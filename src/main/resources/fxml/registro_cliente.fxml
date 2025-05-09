@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+    <center>
+        <VBox alignment="CENTER" spacing="20">
+            <Label text="Registro de Cliente" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+
+            <GridPane hgap="10" vgap="10">
+                <Label text="Nombres:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <TextField fx:id="txtNombres" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <Label text="Apellidos:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <TextField fx:id="txtApellidos" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                <Label text="Teléfono:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <TextField fx:id="txtTelefono" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                <Label text="Fecha de Inicio:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <DatePicker fx:id="dpFechaInicio" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                <Label text="Membresía:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                <ComboBox fx:id="cbMembresia" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+            </GridPane>
+
+            <Button text="Siguiente" fx:id="btnSiguiente" style="-fx-font-size: 14px;"/>
+        </VBox>
+    </center>
+</BorderPane>
