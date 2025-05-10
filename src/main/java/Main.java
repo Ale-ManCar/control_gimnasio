@@ -3,10 +3,13 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import util.DatabaseUtil;
 
 public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
+        DatabaseUtil.initDatabase();
+
         // Carga el diseño FXML de la pantalla de registro
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/registro_cliente.fxml"));
 
