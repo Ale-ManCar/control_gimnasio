@@ -29,7 +29,9 @@
                 <ComboBox fx:id="cbMembresia" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
             </GridPane>
 
-            <Button text="Siguiente" fx:id="btnSiguiente" style="-fx-font-size: 14px;"/>
+            <Button fx:id="btnSiguiente" text="Siguiente" onAction="#handleSiguiente"/>
+
+            <Button fx:id="btnIrARenovaciones" text="Ir a Renovaciones" onAction="#handleIrARenovaciones" />
         </VBox>
     </center>
 </BorderPane>

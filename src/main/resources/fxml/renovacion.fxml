@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.RenovacionController">
+    <center>
+        <VBox spacing="20" alignment="CENTER">
+            <Label text="Renovación de Membresías" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+
+            <TableView fx:id="tablaClientes" prefHeight="300">
+                <columns>
+                    <TableColumn fx:id="colNombre" text="Nombre" prefWidth="150"/>
+                    <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="100"/>
+                    <TableColumn fx:id="colVence" text="Vence" prefWidth="100"/>
+                </columns>
+            </TableView>
+
+            <GridPane hgap="10" vgap="10">
+                <Label text="Nueva Membresía:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <ComboBox fx:id="cbNuevaMembresia" GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="150"/>
+
+                <Label text="Fecha de Renovación:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <DatePicker fx:id="dpFechaRenovacion" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+            </GridPane>
+
+            <Button text="Renovar" fx:id="btnRenovar" style="-fx-font-size: 14px;"/>
+        </VBox>
+    </center>
+</BorderPane>

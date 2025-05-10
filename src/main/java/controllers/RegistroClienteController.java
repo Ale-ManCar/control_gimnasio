@@ -1,8 +1,13 @@
 package controllers;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.stage.Stage;
 import util.DatabaseUtil;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -13,31 +18,15 @@ public class RegistroClienteController {
     @FXML private DatePicker dpFechaInicio;
     @FXML private ComboBox<String> cbMembresia;
     @FXML private Button btnSiguiente;
+    @FXML private Button btnIrARenovaciones; // Nuevo botón para navegación
 
     @FXML
     public void initialize() {
-        // Verificar que el ComboBox no sea nulo
+        // Configuración inicial del ComboBox
         if (cbMembresia != null) {
-            // Limpiar cualquier dato previo
             cbMembresia.getItems().clear();
-
-            // Agregar las opciones de membresía
-            cbMembresia.getItems().addAll(
-                    "1 Mes",
-                    "3 Meses",
-                    "6 Meses",
-                    "1 Año"
-            );
-
-            // Seleccionar un valor por defecto
+            cbMembresia.getItems().addAll("1 Mes", "3 Meses", "6 Meses", "1 Año");
             cbMembresia.setValue("1 Mes");
-
-            // Listener para debug
-            cbMembresia.setOnAction(event -> {
-                System.out.println("Membresía seleccionada: " + cbMembresia.getValue());
-            });
-        } else {
-            System.err.println("Error: ComboBox cbMembresia es null");
         }
 
         // Validación del teléfono
@@ -50,7 +39,7 @@ public class RegistroClienteController {
 
     @FXML
     private void handleSiguiente() {
-        // Validar campos obligatorios
+        // Validación de campos
         if (cbMembresia.getValue() == null || dpFechaInicio.getValue() == null) {
             mostrarAlerta("Error", "Debe completar todos los campos");
             return;
@@ -60,27 +49,33 @@ public class RegistroClienteController {
             String sql = "INSERT INTO clientes (nombres, apellidos, telefono, tipoMembresia, fechaInicio, fechaVencimiento) VALUES (?, ?, ?, ?, ?, ?)";
             PreparedStatement stmt = conn.prepareStatement(sql);
 
-            // Validar y asignar valores
             stmt.setString(1, validarCampo(txtNombres.getText(), "Nombres"));
             stmt.setString(2, validarCampo(txtApellidos.getText(), "Apellidos"));
             stmt.setString(3, validarCampo(txtTelefono.getText(), "Teléfono"));
             stmt.setString(4, cbMembresia.getValue());
-
-            LocalDate fechaInicio = dpFechaInicio.getValue();
-            stmt.setString(5, fechaInicio.toString());
-
-            // Calcular fecha de vencimiento
-            LocalDate fechaVencimiento = calcularVencimiento(fechaInicio, cbMembresia.getValue());
-            stmt.setString(6, fechaVencimiento.toString());
+            stmt.setString(5, dpFechaInicio.getValue().toString());
+            stmt.setString(6, calcularVencimiento(dpFechaInicio.getValue(), cbMembresia.getValue()).toString());
 
             stmt.executeUpdate();
             mostrarAlerta("Éxito", "Cliente registrado correctamente");
-
             limpiarCampos();
 
         } catch (SQLException e) {
-            e.printStackTrace();
             mostrarAlerta("Error", "No se pudo registrar el cliente: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleIrARenovaciones() {
+        try {
+            // Cargar la pantalla de renovaciones
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/renovacion.fxml"));
+            Stage stage = (Stage) btnIrARenovaciones.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Renovación de Membresías");
+        } catch (IOException e) {
+            mostrarAlerta("Error", "No se pudo cargar la pantalla de renovaciones");
+            e.printStackTrace();
         }
     }
 
@@ -106,7 +101,7 @@ public class RegistroClienteController {
         txtApellidos.clear();
         txtTelefono.clear();
         dpFechaInicio.setValue(null);
-        cbMembresia.setValue("1 Mes"); // Restablecer al valor por defecto
+        cbMembresia.setValue("1 Mes");
     }
 
     private void mostrarAlerta(String titulo, String mensaje) {
