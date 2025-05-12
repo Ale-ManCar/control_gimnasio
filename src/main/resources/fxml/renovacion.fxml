@@ -3,6 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controllers.RenovacionController">
@@ -15,6 +16,15 @@
                     <TableColumn fx:id="colNombre" text="Nombre" prefWidth="150"/>
                     <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="100"/>
                     <TableColumn fx:id="colVence" text="Vence" prefWidth="100"/>
+                    <TableColumn fx:id="colMembresia" text="Membresía" prefWidth="100"></TableColumn>
+                    <TableColumn text="Membresía Actual" prefWidth="100">
+                        <cellValueFactory><PropertyValueFactory property="tipoMembresia"/></cellValueFactory>
+                    </TableColumn>
+                    <TableColumn text="Días Restantes" prefWidth="100">
+                        <cellValueFactory>
+                            <PropertyValueFactory property="diasRestantes"/>
+                        </cellValueFactory>
+                    </TableColumn>
                 </columns>
             </TableView>
 
@@ -26,7 +36,7 @@
                 <DatePicker fx:id="dpFechaRenovacion" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
             </GridPane>
 
-            <Button text="Renovar" fx:id="btnRenovar" style="-fx-font-size: 14px;"/>
+            <Button text="Renovar" fx:id="btnRenovar" onAction="#handleRenovar" style="-fx-font-size: 14px;"/>
         </VBox>
     </center>
 </BorderPane>
