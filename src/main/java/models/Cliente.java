@@ -41,4 +41,9 @@ public class Cliente {
     public String getTipoMembresia() { return tipoMembresia.get(); }
     public String getFechaVencimiento() { return fechaVencimiento.get(); }
     public int getDiasRestantes() { return diasRestantes.get(); }
+
+    // ✅ Nuevo método para trabajar con fechas como LocalDate
+    public LocalDate getFechaVencimientoDate() {
+        return LocalDate.parse(fechaVencimiento.get());
+    }
 }

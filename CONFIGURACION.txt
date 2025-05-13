@@ -1,0 +1,12 @@
+1. DESCARGAR ChromeDriver:
+   - Ve a https://chromedriver.chromium.org/
+   - Guarda en: C:/driver/chromedriver.exe
+
+2. CONFIGURAR WhatsAppService.java:
+   - Línea 8: Ruta exacta de chromedriver
+   - Línea 9: Número de WhatsApp del gimnasio
+   - Línea 11-13: Personaliza el mensaje base
+
+3. INICIAR SESIÓN:
+   - Abre WhatsApp Web en tu navegador
+   - Escanea el QR cuando se ejecute el sistema
