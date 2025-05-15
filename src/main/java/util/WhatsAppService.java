@@ -38,7 +38,7 @@ public class WhatsAppService {
                         String mensaje = construirMensajePersonalizado(cliente);
                         String url = generarUrlWhatsApp(cliente.getTelefono(), mensaje);
 
-                        driver.get(url);
+                        driver.get("https://web.whatsapp.com/");
                         if (!esperarConexion(driver)) {
                                 throw new RuntimeException("Tiempo de conexión agotado");
                         }
@@ -67,14 +67,14 @@ public class WhatsAppService {
         }
 
         private static boolean validarCondicionesEnvio() {
-                if (!esHorarioLaboral()) {
-                        System.out.println("⚠️ Fuera de horario (9AM-9PM)");
-                        return false;
-                }
-                if (limiteDiarioAlcanzado()) {
-                        System.out.println("⚠️ Límite diario alcanzado (" + LIMITE_DIARIO + ")");
-                        return false;
-                }
+            //    if (!esHorarioLaboral()) {
+            //            System.out.println("⚠️ Fuera de horario (9AM-9PM)");
+            //            return false;
+            //    }
+            //    if (limiteDiarioAlcanzado()) {
+            //            System.out.println("⚠️ Límite diario alcanzado (" + LIMITE_DIARIO + ")");
+             //           return false;
+             //   }
                 return true;
         }
 
