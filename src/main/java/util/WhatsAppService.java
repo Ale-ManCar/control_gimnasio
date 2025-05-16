@@ -67,14 +67,14 @@ public class WhatsAppService {
         }
 
         private static boolean validarCondicionesEnvio() {
-            //    if (!esHorarioLaboral()) {
-            //            System.out.println("⚠️ Fuera de horario (9AM-9PM)");
-            //            return false;
-            //    }
-            //    if (limiteDiarioAlcanzado()) {
-            //            System.out.println("⚠️ Límite diario alcanzado (" + LIMITE_DIARIO + ")");
-             //           return false;
-             //   }
+                if (!esHorarioLaboral()) {
+                        System.out.println("⚠️ Fuera de horario (9AM-9PM)");
+                        return false;
+                }
+                if (limiteDiarioAlcanzado()) {
+                        System.out.println("⚠️ Límite diario alcanzado (" + LIMITE_DIARIO + ")");
+                        return false;
+                }
                 return true;
         }
 

@@ -10,3 +10,9 @@
 3. INICIAR SESIÓN:
    - Abre WhatsApp Web en tu navegador
    - Escanea el QR cuando se ejecute el sistema
+
+4.- CONFIGURAR DIRECTO EN LOA BD
+UPDATE config SET
+   nombre_gimnasio = '[NOMBRE_REAL_DEL_GIMNASIO]',
+   mensaje_whatsapp = 'Estimado [NOMBRE], tu membresía en [GIMNASIO] vence el [FECHA]. Renueva aquí: [LINK]'
+WHERE id = 1;
