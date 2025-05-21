@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.DashboardController"
+            stylesheets="@/css/dashboard.css">
+
+    <top>
+        <Label text="Panel de Control" styleClass="dashboard-title"/>
+    </top>
+
+    <center>
+        <VBox spacing="20">
+            <!-- Tarjetas de métricas -->
+            <HBox spacing="15">
+                <fx:include source="components/metric_card.fxml" fx:id="cardClientes"/>
+                <fx:include source="components/metric_card.fxml" fx:id="cardPagos"/>
+                <fx:include source="components/metric_card.fxml" fx:id="cardVencimientos"/>
+            </HBox>
+
+            <!-- Gráfico de ingresos -->
+            <LineChart fx:id="chartIngresos" title="Ingresos Mensuales (Últimos 6 meses)">
+                <xAxis><CategoryAxis label="Mes"/></xAxis>
+                <yAxis><NumberAxis label="USD"/></yAxis>
+            </LineChart>
+
+            <!-- Tabla de clientes próximos a vencer -->
+            <TableView fx:id="tblProximosVencer">
+                <columns>
+                    <TableColumn text="Nombre" prefWidth="150"/>
+                    <TableColumn text="Teléfono" prefWidth="100"/>
+                    <TableColumn text="Vence" prefWidth="100"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>

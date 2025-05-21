@@ -1,0 +1,22 @@
+.dashboard-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.metric-card {
+    -fx-background-color: #ffffff;
+    -fx-border-radius: 5px;
+    -fx-padding: 15px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);
+}
+
+.metric-title {
+    -fx-text-fill: #666;
+    -fx-font-size: 14px;
+}
+
+.metric-value {
+    -fx-text-fill: #2c3e50;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}

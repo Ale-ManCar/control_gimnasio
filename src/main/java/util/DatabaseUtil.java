@@ -1,10 +1,12 @@
 package util;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.sql.ResultSet;
+import java.util.HashMap;
+import java.util.Map;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import models.PagoMensual;
 
 public class DatabaseUtil {
     private static final String URL = "jdbc:sqlite:database/gimnasio.db";
@@ -104,5 +106,53 @@ public class DatabaseUtil {
         } catch (SQLException e) {
             System.err.println("❌ Error de conexión: " + e.getMessage());
         }
+    }
+
+    // Método para obtener estadísticas clave
+    public static Map<String, Integer> getEstadisticas() throws SQLException {
+        Map<String, Integer> stats = new HashMap<>();
+        String sql = """
+        SELECT 
+            (SELECT COUNT(*) FROM clientes WHERE activo = 1) AS clientes_activos,
+            (SELECT COUNT(*) FROM pagos WHERE date(fecha_pago) = CURRENT_DATE) AS pagos_hoy,
+            (SELECT COUNT(*) FROM clientes WHERE fecha_vencimiento BETWEEN CURRENT_DATE AND date('now', '+7 days')) AS por_vencer
+        """;
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                stats.put("clientes_activos", rs.getInt(1));
+                stats.put("pagos_hoy", rs.getInt(2));
+                stats.put("por_vencer", rs.getInt(3));
+            }
+        }
+        return stats;
+    }
+
+    // Método para datos de gráficos
+    public static ObservableList<PagoMensual> getIngresosMensuales() throws SQLException {
+        ObservableList<PagoMensual> data = FXCollections.observableArrayList();
+        String sql = """
+        SELECT strftime('%Y-%m', fecha_pago) AS mes, 
+               SUM(monto) AS total 
+        FROM pagos 
+        GROUP BY mes 
+        ORDER BY mes DESC 
+        LIMIT 6
+        """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                String mes = rs.getString("mes");
+                double total = rs.getDouble("total");
+                data.add(new PagoMensual(mes, total));
+            }
+        }
+        return data;
     }
 }
