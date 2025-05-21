@@ -1,41 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.chart.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/17"
+<BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controllers.DashboardController"
-            stylesheets="@/css/dashboard.css">
+            prefWidth="900" prefHeight="600">
 
     <top>
-        <Label text="Panel de Control" styleClass="dashboard-title"/>
+        <Label fx:id="lblMensaje" text="Panel de Control - Gimnasio" style="-fx-font-size: 24px; -fx-padding: 10;" />
     </top>
 
     <center>
         <VBox spacing="20">
-            <!-- Tarjetas de métricas -->
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
             <HBox spacing="15">
-                <fx:include source="components/metric_card.fxml" fx:id="cardClientes"/>
-                <fx:include source="components/metric_card.fxml" fx:id="cardPagos"/>
-                <fx:include source="components/metric_card.fxml" fx:id="cardVencimientos"/>
+                <AnchorPane fx:id="cardClientes" prefWidth="200" prefHeight="120" />
+                <AnchorPane fx:id="cardPagos" prefWidth="200" prefHeight="120" />
+                <AnchorPane fx:id="cardVencimientos" prefWidth="200" prefHeight="120" />
             </HBox>
 
-            <!-- Gráfico de ingresos -->
-            <LineChart fx:id="chartIngresos" title="Ingresos Mensuales (Últimos 6 meses)">
-                <xAxis><CategoryAxis label="Mes"/></xAxis>
-                <yAxis><NumberAxis label="USD"/></yAxis>
-            </LineChart>
+            <Label text="Clientes Próximos a Vencer" style="-fx-font-size: 18px;" />
+            <ListView fx:id="listaClientesProximosAVencer" prefHeight="200" />
 
-            <!-- Tabla de clientes próximos a vencer -->
-            <TableView fx:id="tblProximosVencer">
-                <columns>
-                    <TableColumn text="Nombre" prefWidth="150"/>
-                    <TableColumn text="Teléfono" prefWidth="100"/>
-                    <TableColumn text="Vence" prefWidth="100"/>
-                </columns>
-            </TableView>
         </VBox>
     </center>
+
 </BorderPane>

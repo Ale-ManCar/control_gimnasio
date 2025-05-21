@@ -1,113 +1,141 @@
 package controllers;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.XYChart;
-import javafx.scene.control.Alert;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
-import models.Cliente;
-import models.PagoMensual;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
 import util.DatabaseUtil;
 
-import java.sql.*;
-import java.util.Map;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ResourceBundle;
 
-public class DashboardController {
-
-    @FXML private LineChart<String, Number> chartIngresos;
-    @FXML private TableView<Cliente> tblProximosVencer;
+public class DashboardController implements Initializable {
 
     @FXML
-    public void initialize() {
-        cargarMetricas();
-        cargarGrafico();
-        cargarClientesProximosAVencer();
-    }
+    private AnchorPane cardClientes;
 
-    private void cargarMetricas() {
+    @FXML
+    private AnchorPane cardPagos;
+
+    @FXML
+    private AnchorPane cardVencimientos;
+
+    @FXML
+    private ListView<String> listaClientesProximosAVencer;
+
+    @FXML
+    private Label lblMensaje;
+
+    private MetricCardController ctrlClientes;
+    private MetricCardController ctrlPagos;
+    private MetricCardController ctrlVencimientos;
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
         try {
-            Map<String, Integer> stats = DatabaseUtil.getEstadisticas();
+            FXMLLoader loaderClientes = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
+            Pane paneClientes = loaderClientes.load();
+            ctrlClientes = loaderClientes.getController();
+            ctrlClientes.setTitulo("Clientes Activos");
+            cardClientes.getChildren().add(paneClientes);
 
-            // Aquí deberías tener referencias a los controladores de las tarjetas
-            // por ejemplo si usas fx:include con fx:id="cardClientes", deberías inyectar su controller
-            // Esto se puede hacer con FXMLLoader y controladores personalizados, lo configuraremos luego
+            FXMLLoader loaderPagos = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
+            Pane panePagos = loaderPagos.load();
+            ctrlPagos = loaderPagos.getController();
+            ctrlPagos.setTitulo("Pagos Recibidos");
+            cardPagos.getChildren().add(panePagos);
 
-            System.out.println("Clientes activos: " + stats.get("clientes_activos"));
-            System.out.println("Pagos hoy: " + stats.get("pagos_hoy"));
-            System.out.println("Próximos a vencer: " + stats.get("por_vencer"));
+            FXMLLoader loaderVencimientos = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
+            Pane paneVencimientos = loaderVencimientos.load();
+            ctrlVencimientos = loaderVencimientos.getController();
+            ctrlVencimientos.setTitulo("Próximos a Vencer");
+            cardVencimientos.getChildren().add(paneVencimientos);
 
-        } catch (SQLException e) {
-            mostrarAlerta("Error", "No se pudieron cargar las estadísticas");
+            cargarDatosTarjetas();
+            cargarClientesProximosAVencer();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            lblMensaje.setText("Error al inicializar el panel.");
         }
     }
 
-    private void cargarGrafico() {
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Ingresos");
+    private void cargarDatosTarjetas() {
+        // Clientes activos
+        String sqlClientes = "SELECT COUNT(*) AS total FROM clientes WHERE activo = 1";
+        // Pagos recibidos (ejemplo: pagos en el mes actual)
+        String sqlPagos = "SELECT COUNT(*) AS total FROM pagos WHERE strftime('%Y-%m', fecha_pago) = strftime('%Y-%m', 'now')";
+        // Clientes próximos a vencer
+        String sqlVencimientos = "SELECT COUNT(*) AS total FROM clientes " +
+                "WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days')";
 
-        try {
-            ObservableList<PagoMensual> datos = DatabaseUtil.getIngresosMensuales();
-            for (PagoMensual p : datos) {
-                series.getData().add(new XYChart.Data<>(p.getMes(), p.getTotal()));
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            // Clientes activos
+            try (PreparedStatement ps = conn.prepareStatement(sqlClientes);
+                 ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ctrlClientes.setValor(rs.getString("total"));
+                }
             }
-            chartIngresos.getData().clear();
-            chartIngresos.getData().add(series);
+            // Pagos recibidos
+            try (PreparedStatement ps = conn.prepareStatement(sqlPagos);
+                 ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ctrlPagos.setValor(rs.getString("total"));
+                }
+            }
+            // Próximos a vencer
+            try (PreparedStatement ps = conn.prepareStatement(sqlVencimientos);
+                 ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ctrlVencimientos.setValor(rs.getString("total"));
+                }
+            }
         } catch (SQLException e) {
-            mostrarAlerta("Error", "No se pudo cargar el gráfico");
+            e.printStackTrace();
+            lblMensaje.setText("Error al cargar datos métricos.");
         }
     }
 
     private void cargarClientesProximosAVencer() {
-        ObservableList<Cliente> clientes = FXCollections.observableArrayList();
+        listaClientesProximosAVencer.getItems().clear();
+
         String sql = "SELECT nombres, telefono, fecha_vencimiento FROM clientes " +
-                "WHERE fecha_vencimiento BETWEEN CURRENT_DATE AND date('now', '+7 days') " +
+                "WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days') " +
                 "ORDER BY fecha_vencimiento LIMIT 10";
 
         try (Connection conn = DatabaseUtil.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            boolean hayClientes = false;
 
             while (rs.next()) {
-                Cliente c = new Cliente();
-                c.setNombres(rs.getString("nombres"));
-                c.setTelefono(rs.getString("telefono"));
-                c.setFechaVencimiento(rs.getString("fecha_vencimiento"));
-                clientes.add(c);
+                hayClientes = true;
+                String nombre = rs.getString("nombres");
+                String telefono = rs.getString("telefono");
+                String fechaVenc = rs.getString("fecha_vencimiento");
+
+                String item = nombre + " - Tel: " + telefono + " - Vence: " + fechaVenc;
+                listaClientesProximosAVencer.getItems().add(item);
             }
 
-            // Configura columnas si aún no lo has hecho
-            if (tblProximosVencer.getColumns().isEmpty()) {
-                TableColumn<Cliente, String> colNombre = new TableColumn<>("Nombre");
-                colNombre.setCellValueFactory(new PropertyValueFactory<>("nombres"));
-                colNombre.setPrefWidth(150);
-
-                TableColumn<Cliente, String> colTelefono = new TableColumn<>("Teléfono");
-                colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
-                colTelefono.setPrefWidth(100);
-
-                TableColumn<Cliente, String> colVence = new TableColumn<>("Vence");
-                colVence.setCellValueFactory(new PropertyValueFactory<>("fechaVencimiento"));
-                colVence.setPrefWidth(100);
-
-                tblProximosVencer.getColumns().addAll(colNombre, colTelefono, colVence);
+            if (!hayClientes) {
+                lblMensaje.setText("No hay clientes próximos a vencer en los próximos 7 días.");
+            } else {
+                lblMensaje.setText("");
             }
-
-            tblProximosVencer.setItems(clientes);
 
         } catch (SQLException e) {
-            mostrarAlerta("Error", "No se pudo cargar la tabla de clientes próximos a vencer");
+            e.printStackTrace();
+            lblMensaje.setText("Error al cargar clientes próximos a vencer.");
         }
-    }
-
-    private void mostrarAlerta(String titulo, String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(titulo);
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
     }
 }

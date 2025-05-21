@@ -1,22 +1,27 @@
 .dashboard-title {
     -fx-font-size: 24px;
     -fx-font-weight: bold;
+    -fx-padding: 10px;
+    -fx-text-fill: #2e2e2e;
 }
 
 .metric-card {
     -fx-background-color: #ffffff;
-    -fx-border-radius: 5px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
     -fx-padding: 15px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 6, 0.3, 0, 2);
+    -fx-min-width: 180px;
+    -fx-min-height: 100px;
 }
 
 .metric-title {
-    -fx-text-fill: #666;
     -fx-font-size: 14px;
+    -fx-text-fill: #666666;
 }
 
 .metric-value {
-    -fx-text-fill: #2c3e50;
-    -fx-font-size: 24px;
+    -fx-font-size: 22px;
     -fx-font-weight: bold;
+    -fx-text-fill: #1e88e5;
 }

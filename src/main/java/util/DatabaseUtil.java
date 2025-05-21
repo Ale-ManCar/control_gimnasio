@@ -1,7 +1,6 @@
 package util;
 
 import java.sql.*;
-import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
 import javafx.collections.FXCollections;
@@ -14,9 +13,8 @@ public class DatabaseUtil {
 
     public static Connection getConnection() throws SQLException {
         Connection conn = DriverManager.getConnection(URL);
-        // Configurar parámetros para mejor manejo concurrente
         try (Statement stmt = conn.createStatement()) {
-            stmt.execute("PRAGMA journal_mode = WAL"); // Mejor rendimiento concurrente
+            stmt.execute("PRAGMA journal_mode = WAL");
             stmt.execute("PRAGMA synchronous = NORMAL");
             stmt.execute("PRAGMA busy_timeout = " + BUSY_TIMEOUT_MS);
             stmt.execute("PRAGMA foreign_keys = ON");
@@ -31,14 +29,14 @@ public class DatabaseUtil {
                 "apellidos TEXT NOT NULL," +
                 "telefono TEXT NOT NULL UNIQUE," +
                 "tipoMembresia TEXT NOT NULL," +
-                "fechaInicio TEXT NOT NULL," +  // Almacenado como TEXT en formato ISO
-                "fechaVencimiento TEXT NOT NULL," +  // Almacenado como TEXT en formato ISO
+                "fechaInicio TEXT NOT NULL," +
+                "fechaVencimiento TEXT NOT NULL," +
                 "activo BOOLEAN DEFAULT TRUE)";
 
         String sqlAlertas = "CREATE TABLE IF NOT EXISTS alertas_enviadas (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "telefono_cliente TEXT NOT NULL," +
-                "fecha_envio TEXT NOT NULL," +  // Almacenado como TEXT en formato ISO
+                "fecha_envio TEXT NOT NULL," +
                 "tipo_alerta TEXT NOT NULL," +
                 "FOREIGN KEY (telefono_cliente) REFERENCES clientes(telefono))";
 
@@ -47,14 +45,22 @@ public class DatabaseUtil {
                 "nombre_gimnasio TEXT DEFAULT 'Mi Gimnasio'," +
                 "mensaje_whatsapp TEXT DEFAULT '¡Hola [NOMBRE]! Tu membresía en [GIMNASIO] vence en [DIAS] días')";
 
+        String sqlPagos = "CREATE TABLE IF NOT EXISTS pagos (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "cliente_id INTEGER NOT NULL," +
+                "fecha_pago TEXT NOT NULL," +
+                "fecha_vencimiento TEXT," +
+                "monto REAL NOT NULL," +
+                "FOREIGN KEY (cliente_id) REFERENCES clientes(id))";
+
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
 
-            // Ejecutar en transacción
             conn.setAutoCommit(false);
             stmt.execute(sqlClientes);
             stmt.execute(sqlAlertas);
             stmt.execute(sqlConfig);
+            stmt.execute(sqlPagos);
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
             conn.commit();
 
@@ -74,7 +80,6 @@ public class DatabaseUtil {
             stmt = conn.prepareStatement(sql);
 
             for (int i = 0; i < params.length; i++) {
-                // Convertir LocalDate a String ISO si es necesario
                 if (params[i] instanceof java.time.LocalDate) {
                     stmt.setString(i + 1, params[i].toString());
                 } else {
@@ -108,14 +113,13 @@ public class DatabaseUtil {
         }
     }
 
-    // Método para obtener estadísticas clave
     public static Map<String, Integer> getEstadisticas() throws SQLException {
         Map<String, Integer> stats = new HashMap<>();
         String sql = """
         SELECT 
             (SELECT COUNT(*) FROM clientes WHERE activo = 1) AS clientes_activos,
             (SELECT COUNT(*) FROM pagos WHERE date(fecha_pago) = CURRENT_DATE) AS pagos_hoy,
-            (SELECT COUNT(*) FROM clientes WHERE fecha_vencimiento BETWEEN CURRENT_DATE AND date('now', '+7 days')) AS por_vencer
+            (SELECT COUNT(*) FROM clientes WHERE fechaVencimiento BETWEEN CURRENT_DATE AND date('now', '+7 days')) AS por_vencer
         """;
 
         try (Connection conn = getConnection();
@@ -131,7 +135,6 @@ public class DatabaseUtil {
         return stats;
     }
 
-    // Método para datos de gráficos
     public static ObservableList<PagoMensual> getIngresosMensuales() throws SQLException {
         ObservableList<PagoMensual> data = FXCollections.observableArrayList();
         String sql = """

@@ -4,11 +4,16 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 
 public class MetricCardController {
+
     @FXML private Label lblTitulo;
+
     @FXML private Label lblValor;
 
-    public void setDatos(String titulo, int valor) {
+    public void setTitulo(String titulo) {
         lblTitulo.setText(titulo);
-        lblValor.setText(String.valueOf(valor));
+    }
+
+    public void setValor(String valor) {
+        lblValor.setText(valor);
     }
 }

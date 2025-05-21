@@ -13,15 +13,16 @@ import java.util.concurrent.TimeUnit;
 public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
+        // Inicializa la base de datos
         DatabaseUtil.initDatabase();
 
-        // Carga el diseño FXML de la pantalla de registro
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/registro_cliente.fxml"));
+        // Carga el dashboard al inicio
+        Parent root = FXMLLoader.load(getClass().getResource("/fxml/dashboard.fxml"));
 
         // Configura la ventana principal
-        primaryStage.setTitle("Sistema de Gimnasio - Registro");
+        primaryStage.setTitle("Panel de Control - Gimnasio");
         primaryStage.setScene(new Scene(root, 800, 600));
-        primaryStage.setResizable(false); // Evita redimensionar
+        primaryStage.setResizable(false);
         primaryStage.show();
 
         // Programación automática de alertas cada 24 horas
@@ -32,6 +33,6 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) {
-        launch(args); // Inicia la aplicación
+        launch(args);
     }
 }

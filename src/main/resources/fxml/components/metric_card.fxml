@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controllers.MetricCardController"
+      style="-fx-background-color: #f0f0f0; -fx-border-color: #ccc; -fx-border-radius: 5; -fx-background-radius: 5;"
+      spacing="10" prefWidth="200" prefHeight="120">
+
+    <padding>
+        <Insets top="15" right="15" bottom="15" left="15"/>
+    </padding>
+
+    <Label fx:id="lblTitulo" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+    <Label fx:id="lblValor" style="-fx-font-size: 28px; -fx-text-fill: #2a9d8f;" />
+
+</VBox>
