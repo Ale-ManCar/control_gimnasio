@@ -50,9 +50,9 @@ public class AlertScheduler implements Runnable {
         LocalDate fecha3Dias = hoy.plusDays(3);
         LocalDate fecha1Dia = hoy.plusDays(1);
 
-        String sql = "SELECT nombres, telefono, tipoMembresia, fechaVencimiento " +
+        String sql = "SELECT nombres, telefono, tipoMembresia, fecha_vencimiento " +
                 "FROM clientes " +
-                "WHERE fechaVencimiento IN (?, ?, ?) " +
+                "WHERE fecha_vencimiento IN (?, ?, ?) " +
                 "AND activo = true " +
                 "AND telefono NOT IN (" +
                 "    SELECT telefono_cliente FROM alertas_enviadas " +

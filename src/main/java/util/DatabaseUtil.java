@@ -30,7 +30,7 @@ public class DatabaseUtil {
                 "telefono TEXT NOT NULL UNIQUE," +
                 "tipoMembresia TEXT NOT NULL," +
                 "fechaInicio TEXT NOT NULL," +
-                "fechaVencimiento TEXT NOT NULL," +
+                "fecha_vencimiento TEXT NOT NULL," +  // <-- cambio aquí
                 "activo BOOLEAN DEFAULT TRUE)";
 
         String sqlAlertas = "CREATE TABLE IF NOT EXISTS alertas_enviadas (" +
@@ -119,7 +119,7 @@ public class DatabaseUtil {
         SELECT 
             (SELECT COUNT(*) FROM clientes WHERE activo = 1) AS clientes_activos,
             (SELECT COUNT(*) FROM pagos WHERE date(fecha_pago) = CURRENT_DATE) AS pagos_hoy,
-            (SELECT COUNT(*) FROM clientes WHERE fechaVencimiento BETWEEN CURRENT_DATE AND date('now', '+7 days')) AS por_vencer
+            (SELECT COUNT(*) FROM clientes WHERE fecha_vencimiento BETWEEN CURRENT_DATE AND date('now', '+7 days')) AS por_vencer
         """;
 
         try (Connection conn = getConnection();
