@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport
+		xmlns="http://jasperreports.sourceforge.net/jasperreports"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+                        http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+		name="reporte_ingresos"
+		language="java"
+		pageWidth="595"
+		pageHeight="842"
+		columnWidth="555"
+		leftMargin="20"
+		rightMargin="20"
+		topMargin="20"
+		bottomMargin="20"
+		uuid="e73b923e-d8e0-437a-9cc5-c43cc7a35117">
+
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="Data Adapter"/>
+
+	<!-- Consulta basada en la tabla pagos -->
+	<queryString language="SQL">
+		<![CDATA[
+            SELECT
+                strftime('%Y-%m', fecha_pago) AS mes,
+                SUM(monto) AS total_ingresos
+            FROM pagos
+            GROUP BY mes
+            ORDER BY mes ASC
+        ]]>
+	</queryString>
+
+	<!-- Campos de la consulta -->
+	<field name="mes" class="java.lang.String"/>
+	<field name="total_ingresos" class="java.lang.Double"/>
+
+	<!-- Título -->
+	<title>
+		<band height="50">
+			<staticText>
+				<reportElement x="0" y="10" width="555" height="30"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="18" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Reporte de Ingresos Mensuales]]></text>
+			</staticText>
+		</band>
+	</title>
+
+	<!-- Encabezado de columna -->
+	<columnHeader>
+		<band height="30">
+			<staticText>
+				<reportElement x="0" y="5" width="277" height="20" backcolor="#D3D3D3" mode="Opaque"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Mes]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="278" y="5" width="277" height="20" backcolor="#D3D3D3" mode="Opaque"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Total Ingresos]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+
+	<!-- Detalle con los datos -->
+	<detail>
+		<band height="25">
+			<textField>
+				<reportElement x="0" y="0" width="277" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{mes}]]></textFieldExpression>
+			</textField>
+			<textField pattern="$ #,##0.00">
+				<reportElement x="278" y="0" width="277" height="20"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{total_ingresos}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+
+	<!-- Pie de página -->
+	<pageFooter>
+		<band height="20">
+			<textField>
+				<reportElement x="0" y="0" width="555" height="20"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+
+</jasperReport>

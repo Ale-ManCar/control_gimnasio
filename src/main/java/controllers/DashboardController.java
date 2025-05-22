@@ -8,6 +8,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import util.DatabaseUtil;
+import util.ReporteUtil;
 
 import java.net.URL;
 import java.sql.Connection;
@@ -137,5 +138,9 @@ public class DashboardController implements Initializable {
             e.printStackTrace();
             lblMensaje.setText("Error al cargar clientes próximos a vencer.");
         }
+    }
+
+    public void handleExportarPDF() {
+        ReporteUtil.generarReporteIngresos();
     }
 }

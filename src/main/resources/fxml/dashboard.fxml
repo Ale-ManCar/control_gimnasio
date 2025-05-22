@@ -8,6 +8,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
+<?import javafx.scene.control.Button?>
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controllers.DashboardController"
@@ -30,6 +31,13 @@
 
             <Label text="Clientes Próximos a Vencer" style="-fx-font-size: 18px;" />
             <ListView fx:id="listaClientesProximosAVencer" prefHeight="200" />
+
+            <!-- Botón para exportar PDF -->
+            <HBox alignment="CENTER_RIGHT">
+                <Button text="Exportar PDF"
+                        onAction="#handleExportarPDF"
+                        style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold;" />
+            </HBox>
 
         </VBox>
     </center>
