@@ -27,7 +27,7 @@ public class RenovacionController {
     public void initialize() {
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombres"));
         colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
-        colVence.setCellValueFactory(new PropertyValueFactory<>("fechaVencimiento"));
+        colVence.setCellValueFactory(new PropertyValueFactory<>("fecha_vencimiento"));
         colMembresia.setCellValueFactory(new PropertyValueFactory<>("tipoMembresia"));
 
         cbNuevaMembresia.getItems().addAll("1 Mes", "3 Meses", "6 Meses", "1 Año");
@@ -37,8 +37,8 @@ public class RenovacionController {
     }
 
     private void cargarClientesProximos() {
-        String sql = "SELECT nombres, telefono, tipoMembresia, fechaVencimiento FROM clientes " +
-                "WHERE fechaVencimiento BETWEEN date('now') AND date('now', '+7 days')";
+        String sql = "SELECT nombres, telefono, tipoMembresia, fecha_vencimiento FROM clientes " +
+                "WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days')";
 
         try (Connection conn = DatabaseUtil.getConnection();
              Statement stmt = conn.createStatement();
@@ -50,7 +50,7 @@ public class RenovacionController {
                         rs.getString("nombres"),
                         rs.getString("telefono"),
                         rs.getString("tipoMembresia"),
-                        LocalDate.parse(rs.getString("fechaVencimiento"))
+                        LocalDate.parse(rs.getString("fecha_vencimiento"))
                 ));
             }
             tablaClientes.setItems(clientes);
@@ -76,7 +76,7 @@ public class RenovacionController {
         }
 
         try (Connection conn = DatabaseUtil.getConnection()) {
-            String sql = "UPDATE clientes SET tipoMembresia = ?, fechaVencimiento = ? WHERE telefono = ?";
+            String sql = "UPDATE clientes SET tipoMembresia = ?, fecha_vencimiento = ? WHERE telefono = ?";
 
             PreparedStatement stmt = conn.prepareStatement(sql);
 

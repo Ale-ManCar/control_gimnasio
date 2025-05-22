@@ -1,15 +1,21 @@
 package controllers;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.stage.Stage;
+import javafx.scene.Node;
 import util.DatabaseUtil;
 import util.ReporteUtil;
 
+import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -142,5 +148,21 @@ public class DashboardController implements Initializable {
 
     public void handleExportarPDF() {
         ReporteUtil.generarReporteIngresos();
+    }
+
+    @FXML
+    private void handleRegistroCliente(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/registro_cliente.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Registro de Cliente");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            lblMensaje.setText("No se pudo abrir el formulario de registro.");
+        }
     }
 }

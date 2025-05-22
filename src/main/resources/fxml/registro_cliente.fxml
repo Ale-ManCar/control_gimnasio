@@ -1,18 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-<?import javafx.geometry.Insets?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="controllers.RegistroClienteController">
+            fx:controller="controllers.RegistroClienteController"
+            prefWidth="900"
+            prefHeight="600"
+            style="-fx-background-color: white;">
     <center>
-        <VBox alignment="CENTER" spacing="20">
+        <VBox alignment="TOP_CENTER" spacing="30">
+            <padding>
+                <Insets top="40" right="40" bottom="40" left="40"/>
+            </padding>
+
             <Label text="Registro de Cliente" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
 
-            <GridPane hgap="10" vgap="10">
+            <GridPane hgap="20" vgap="15">
+                <columnConstraints>
+                    <ColumnConstraints halignment="RIGHT" minWidth="120"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                </columnConstraints>
+
                 <Label text="Nombres:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
                 <TextField fx:id="txtNombres" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
@@ -29,9 +41,10 @@
                 <ComboBox fx:id="cbMembresia" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
             </GridPane>
 
-            <Button fx:id="btnSiguiente" text="Siguiente" onAction="#handleSiguiente"/>
-
-            <Button fx:id="btnIrARenovaciones" text="Ir a Renovaciones" onAction="#handleIrARenovaciones" />
+            <HBox spacing="20" alignment="CENTER">
+                <Button fx:id="btnSiguiente" text="Siguiente" onAction="#handleSiguiente" />
+                <Button fx:id="btnIrARenovaciones" text="Ir a Renovaciones" onAction="#handleIrARenovaciones" />
+            </HBox>
         </VBox>
     </center>
 </BorderPane>
