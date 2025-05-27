@@ -105,7 +105,7 @@ public class WhatsAppService {
                      ResultSet rs = stmt.executeQuery(sql)) {
 
                         String plantilla = rs.getString("mensaje_whatsapp");
-                        LocalDate fechaVenc = cliente.getFechaVencimientoDate();
+                        LocalDate fechaVenc = cliente.getFecha_vencimientoDate();
 
                         long dias = ChronoUnit.DAYS.between(LocalDate.now(), fechaVenc);
                         String fechaFormateada = fechaVenc.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -121,7 +121,7 @@ public class WhatsAppService {
         private static void registrarEnvioExitoso(Cliente cliente) {
                 String sql = "INSERT INTO alertas_enviadas (telefono_cliente, fecha_envio, tipo_alerta) VALUES (?, ?, ?)";
                 try {
-                        LocalDate fechaVenc = cliente.getFechaVencimientoDate();
+                        LocalDate fechaVenc = cliente.getFecha_vencimientoDate();
                         long dias = ChronoUnit.DAYS.between(LocalDate.now(), fechaVenc);
 
                         DatabaseUtil.executeUpdate(sql,

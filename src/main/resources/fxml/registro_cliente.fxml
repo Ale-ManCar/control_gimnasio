@@ -10,41 +10,58 @@
             fx:controller="controllers.RegistroClienteController"
             prefWidth="900"
             prefHeight="600"
-            style="-fx-background-color: white;">
+            style="-fx-background-color: linear-gradient(to bottom, #f0f4f8, #dfe6ed); -fx-font-family: 'Segoe UI', sans-serif;">
+
     <center>
         <VBox alignment="TOP_CENTER" spacing="30">
             <padding>
-                <Insets top="40" right="40" bottom="40" left="40"/>
+                <Insets top="60" right="40" bottom="40" left="40"/>
             </padding>
 
-            <Label text="Registro de Cliente" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+            <Label text="Registro de Cliente"
+                   style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
 
-            <GridPane hgap="20" vgap="15">
-                <columnConstraints>
-                    <ColumnConstraints halignment="RIGHT" minWidth="120"/>
-                    <ColumnConstraints hgrow="ALWAYS"/>
-                </columnConstraints>
+            <VBox spacing="25" maxWidth="600" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 40; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 15, 0, 0, 4);">
 
-                <Label text="Nombres:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtNombres" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                <GridPane hgap="20" vgap="20">
+                    <columnConstraints>
+                        <ColumnConstraints halignment="RIGHT" minWidth="120"/>
+                        <ColumnConstraints hgrow="ALWAYS"/>
+                    </columnConstraints>
 
-                <Label text="Apellidos:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtApellidos" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                    <Label text="Nombres:" GridPane.rowIndex="0" GridPane.columnIndex="0"
+                           style="-fx-text-fill: #34495e; -fx-font-size: 14px;"/>
+                    <TextField fx:id="txtNombres" GridPane.rowIndex="0" GridPane.columnIndex="1"
+                               style="-fx-background-color: #f9f9f9; -fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;"/>
 
-                <Label text="Teléfono:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtTelefono" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                    <Label text="Apellidos:" GridPane.rowIndex="1" GridPane.columnIndex="0"
+                           style="-fx-text-fill: #34495e; -fx-font-size: 14px;"/>
+                    <TextField fx:id="txtApellidos" GridPane.rowIndex="1" GridPane.columnIndex="1"
+                               style="-fx-background-color: #f9f9f9; -fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;"/>
 
-                <Label text="Fecha de Inicio:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                <DatePicker fx:id="dpFechaInicio" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                    <Label text="Teléfono:" GridPane.rowIndex="2" GridPane.columnIndex="0"
+                           style="-fx-text-fill: #34495e; -fx-font-size: 14px;"/>
+                    <TextField fx:id="txtTelefono" GridPane.rowIndex="2" GridPane.columnIndex="1"
+                               style="-fx-background-color: #f9f9f9; -fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;"/>
 
-                <Label text="Membresía:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                <ComboBox fx:id="cbMembresia" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
-            </GridPane>
+                    <Label text="Fecha de Inicio:" GridPane.rowIndex="3" GridPane.columnIndex="0"
+                           style="-fx-text-fill: #34495e; -fx-font-size: 14px;"/>
+                    <DatePicker fx:id="dpFechaInicio" GridPane.rowIndex="3" GridPane.columnIndex="1"
+                                style="-fx-border-radius: 8; -fx-background-radius: 8;"/>
 
-            <HBox spacing="20" alignment="CENTER">
-                <Button fx:id="btnSiguiente" text="Siguiente" onAction="#handleSiguiente" />
-                <Button fx:id="btnIrARenovaciones" text="Ir a Renovaciones" onAction="#handleIrARenovaciones" />
-            </HBox>
+                    <Label text="Membresía:" GridPane.rowIndex="4" GridPane.columnIndex="0"
+                           style="-fx-text-fill: #34495e; -fx-font-size: 14px;"/>
+                    <ComboBox fx:id="cbMembresia" GridPane.rowIndex="4" GridPane.columnIndex="1"
+                              style="-fx-border-radius: 8; -fx-background-radius: 8;"/>
+                </GridPane>
+
+                <HBox spacing="20" alignment="CENTER" style="-fx-padding: 20 0 0 0;">
+                    <Button fx:id="btnSiguiente" text="Siguiente" onAction="#handleSiguiente"
+                            style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 10 20;"/>
+                    <Button fx:id="btnIrARenovaciones" text="Ir a Renovaciones" onAction="#handleIrARenovaciones"
+                            style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 10 20;"/>
+                </HBox>
+            </VBox>
         </VBox>
     </center>
 </BorderPane>

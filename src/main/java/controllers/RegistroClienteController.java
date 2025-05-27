@@ -46,7 +46,7 @@ public class RegistroClienteController {
         }
 
         try (Connection conn = DatabaseUtil.getConnection()) {
-            String sql = "INSERT INTO clientes (nombres, apellidos, telefono, tipoMembresia, fechaInicio, fechaVencimiento) VALUES (?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO clientes (nombres, apellidos, telefono, tipoMembresia, fechaInicio, fecha_vencimiento) VALUES (?, ?, ?, ?, ?, ?)";
             PreparedStatement stmt = conn.prepareStatement(sql);
 
             stmt.setString(1, validarCampo(txtNombres.getText(), "Nombres"));

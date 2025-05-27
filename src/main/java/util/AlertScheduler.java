@@ -73,7 +73,7 @@ public class AlertScheduler implements Runnable {
                         rs.getString("nombres"),
                         rs.getString("telefono"),
                         rs.getString("tipoMembresia"),
-                        LocalDate.parse(rs.getString("fechaVencimiento"))
+                        LocalDate.parse(rs.getString("fecha_vencimiento"))
                 );
                 clientes.add(cliente);
             }
@@ -98,7 +98,7 @@ public class AlertScheduler implements Runnable {
             stmt.setDate(2, Date.valueOf(LocalDate.now()));
 
             // Determinar tipo de alerta según días restantes
-            long diasRestantes = LocalDate.now().until(cliente.getFechaVencimientoDate()).getDays();
+            long diasRestantes = LocalDate.now().until(cliente.getFecha_vencimientoDate()).getDays();
             String tipoAlerta = "Alerta a " + diasRestantes + " días";
 
             stmt.setString(3, tipoAlerta);
