@@ -51,6 +51,7 @@ public class DatabaseUtil {
                 "cliente_id INTEGER NOT NULL," +
                 "fecha_pago TEXT NOT NULL," +
                 "fecha_vencimiento TEXT," +
+                "tipo_membresia TEXT," +
                 "monto REAL NOT NULL," +
                 "FOREIGN KEY (cliente_id) REFERENCES clientes(id))";
 

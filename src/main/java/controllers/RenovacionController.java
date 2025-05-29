@@ -6,6 +6,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import models.Cliente;
+import models.PagoHistorial;
 import util.DatabaseUtil;
 
 import java.sql.*;
@@ -22,6 +23,11 @@ public class RenovacionController {
     @FXML private DatePicker dpFechaRenovacion;
     @FXML private TextField txtMonto;
 
+    @FXML private TableView<PagoHistorial> tablaHistorial;
+    @FXML private TableColumn<PagoHistorial, LocalDate> colFechaPago;
+    @FXML private TableColumn<PagoHistorial, String> colTipoMembresia;
+    @FXML private TableColumn<PagoHistorial, Double> colMonto;
+
     private final ObservableList<Cliente> clientes = FXCollections.observableArrayList();
 
     @FXML
@@ -35,6 +41,16 @@ public class RenovacionController {
         dpFechaRenovacion.setValue(LocalDate.now());
 
         cargarClientesProximos();
+
+        colFechaPago.setCellValueFactory(new PropertyValueFactory<>("fechaPago"));
+        colTipoMembresia.setCellValueFactory(new PropertyValueFactory<>("tipoMembresia"));
+        colMonto.setCellValueFactory(new PropertyValueFactory<>("monto"));
+
+        tablaClientes.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                cargarHistorialPagos(newVal.getTelefono());
+            }
+        });
     }
 
     private void cargarClientesProximos() {
@@ -151,5 +167,27 @@ public class RenovacionController {
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
         alert.showAndWait();
+    }
+
+    private void cargarHistorialPagos(String telefono) {
+        ObservableList<PagoHistorial> historial = FXCollections.observableArrayList();
+        String sql = "SELECT pagos.fecha_pago, pagos.tipo_membresia, pagos.monto FROM pagos JOIN clientes ON pagos.cliente_id = clientes.id WHERE clientes.telefono = ? ORDER BY pagos.fecha_pago DESC";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, telefono);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                historial.add(new PagoHistorial(
+                        LocalDate.parse(rs.getString("fecha_pago")),
+                        rs.getString("tipo_membresia"),
+                        rs.getDouble("monto")
+                ));
+            }
+            tablaHistorial.setItems(historial);
+        } catch (SQLException e) {
+            mostrarAlerta("Error", "No se pudo cargar historial: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

@@ -8,16 +8,16 @@
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controllers.RenovacionController">
     <center>
-        <VBox spacing="20" alignment="CENTER">
+        <VBox spacing="20" alignment="CENTER" style="-fx-padding: 20;">
             <Label text="Renovación de Membresías" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
 
-            <TableView fx:id="tablaClientes" prefHeight="300">
+            <TableView fx:id="tablaClientes" prefHeight="250">
                 <columns>
                     <TableColumn fx:id="colNombre" text="Nombre" prefWidth="150"/>
                     <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="100"/>
                     <TableColumn fx:id="colVence" text="Vence" prefWidth="100"/>
                     <TableColumn fx:id="colMembresia" text="Membresía" prefWidth="100"/>
-                    <TableColumn text="Membresía Actual" prefWidth="100">
+                    <TableColumn text="Membresía Actual" prefWidth="120">
                         <cellValueFactory><PropertyValueFactory property="tipoMembresia"/></cellValueFactory>
                     </TableColumn>
                     <TableColumn text="Días Restantes" prefWidth="100">
@@ -40,6 +40,16 @@
             </GridPane>
 
             <Button text="Renovar" fx:id="btnRenovar" onAction="#handleRenovar" style="-fx-font-size: 14px;"/>
+
+            <Label text="Historial de Pagos del Cliente" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+
+            <TableView fx:id="tablaHistorial" prefHeight="200">
+                <columns>
+                    <TableColumn fx:id="colFechaPago" text="Fecha de Pago" prefWidth="150"/>
+                    <TableColumn fx:id="colTipoMembresia" text="Tipo de Membresía" prefWidth="150"/>
+                    <TableColumn fx:id="colMonto" text="Monto" prefWidth="100"/>
+                </columns>
+            </TableView>
         </VBox>
     </center>
 </BorderPane>
