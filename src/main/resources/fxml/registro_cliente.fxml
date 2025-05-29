@@ -53,6 +53,11 @@
                            style="-fx-text-fill: #34495e; -fx-font-size: 14px;"/>
                     <ComboBox fx:id="cbMembresia" GridPane.rowIndex="4" GridPane.columnIndex="1"
                               style="-fx-border-radius: 8; -fx-background-radius: 8;"/>
+
+                    <Label text="Monto de Pago:" GridPane.rowIndex="5" GridPane.columnIndex="0"
+                           style="-fx-text-fill: #34495e; -fx-font-size: 14px;"/>
+                    <TextField fx:id="txtMontoPago" promptText="Monto de Pago" GridPane.rowIndex="5" GridPane.columnIndex="1"
+                               style="-fx-background-color: #f9f9f9; -fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;"/>
                 </GridPane>
 
                 <HBox spacing="20" alignment="CENTER" style="-fx-padding: 20 0 0 0;">

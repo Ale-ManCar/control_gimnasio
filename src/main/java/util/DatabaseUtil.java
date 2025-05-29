@@ -30,7 +30,8 @@ public class DatabaseUtil {
                 "telefono TEXT NOT NULL UNIQUE," +
                 "tipoMembresia TEXT NOT NULL," +
                 "fechaInicio TEXT NOT NULL," +
-                "fecha_vencimiento TEXT NOT NULL," +  // <-- cambio aquí
+                "fecha_vencimiento TEXT NOT NULL," +
+                "monto_pago REAL NOT NULL," +
                 "activo BOOLEAN DEFAULT TRUE)";
 
         String sqlAlertas = "CREATE TABLE IF NOT EXISTS alertas_enviadas (" +

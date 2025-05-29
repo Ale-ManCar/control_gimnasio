@@ -14,61 +14,97 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 
 public class RegistroClienteController {
-    @FXML private TextField txtNombres, txtApellidos, txtTelefono;
+
+    @FXML private TextField txtNombres, txtApellidos, txtTelefono, txtMontoPago;
     @FXML private DatePicker dpFechaInicio;
     @FXML private ComboBox<String> cbMembresia;
     @FXML private Button btnSiguiente;
-    @FXML private Button btnIrARenovaciones; // Nuevo botón para navegación
+    @FXML private Button btnIrARenovaciones;
 
     @FXML
     public void initialize() {
-        // Configuración inicial del ComboBox
         if (cbMembresia != null) {
             cbMembresia.getItems().clear();
             cbMembresia.getItems().addAll("1 Mes", "3 Meses", "6 Meses", "1 Año");
             cbMembresia.setValue("1 Mes");
         }
 
-        // Validación del teléfono
         txtTelefono.textProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal.matches("\\d*")) {
                 txtTelefono.setText(newVal.replaceAll("[^\\d]", ""));
+            }
+        });
+
+        txtMontoPago.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.matches("\\d*(\\.\\d{0,2})?")) {
+                txtMontoPago.setText(oldVal);
             }
         });
     }
 
     @FXML
     private void handleSiguiente() {
-        // Validación de campos
         if (cbMembresia.getValue() == null || dpFechaInicio.getValue() == null) {
             mostrarAlerta("Error", "Debe completar todos los campos");
             return;
         }
 
         try (Connection conn = DatabaseUtil.getConnection()) {
-            String sql = "INSERT INTO clientes (nombres, apellidos, telefono, tipoMembresia, fechaInicio, fecha_vencimiento) VALUES (?, ?, ?, ?, ?, ?)";
-            PreparedStatement stmt = conn.prepareStatement(sql);
+            conn.setAutoCommit(false); // Transacción
 
-            stmt.setString(1, validarCampo(txtNombres.getText(), "Nombres"));
-            stmt.setString(2, validarCampo(txtApellidos.getText(), "Apellidos"));
-            stmt.setString(3, validarCampo(txtTelefono.getText(), "Teléfono"));
-            stmt.setString(4, cbMembresia.getValue());
-            stmt.setString(5, dpFechaInicio.getValue().toString());
-            stmt.setString(6, calcularVencimiento(dpFechaInicio.getValue(), cbMembresia.getValue()).toString());
+            // Insertar cliente
+            String sqlCliente = "INSERT INTO clientes (nombres, apellidos, telefono, tipoMembresia, fechaInicio, fecha_vencimiento, monto_pago) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement stmtCliente = conn.prepareStatement(sqlCliente, PreparedStatement.RETURN_GENERATED_KEYS);
 
-            stmt.executeUpdate();
+            stmtCliente.setString(1, validarCampo(txtNombres.getText(), "Nombres"));
+            stmtCliente.setString(2, validarCampo(txtApellidos.getText(), "Apellidos"));
+            stmtCliente.setString(3, validarCampo(txtTelefono.getText(), "Teléfono"));
+            stmtCliente.setString(4, cbMembresia.getValue());
+            stmtCliente.setString(5, dpFechaInicio.getValue().toString());
+
+            LocalDate fechaVencimiento = calcularVencimiento(dpFechaInicio.getValue(), cbMembresia.getValue());
+            stmtCliente.setString(6, fechaVencimiento.toString());
+
+            String montoStr = validarCampo(txtMontoPago.getText(), "Monto de Pago");
+            double monto = Double.parseDouble(montoStr);
+            if (monto <= 0) {
+                mostrarAlerta("Error", "El monto de pago debe ser mayor a 0");
+                return;
+            }
+            stmtCliente.setDouble(7, monto);
+
+            stmtCliente.executeUpdate();
+
+            int clienteId = -1;
+            var rs = stmtCliente.getGeneratedKeys();
+            if (rs.next()) {
+                clienteId = rs.getInt(1);
+            }
+
+            if (clienteId != -1) {
+                String sqlPago = "INSERT INTO pagos (cliente_id, fecha_pago, fecha_vencimiento, monto) VALUES (?, ?, ?, ?)";
+                PreparedStatement stmtPago = conn.prepareStatement(sqlPago);
+                stmtPago.setInt(1, clienteId);
+                stmtPago.setString(2, LocalDate.now().toString());
+                stmtPago.setString(3, fechaVencimiento.toString());
+                stmtPago.setDouble(4, monto);
+                stmtPago.executeUpdate();
+            }
+
+            conn.commit();
             mostrarAlerta("Éxito", "Cliente registrado correctamente");
             limpiarCampos();
 
         } catch (SQLException e) {
-            mostrarAlerta("Error", "No se pudo registrar el cliente: " + e.getMessage());
+            mostrarAlerta("Error", "No se pudo registrar el cliente/pago: " + e.getMessage());
+        } catch (NumberFormatException e) {
+            mostrarAlerta("Error", "El monto de pago no es válido");
         }
     }
 
     @FXML
     private void handleIrARenovaciones() {
         try {
-            // Cargar la pantalla de renovaciones
             Parent root = FXMLLoader.load(getClass().getResource("/fxml/renovacion.fxml"));
             Stage stage = (Stage) btnIrARenovaciones.getScene().getWindow();
             stage.setScene(new Scene(root));
@@ -100,6 +136,7 @@ public class RegistroClienteController {
         txtNombres.clear();
         txtApellidos.clear();
         txtTelefono.clear();
+        txtMontoPago.clear();
         dpFechaInicio.setValue(null);
         cbMembresia.setValue("1 Mes");
     }

@@ -20,6 +20,7 @@ public class RenovacionController {
 
     @FXML private ComboBox<String> cbNuevaMembresia;
     @FXML private DatePicker dpFechaRenovacion;
+    @FXML private TextField txtMonto;
 
     private final ObservableList<Cliente> clientes = FXCollections.observableArrayList();
 
@@ -70,14 +71,24 @@ public class RenovacionController {
             return;
         }
 
-        if (cbNuevaMembresia.getValue() == null || dpFechaRenovacion.getValue() == null) {
-            mostrarAlerta("Error", "Selecciona tipo de membresía y fecha de renovación");
+        if (cbNuevaMembresia.getValue() == null || dpFechaRenovacion.getValue() == null || txtMonto.getText().isEmpty()) {
+            mostrarAlerta("Error", "Completa todos los campos: membresía, fecha y monto");
+            return;
+        }
+
+        double monto;
+        try {
+            monto = Double.parseDouble(txtMonto.getText());
+            if (monto < 0) throw new NumberFormatException();
+        } catch (NumberFormatException e) {
+            mostrarAlerta("Error", "Monto inválido. Ingresa un número válido positivo.");
             return;
         }
 
         try (Connection conn = DatabaseUtil.getConnection()) {
-            String sql = "UPDATE clientes SET tipoMembresia = ?, fecha_vencimiento = ? WHERE telefono = ?";
+            conn.setAutoCommit(false); // Transacción
 
+            String sql = "UPDATE clientes SET tipoMembresia = ?, fecha_vencimiento = ? WHERE telefono = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
 
             LocalDate nuevaFecha = calcularNuevaFecha(
@@ -92,8 +103,28 @@ public class RenovacionController {
             int filasActualizadas = stmt.executeUpdate();
 
             if (filasActualizadas > 0) {
-                mostrarAlerta("Éxito", "Membresía renovada hasta: " + nuevaFecha);
+                // Obtener el ID del cliente por el teléfono
+                String sqlId = "SELECT id FROM clientes WHERE telefono = ?";
+                PreparedStatement stmtId = conn.prepareStatement(sqlId);
+                stmtId.setString(1, seleccionado.getTelefono());
+                ResultSet rs = stmtId.executeQuery();
+
+                if (rs.next()) {
+                    int clienteId = rs.getInt("id");
+
+                    String sqlPago = "INSERT INTO pagos (cliente_id, fecha_pago, fecha_vencimiento, monto) VALUES (?, ?, ?, ?)";
+                    PreparedStatement stmtPago = conn.prepareStatement(sqlPago);
+                    stmtPago.setInt(1, clienteId);
+                    stmtPago.setString(2, LocalDate.now().toString());
+                    stmtPago.setString(3, nuevaFecha.toString());
+                    stmtPago.setDouble(4, monto);
+                    stmtPago.executeUpdate();
+                }
+
+                conn.commit();
+                mostrarAlerta("Éxito", "Membresía renovada y pago registrado.");
                 cargarClientesProximos();
+                txtMonto.clear();
             } else {
                 mostrarAlerta("Error", "No se pudo actualizar la membresía");
             }

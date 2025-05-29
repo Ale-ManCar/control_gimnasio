@@ -16,7 +16,7 @@
                     <TableColumn fx:id="colNombre" text="Nombre" prefWidth="150"/>
                     <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="100"/>
                     <TableColumn fx:id="colVence" text="Vence" prefWidth="100"/>
-                    <TableColumn fx:id="colMembresia" text="Membresía" prefWidth="100"></TableColumn>
+                    <TableColumn fx:id="colMembresia" text="Membresía" prefWidth="100"/>
                     <TableColumn text="Membresía Actual" prefWidth="100">
                         <cellValueFactory><PropertyValueFactory property="tipoMembresia"/></cellValueFactory>
                     </TableColumn>
@@ -34,6 +34,9 @@
 
                 <Label text="Fecha de Renovación:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                 <DatePicker fx:id="dpFechaRenovacion" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                <Label text="Monto:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <TextField fx:id="txtMonto" promptText="Ingrese el monto" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
             </GridPane>
 
             <Button text="Renovar" fx:id="btnRenovar" onAction="#handleRenovar" style="-fx-font-size: 14px;"/>
