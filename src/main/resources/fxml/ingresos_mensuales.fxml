@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.IngresosMensualesController"
+            prefHeight="800" prefWidth="600">
+
+    <top>
+        <Label text="Ingresos Mensuales del Año Actual"
+                style="-fx-font-size: 20px; -fx-padding: 15px"/>
+    </top>
+
+    <center>
+        <BarChart fx:id="barChart"
+                  title="Ingresos por Mes"
+                  categoryGap="15"
+                  barGap="5"
+                  animated="false">
+            <xAxis>
+                <CategoryAxis label="Mes"/>
+            </xAxis>
+            <yAxis>
+                <NumberAxis label="Monto ($)"/>
+            </yAxis>
+        </BarChart>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER" style="-fx-padding: 10px">
+            <Button text="Volver" onAction="#handleVolver"/>
+        </HBox>
+    </bottom>
+
+</AnchorPane>
