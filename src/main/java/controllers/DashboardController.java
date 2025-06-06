@@ -224,12 +224,17 @@ public class DashboardController implements Initializable {
 
         barChart.setOnMouseClicked(event -> {
             try {
+                // Cargar el FXML sin especificar controlador aquí
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/ingresos_mensuales.fxml"));
                 Parent root = loader.load();
-                Stage stage = (Stage) miniGrafico.getScene().getWindow();
-                stage.setScene(new Scene(root));
-                stage.setTitle("Ingresos Mensuales");
-                stage.show();
+
+                // Obtener el controlador después de cargar
+                IngresosMensualesController controller = loader.getController();
+
+                Stage nuevaVentana = new Stage();
+                nuevaVentana.setScene(new Scene(root));
+                nuevaVentana.setTitle("Ingresos Mensuales");
+                nuevaVentana.show();
             } catch (IOException e) {
                 e.printStackTrace();
                 lblMensaje.setText("Error al abrir ingresos mensuales.");
@@ -279,5 +284,9 @@ public class DashboardController implements Initializable {
             e.printStackTrace();
             lblMensaje.setText("No se pudo abrir el formulario de registro.");
         }
+    }
+
+    public void setIngresosChart(BarChart<String, Number> ingresosChart) {
+        this.ingresosChart = ingresosChart;
     }
 }
