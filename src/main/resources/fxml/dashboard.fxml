@@ -34,7 +34,7 @@
                 <AnchorPane fx:id="cardClientes" prefWidth="200" prefHeight="120" />
                 <AnchorPane fx:id="cardPagos" prefWidth="200" prefHeight="120" />
                 <AnchorPane fx:id="cardVencimientos" prefWidth="200" prefHeight="120" />
-                <AnchorPane fx:id="cardIngresos" prefWidth="200" prefHeight="120" onMouseClicked="#handleVerIngresos">
+                <AnchorPane fx:id="cardIngresos" prefWidth="200" prefHeight="120">
                     <VBox alignment="CENTER" spacing="5"
                           AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"
                           AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0">

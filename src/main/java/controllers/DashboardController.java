@@ -15,7 +15,6 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.scene.Node;
 import models.PagoMensual;
@@ -168,101 +167,49 @@ public class DashboardController implements Initializable {
     }
 
     private void cargarMiniGraficoIngresos() {
-        // Ejes
-        CategoryAxis xAxis = new CategoryAxis();
-        NumberAxis yAxis = new NumberAxis();
-        xAxis.setLabel("Mes");
-        yAxis.setLabel("Ingresos");
+        try {
+            // Configuración del mini gráfico
+            CategoryAxis xAxis = new CategoryAxis();
+            NumberAxis yAxis = new NumberAxis();
+            BarChart<String, Number> miniChart = new BarChart<>(xAxis, yAxis);
 
-        // Gráficos
-        BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
-        barChart.setLegendVisible(false);
-        barChart.setTitle(null);
-        barChart.setPrefHeight(90);
-        barChart.setVerticalGridLinesVisible(false);
-        barChart.setHorizontalGridLinesVisible(false);
-        barChart.setBarGap(2);
-        barChart.setCategoryGap(10);
-        barChart.setAnimated(false);
-        barChart.setStyle("-fx-background-color: transparent;");
+            // Estilo del mini gráfico
+            miniChart.setPrefHeight(90);
+            miniChart.setLegendVisible(false);
+            miniChart.setAnimated(false);
+            miniChart.setStyle("-fx-background-color: transparent;");
 
-        XYChart.Series<String, Number> datos = new XYChart.Series<>();
+            // Cargar datos
+            XYChart.Series<String, Number> series = new XYChart.Series<>();
+            List<PagoMensual> ingresos = DatabaseUtil.getIngresosMensuales();
 
-        String sql = "SELECT strftime('%m', fecha_pago) AS mes, SUM(monto) as total " +
-                "FROM pagos WHERE strftime('%Y', fecha_pago) = strftime('%Y', 'now') " +
-                "GROUP BY mes ORDER BY mes";
-
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                String mes = switch (rs.getString("mes")) {
-                    case "01" -> "Ene";
-                    case "02" -> "Feb";
-                    case "03" -> "Mar";
-                    case "04" -> "Abr";
-                    case "05" -> "May";
-                    case "06" -> "Jun";
-                    case "07" -> "Jul";
-                    case "08" -> "Ago";
-                    case "09" -> "Sep";
-                    case "10" -> "Oct";
-                    case "11" -> "Nov";
-                    case "12" -> "Dic";
-                    default -> "";
-                };
-                datos.getData().add(new XYChart.Data<>(mes, rs.getDouble("total")));
+            for (PagoMensual ingreso : ingresos) {
+                series.getData().add(new XYChart.Data<>(ingreso.getMes(), ingreso.getTotal()));
             }
+
+            miniChart.getData().add(series);
+
+            // Configurar el evento de clic
+            miniChart.setOnMouseClicked(event -> {
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/ingresos_mensuales.fxml"));
+                    Parent root = loader.load();
+                    Stage stage = new Stage();
+                    stage.setScene(new Scene(root));
+                    stage.setTitle("Ingresos Mensuales Detallados");
+                    stage.show();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    lblMensaje.setText("Error al abrir ventana de ingresos");
+                }
+            });
+
+            miniGrafico.getChildren().clear();
+            miniGrafico.getChildren().add(miniChart);
 
         } catch (SQLException e) {
             e.printStackTrace();
-            lblMensaje.setText("Error al cargar datos del gráfico de ingresos.");
-        }
-
-        barChart.getData().add(datos);
-
-        barChart.setOnMouseClicked(event -> {
-            try {
-                // Cargar el FXML sin especificar controlador aquí
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/ingresos_mensuales.fxml"));
-                Parent root = loader.load();
-
-                // Obtener el controlador después de cargar
-                IngresosMensualesController controller = loader.getController();
-
-                Stage nuevaVentana = new Stage();
-                nuevaVentana.setScene(new Scene(root));
-                nuevaVentana.setTitle("Ingresos Mensuales");
-                nuevaVentana.show();
-            } catch (IOException e) {
-                e.printStackTrace();
-                lblMensaje.setText("Error al abrir ingresos mensuales.");
-            }
-        });
-
-        miniGrafico.getChildren().add(barChart);
-    }
-
-    @FXML
-    private void handleVerIngresos(MouseEvent event) {
-        ingresosChart.getData().clear();
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Ingresos Mensuales");
-
-        try {
-            List<PagoMensual> ingresosMensuales = DatabaseUtil.getIngresosMensuales();
-
-            for (PagoMensual ingreso : ingresosMensuales) {
-                String mes = ingreso.getMes();
-                double total = ingreso.getTotal();
-                series.getData().add(new XYChart.Data<>(mes, total));
-            }
-
-            ingresosChart.getData().add(series);
-        } catch (SQLException e) {
-            e.printStackTrace(); // O muestra un alert al usuario
-            System.out.println("Error al obtener los ingresos mensuales: " + e.getMessage());
+            lblMensaje.setText("Error al cargar datos de ingresos");
         }
     }
 
@@ -284,9 +231,5 @@ public class DashboardController implements Initializable {
             e.printStackTrace();
             lblMensaje.setText("No se pudo abrir el formulario de registro.");
         }
-    }
-
-    public void setIngresosChart(BarChart<String, Number> ingresosChart) {
-        this.ingresosChart = ingresosChart;
     }
 }
