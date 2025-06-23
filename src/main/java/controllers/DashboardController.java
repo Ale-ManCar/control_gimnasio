@@ -6,18 +6,12 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.chart.BarChart;
-import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.scene.Node;
-import models.PagoMensual;
 import util.DatabaseUtil;
 import util.ReporteUtil;
 
@@ -27,37 +21,19 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.ResourceBundle;
 
 public class DashboardController implements Initializable {
 
-    @FXML
-    private AnchorPane cardClientes;
+    @FXML private AnchorPane cardClientes;
 
-    @FXML
-    private AnchorPane cardPagos;
+    @FXML private AnchorPane cardPagos;
 
-    @FXML
-    private AnchorPane cardVencimientos;
+    @FXML private AnchorPane cardVencimientos;
 
-    @FXML
-    private ListView<String> listaClientesProximosAVencer;
+    @FXML private ListView<String> listaClientesProximosAVencer;
 
-    @FXML
-    private VBox miniGrafico;
-
-    @FXML
-    private BarChart<String, Number> ingresosChart;
-
-    @FXML
-    private CategoryAxis xAxis;
-
-    @FXML
-    private NumberAxis yAxis;
-
-    @FXML
-    private Label lblMensaje;
+    @FXML private Label lblMensaje;
 
     private MetricCardController ctrlClientes;
     private MetricCardController ctrlPagos;
@@ -70,23 +46,28 @@ public class DashboardController implements Initializable {
             Pane paneClientes = loaderClientes.load();
             ctrlClientes = loaderClientes.getController();
             ctrlClientes.setTitulo("Clientes Activos");
+            paneClientes.prefWidthProperty().bind(cardClientes.widthProperty());
+            paneClientes.prefHeightProperty().bind(cardClientes.heightProperty());
             cardClientes.getChildren().add(paneClientes);
 
             FXMLLoader loaderPagos = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
             Pane panePagos = loaderPagos.load();
             ctrlPagos = loaderPagos.getController();
             ctrlPagos.setTitulo("Pagos Recibidos");
+            panePagos.prefWidthProperty().bind(cardPagos.widthProperty());
+            panePagos.prefHeightProperty().bind(cardPagos.heightProperty());
             cardPagos.getChildren().add(panePagos);
 
             FXMLLoader loaderVencimientos = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
             Pane paneVencimientos = loaderVencimientos.load();
             ctrlVencimientos = loaderVencimientos.getController();
             ctrlVencimientos.setTitulo("Próximos a Vencer");
+            paneVencimientos.prefWidthProperty().bind(cardVencimientos.widthProperty());
+            paneVencimientos.prefHeightProperty().bind(cardVencimientos.heightProperty());
             cardVencimientos.getChildren().add(paneVencimientos);
 
             cargarDatosTarjetas();
             cargarClientesProximosAVencer();
-            cargarMiniGraficoIngresos();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -166,50 +147,18 @@ public class DashboardController implements Initializable {
         }
     }
 
-    private void cargarMiniGraficoIngresos() {
+    @FXML
+    private void handleVerIngresosMensuales(ActionEvent event) {
         try {
-            // Configuración del mini gráfico
-            CategoryAxis xAxis = new CategoryAxis();
-            NumberAxis yAxis = new NumberAxis();
-            BarChart<String, Number> miniChart = new BarChart<>(xAxis, yAxis);
-
-            // Estilo del mini gráfico
-            miniChart.setPrefHeight(90);
-            miniChart.setLegendVisible(false);
-            miniChart.setAnimated(false);
-            miniChart.setStyle("-fx-background-color: transparent;");
-
-            // Cargar datos
-            XYChart.Series<String, Number> series = new XYChart.Series<>();
-            List<PagoMensual> ingresos = DatabaseUtil.getIngresosMensuales();
-
-            for (PagoMensual ingreso : ingresos) {
-                series.getData().add(new XYChart.Data<>(ingreso.getMes(), ingreso.getTotal()));
-            }
-
-            miniChart.getData().add(series);
-
-            // Configurar el evento de clic
-            miniChart.setOnMouseClicked(event -> {
-                try {
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/ingresos_mensuales.fxml"));
-                    Parent root = loader.load();
-                    Stage stage = new Stage();
-                    stage.setScene(new Scene(root));
-                    stage.setTitle("Ingresos Mensuales Detallados");
-                    stage.show();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    lblMensaje.setText("Error al abrir ventana de ingresos");
-                }
-            });
-
-            miniGrafico.getChildren().clear();
-            miniGrafico.getChildren().add(miniChart);
-
-        } catch (SQLException e) {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/ingresos_mensuales.fxml"));
+            Parent root = loader.load();
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Ingresos Mensuales Detallados");
+            stage.show();
+        } catch (IOException e) {
             e.printStackTrace();
-            lblMensaje.setText("Error al cargar datos de ingresos");
+            lblMensaje.setText("Error al abrir ingresos mensuales");
         }
     }
 
