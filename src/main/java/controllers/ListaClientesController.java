@@ -2,10 +2,12 @@ package controllers;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import models.Cliente;
 import util.DatabaseUtil;
 
@@ -20,7 +22,7 @@ import java.util.ResourceBundle;
 public class ListaClientesController implements Initializable {
 
     @FXML private TableView<Cliente> tablaClientes;
-    @FXML private TableColumn<Cliente, String> colNombre;
+    @FXML private TableColumn<Cliente, String> colNombres;
     @FXML private TableColumn<Cliente, String> colApellidos;
     @FXML private TableColumn<Cliente, String> colTelefono;
     @FXML private TableColumn<Cliente, String> colVencimiento;
@@ -30,10 +32,12 @@ public class ListaClientesController implements Initializable {
         configurarColumnas();
         cargarClientes();
         ajustarAnchoColumnas();
+        centrarContenidoCeldas();
+        centrarEncabezados();
     }
 
     private void configurarColumnas() {
-        colNombre.setCellValueFactory(new PropertyValueFactory<>("nombres"));
+        colNombres.setCellValueFactory(new PropertyValueFactory<>("nombres"));
         colApellidos.setCellValueFactory(new PropertyValueFactory<>("apellidos"));
         colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
         colVencimiento.setCellValueFactory(new PropertyValueFactory<>("fecha_vencimiento"));
@@ -61,7 +65,6 @@ public class ListaClientesController implements Initializable {
     }
 
     private void ajustarAnchoColumnas() {
-        // Ajustar dinámicamente el ancho de las columnas
         tablaClientes.widthProperty().addListener((obs, oldVal, newVal) -> {
             double anchoTotal = tablaClientes.getWidth();
             double anchoColumna = anchoTotal / tablaClientes.getColumns().size();
@@ -70,6 +73,45 @@ public class ListaClientesController implements Initializable {
                 columna.setPrefWidth(anchoColumna);
             }
         });
+    }
+
+    // Centrar el contenido de todas las celdas
+    private void centrarContenidoCeldas() {
+        centrarColumna(colNombres);
+        centrarColumna(colApellidos);
+        centrarColumna(colTelefono);
+        centrarColumna(colVencimiento);
+    }
+
+    // Método genérico para centrar una columna
+    private <T> void centrarColumna(TableColumn<Cliente, T> columna) {
+        columna.setCellFactory(new Callback<>() {
+            @Override
+            public TableCell<Cliente, T> call(TableColumn<Cliente, T> param) {
+                return new TableCell<>() {
+                    @Override
+                    protected void updateItem(T item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setText(null);
+                            setGraphic(null);
+                        } else {
+                            setText(item.toString());
+                            setStyle("-fx-alignment: CENTER;");
+                        }
+                    }
+                };
+            }
+        });
+    }
+
+    // Centrar los encabezados de las columnas
+    private void centrarEncabezados() {
+        tablaClientes.setStyle("-fx-font-size: 14px;");
+        colNombres.setStyle("-fx-alignment: CENTER;");
+        colApellidos.setStyle("-fx-alignment: CENTER;");
+        colTelefono.setStyle("-fx-alignment: CENTER;");
+        colVencimiento.setStyle("-fx-alignment: CENTER;");
     }
 
     @FXML
