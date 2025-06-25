@@ -25,12 +25,15 @@ public class Cliente {
 
     // Constructor alternativo sin tipoMembresia
     public Cliente(String nombres, String telefono, LocalDate fecha_vencimiento) {
-        this(nombres, telefono, "No definida", fecha_vencimiento);
+        this(nombres, telefono, "No definido", fecha_vencimiento);
     }
 
     // Getters para JavaFX
     public StringProperty nombresProperty() { return nombres; }
     public StringProperty telefonoProperty() { return telefono; }
+
+    //public StringProperty emailProperty() { return email; }
+
     public StringProperty fechaVencimientoProperty() { return fecha_vencimiento; }
     public StringProperty tipoMembresiaProperty() { return tipoMembresia; }
     public IntegerProperty diasRestantesProperty() { return diasRestantes; }

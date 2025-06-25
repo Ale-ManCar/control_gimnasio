@@ -50,6 +50,10 @@ public class DashboardController implements Initializable {
             paneClientes.prefHeightProperty().bind(cardClientes.heightProperty());
             cardClientes.getChildren().add(paneClientes);
 
+            paneClientes.setOnMouseClicked(event -> {
+                abrirListaClientes();
+            });
+
             FXMLLoader loaderPagos = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
             Pane panePagos = loaderPagos.load();
             ctrlPagos = loaderPagos.getController();
@@ -72,6 +76,21 @@ public class DashboardController implements Initializable {
         } catch (Exception e) {
             e.printStackTrace();
             lblMensaje.setText("Error al inicializar el panel.");
+        }
+    }
+
+    //  Método para abrir la lista de clientes, dando click
+    private void abrirListaClientes() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/lista_clientes.fxml"));
+            Parent root = loader.load();
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Lista de Clientes Activos");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            lblMensaje.setText("Error al abrir lista de clientes");
         }
     }
 

@@ -11,7 +11,8 @@
              -fx-border-radius: 10px;
              -fx-background-radius: 10px;
              -fx-padding: 15px;
-             -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 6, 0.3, 0, 2);"
+             -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 6, 0.3, 0, 2);
+             -fx-cursor: hand;"
       spacing="5" alignment="CENTER"
       prefWidth="200" prefHeight="120">
 
