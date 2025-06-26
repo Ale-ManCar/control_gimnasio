@@ -125,9 +125,12 @@ public class DashboardController implements Initializable {
                         if (empty || item == null) {
                             setText(null);
                             setGraphic(null);
+                            setStyle("");
                         } else {
                             setText(item.toString());
                             setAlignment(Pos.CENTER);
+                            // FORZAR TEXTO NEGRO EN TODAS LAS CELDAS
+                            setStyle("-fx-text-fill: black;");
                         }
                     }
                 };
@@ -227,21 +230,27 @@ public class DashboardController implements Initializable {
                         setStyle("");
                     } else {
                         int dias = cliente.getDiasRestantes();
+                        String baseStyle = "";
 
                         if (dias >= 5 && dias <= 7) {
                             // Verde: 5-7 días
-                            setStyle("-fx-background-color: #e8f5e9;");
+                            baseStyle = "-fx-background-color: #e8f5e9;";
                         } else if (dias >= 3 && dias <= 4) {
                             // Amarillo: 3-4 días
-                            setStyle("-fx-background-color: #fff9c4;");
+                            baseStyle = "-fx-background-color: #fff9c4;";
                         } else if (dias >= 0 && dias <= 2) {
                             // Rojo: 0-2 días (incluye hoy)
-                            setStyle("-fx-background-color: #ffebee;");
+                            baseStyle = "-fx-background-color: #ffebee;";
                         } else if (dias < 0) {
                             // Vencidos
-                            setStyle("-fx-background-color: #ffcdd2;");
+                            baseStyle = "-fx-background-color: #ffcdd2;";
+                        }
+
+                        // Aplicar negro y negrita solo si está seleccionado
+                        if (isSelected()) {
+                            setStyle(baseStyle + " -fx-font-weight: bold; -fx-text-fill: black;");
                         } else {
-                            setStyle("");
+                            setStyle(baseStyle + " -fx-text-fill: black;");
                         }
                     }
                 }
