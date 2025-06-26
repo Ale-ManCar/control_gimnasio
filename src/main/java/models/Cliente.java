@@ -13,7 +13,7 @@ public class Cliente {
     private final StringProperty telefono;
     private final StringProperty fecha_vencimiento;
     private final StringProperty tipoMembresia;
-    private final IntegerProperty diasRestantes;
+    private final IntegerProperty diasRestantes = new SimpleIntegerProperty(0);
 
     // Constructor completo con apellidos
     public Cliente(String nombres, String apellidos, String telefono, String tipoMembresia, LocalDate fecha_vencimiento) {
@@ -22,7 +22,7 @@ public class Cliente {
         this.telefono = new SimpleStringProperty(telefono);
         this.tipoMembresia = new SimpleStringProperty(tipoMembresia);
         this.fecha_vencimiento = new SimpleStringProperty(fecha_vencimiento.toString());
-        this.diasRestantes = new SimpleIntegerProperty(LocalDate.now().until(fecha_vencimiento).getDays());
+        this.diasRestantes.set(LocalDate.now().until(fecha_vencimiento).getDays());
     }
 
     // Constructor alternativo con apellidos pero sin tipoMembresia
@@ -37,7 +37,7 @@ public class Cliente {
 
     // Getters para propiedades JavaFX
     public StringProperty nombresProperty() { return nombres; }
-    public StringProperty apellidosProperty() { return apellidos; } // Nuevo getter para apellidos
+    public StringProperty apellidosProperty() { return apellidos; }
     public StringProperty telefonoProperty() { return telefono; }
     public StringProperty fechaVencimientoProperty() { return fecha_vencimiento; }
     public StringProperty tipoMembresiaProperty() { return tipoMembresia; }
@@ -45,11 +45,21 @@ public class Cliente {
 
     // Getters normales
     public String getNombres() { return nombres.get(); }
-    public String getApellidos() { return apellidos.get(); } // Nuevo getter
+    public String getApellidos() { return apellidos.get(); }
     public String getTelefono() { return telefono.get(); }
     public String getTipoMembresia() { return tipoMembresia.get(); }
     public String getFecha_vencimiento() { return fecha_vencimiento.get(); }
     public int getDiasRestantes() { return diasRestantes.get(); }
+
+    // Método para obtener nombre completo
+    public String getNombreCompleto() {
+        return getNombres() + " " + getApellidos();
+    }
+
+    // Método para establecer días restantes
+    public void setDiasRestantes(int dias) {
+        this.diasRestantes.set(dias);
+    }
 
     // Método para obtener fecha como LocalDate
     public LocalDate getFecha_vencimientoDate() {
