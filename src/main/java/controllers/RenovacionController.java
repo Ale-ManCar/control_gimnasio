@@ -11,70 +11,116 @@ import util.DatabaseUtil;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RenovacionController {
+    // Controles UI
     @FXML private TableView<Cliente> tablaClientes;
-    @FXML private TableColumn<Cliente, String> colNombre;
-    @FXML private TableColumn<Cliente, String> colTelefono;
-    @FXML private TableColumn<Cliente, String> colVence;
-    @FXML private TableColumn<Cliente, String> colMembresia;
-
     @FXML private ComboBox<String> cbNuevaMembresia;
     @FXML private DatePicker dpFechaRenovacion;
     @FXML private TextField txtMonto;
-
     @FXML private TableView<PagoHistorial> tablaHistorial;
-    @FXML private TableColumn<PagoHistorial, LocalDate> colFechaPago;
-    @FXML private TableColumn<PagoHistorial, String> colTipoMembresia;
-    @FXML private TableColumn<PagoHistorial, Double> colMonto;
+    @FXML private Button btnAnterior;
+    @FXML private Button btnSiguiente;
+    @FXML private Label lblPagina;
 
-    private final ObservableList<Cliente> clientes = FXCollections.observableArrayList();
+    // Datos
+    private final ObservableList<Cliente> todosClientes = FXCollections.observableArrayList();
+    private List<Cliente> clientesPaginados = new ArrayList<>();
+    private int paginaActual = 1;
+    private int clientesPorPagina = 8;
+    private int totalPaginas = 1;
 
     @FXML
     public void initialize() {
-        colNombre.setCellValueFactory(new PropertyValueFactory<>("nombres"));
-        colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
-        colVence.setCellValueFactory(new PropertyValueFactory<>("fecha_vencimiento"));
-        colMembresia.setCellValueFactory(new PropertyValueFactory<>("tipoMembresia"));
+        try {
+            // Configuración inicial
+            cbNuevaMembresia.getItems().addAll("1 Mes", "3 Meses", "6 Meses", "1 Año");
+            dpFechaRenovacion.setValue(LocalDate.now());
 
-        cbNuevaMembresia.getItems().addAll("1 Mes", "3 Meses", "6 Meses", "1 Año");
-        dpFechaRenovacion.setValue(LocalDate.now());
+            // Cargar clientes
+            cargarTodosClientes();
+            actualizarTablaClientes();
 
-        cargarClientesProximos();
+            // Configurar paginación
+            actualizarControlesPaginacion();
 
-        colFechaPago.setCellValueFactory(new PropertyValueFactory<>("fechaPago"));
-        colTipoMembresia.setCellValueFactory(new PropertyValueFactory<>("tipoMembresia"));
-        colMonto.setCellValueFactory(new PropertyValueFactory<>("monto"));
+            // Configurar listeners
+            tablaClientes.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) {
+                    cargarHistorialPagos(newVal.getTelefono());
+                }
+            });
 
-        tablaClientes.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                cargarHistorialPagos(newVal.getTelefono());
-            }
-        });
+        } catch (Exception e) {
+            mostrarAlerta("Error Crítico", "No se pudo cargar la pantalla: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
-    private void cargarClientesProximos() {
-        String sql = "SELECT nombres, telefono, tipoMembresia, fecha_vencimiento FROM clientes " +
+    private void cargarTodosClientes() {
+        String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento FROM clientes " +
                 "WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days')";
 
         try (Connection conn = DatabaseUtil.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
-            clientes.clear();
+            todosClientes.clear();
             while (rs.next()) {
-                clientes.add(new Cliente(
+                todosClientes.add(new Cliente(
                         rs.getString("nombres"),
+                        rs.getString("apellidos"),
                         rs.getString("telefono"),
                         rs.getString("tipoMembresia"),
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 ));
             }
-            tablaClientes.setItems(clientes);
+
+            // Calcular paginación
+            totalPaginas = (int) Math.ceil((double) todosClientes.size() / clientesPorPagina);
+            if (totalPaginas == 0) totalPaginas = 1;
 
         } catch (SQLException e) {
-            mostrarAlerta("Error", "Error al cargar clientes: " + e.getMessage());
+            mostrarAlerta("Error de BD", "Error al cargar clientes: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private void actualizarTablaClientes() {
+        int inicio = (paginaActual - 1) * clientesPorPagina;
+        int fin = Math.min(inicio + clientesPorPagina, todosClientes.size());
+
+        if (inicio < todosClientes.size()) {
+            clientesPaginados = todosClientes.subList(inicio, fin);
+            tablaClientes.setItems(FXCollections.observableArrayList(clientesPaginados));
+        } else {
+            tablaClientes.setItems(FXCollections.observableArrayList());
+        }
+    }
+
+    private void actualizarControlesPaginacion() {
+        lblPagina.setText("Página " + paginaActual + " de " + totalPaginas);
+        btnAnterior.setDisable(paginaActual <= 1);
+        btnSiguiente.setDisable(paginaActual >= totalPaginas);
+    }
+
+    @FXML
+    private void paginaAnterior() {
+        if (paginaActual > 1) {
+            paginaActual--;
+            actualizarTablaClientes();
+            actualizarControlesPaginacion();
+        }
+    }
+
+    @FXML
+    private void paginaSiguiente() {
+        if (paginaActual < totalPaginas) {
+            paginaActual++;
+            actualizarTablaClientes();
+            actualizarControlesPaginacion();
         }
     }
 
@@ -102,7 +148,7 @@ public class RenovacionController {
         }
 
         try (Connection conn = DatabaseUtil.getConnection()) {
-            conn.setAutoCommit(false); // Transacción
+            conn.setAutoCommit(false);
 
             String sql = "UPDATE clientes SET tipoMembresia = ?, fecha_vencimiento = ? WHERE telefono = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
@@ -119,7 +165,7 @@ public class RenovacionController {
             int filasActualizadas = stmt.executeUpdate();
 
             if (filasActualizadas > 0) {
-                // Obtener el ID del cliente por el teléfono
+                // Obtener ID del cliente
                 String sqlId = "SELECT id FROM clientes WHERE telefono = ?";
                 PreparedStatement stmtId = conn.prepareStatement(sqlId);
                 stmtId.setString(1, seleccionado.getTelefono());
@@ -139,14 +185,15 @@ public class RenovacionController {
 
                 conn.commit();
                 mostrarAlerta("Éxito", "Membresía renovada y pago registrado.");
-                cargarClientesProximos();
+                cargarTodosClientes();
+                actualizarTablaClientes();
                 txtMonto.clear();
             } else {
                 mostrarAlerta("Error", "No se pudo actualizar la membresía");
             }
 
         } catch (SQLException e) {
-            mostrarAlerta("Error", "Error en base de datos: " + e.getMessage());
+            mostrarAlerta("Error de BD", "Error en base de datos: " + e.getMessage());
             e.printStackTrace();
         }
     }
