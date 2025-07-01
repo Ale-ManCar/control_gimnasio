@@ -107,6 +107,24 @@ public class DatabaseUtil {
         }
     }
 
+    public static double obtenerTotalPagosDelMesActual() {
+        double total = 0.0;
+        String sql = "SELECT SUM(monto) AS total FROM pagos WHERE strftime('%Y-%m', fecha_pago) = strftime('%Y-%m', 'now')";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            if (rs.next()) {
+                total = rs.getDouble("total");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return total;
+    }
+
     public static void testConnection() {
         try (Connection conn = getConnection()) {
             System.out.println("✅ Conexión exitosa a: " + URL);

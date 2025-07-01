@@ -156,11 +156,8 @@ public class DashboardController implements Initializable {
     private void cargarDatosTarjetas() {
         // Clientes activos
         String sqlClientes = "SELECT COUNT(*) AS total FROM clientes WHERE activo = 1";
-        // Pagos recibidos
-        String sqlPagos = "SELECT COUNT(*) AS total FROM pagos WHERE strftime('%Y-%m', fecha_pago) = strftime('%Y-%m', 'now')";
         // Clientes próximos a vencer (7 días)
-        String sqlVencimientos = "SELECT COUNT(*) AS total FROM clientes " +
-                "WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days')";
+        String sqlVencimientos = "SELECT COUNT(*) AS total FROM clientes " + "WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days')";
 
         try (Connection conn = DatabaseUtil.getConnection()) {
             // Clientes activos
@@ -171,12 +168,9 @@ public class DashboardController implements Initializable {
                 }
             }
             // Pagos recibidos
-            try (PreparedStatement ps = conn.prepareStatement(sqlPagos);
-                 ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    ctrlPagos.setValor(rs.getString("total"));
-                }
-            }
+            double totalPagos = DatabaseUtil.obtenerTotalPagosDelMesActual();
+            ctrlPagos.setValor(String.format("$ %.2f", totalPagos));
+
             // Próximos a vencer
             try (PreparedStatement ps = conn.prepareStatement(sqlVencimientos);
                  ResultSet rs = ps.executeQuery()) {
