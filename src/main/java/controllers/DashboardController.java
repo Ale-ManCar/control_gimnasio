@@ -46,6 +46,7 @@ public class DashboardController implements Initializable {
     @FXML private TableColumn<Cliente, String> colTelefono;
     @FXML private TableColumn<Cliente, String> colVencimiento;
     @FXML private TableColumn<Cliente, Integer> colDiasRestantes;
+    @FXML private TableColumn<Cliente, Void> colAlerta;  // Cambiado a Void
 
     private MetricCardController ctrlClientes;
     private MetricCardController ctrlPagos;
@@ -60,37 +61,31 @@ public class DashboardController implements Initializable {
             colVencimiento.setCellValueFactory(new PropertyValueFactory<>("fecha_vencimiento"));
             colDiasRestantes.setCellValueFactory(new PropertyValueFactory<>("diasRestantes"));
 
-            // Centrar contenido en todas las columnas (celdas y encabezados)
+            // Configurar columna de alerta
+            colAlerta.setCellFactory(column -> new TableCell<Cliente, Void>() {
+                private final Label warningIcon = new Label("⚠");
+
+                {
+                    warningIcon.setStyle("-fx-text-fill: #d32f2f; -fx-font-weight: bold;");
+                }
+
+                @Override
+                protected void updateItem(Void item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty) {
+                        setGraphic(null);
+                    } else {
+                        Cliente cliente = getTableView().getItems().get(getIndex());
+                        setGraphic(cliente.getDiasRestantes() <= 3 ? warningIcon : null);
+                    }
+                }
+            });
+
+            // Centrar contenido en todas las columnas
             centrarContenidoColumnas();
 
             // Inicializar tarjetas de métricas
-            FXMLLoader loaderClientes = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
-            Pane paneClientes = loaderClientes.load();
-            ctrlClientes = loaderClientes.getController();
-            ctrlClientes.setTitulo("Clientes Activos");
-            paneClientes.prefWidthProperty().bind(cardClientes.widthProperty());
-            paneClientes.prefHeightProperty().bind(cardClientes.heightProperty());
-            cardClientes.getChildren().add(paneClientes);
-
-            paneClientes.setOnMouseClicked(event -> {
-                abrirListaClientes();
-            });
-
-            FXMLLoader loaderPagos = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
-            Pane panePagos = loaderPagos.load();
-            ctrlPagos = loaderPagos.getController();
-            ctrlPagos.setTitulo("Pagos Recibidos");
-            panePagos.prefWidthProperty().bind(cardPagos.widthProperty());
-            panePagos.prefHeightProperty().bind(cardPagos.heightProperty());
-            cardPagos.getChildren().add(panePagos);
-
-            FXMLLoader loaderVencimientos = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
-            Pane paneVencimientos = loaderVencimientos.load();
-            ctrlVencimientos = loaderVencimientos.getController();
-            ctrlVencimientos.setTitulo("Próximos a Vencer");
-            paneVencimientos.prefWidthProperty().bind(cardVencimientos.widthProperty());
-            paneVencimientos.prefHeightProperty().bind(cardVencimientos.heightProperty());
-            cardVencimientos.getChildren().add(paneVencimientos);
+            inicializarTarjetasMetricas();
 
             cargarDatosTarjetas();
             cargarClientesProximosAVencer();
@@ -101,44 +96,60 @@ public class DashboardController implements Initializable {
         }
     }
 
-    // Método para centrar contenido en todas las columnas (celdas y encabezados)
+    private void inicializarTarjetasMetricas() throws IOException {
+        FXMLLoader loaderClientes = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
+        Pane paneClientes = loaderClientes.load();
+        ctrlClientes = loaderClientes.getController();
+        ctrlClientes.setTitulo("Clientes Activos");
+        paneClientes.prefWidthProperty().bind(cardClientes.widthProperty());
+        paneClientes.prefHeightProperty().bind(cardClientes.heightProperty());
+        cardClientes.getChildren().add(paneClientes);
+        paneClientes.setOnMouseClicked(event -> abrirListaClientes());
+
+        FXMLLoader loaderPagos = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
+        Pane panePagos = loaderPagos.load();
+        ctrlPagos = loaderPagos.getController();
+        ctrlPagos.setTitulo("Pagos Recibidos");
+        panePagos.prefWidthProperty().bind(cardPagos.widthProperty());
+        panePagos.prefHeightProperty().bind(cardPagos.heightProperty());
+        cardPagos.getChildren().add(panePagos);
+
+        FXMLLoader loaderVencimientos = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
+        Pane paneVencimientos = loaderVencimientos.load();
+        ctrlVencimientos = loaderVencimientos.getController();
+        ctrlVencimientos.setTitulo("Próximos a Vencer");
+        paneVencimientos.prefWidthProperty().bind(cardVencimientos.widthProperty());
+        paneVencimientos.prefHeightProperty().bind(cardVencimientos.heightProperty());
+        cardVencimientos.getChildren().add(paneVencimientos);
+    }
+
     private void centrarContenidoColumnas() {
         centrarColumna(colCliente);
         centrarColumna(colTelefono);
         centrarColumna(colVencimiento);
         centrarColumna(colDiasRestantes);
+        colAlerta.setStyle("-fx-alignment: CENTER;");
     }
 
-    // Método genérico para centrar contenido
     private <T> void centrarColumna(TableColumn<Cliente, T> columna) {
-        // Centrar encabezado
         columna.setStyle("-fx-alignment: CENTER;");
-
-        // Centrar contenido de celdas
-        columna.setCellFactory(new Callback<TableColumn<Cliente, T>, TableCell<Cliente, T>>() {
+        columna.setCellFactory(column -> new TableCell<Cliente, T>() {
             @Override
-            public TableCell<Cliente, T> call(TableColumn<Cliente, T> param) {
-                return new TableCell<Cliente, T>() {
-                    @Override
-                    protected void updateItem(T item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (empty || item == null) {
-                            setText(null);
-                            setGraphic(null);
-                            setStyle("");
-                        } else {
-                            setText(item.toString());
-                            setAlignment(Pos.CENTER);
-                            // FORZAR TEXTO NEGRO EN TODAS LAS CELDAS
-                            setStyle("-fx-text-fill: black;");
-                        }
-                    }
-                };
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                    setStyle("");
+                } else {
+                    setText(item.toString());
+                    setAlignment(Pos.CENTER);
+                    setStyle("-fx-text-fill: black;");
+                }
             }
         });
     }
 
-    // Método para abrir la lista de clientes
     private void abrirListaClientes() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/lista_clientes.fxml"));
@@ -154,24 +165,22 @@ public class DashboardController implements Initializable {
     }
 
     private void cargarDatosTarjetas() {
-        // Clientes activos
-        String sqlClientes = "SELECT COUNT(*) AS total FROM clientes WHERE activo = 1";
-        // Clientes próximos a vencer (7 días)
-        String sqlVencimientos = "SELECT COUNT(*) AS total FROM clientes " + "WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days')";
-
         try (Connection conn = DatabaseUtil.getConnection()) {
             // Clientes activos
+            String sqlClientes = "SELECT COUNT(*) AS total FROM clientes WHERE activo = 1";
             try (PreparedStatement ps = conn.prepareStatement(sqlClientes);
                  ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     ctrlClientes.setValor(rs.getString("total"));
                 }
             }
+
             // Pagos recibidos
             double totalPagos = DatabaseUtil.obtenerTotalPagosDelMesActual();
             ctrlPagos.setValor(String.format("$ %.2f", totalPagos));
 
             // Próximos a vencer
+            String sqlVencimientos = "SELECT COUNT(*) AS total FROM clientes WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days')";
             try (PreparedStatement ps = conn.prepareStatement(sqlVencimientos);
                  ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -184,10 +193,8 @@ public class DashboardController implements Initializable {
         }
     }
 
-    // Método con nuevos rangos de colores
     private void cargarClientesProximosAVencer() {
         ObservableList<Cliente> clientes = FXCollections.observableArrayList();
-        // Solo próximos 7 días
         String sql = "SELECT nombres, apellidos, telefono, fecha_vencimiento, " +
                 "(julianday(fecha_vencimiento) - julianday(date('now'))) AS dias_restantes " +
                 "FROM clientes " +
@@ -199,62 +206,22 @@ public class DashboardController implements Initializable {
              ResultSet rs = stmt.executeQuery()) {
 
             boolean hayClientes = false;
-
             while (rs.next()) {
                 hayClientes = true;
-                String nombres = rs.getString("nombres");
-                String apellidos = rs.getString("apellidos");
-                String telefono = rs.getString("telefono");
-                String fechaVenc = rs.getString("fecha_vencimiento");
-                int diasRestantes = rs.getInt("dias_restantes");
-
-                Cliente cliente = new Cliente(nombres, apellidos, telefono, LocalDate.parse(fechaVenc));
-                cliente.setDiasRestantes(diasRestantes);
+                Cliente cliente = new Cliente(
+                        rs.getString("nombres"),
+                        rs.getString("apellidos"),
+                        rs.getString("telefono"),
+                        LocalDate.parse(rs.getString("fecha_vencimiento"))
+                );
+                cliente.setDiasRestantes(rs.getInt("dias_restantes"));
                 clientes.add(cliente);
             }
 
             tablaClientesProximosAVencer.setItems(clientes);
+            configurarEstilosFilas();
 
-            // Nuevos rangos de colores según especificación
-            tablaClientesProximosAVencer.setRowFactory(tv -> new TableRow<Cliente>() {
-                @Override
-                protected void updateItem(Cliente cliente, boolean empty) {
-                    super.updateItem(cliente, empty);
-                    if (cliente == null || empty) {
-                        setStyle("");
-                    } else {
-                        int dias = cliente.getDiasRestantes();
-                        String baseStyle = "";
-
-                        if (dias >= 5 && dias <= 7) {
-                            // Verde: 5-7 días
-                            baseStyle = "-fx-background-color: #e8f5e9;";
-                        } else if (dias >= 3 && dias <= 4) {
-                            // Amarillo: 3-4 días
-                            baseStyle = "-fx-background-color: #fff9c4;";
-                        } else if (dias >= 0 && dias <= 2) {
-                            // Rojo: 0-2 días (incluye hoy)
-                            baseStyle = "-fx-background-color: #ffebee;";
-                        } else if (dias < 0) {
-                            // Vencidos
-                            baseStyle = "-fx-background-color: #ffcdd2;";
-                        }
-
-                        // Aplicar negro y negrita solo si está seleccionado
-                        if (isSelected()) {
-                            setStyle(baseStyle + " -fx-font-weight: bold; -fx-text-fill: black;");
-                        } else {
-                            setStyle(baseStyle + " -fx-text-fill: black;");
-                        }
-                    }
-                }
-            });
-
-            if (!hayClientes) {
-                lblMensaje.setText("No hay clientes próximos a vencer en los próximos 7 días.");
-            } else {
-                lblMensaje.setText("");
-            }
+            lblMensaje.setText(hayClientes ? "" : "No hay clientes próximos a vencer en los próximos 7 días.");
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -262,7 +229,35 @@ public class DashboardController implements Initializable {
         }
     }
 
-    // Resto de métodos iguales...
+    private void configurarEstilosFilas() {
+        tablaClientesProximosAVencer.setRowFactory(tv -> new TableRow<Cliente>() {
+            @Override
+            protected void updateItem(Cliente cliente, boolean empty) {
+                super.updateItem(cliente, empty);
+                if (cliente == null || empty) {
+                    setStyle("");
+                } else {
+                    int dias = cliente.getDiasRestantes();
+                    String baseStyle = "";
+
+                    if (dias >= 5 && dias <= 7) {
+                        baseStyle = "-fx-background-color: #e8f5e9;"; // Verde
+                    } else if (dias >= 3 && dias <= 4) {
+                        baseStyle = "-fx-background-color: #fff3e0;"; // Amarillo
+                    } else if (dias >= 0 && dias <= 3) {
+                        baseStyle = "-fx-background-color: #ffebee;"; // Rojo
+                    } else if (dias < 0) {
+                        baseStyle = "-fx-background-color: #ffcdd2;"; // Vencidos
+                    }
+
+                    setStyle(baseStyle + (isSelected() ?
+                            " -fx-font-weight: bold; -fx-text-fill: black;" :
+                            " -fx-text-fill: black;"));
+                }
+            }
+        });
+    }
+
     @FXML
     private void handleVerIngresosMensuales(ActionEvent event) {
         try {
@@ -287,7 +282,6 @@ public class DashboardController implements Initializable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/registro_cliente.fxml"));
             Parent root = loader.load();
-
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Registro de Cliente");
