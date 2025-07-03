@@ -15,8 +15,8 @@
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controllers.DashboardController"
-            prefWidth="900" prefHeight="600"
-            style="-fx-background-color: #f9f9f9">
+            prefWidth="1100" prefHeight="800"
+            style="-fx-background-color: #f9f9f9"> <!-- 900 600 -->
 
     <!-- TÍTULO SUPERIOR -->
     <top>
@@ -27,7 +27,7 @@
 
     <!-- CONTENIDO CENTRAL -->
     <center>
-        <VBox spacing="20" alignment="TOP_CENTER">
+        <VBox spacing="20" alignment="TOP_CENTER" prefWidth="1100">
             <padding>
                 <Insets top="20" right="20" bottom="20" left="20"/>
             </padding>
@@ -43,26 +43,28 @@
             <Label text="Clientes Próximos a Vencer"
                    style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-padding: 10 0 5 0; -fx-alignment: CENTER;" />
 
-            <TableView fx:id="tablaClientesProximosAVencer" prefHeight="200" style="-fx-alignment: CENTER; -fx-fit-to-height: true; -fx-fit-to-width: true;">
+            <TableView fx:id="tablaClientesProximosAVencer" prefHeight="400" style="-fx-alignment: CENTER; -fx-fit-to-height: true; -fx-fit-to-width: true; ">
                 <columns>
                     <!-- Ajustamos prefWidth para ocupar todo el espacio disponible -->
-                    <TableColumn fx:id="colAlerta" prefWidth="40" sortable="false" resizable="false">
-                        <cellFactory>
-                            <PropertyValueFactory property="diasRestantes" />
-                        </cellFactory>
-                        <style>
-                            -fx-aligment: CENTER;
+                    <TableColumn fx:id="colAlerta" prefWidth="50" sortable="false" resizable="false"> <!-- 40 -->
+                        <style><![CDATA[
+                            -fx-alignment: CENTER;
                             -fx-padding: 0 5 0 0;
-                        </style>
+                        ]]></style>
                     </TableColumn>
                     <TableColumn text="Cliente" prefWidth="250" fx:id="colCliente"
-                                 style="-fx-alignment: CENTER; -fx-text-alignment: center;" />
+                                 style="-fx-alignment: CENTER; -fx-text-alignment: center;" /> <!-- 250 -->
                     <TableColumn text="Teléfono" prefWidth="150" fx:id="colTelefono"
                                  style="-fx-alignment: CENTER; -fx-text-alignment: center;" />
                     <TableColumn text="Vencimiento" prefWidth="150" fx:id="colVencimiento"
                                  style="-fx-alignment: CENTER; -fx-text-alignment: center;" />
                     <TableColumn text="Días Restantes" prefWidth="150" fx:id="colDiasRestantes"
                                  style="-fx-alignment: CENTER; -fx-text-alignment: center;" />
+                    <TableColumn fx:id="colAccion" prefWidth="110" resizable="false" sortable="false">
+                        <style><![CDATA[
+                            -fx-padding: 0 5 0 0;
+                        ]]></style>
+                    </TableColumn>
                 </columns>
             </TableView>
 

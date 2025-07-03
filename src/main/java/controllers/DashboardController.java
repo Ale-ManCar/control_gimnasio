@@ -14,12 +14,13 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableRow;
+import javafx.scene.control.Button;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.scene.Node;
-import javafx.util.Callback;
+//import javafx.util.Callback;
 import models.Cliente;
 import util.DatabaseUtil;
 import util.ReporteUtil;
@@ -47,6 +48,7 @@ public class DashboardController implements Initializable {
     @FXML private TableColumn<Cliente, String> colVencimiento;
     @FXML private TableColumn<Cliente, Integer> colDiasRestantes;
     @FXML private TableColumn<Cliente, Void> colAlerta;
+    @FXML private TableColumn<Cliente, Void> colAccion;
 
     private MetricCardController ctrlClientes;
     private MetricCardController ctrlPagos;
@@ -84,6 +86,33 @@ public class DashboardController implements Initializable {
                 }
             });
 
+            // Configurar columna de acción (botones)
+            colAccion.setCellFactory(column -> new TableCell<Cliente, Void>() {
+                private final Button btnRenovar = new Button("🔄 Renovar");
+
+                {
+                    // Estilo del botón
+                    btnRenovar.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;"
+                            + " -fx-padding: 5px 10px; -fx-background-radius: 5px;");
+
+                    // Acción al hacer clic
+                    btnRenovar.setOnAction(event -> {
+                        Cliente cliente = getTableView().getItems().get(getIndex());
+                        abrirRenovacionConCliente(cliente);
+                    });
+                }
+
+                @Override
+                protected void updateItem(Void item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty) {
+                        setGraphic(null);
+                    } else {
+                        setGraphic(btnRenovar);
+                    }
+                }
+            });
+
             // Centrar contenido en todas las columnas
             centrarContenidoColumnas();
 
@@ -101,13 +130,16 @@ public class DashboardController implements Initializable {
 
     private void configurarTablaSinScroll() {
         // Configurar política de redimensionamiento para eliminar barras de scroll
-        tablaClientesProximosAVencer.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tablaClientesProximosAVencer.setFixedCellSize(30);
 
         // Estilo para ocultar barras de scroll
         tablaClientesProximosAVencer.setStyle(
                 "-fx-scroll-bar-policy-vertical: never;" +
                         "-fx-scroll-bar-policy-horizontal: never;"
         );
+
+        // Ajustar política de redimensionamiento
+        tablaClientesProximosAVencer.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
     private void inicializarTarjetasMetricas() throws IOException {
@@ -143,6 +175,7 @@ public class DashboardController implements Initializable {
         centrarColumna(colVencimiento);
         centrarColumna(colDiasRestantes);
         colAlerta.setStyle("-fx-alignment: CENTER;");
+        colAccion.setStyle("-fx-alignment: CENTER;");
     }
 
     private <T> void centrarColumna(TableColumn<Cliente, T> columna) {
@@ -207,6 +240,25 @@ public class DashboardController implements Initializable {
         }
     }
 
+    private void abrirRenovacionConCliente(Cliente cliente) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/renovacion.fxml"));
+            Parent root = loader.load();
+
+            // Obtener el controlador y pasar el cliente
+            RenovacionController controller = loader.getController();
+            controller.precargarCliente(cliente);
+
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Renovar Membresía");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            lblMensaje.setText("Error al abrir renovación.");
+        }
+    }
+
     private void cargarClientesProximosAVencer() {
         ObservableList<Cliente> clientes = FXCollections.observableArrayList();
         String sql = "SELECT nombres, apellidos, telefono, fecha_vencimiento, " +
@@ -246,11 +298,10 @@ public class DashboardController implements Initializable {
 
     private void ajustarAlturaTabla() {
         int filas = tablaClientesProximosAVencer.getItems().size();
-        double alturaPorFila = 30; // Altura estimada por fila (ajustar según necesidad)
-        double alturaCabecera = 30; // Altura de la cabecera de la tabla
+        double alturaPorFila = 40; // Aumentado de 30 a 40
+        double alturaCabecera = 40; // Aumentado de 30 a 40
 
-        // Calcular altura total (mínimo 100px para mostrar cabecera vacía)
-        double alturaTotal = Math.max(100, (filas * alturaPorFila) + alturaCabecera);
+        double alturaTotal = Math.max(150, (filas * alturaPorFila) + alturaCabecera);
 
         // Aplicar nueva altura
         tablaClientesProximosAVencer.setPrefHeight(alturaTotal);

@@ -4,7 +4,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
+//import javafx.scene.control.cell.PropertyValueFactory;
 import models.Cliente;
 import models.PagoHistorial;
 import util.DatabaseUtil;
@@ -104,6 +104,31 @@ public class RenovacionController {
         lblPagina.setText("Página " + paginaActual + " de " + totalPaginas);
         btnAnterior.setDisable(paginaActual <= 1);
         btnSiguiente.setDisable(paginaActual >= totalPaginas);
+    }
+
+    // Método para precargar cliente
+    public void precargarCliente(Cliente cliente) {
+        // Buscar el cliente en la lista
+        for (int i = 0; i < todosClientes.size(); i++) {
+            if (todosClientes.get(i).getTelefono().equals(cliente.getTelefono())) {
+                // Seleccionar el cliente en la tabla
+                int pagina = (i / clientesPorPagina) + 1;
+
+                // Si está en otra página, cambiar a esa página
+                if (pagina != paginaActual) {
+                    paginaActual = pagina;
+                    actualizarTablaClientes();
+                }
+
+                // Seleccionar y desplazar
+                tablaClientes.getSelectionModel().select(i % clientesPorPagina);
+                tablaClientes.scrollTo(i % clientesPorPagina);
+
+                // Cargar su historial
+                cargarHistorialPagos(cliente.getTelefono());
+                break;
+            }
+        }
     }
 
     @FXML

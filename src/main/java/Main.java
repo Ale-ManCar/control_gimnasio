@@ -21,7 +21,7 @@ public class Main extends Application {
 
         // Configura la ventana principal
         primaryStage.setTitle("Panel de Control - Gimnasio");
-        primaryStage.setScene(new Scene(root, 800, 600));
+        primaryStage.setScene(new Scene(root, 900, 650)); // 800 - 600
         primaryStage.setResizable(false);
         primaryStage.show();
 
