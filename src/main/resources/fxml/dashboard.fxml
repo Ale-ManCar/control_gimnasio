@@ -43,7 +43,7 @@
             <Label text="Clientes Próximos a Vencer"
                    style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-padding: 10 0 5 0; -fx-alignment: CENTER;" />
 
-            <TableView fx:id="tablaClientesProximosAVencer" prefHeight="200" style="-fx-alignment: CENTER;">
+            <TableView fx:id="tablaClientesProximosAVencer" prefHeight="200" style="-fx-alignment: CENTER; -fx-fit-to-height: true; -fx-fit-to-width: true;">
                 <columns>
                     <!-- Ajustamos prefWidth para ocupar todo el espacio disponible -->
                     <TableColumn fx:id="colAlerta" prefWidth="40" sortable="false" resizable="false">

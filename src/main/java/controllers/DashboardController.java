@@ -46,7 +46,7 @@ public class DashboardController implements Initializable {
     @FXML private TableColumn<Cliente, String> colTelefono;
     @FXML private TableColumn<Cliente, String> colVencimiento;
     @FXML private TableColumn<Cliente, Integer> colDiasRestantes;
-    @FXML private TableColumn<Cliente, Void> colAlerta;  // Cambiado a Void
+    @FXML private TableColumn<Cliente, Void> colAlerta;
 
     private MetricCardController ctrlClientes;
     private MetricCardController ctrlPagos;
@@ -55,7 +55,10 @@ public class DashboardController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
-            // Configurar columnas usando las definidas en FXML
+            // Configurar tabla sin barras de scroll
+            configurarTablaSinScroll();
+
+            // Configurar columnas
             colCliente.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
             colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
             colVencimiento.setCellValueFactory(new PropertyValueFactory<>("fecha_vencimiento"));
@@ -94,6 +97,17 @@ public class DashboardController implements Initializable {
             e.printStackTrace();
             lblMensaje.setText("Error al inicializar el panel.");
         }
+    }
+
+    private void configurarTablaSinScroll() {
+        // Configurar política de redimensionamiento para eliminar barras de scroll
+        tablaClientesProximosAVencer.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        // Estilo para ocultar barras de scroll
+        tablaClientesProximosAVencer.setStyle(
+                "-fx-scroll-bar-policy-vertical: never;" +
+                        "-fx-scroll-bar-policy-horizontal: never;"
+        );
     }
 
     private void inicializarTarjetasMetricas() throws IOException {
@@ -220,6 +234,7 @@ public class DashboardController implements Initializable {
 
             tablaClientesProximosAVencer.setItems(clientes);
             configurarEstilosFilas();
+            ajustarAlturaTabla(); // Ajustar altura dinámicamente
 
             lblMensaje.setText(hayClientes ? "" : "No hay clientes próximos a vencer en los próximos 7 días.");
 
@@ -227,6 +242,18 @@ public class DashboardController implements Initializable {
             e.printStackTrace();
             lblMensaje.setText("Error al cargar clientes próximos a vencer.");
         }
+    }
+
+    private void ajustarAlturaTabla() {
+        int filas = tablaClientesProximosAVencer.getItems().size();
+        double alturaPorFila = 30; // Altura estimada por fila (ajustar según necesidad)
+        double alturaCabecera = 30; // Altura de la cabecera de la tabla
+
+        // Calcular altura total (mínimo 100px para mostrar cabecera vacía)
+        double alturaTotal = Math.max(100, (filas * alturaPorFila) + alturaCabecera);
+
+        // Aplicar nueva altura
+        tablaClientesProximosAVencer.setPrefHeight(alturaTotal);
     }
 
     private void configurarEstilosFilas() {
