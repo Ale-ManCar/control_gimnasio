@@ -4,7 +4,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-//import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.Tooltip;
 import models.Cliente;
 import models.PagoHistorial;
 import util.DatabaseUtil;
@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RenovacionController {
-    // Controles UI
     @FXML private TableView<Cliente> tablaClientes;
     @FXML private ComboBox<String> cbNuevaMembresia;
     @FXML private DatePicker dpFechaRenovacion;
@@ -25,7 +24,6 @@ public class RenovacionController {
     @FXML private Button btnSiguiente;
     @FXML private Label lblPagina;
 
-    // Datos
     private final ObservableList<Cliente> todosClientes = FXCollections.observableArrayList();
     private List<Cliente> clientesPaginados = new ArrayList<>();
     private int paginaActual = 1;
@@ -35,22 +33,34 @@ public class RenovacionController {
     @FXML
     public void initialize() {
         try {
-            // Configuración inicial
             cbNuevaMembresia.getItems().addAll("1 Mes", "3 Meses", "6 Meses", "1 Año");
             dpFechaRenovacion.setValue(LocalDate.now());
 
-            // Cargar clientes
             cargarTodosClientes();
             actualizarTablaClientes();
-
-            // Configurar paginación
             actualizarControlesPaginacion();
 
-            // Configurar listeners
             tablaClientes.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal != null) {
                     cargarHistorialPagos(newVal.getTelefono());
                 }
+            });
+
+            tablaClientes.setRowFactory(tv -> {
+                TableRow<Cliente> row = new TableRow<>();
+                row.setOnMouseEntered(event -> {
+                    if (!row.isEmpty()) {
+                        Tooltip tooltip = new Tooltip(row.getItem().getTooltipText());
+                        tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+                        Tooltip.install(row, tooltip);
+                    }
+                });
+                row.setOnMouseExited(event -> {
+                    if (!row.isEmpty()) {
+                        Tooltip.uninstall(row, null);
+                    }
+                });
+                return row;
             });
 
         } catch (Exception e) {
@@ -78,7 +88,6 @@ public class RenovacionController {
                 ));
             }
 
-            // Calcular paginación
             totalPaginas = (int) Math.ceil((double) todosClientes.size() / clientesPorPagina);
             if (totalPaginas == 0) totalPaginas = 1;
 
@@ -106,25 +115,19 @@ public class RenovacionController {
         btnSiguiente.setDisable(paginaActual >= totalPaginas);
     }
 
-    // Método para precargar cliente
     public void precargarCliente(Cliente cliente) {
-        // Buscar el cliente en la lista
         for (int i = 0; i < todosClientes.size(); i++) {
             if (todosClientes.get(i).getTelefono().equals(cliente.getTelefono())) {
-                // Seleccionar el cliente en la tabla
                 int pagina = (i / clientesPorPagina) + 1;
 
-                // Si está en otra página, cambiar a esa página
                 if (pagina != paginaActual) {
                     paginaActual = pagina;
                     actualizarTablaClientes();
                 }
 
-                // Seleccionar y desplazar
                 tablaClientes.getSelectionModel().select(i % clientesPorPagina);
                 tablaClientes.scrollTo(i % clientesPorPagina);
 
-                // Cargar su historial
                 cargarHistorialPagos(cliente.getTelefono());
                 break;
             }
@@ -190,7 +193,6 @@ public class RenovacionController {
             int filasActualizadas = stmt.executeUpdate();
 
             if (filasActualizadas > 0) {
-                // Obtener ID del cliente
                 String sqlId = "SELECT id FROM clientes WHERE telefono = ?";
                 PreparedStatement stmtId = conn.prepareStatement(sqlId);
                 stmtId.setString(1, seleccionado.getTelefono());

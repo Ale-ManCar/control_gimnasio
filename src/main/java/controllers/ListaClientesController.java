@@ -2,9 +2,7 @@ package controllers;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -34,6 +32,23 @@ public class ListaClientesController implements Initializable {
         ajustarAnchoColumnas();
         centrarContenidoCeldas();
         centrarEncabezados();
+
+        tablaClientes.setRowFactory(tv -> {
+            TableRow<Cliente> row = new TableRow<>();
+            row.setOnMouseEntered(event -> {
+                if (!row.isEmpty()) {
+                    Tooltip tooltip = new Tooltip(row.getItem().getTooltipText());
+                    tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+                    Tooltip.install(row, tooltip);
+                }
+            });
+            row.setOnMouseExited(event -> {
+                if (!row.isEmpty()) {
+                    Tooltip.uninstall(row, null);
+                }
+            });
+            return row;
+        });
     }
 
     private void configurarColumnas() {
@@ -44,7 +59,7 @@ public class ListaClientesController implements Initializable {
     }
 
     private void cargarClientes() {
-        String sql = "SELECT nombres, apellidos, telefono, fecha_vencimiento FROM clientes WHERE activo = 1";
+        String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento FROM clientes WHERE activo = 1";
 
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -55,6 +70,7 @@ public class ListaClientesController implements Initializable {
                         rs.getString("nombres"),
                         rs.getString("apellidos"),
                         rs.getString("telefono"),
+                        rs.getString("tipoMembresia"),
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 );
                 tablaClientes.getItems().add(cliente);
@@ -75,7 +91,6 @@ public class ListaClientesController implements Initializable {
         });
     }
 
-    // Centrar el contenido de todas las celdas
     private void centrarContenidoCeldas() {
         centrarColumna(colNombres);
         centrarColumna(colApellidos);
@@ -83,7 +98,6 @@ public class ListaClientesController implements Initializable {
         centrarColumna(colVencimiento);
     }
 
-    // Método genérico para centrar una columna
     private <T> void centrarColumna(TableColumn<Cliente, T> columna) {
         columna.setCellFactory(new Callback<>() {
             @Override
@@ -105,7 +119,6 @@ public class ListaClientesController implements Initializable {
         });
     }
 
-    // Centrar los encabezados de las columnas
     private void centrarEncabezados() {
         tablaClientes.setStyle("-fx-font-size: 14px;");
         colNombres.setStyle("-fx-alignment: CENTER;");

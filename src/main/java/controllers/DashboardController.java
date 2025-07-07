@@ -15,12 +15,12 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.Button;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.scene.Node;
-//import javafx.util.Callback;
 import models.Cliente;
 import util.DatabaseUtil;
 import util.ReporteUtil;
@@ -42,7 +42,6 @@ public class DashboardController implements Initializable {
     @FXML private TableView<Cliente> tablaClientesProximosAVencer;
     @FXML private Label lblMensaje;
 
-    // Columnas definidas en FXML
     @FXML private TableColumn<Cliente, String> colCliente;
     @FXML private TableColumn<Cliente, String> colTelefono;
     @FXML private TableColumn<Cliente, String> colVencimiento;
@@ -57,16 +56,13 @@ public class DashboardController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
-            // Configurar tabla sin barras de scroll
             configurarTablaSinScroll();
 
-            // Configurar columnas
             colCliente.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
             colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
             colVencimiento.setCellValueFactory(new PropertyValueFactory<>("fecha_vencimiento"));
             colDiasRestantes.setCellValueFactory(new PropertyValueFactory<>("diasRestantes"));
 
-            // Configurar columna de alerta
             colAlerta.setCellFactory(column -> new TableCell<Cliente, Void>() {
                 private final Label warningIcon = new Label("⚠");
 
@@ -86,16 +82,13 @@ public class DashboardController implements Initializable {
                 }
             });
 
-            // Configurar columna de acción (botones)
             colAccion.setCellFactory(column -> new TableCell<Cliente, Void>() {
                 private final Button btnRenovar = new Button("🔄 Renovar");
 
                 {
-                    // Estilo del botón
                     btnRenovar.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;"
                             + " -fx-padding: 5px 10px; -fx-background-radius: 5px;");
 
-                    // Acción al hacer clic
                     btnRenovar.setOnAction(event -> {
                         Cliente cliente = getTableView().getItems().get(getIndex());
                         abrirRenovacionConCliente(cliente);
@@ -113,14 +106,54 @@ public class DashboardController implements Initializable {
                 }
             });
 
-            // Centrar contenido en todas las columnas
             centrarContenidoColumnas();
-
-            // Inicializar tarjetas de métricas
             inicializarTarjetasMetricas();
-
             cargarDatosTarjetas();
             cargarClientesProximosAVencer();
+
+            // TOOLTIPS Y COLORES DE FILA (RESTAURADO)
+            tablaClientesProximosAVencer.setRowFactory(tv -> {
+                TableRow<Cliente> row = new TableRow<Cliente>() {
+                    @Override
+                    protected void updateItem(Cliente cliente, boolean empty) {
+                        super.updateItem(cliente, empty);
+                        if (cliente == null || empty) {
+                            setStyle("");
+                        } else {
+                            int dias = cliente.getDiasRestantes();
+                            String baseStyle = "";
+
+                            if (dias >= 5 && dias <= 7) {
+                                baseStyle = "-fx-background-color: #e8f5e9;"; // Verde
+                            } else if (dias >= 3 && dias <= 4) {
+                                baseStyle = "-fx-background-color: #fff3e0;"; // Amarillo
+                            } else if (dias >= 0 && dias <= 3) {
+                                baseStyle = "-fx-background-color: #ffebee;"; // Rojo
+                            } else if (dias < 0) {
+                                baseStyle = "-fx-background-color: #ffcdd2;"; // Vencidos
+                            }
+
+                            setStyle(baseStyle + (isSelected() ?
+                                    " -fx-font-weight: bold; -fx-text-fill: black;" :
+                                    " -fx-text-fill: black;"));
+                        }
+                    }
+                };
+
+                row.setOnMouseEntered(event -> {
+                    if (!row.isEmpty()) {
+                        Tooltip tooltip = new Tooltip(row.getItem().getTooltipText());
+                        tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+                        Tooltip.install(row, tooltip);
+                    }
+                });
+                row.setOnMouseExited(event -> {
+                    if (!row.isEmpty()) {
+                        Tooltip.uninstall(row, null);
+                    }
+                });
+                return row;
+            });
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -129,16 +162,11 @@ public class DashboardController implements Initializable {
     }
 
     private void configurarTablaSinScroll() {
-        // Configurar política de redimensionamiento para eliminar barras de scroll
         tablaClientesProximosAVencer.setFixedCellSize(30);
-
-        // Estilo para ocultar barras de scroll
         tablaClientesProximosAVencer.setStyle(
                 "-fx-scroll-bar-policy-vertical: never;" +
                         "-fx-scroll-bar-policy-horizontal: never;"
         );
-
-        // Ajustar política de redimensionamiento
         tablaClientesProximosAVencer.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
@@ -213,7 +241,6 @@ public class DashboardController implements Initializable {
 
     private void cargarDatosTarjetas() {
         try (Connection conn = DatabaseUtil.getConnection()) {
-            // Clientes activos
             String sqlClientes = "SELECT COUNT(*) AS total FROM clientes WHERE activo = 1";
             try (PreparedStatement ps = conn.prepareStatement(sqlClientes);
                  ResultSet rs = ps.executeQuery()) {
@@ -222,11 +249,9 @@ public class DashboardController implements Initializable {
                 }
             }
 
-            // Pagos recibidos
             double totalPagos = DatabaseUtil.obtenerTotalPagosDelMesActual();
             ctrlPagos.setValor(String.format("$ %.2f", totalPagos));
 
-            // Próximos a vencer
             String sqlVencimientos = "SELECT COUNT(*) AS total FROM clientes WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days')";
             try (PreparedStatement ps = conn.prepareStatement(sqlVencimientos);
                  ResultSet rs = ps.executeQuery()) {
@@ -245,7 +270,6 @@ public class DashboardController implements Initializable {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/renovacion.fxml"));
             Parent root = loader.load();
 
-            // Obtener el controlador y pasar el cliente
             RenovacionController controller = loader.getController();
             controller.precargarCliente(cliente);
 
@@ -261,7 +285,7 @@ public class DashboardController implements Initializable {
 
     private void cargarClientesProximosAVencer() {
         ObservableList<Cliente> clientes = FXCollections.observableArrayList();
-        String sql = "SELECT nombres, apellidos, telefono, fecha_vencimiento, " +
+        String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento, " +
                 "(julianday(fecha_vencimiento) - julianday(date('now'))) AS dias_restantes " +
                 "FROM clientes " +
                 "WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days') " +
@@ -278,6 +302,7 @@ public class DashboardController implements Initializable {
                         rs.getString("nombres"),
                         rs.getString("apellidos"),
                         rs.getString("telefono"),
+                        rs.getString("tipoMembresia"),
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 );
                 cliente.setDiasRestantes(rs.getInt("dias_restantes"));
@@ -285,8 +310,7 @@ public class DashboardController implements Initializable {
             }
 
             tablaClientesProximosAVencer.setItems(clientes);
-            configurarEstilosFilas();
-            ajustarAlturaTabla(); // Ajustar altura dinámicamente
+            ajustarAlturaTabla();
 
             lblMensaje.setText(hayClientes ? "" : "No hay clientes próximos a vencer en los próximos 7 días.");
 
@@ -298,42 +322,11 @@ public class DashboardController implements Initializable {
 
     private void ajustarAlturaTabla() {
         int filas = tablaClientesProximosAVencer.getItems().size();
-        double alturaPorFila = 40; // Aumentado de 30 a 40
-        double alturaCabecera = 40; // Aumentado de 30 a 40
+        double alturaPorFila = 40;
+        double alturaCabecera = 40;
 
         double alturaTotal = Math.max(150, (filas * alturaPorFila) + alturaCabecera);
-
-        // Aplicar nueva altura
         tablaClientesProximosAVencer.setPrefHeight(alturaTotal);
-    }
-
-    private void configurarEstilosFilas() {
-        tablaClientesProximosAVencer.setRowFactory(tv -> new TableRow<Cliente>() {
-            @Override
-            protected void updateItem(Cliente cliente, boolean empty) {
-                super.updateItem(cliente, empty);
-                if (cliente == null || empty) {
-                    setStyle("");
-                } else {
-                    int dias = cliente.getDiasRestantes();
-                    String baseStyle = "";
-
-                    if (dias >= 5 && dias <= 7) {
-                        baseStyle = "-fx-background-color: #e8f5e9;"; // Verde
-                    } else if (dias >= 3 && dias <= 4) {
-                        baseStyle = "-fx-background-color: #fff3e0;"; // Amarillo
-                    } else if (dias >= 0 && dias <= 3) {
-                        baseStyle = "-fx-background-color: #ffebee;"; // Rojo
-                    } else if (dias < 0) {
-                        baseStyle = "-fx-background-color: #ffcdd2;"; // Vencidos
-                    }
-
-                    setStyle(baseStyle + (isSelected() ?
-                            " -fx-font-weight: bold; -fx-text-fill: black;" :
-                            " -fx-text-fill: black;"));
-                }
-            }
-        });
     }
 
     @FXML
