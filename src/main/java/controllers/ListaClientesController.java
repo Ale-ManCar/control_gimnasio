@@ -16,6 +16,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ResourceBundle;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 public class ListaClientesController implements Initializable {
 
@@ -24,6 +26,9 @@ public class ListaClientesController implements Initializable {
     @FXML private TableColumn<Cliente, String> colApellidos;
     @FXML private TableColumn<Cliente, String> colTelefono;
     @FXML private TableColumn<Cliente, String> colVencimiento;
+    @FXML private TextField txtBuscar; // Nuevo campo para búsqueda
+
+    private ObservableList<Cliente> clientesOriginales = FXCollections.observableArrayList();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -32,6 +37,9 @@ public class ListaClientesController implements Initializable {
         ajustarAnchoColumnas();
         centrarContenidoCeldas();
         centrarEncabezados();
+
+        // Guardar copia de la lista original
+        clientesOriginales.setAll(tablaClientes.getItems());
 
         tablaClientes.setRowFactory(tv -> {
             TableRow<Cliente> row = new TableRow<>();
@@ -50,6 +58,35 @@ public class ListaClientesController implements Initializable {
             return row;
         });
     }
+
+    // ========== MÉTODOS DE FILTRADO NUEVOS ========== //
+    @FXML
+    private void filtrarClientes() {
+        String filtro = txtBuscar.getText().trim().toLowerCase();
+
+        if (filtro.isEmpty()) {
+            tablaClientes.setItems(clientesOriginales);
+            return;
+        }
+
+        ObservableList<Cliente> filtrados = FXCollections.observableArrayList();
+        for (Cliente cliente : clientesOriginales) {
+            if (cliente.getNombres().toLowerCase().contains(filtro) ||
+                    cliente.getApellidos().toLowerCase().contains(filtro) ||
+                    cliente.getTelefono().contains(filtro)) {
+                filtrados.add(cliente);
+            }
+        }
+
+        tablaClientes.setItems(filtrados);
+    }
+
+    @FXML
+    private void limpiarFiltro() {
+        txtBuscar.clear();
+        tablaClientes.setItems(clientesOriginales);
+    }
+    // ========== FIN MÉTODOS NUEVOS ========== //
 
     private void configurarColumnas() {
         colNombres.setCellValueFactory(new PropertyValueFactory<>("nombres"));

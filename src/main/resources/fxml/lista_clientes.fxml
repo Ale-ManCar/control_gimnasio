@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
@@ -19,6 +20,15 @@
         <Label text="Lista de Clientes Activos"
                style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
     </StackPane>
+
+    <!-- BARRA DE BÚSQUEDA NUEVA -->
+    <HBox spacing="10" style="-fx-padding: 0 0 10 0;">
+        <TextField fx:id="txtBuscar" promptText="Buscar cliente..." style="-fx-pref-width: 300px;"/>
+        <Button text="Filtrar" onAction="#filtrarClientes"
+                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold;"/>
+        <Button text="Limpiar" onAction="#limpiarFiltro"
+                style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-font-weight: bold;"/>
+    </HBox>
 
     <TableView fx:id="tablaClientes" prefHeight="400" style="-fx-font-size: 14px;">
         <columns>

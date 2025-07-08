@@ -12,6 +12,15 @@
             <Label text="Renovación de Membresías"
                    style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-padding: 0 0 10 0;"/>
 
+            <!-- BARRA DE BÚSQUEDA NUEVA -->
+            <HBox alignment="CENTER" spacing="10" style="-fx-padding: 0 0 10 0;">
+                <TextField fx:id="txtBuscar" promptText="Buscar cliente..." style="-fx-pref-width: 250px;"/>
+                <Button text="Filtrar" onAction="#filtrarClientes"
+                        style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button text="Limpiar" onAction="#limpiarFiltro"
+                        style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            </HBox>
+
             <TableView fx:id="tablaClientes" prefHeight="250">
                 <columns>
                     <!-- Nombre completo -->
