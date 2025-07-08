@@ -68,6 +68,16 @@
                 </columns>
             </TableView>
 
+            <!-- CONTENEDOR BOTON VER TODOS -->
+            <HBox alignment="CENTER" style="-fx-padding: 10px 0 20px 0;">
+                <Button text="📋 Ver Todos" onAction="#handleVerTodos"
+                        style="-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold;
+               -fx-padding: 8px 15px; -fx-font-size: 14px; -fx-min-width: 120px;
+               -fx-cursor: hand;"
+                        fx:id="btnVerTodos"/>
+            </HBox>
+
+
             <!-- BOTONES DE ACCIÓN -->
             <HBox spacing="10" alignment="CENTER_RIGHT">
                 <Region fx:id="regionSpacer" HBox.hgrow="ALWAYS"/>

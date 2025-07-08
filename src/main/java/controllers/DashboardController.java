@@ -41,6 +41,7 @@ public class DashboardController implements Initializable {
     @FXML private AnchorPane cardVencimientos;
     @FXML private TableView<Cliente> tablaClientesProximosAVencer;
     @FXML private Label lblMensaje;
+    @FXML private Button btnVerTodos;
 
     @FXML private TableColumn<Cliente, String> colCliente;
     @FXML private TableColumn<Cliente, String> colTelefono;
@@ -154,6 +155,12 @@ public class DashboardController implements Initializable {
                 });
                 return row;
             });
+
+            btnVerTodos.setOnMouseEntered(e ->
+                    btnVerTodos.setStyle("-fx-backgroung-color: #8e44ad; -fx-text-fill: white; -fx-font-weight: bold;"));
+
+            btnVerTodos.setOnMouseExited(e ->
+                    btnVerTodos.setStyle("-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold;"));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -360,6 +367,25 @@ public class DashboardController implements Initializable {
         } catch (IOException e) {
             e.printStackTrace();
             lblMensaje.setText("No se pudo abrir el formulario de registro.");
+        }
+    }
+
+    @FXML
+    private void handleVerTodos(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/renovacion.fxml"));
+            Parent root = loader.load();
+
+            RenovacionController controller = loader.getController();
+            controller.setModoTodosClientes(true);
+
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Todos los Clientes Activos - Renovación");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            lblMensaje.setText("Error al abrir todos los clientes");
         }
     }
 }

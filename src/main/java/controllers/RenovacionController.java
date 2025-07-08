@@ -29,6 +29,7 @@ public class RenovacionController {
     private int paginaActual = 1;
     private int clientesPorPagina = 8;
     private int totalPaginas = 1;
+    private boolean modoTodosClientes = false;
 
     @FXML
     public void initialize() {
@@ -67,17 +68,36 @@ public class RenovacionController {
             mostrarAlerta("Error Crítico", "No se pudo cargar la pantalla: " + e.getMessage());
             e.printStackTrace();
         }
+
+        if(!modoTodosClientes) {
+            cargarTodosClientes();
+            actualizarTablaClientes();
+            actualizarControlesPaginacion();
+        }
+    }
+
+    // Método mostras clientes
+    void setModoTodosClientes(boolean modo) {
+        this.modoTodosClientes = modo;
     }
 
     private void cargarTodosClientes() {
-        String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento FROM clientes " +
-                "WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days')";
+        String sql;
+
+        if(modoTodosClientes) {
+            sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
+                    "FROM clientes WHERE activo = 1";
+        } else {
+            sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
+                    "FROM clientes WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days')";
+        }
 
         try (Connection conn = DatabaseUtil.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+             Statement stmt = conn.createStatement()) {
 
+            ResultSet rs = stmt.executeQuery(sql);
             todosClientes.clear();
+
             while (rs.next()) {
                 todosClientes.add(new Cliente(
                         rs.getString("nombres"),
@@ -87,6 +107,8 @@ public class RenovacionController {
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 ));
             }
+
+            rs.close(); // Cierre manual después del procesamiento
 
             totalPaginas = (int) Math.ceil((double) todosClientes.size() / clientesPorPagina);
             if (totalPaginas == 0) totalPaginas = 1;
