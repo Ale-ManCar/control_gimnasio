@@ -312,7 +312,7 @@ public class DashboardController implements Initializable {
                         rs.getString("tipoMembresia"),
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 );
-                cliente.setDiasRestantes(rs.getInt("dias_restantes"));
+                //cliente.setDiasRestantes(rs.getInt("dias_restantes"));
                 clientes.add(cliente);
             }
 

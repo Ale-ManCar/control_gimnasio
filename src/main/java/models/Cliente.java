@@ -6,6 +6,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 public class Cliente {
     private final StringProperty nombres;
@@ -21,7 +22,10 @@ public class Cliente {
         this.telefono = new SimpleStringProperty(telefono);
         this.tipoMembresia = new SimpleStringProperty(tipoMembresia);
         this.fecha_vencimiento = new SimpleStringProperty(fecha_vencimiento.toString());
-        this.diasRestantes.set(LocalDate.now().until(fecha_vencimiento).getDays());
+        //this.diasRestantes.set(LocalDate.now().until(fecha_vencimiento).getDays());
+
+        long dias = ChronoUnit.DAYS.between(LocalDate.now(), fecha_vencimiento);
+        this.diasRestantes.set((int) dias);
     }
 
     public Cliente(String nombres, String apellidos, String telefono, LocalDate fecha_vencimiento) {

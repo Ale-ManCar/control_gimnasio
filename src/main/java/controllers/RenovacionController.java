@@ -104,11 +104,11 @@ public class RenovacionController {
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 );
 
-                long diasRestantes = ChronoUnit.DAYS.between(
-                        LocalDate.now(),
-                        cliente.getFecha_vencimientoDate()
-                );
-                cliente.setDiasRestantes((int) diasRestantes);
+                //long diasRestantes = ChronoUnit.DAYS.between(
+                //        LocalDate.now(),
+                //        cliente.getFecha_vencimientoDate()
+                //);
+                //cliente.setDiasRestantes((int) diasRestantes);
 
                 destino.add(cliente);
             }
