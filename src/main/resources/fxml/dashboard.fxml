@@ -15,7 +15,7 @@
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controllers.DashboardController"
-            prefWidth="1100" prefHeight="800"
+            prefWidth="900" prefHeight="600"
             style="-fx-background-color: #f9f9f9"> <!-- 900 600 -->
 
     <!-- TÍTULO SUPERIOR -->
