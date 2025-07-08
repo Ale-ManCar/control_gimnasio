@@ -5,13 +5,14 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.VBox;
 import models.Cliente;
 import models.PagoHistorial;
 import util.DatabaseUtil;
 
 import java.sql.*;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
+//import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,6 +27,8 @@ public class RenovacionController {
     @FXML private Button btnSiguiente;
     @FXML private Label lblPagina;
     @FXML private TextField txtBuscar;
+    @FXML private VBox panelDerecho;
+    @FXML private Label lblInfoCliente;
 
     private final ObservableList<Cliente> clientesProximos = FXCollections.observableArrayList();
     private final ObservableList<Cliente> todosClientes = FXCollections.observableArrayList();
@@ -37,16 +40,27 @@ public class RenovacionController {
     @FXML
     public void initialize() {
         try {
+            // ESTILOS DE CONTROLES
+            aplicarEstilos();
+
             cbNuevaMembresia.getItems().addAll("1 Mes", "3 Meses", "6 Meses", "1 Año");
+            cbNuevaMembresia.setValue("1 Mes");
             dpFechaRenovacion.setValue(LocalDate.now());
 
             cargarClientesProximos();
             actualizarTablaClientes();
             actualizarControlesPaginacion();
 
+            // PANEL DERECHO OCULTO INICIALMENTE
+            panelDerecho.setVisible(false);
+
             tablaClientes.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal != null) {
                     cargarHistorialPagos(newVal.getTelefono());
+                    mostrarInformacionCliente(newVal);
+                    panelDerecho.setVisible(true);
+                } else {
+                    panelDerecho.setVisible(false);
                 }
             });
 
@@ -71,6 +85,44 @@ public class RenovacionController {
             mostrarAlerta("Error Crítico", "No se pudo cargar la pantalla: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void aplicarEstilos() {
+        // ESTILOS TABLA CLIENTES
+        tablaClientes.setStyle("-fx-font-size: 12px; -fx-padding: 5px;");
+        tablaHistorial.setStyle("-fx-font-size: 12px; -fx-padding: 5px;");
+
+        // ESTILO BOTONES
+        String botonStyle = "-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; "
+                + "-fx-padding: 5 10; -fx-background-radius: 5;";
+        btnAnterior.setStyle(botonStyle);
+        btnSiguiente.setStyle(botonStyle);
+
+        // ESTILO PANEL DERECHO
+        panelDerecho.setStyle("-fx-background-color: #f5f5f5; -fx-padding: 15px; -fx-border-color: #e0e0e0; "
+                + "-fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-radius: 5px;");
+
+        // ESTILO FORMULARIO
+        cbNuevaMembresia.setStyle("-fx-font-size: 12px;");
+        dpFechaRenovacion.setStyle("-fx-font-size: 12px;");
+        txtMonto.setStyle("-fx-font-size: 12px;");
+    }
+
+    private void mostrarInformacionCliente(Cliente cliente) {
+        String info = String.format("Cliente seleccionado:\n\n"
+                        + "Nombre: %s %s\n"
+                        + "Teléfono: %s\n"
+                        + "Membresía actual: %s\n"
+                        + "Vencimiento: %s\n"
+                        + "Días restantes: %d",
+                cliente.getNombres(),
+                cliente.getApellidos(),
+                cliente.getTelefono(),
+                cliente.getTipoMembresia(),
+                cliente.getFecha_vencimiento(),
+                cliente.getDiasRestantes());
+
+        lblInfoCliente.setText(info);
     }
 
     // ===== MÉTODOS PRINCIPALES ACTUALIZADOS ===== //
