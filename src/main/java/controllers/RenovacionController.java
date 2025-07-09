@@ -346,7 +346,7 @@ public class RenovacionController {
                     String sqlPago = "INSERT INTO pagos (cliente_id, fecha_pago, fecha_vencimiento, monto) VALUES (?, ?, ?, ?)";
                     PreparedStatement stmtPago = conn.prepareStatement(sqlPago);
                     stmtPago.setInt(1, clienteId);
-                    stmtPago.setString(2, LocalDate.now().toString());
+                    stmtPago.setString(2, dpFechaRenovacion.getValue().toString());
                     stmtPago.setString(3, nuevaFecha.toString());
                     stmtPago.setDouble(4, monto);
                     stmtPago.executeUpdate();
