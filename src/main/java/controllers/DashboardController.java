@@ -1,5 +1,6 @@
 package controllers;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -9,13 +10,7 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.Button;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
@@ -172,8 +167,20 @@ public class DashboardController implements Initializable {
         tablaClientesProximosAVencer.setFixedCellSize(30);
         tablaClientesProximosAVencer.setStyle(
                 "-fx-scroll-bar-policy-vertical: never;" +
-                        "-fx-scroll-bar-policy-horizontal: never;"
+                        "-fx-scroll-bar-policy-horizontal: never;" +
+                        "-fx-padding: 0;"
         );
+
+        // OCULTAR BARRAS SCROLLS
+        tablaClientesProximosAVencer.skinProperty().addListener((obs, oldSkin, newSkin) -> {
+            if (newSkin != null) {
+                ScrollBar vbar = (ScrollBar) tablaClientesProximosAVencer.lookup(".scroll-bar:vertical");
+                ScrollBar hbar = (ScrollBar) tablaClientesProximosAVencer.lookup(".scroll-bar:horizontal");
+                if (vbar != null) vbar.setVisible(false);
+                if (hbar != null) hbar.setVisible(false);
+            }
+        });
+
         tablaClientesProximosAVencer.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
@@ -329,11 +336,13 @@ public class DashboardController implements Initializable {
 
     private void ajustarAlturaTabla() {
         int filas = tablaClientesProximosAVencer.getItems().size();
-        double alturaPorFila = 40;
-        double alturaCabecera = 40;
+        double alturaPorFila = 30;
+        double alturaCabecera = 35;
 
         double alturaTotal = Math.max(150, (filas * alturaPorFila) + alturaCabecera);
         tablaClientesProximosAVencer.setPrefHeight(alturaTotal);
+
+        Platform.runLater(() -> tablaClientesProximosAVencer.requestLayout());
     }
 
     @FXML

@@ -2,6 +2,7 @@ package controllers;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -13,7 +14,6 @@ import util.DatabaseUtil;
 
 import java.sql.*;
 import java.time.LocalDate;
-//import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,14 +35,20 @@ public class RenovacionController {
     private final ObservableList<Cliente> todosClientes = FXCollections.observableArrayList();
     private List<Cliente> clientesPaginados = new ArrayList<>();
     private int paginaActual = 1;
-    private int clientesPorPagina = 8;
+    private int clientesPorPagina = 12;
     private int totalPaginas = 1;
+    private final double ALTURA_FILA = 30.0; // Altura estimada por fila
+    private final double ALTURA_CABECERA = 30.0; // Altura estimada de la cabecera
 
     @FXML
     public void initialize() {
         try {
             // ESTILOS DE CONTROLES
             aplicarEstilos();
+
+            // Configurar altura fija para filas
+            tablaClientes.setFixedCellSize(ALTURA_FILA);
+            tablaHistorial.setFixedCellSize(ALTURA_FILA);
 
             cbNuevaMembresia.getItems().addAll("1 Mes", "3 Meses", "6 Meses", "1 Año");
             cbNuevaMembresia.setValue("1 Mes");
@@ -51,6 +57,7 @@ public class RenovacionController {
             cargarClientesProximos();
             actualizarTablaClientes();
             actualizarControlesPaginacion();
+            ajustarAlturaTablas(); // Ajustar altura inicial
 
             // PANEL DERECHO OCULTO INICIALMENTE
             panelDerecho.setVisible(false);
@@ -82,6 +89,10 @@ public class RenovacionController {
                 return row;
             });
 
+            // Listeners para cambios en los datos
+            tablaClientes.getItems().addListener((ListChangeListener<Cliente>) c -> ajustarAlturaTablas());
+            tablaHistorial.getItems().addListener((ListChangeListener<PagoHistorial>) c -> ajustarAlturaTablas());
+
         } catch (Exception e) {
             mostrarAlerta("Error Crítico", "No se pudo cargar la pantalla: " + e.getMessage());
             e.printStackTrace();
@@ -89,9 +100,14 @@ public class RenovacionController {
     }
 
     private void aplicarEstilos() {
+        // Estilos para ocultar barras de desplazamiento
+        String estiloSinScroll = "-fx-scroll-bar-policy: never; -fx-padding: 0; -fx-background-insets: 0;";
+
         // ESTILOS TABLA CLIENTES
-        tablaClientes.setStyle("-fx-font-size: 12px; -fx-padding: 5px;");
-        tablaHistorial.setStyle("-fx-font-size: 12px; -fx-padding: 5px;");
+        tablaClientes.setStyle("-fx-font-size: 12px; " + estiloSinScroll);
+
+        // ESTILOS TABLA HISTORIAL
+        tablaHistorial.setStyle("-fx-font-size: 12px; " + estiloSinScroll);
 
         // ESTILO BOTONES
         String botonStyle = "-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; "
@@ -109,13 +125,30 @@ public class RenovacionController {
         txtMonto.setStyle("-fx-font-size: 12px;");
     }
 
+    // Ajusta la altura de las tablas dinámicamente
+    private void ajustarAlturaTablas() {
+        // Ajustar tabla de clientes
+        int filasClientes = tablaClientes.getItems().size();
+        double alturaClientes = ALTURA_CABECERA + (filasClientes * ALTURA_FILA);
+        tablaClientes.setPrefHeight(Math.max(ALTURA_CABECERA + ALTURA_FILA, alturaClientes));
+
+        // Ajustar tabla de historial
+        int filasHistorial = tablaHistorial.getItems().size();
+        double alturaHistorial = ALTURA_CABECERA + (filasHistorial * ALTURA_FILA);
+        tablaHistorial.setPrefHeight(Math.max(ALTURA_CABECERA + ALTURA_FILA, alturaHistorial));
+
+        // Forzar actualización visual
+        Platform.runLater(() -> {
+            tablaClientes.requestLayout();
+            tablaHistorial.requestLayout();
+        });
+    }
+
     private void mostrarInformacionCliente(Cliente cliente) {
         Platform.runLater(() -> {
             lblInfoCliente.setText("Cliente seleccionado:\n" +
-                                cliente.getNombres() + " " + cliente.getApellidos());
+                    cliente.getNombres() + " " + cliente.getApellidos());
         });
-
-        //lblInfoCliente.setText(info);
     }
 
     // ===== MÉTODOS PRINCIPALES ACTUALIZADOS ===== //
@@ -148,13 +181,6 @@ public class RenovacionController {
                         rs.getString("tipoMembresia"),
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 );
-
-                //long diasRestantes = ChronoUnit.DAYS.between(
-                //        LocalDate.now(),
-                //        cliente.getFecha_vencimientoDate()
-                //);
-                //cliente.setDiasRestantes((int) diasRestantes);
-
                 destino.add(cliente);
             }
 
@@ -175,6 +201,7 @@ public class RenovacionController {
             cargarClientesProximos();
             actualizarTablaClientes();
             actualizarControlesPaginacion();
+            ajustarAlturaTablas();
             return;
         }
 
@@ -190,6 +217,7 @@ public class RenovacionController {
                 .collect(Collectors.toList());
 
         tablaClientes.setItems(FXCollections.observableArrayList(filtrados));
+        ajustarAlturaTablas();
     }
 
     @FXML
@@ -199,6 +227,7 @@ public class RenovacionController {
         cargarClientesProximos();
         actualizarTablaClientes();
         actualizarControlesPaginacion();
+        ajustarAlturaTablas();
     }
 
     private void actualizarTablaClientes() {
@@ -214,6 +243,8 @@ public class RenovacionController {
 
         totalPaginas = (int) Math.ceil((double) clientesProximos.size() / clientesPorPagina);
         if (totalPaginas == 0) totalPaginas = 1;
+
+        ajustarAlturaTablas();
     }
 
     private void actualizarControlesPaginacion() {
@@ -249,6 +280,7 @@ public class RenovacionController {
             paginaActual--;
             actualizarTablaClientes();
             actualizarControlesPaginacion();
+            ajustarAlturaTablas();
         }
     }
 
@@ -258,6 +290,7 @@ public class RenovacionController {
             paginaActual++;
             actualizarTablaClientes();
             actualizarControlesPaginacion();
+            ajustarAlturaTablas();
         }
     }
 
@@ -326,6 +359,7 @@ public class RenovacionController {
                 cargarClientesProximos();
                 actualizarTablaClientes();
                 actualizarControlesPaginacion();
+                ajustarAlturaTablas();
                 txtMonto.clear();
             } else {
                 mostrarAlerta("Error", "No se pudo actualizar la membresía");
@@ -373,6 +407,7 @@ public class RenovacionController {
                 ));
             }
             tablaHistorial.setItems(historial);
+            ajustarAlturaTablas();
         } catch (SQLException e) {
             mostrarAlerta("Error", "No se pudo cargar historial: " + e.getMessage());
             e.printStackTrace();
@@ -388,6 +423,7 @@ public class RenovacionController {
         }
         actualizarTablaClientes();
         actualizarControlesPaginacion();
+        ajustarAlturaTablas();
     }
     // ===== FIN MÉTODOS AUXILIARES ===== //
 }

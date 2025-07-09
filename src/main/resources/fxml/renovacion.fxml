@@ -32,7 +32,21 @@
                             style="-fx-background-color: #9E9E9E; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 5 10;"/>
                 </HBox>
 
-                <TableView fx:id="tablaClientes" prefHeight="300">
+                <TableView fx:id="tablaClientes" prefHeight="300" style="-fx-scroll-bar-policy: never;">
+                    <style>
+                        <![CDATA[
+                            .scroll-bar:vertical, .scroll-bar:horizontal {
+                                -fx-opacity: 0;
+                                -fx-pref-width: 0;
+                                -fx-pref-height: 0;
+                            }
+                            .table-view {
+                                -fx-background-insets: 0;
+                                -fx-padding: 0;
+                            }
+                        ]]>
+                    </style>
+
                     <columns>
                         <TableColumn text="Nombre" prefWidth="150">
                             <cellValueFactory>
@@ -89,7 +103,16 @@
                 <Separator style="-fx-padding: 10 0;"/>
 
                 <Label text="Historial de Pagos" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
-                <TableView fx:id="tablaHistorial" prefHeight="150">
+                <TableView fx:id="tablaHistorial" prefHeight="150" style="-fx-scroll-bar-policy: never;">
+                    <style>
+                        <![CDATA[
+                            .scroll-bar:vertical, .scroll-bar:horizontal {
+                                -fx-opacity: 0;
+                                -fx-pref-width: 0;
+                                -fx-pref-height: 0;
+                            }
+                        ]]>
+                    </style>
                     <columns>
                         <TableColumn text="Fecha" prefWidth="80">
                             <cellValueFactory>
