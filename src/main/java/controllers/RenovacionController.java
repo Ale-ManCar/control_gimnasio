@@ -1,5 +1,6 @@
 package controllers;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -109,20 +110,12 @@ public class RenovacionController {
     }
 
     private void mostrarInformacionCliente(Cliente cliente) {
-        String info = String.format("Cliente seleccionado:\n\n"
-                        + "Nombre: %s %s\n"
-                        + "Teléfono: %s\n"
-                        + "Membresía actual: %s\n"
-                        + "Vencimiento: %s\n"
-                        + "Días restantes: %d",
-                cliente.getNombres(),
-                cliente.getApellidos(),
-                cliente.getTelefono(),
-                cliente.getTipoMembresia(),
-                cliente.getFecha_vencimiento(),
-                cliente.getDiasRestantes());
+        Platform.runLater(() -> {
+            lblInfoCliente.setText("Cliente seleccionado:\n" +
+                                cliente.getNombres() + " " + cliente.getApellidos());
+        });
 
-        lblInfoCliente.setText(info);
+        //lblInfoCliente.setText(info);
     }
 
     // ===== MÉTODOS PRINCIPALES ACTUALIZADOS ===== //

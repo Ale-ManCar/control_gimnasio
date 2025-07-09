@@ -69,7 +69,8 @@
 
             <!-- Columna derecha: Panel de renovación -->
             <VBox fx:id="panelDerecho" GridPane.columnIndex="1" spacing="15">
-                <Label fx:id="lblInfoCliente" style="-fx-font-weight: bold; -fx-wrap-text: true;"/>
+                <Label fx:id="lblInfoCliente"
+                       style="-fx-font-weight: bold; -fx-wrap-text: true; -fx-min-height: 35; -fx-padding: 0 5 0;" />
 
                 <Separator style="-fx-padding: 5 0;"/>
 
