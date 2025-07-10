@@ -11,7 +11,7 @@
             prefWidth="800" prefHeight="600" style="-fx-padding: 15;">
     <top>
         <Label text="Renovación de Membresías"
-               style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-padding: 0 0 10 0;"/>
+               style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-padding: 0 0 10 0;" alignment="CENTER" maxWidth="Infinity"/>
     </top>
 
     <center>

@@ -50,6 +50,9 @@ public class RenovacionController {
             tablaClientes.setFixedCellSize(ALTURA_FILA);
             tablaHistorial.setFixedCellSize(ALTURA_FILA);
 
+            tablaClientes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+            tablaHistorial.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
             cbNuevaMembresia.getItems().addAll("1 Mes", "3 Meses", "6 Meses", "1 Año");
             cbNuevaMembresia.setValue("1 Mes");
             dpFechaRenovacion.setValue(LocalDate.now());
@@ -58,6 +61,7 @@ public class RenovacionController {
             actualizarTablaClientes();
             actualizarControlesPaginacion();
             ajustarAlturaTablas(); // Ajustar altura inicial
+            centrarContenidoTablas();
 
             // PANEL DERECHO OCULTO INICIALMENTE
             panelDerecho.setVisible(false);
@@ -99,6 +103,16 @@ public class RenovacionController {
         }
     }
 
+    private void centrarContenidoTablas() {
+        for (TableColumn<?, ?> col : tablaClientes.getColumns()) {
+            col.setStyle("-fx-alignment: CENTER;");
+        }
+
+        for (TableColumn<?, ?> col : tablaHistorial.getColumns()) {
+            col.setStyle("-fx-alignment: CENTER");
+        }
+    }
+
     private void aplicarEstilos() {
         // Estilos para ocultar barras de desplazamiento
         String estiloSinScroll = "-fx-scroll-bar-policy: never; -fx-padding: 0; -fx-background-insets: 0;";
@@ -123,6 +137,9 @@ public class RenovacionController {
         cbNuevaMembresia.setStyle("-fx-font-size: 12px;");
         dpFechaRenovacion.setStyle("-fx-font-size: 12px;");
         txtMonto.setStyle("-fx-font-size: 12px;");
+
+        TableColumn<Cliente, ?> colDias = tablaClientes.getColumns().get(3);
+        colDias.setPrefWidth(70);
     }
 
     // Ajusta la altura de las tablas dinámicamente
@@ -155,7 +172,7 @@ public class RenovacionController {
     private void cargarClientesProximos() {
         String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
                 "FROM clientes WHERE activo = 1 " +
-                "AND fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days')";
+                "AND fecha_vencimiento BETWEEN date('now') AND date('now', '+6 days')";
 
         cargarClientesDesdeSQL(sql, clientesProximos);
     }
@@ -393,7 +410,7 @@ public class RenovacionController {
 
     private void cargarHistorialPagos(String telefono) {
         ObservableList<PagoHistorial> historial = FXCollections.observableArrayList();
-        String sql = "SELECT pagos.fecha_pago, pagos.tipo_membresia, pagos.monto FROM pagos JOIN clientes ON pagos.cliente_id = clientes.id WHERE clientes.telefono = ? ORDER BY pagos.fecha_pago DESC";
+        String sql = "SELECT pagos.fecha_pago, clientes.tipoMembresia, pagos.monto FROM pagos JOIN clientes ON pagos.cliente_id = clientes.id WHERE clientes.telefono = ? ORDER BY pagos.fecha_pago DESC";
 
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -402,7 +419,7 @@ public class RenovacionController {
             while (rs.next()) {
                 historial.add(new PagoHistorial(
                         LocalDate.parse(rs.getString("fecha_pago")),
-                        rs.getString("tipo_membresia"),
+                        rs.getString("tipoMembresia"),
                         rs.getDouble("monto")
                 ));
             }
