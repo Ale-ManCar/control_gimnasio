@@ -14,7 +14,9 @@ import util.DatabaseUtil;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -170,9 +172,11 @@ public class RenovacionController {
 
     // ===== MÉTODOS PRINCIPALES ACTUALIZADOS ===== //
     private void cargarClientesProximos() {
+        // Consulta simplificada sin cálculo de días
         String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
                 "FROM clientes WHERE activo = 1 " +
-                "AND fecha_vencimiento BETWEEN date('now') AND date('now', '+6 days')";
+                "AND fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days') " +
+                "ORDER BY fecha_vencimiento ASC";
 
         cargarClientesDesdeSQL(sql, clientesProximos);
     }
@@ -191,15 +195,21 @@ public class RenovacionController {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
+                LocalDate fechaVencimiento = LocalDate.parse(rs.getString("fecha_vencimiento"));
+                long diasRestantes = ChronoUnit.DAYS.between(LocalDate.now(), fechaVencimiento);
+
                 Cliente cliente = new Cliente(
                         rs.getString("nombres"),
                         rs.getString("apellidos"),
                         rs.getString("telefono"),
                         rs.getString("tipoMembresia"),
-                        LocalDate.parse(rs.getString("fecha_vencimiento"))
+                        fechaVencimiento
                 );
+                cliente.setDiasRestantes((int) diasRestantes);
                 destino.add(cliente);
             }
+
+            destino.sort(Comparator.comparingInt(Cliente::getDiasRestantes));
 
         } catch (SQLException e) {
             mostrarAlerta("Error de BD", "Error al cargar clientes: " + e.getMessage());

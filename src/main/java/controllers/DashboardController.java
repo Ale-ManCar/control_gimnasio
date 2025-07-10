@@ -302,7 +302,7 @@ public class DashboardController implements Initializable {
         String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento, " +
                 "(julianday(fecha_vencimiento) - julianday(date('now'))) AS dias_restantes " +
                 "FROM clientes " +
-                "WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+6 days') " +
+                "WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days') " +
                 "ORDER BY fecha_vencimiento";
 
         try (Connection conn = DatabaseUtil.getConnection();
