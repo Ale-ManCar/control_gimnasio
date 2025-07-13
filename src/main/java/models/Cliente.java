@@ -50,6 +50,16 @@ public class Cliente {
     public String getFecha_vencimiento() { return fecha_vencimiento.get(); }
     public int getDiasRestantes() { return diasRestantes.get(); }
 
+    // ESTADO DEL CLIENTE
+    public String getEstado() {
+        if (fecha_vencimiento.get() == null || fecha_vencimiento.get().isEmpty())
+            return "Inactivo";
+
+        LocalDate vencimiento = LocalDate.parse(fecha_vencimiento.get());
+        long diasPasados =  ChronoUnit.DAYS.between(vencimiento, LocalDate.now());
+        return diasPasados <= 3 ? "Activo" : "Inactivo";
+    }
+
     public String getNombreCompleto() {
         return getNombres() + " " + getApellidos();
     }

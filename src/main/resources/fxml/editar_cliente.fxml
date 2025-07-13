@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controllers.EditarClienteController"
+      spacing="20"
+      style="-fx-padding: 30; -fx-background-color: #F8F9FA;"
+      prefWidth="450" prefHeight="350">
+
+    <!-- Encabezado -->
+    <Label text="Editar Cliente"
+           style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #4A6CF7; -fx-padding: 0 0 20 0;"/>
+
+    <GridPane hgap="15" vgap="15">
+        <columnConstraints>
+            <ColumnConstraints prefWidth="120" halignment="RIGHT"/>
+            <ColumnConstraints prefWidth="250" halignment="LEFT"/>
+        </columnConstraints>
+
+        <Label text="Nombres:" GridPane.rowIndex="0" GridPane.columnIndex="0"
+               style="-fx-font-size: 14px; -fx-text-fill: #495057;"/>
+        <TextField fx:id="txtNombres" GridPane.rowIndex="0" GridPane.columnIndex="1"
+                   style="-fx-font-size: 14px; -fx-padding: 8px; -fx-background-radius: 5px; -fx-border-radius: 5px;"/>
+
+        <Label text="Apellidos:" GridPane.rowIndex="1" GridPane.columnIndex="0"
+               style="-fx-font-size: 14px; -fx-text-fill: #495057;"/>
+        <TextField fx:id="txtApellidos" GridPane.rowIndex="1" GridPane.columnIndex="1"
+                   style="-fx-font-size: 14px; -fx-padding: 8px; -fx-background-radius: 5px; -fx-border-radius: 5px;"/>
+
+        <Label text="Teléfono:" GridPane.rowIndex="2" GridPane.columnIndex="0"
+               style="-fx-font-size: 14px; -fx-text-fill: #495057;"/>
+        <TextField fx:id="txtTelefono" GridPane.rowIndex="2" GridPane.columnIndex="1"
+                   style="-fx-font-size: 14px; -fx-padding: 8px; -fx-background-radius: 5px; -fx-border-radius: 5px;"/>
+    </GridPane>
+
+    <Button fx:id="btnGuardar" text="Guardar Cambios" onAction="#handleGuardar"
+            style="-fx-background-color: #4A6CF7; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10px 20px; -fx-background-radius: 25px; -fx-border-radius: 25px; -fx-cursor: hand;"/>
+</VBox>
