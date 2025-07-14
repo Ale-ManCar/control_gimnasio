@@ -5,11 +5,8 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
 
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
@@ -20,11 +17,6 @@
 
     <!-- Encabezado con logo y título -->
     <HBox alignment="CENTER" spacing="15" style="-fx-padding: 0 0 20 0;">
-        <!--ImageView fitWidth="40" fitHeight="40">
-            <image>
-                <Image url="@/images/gym.png" />
-            </image>
-        </ImageView-->
         <Label fx:id="lblTitulo" text="Gestión de Clientes" />
     </HBox>
 
@@ -41,7 +33,7 @@
     <TableView fx:id="tablaClientes"
                style="-fx-background-radius: 10px; -fx-scroll-bar-policy: never;">
         <columns>
-            <TableColumn text="Nombre Completo" fx:id="colNombreCompleto"
+            <TableColumn text="Cliente" fx:id="colNombreCompleto"
                          style="-fx-alignment: CENTER;"
                          prefWidth="340"/>
             <TableColumn text="Teléfono" fx:id="colTelefono"
@@ -56,9 +48,12 @@
         </columns>
     </TableView>
 
-    <!-- Botón Volver con estilo moderno -->
-    <HBox spacing="10" alignment="CENTER" style="-fx-padding: 20 0 0 0;">
+    <!-- Botones: Volver y Ver Inactivos -->
+    <HBox spacing="20" alignment="CENTER" style="-fx-padding: 20 0 0 0;">
         <Button text="Volver al Dashboard" onAction="#handleVolver"
                 style="-fx-background-color: #4A6CF7; -fx-text-fill: white; -fx-font-weight: bold; -fx-min-width: 220; -fx-font-size: 16px; -fx-padding: 10px 25px; -fx-background-radius: 25px; -fx-border-radius: 25px; -fx-cursor: hand;"/>
+
+        <Button text="Ver Clientes Inactivos" onAction="#handleVerInactivos"
+                style="-fx-background-color: #c30010; -fx-text-fill: white; -fx-font-weight: bold; -fx-min-width: 220; -fx-font-size: 16px; -fx-padding: 10px 25px; -fx-background-radius: 25px; -fx-border-radius: 25px; -fx-cursor: hand;"/>
     </HBox>
 </VBox>

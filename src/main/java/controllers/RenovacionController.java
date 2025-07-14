@@ -39,16 +39,14 @@ public class RenovacionController {
     private int paginaActual = 1;
     private int clientesPorPagina = 12;
     private int totalPaginas = 1;
-    private final double ALTURA_FILA = 30.0; // Altura estimada por fila
-    private final double ALTURA_CABECERA = 30.0; // Altura estimada de la cabecera
+    private final double ALTURA_FILA = 30.0;
+    private final double ALTURA_CABECERA = 30.0;
 
     @FXML
     public void initialize() {
         try {
-            // ESTILOS DE CONTROLES
             aplicarEstilos();
 
-            // Configurar altura fija para filas
             tablaClientes.setFixedCellSize(ALTURA_FILA);
             tablaHistorial.setFixedCellSize(ALTURA_FILA);
 
@@ -62,10 +60,9 @@ public class RenovacionController {
             cargarClientesProximos();
             actualizarTablaClientes();
             actualizarControlesPaginacion();
-            ajustarAlturaTablas(); // Ajustar altura inicial
+            ajustarAlturaTablas();
             centrarContenidoTablas();
 
-            // PANEL DERECHO OCULTO INICIALMENTE
             panelDerecho.setVisible(false);
 
             tablaClientes.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
@@ -95,7 +92,6 @@ public class RenovacionController {
                 return row;
             });
 
-            // Listeners para cambios en los datos
             tablaClientes.getItems().addListener((ListChangeListener<Cliente>) c -> ajustarAlturaTablas());
             tablaHistorial.getItems().addListener((ListChangeListener<PagoHistorial>) c -> ajustarAlturaTablas());
 
@@ -116,26 +112,19 @@ public class RenovacionController {
     }
 
     private void aplicarEstilos() {
-        // Estilos para ocultar barras de desplazamiento
         String estiloSinScroll = "-fx-scroll-bar-policy: never; -fx-padding: 0; -fx-background-insets: 0;";
 
-        // ESTILOS TABLA CLIENTES
         tablaClientes.setStyle("-fx-font-size: 12px; " + estiloSinScroll);
-
-        // ESTILOS TABLA HISTORIAL
         tablaHistorial.setStyle("-fx-font-size: 12px; " + estiloSinScroll);
 
-        // ESTILO BOTONES
         String botonStyle = "-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; "
                 + "-fx-padding: 5 10; -fx-background-radius: 5;";
         btnAnterior.setStyle(botonStyle);
         btnSiguiente.setStyle(botonStyle);
 
-        // ESTILO PANEL DERECHO
         panelDerecho.setStyle("-fx-background-color: #f5f5f5; -fx-padding: 15px; -fx-border-color: #e0e0e0; "
                 + "-fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-radius: 5px;");
 
-        // ESTILO FORMULARIO
         cbNuevaMembresia.setStyle("-fx-font-size: 12px;");
         dpFechaRenovacion.setStyle("-fx-font-size: 12px;");
         txtMonto.setStyle("-fx-font-size: 12px;");
@@ -144,19 +133,15 @@ public class RenovacionController {
         colDias.setPrefWidth(70);
     }
 
-    // Ajusta la altura de las tablas dinámicamente
     private void ajustarAlturaTablas() {
-        // Ajustar tabla de clientes
         int filasClientes = tablaClientes.getItems().size();
         double alturaClientes = ALTURA_CABECERA + (filasClientes * ALTURA_FILA);
         tablaClientes.setPrefHeight(Math.max(ALTURA_CABECERA + ALTURA_FILA, alturaClientes));
 
-        // Ajustar tabla de historial
         int filasHistorial = tablaHistorial.getItems().size();
         double alturaHistorial = ALTURA_CABECERA + (filasHistorial * ALTURA_FILA);
         tablaHistorial.setPrefHeight(Math.max(ALTURA_CABECERA + ALTURA_FILA, alturaHistorial));
 
-        // Forzar actualización visual
         Platform.runLater(() -> {
             tablaClientes.requestLayout();
             tablaHistorial.requestLayout();
@@ -170,9 +155,7 @@ public class RenovacionController {
         });
     }
 
-    // ===== MÉTODOS PRINCIPALES ACTUALIZADOS ===== //
     private void cargarClientesProximos() {
-        // Consulta simplificada sin cálculo de días
         String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
                 "FROM clientes WHERE activo = 1 " +
                 "AND fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days') " +
@@ -216,9 +199,7 @@ public class RenovacionController {
             e.printStackTrace();
         }
     }
-    // ===== FIN MÉTODOS PRINCIPALES ===== //
 
-    // ===== FILTRADO Y PAGINACIÓN ===== //
     @FXML
     private void filtrarClientes() {
         String filtro = txtBuscar.getText().trim().toLowerCase();
@@ -279,9 +260,7 @@ public class RenovacionController {
         btnAnterior.setDisable(paginaActual <= 1);
         btnSiguiente.setDisable(paginaActual >= totalPaginas);
     }
-    // ===== FIN FILTRADO Y PAGINACIÓN ===== //
 
-    // ===== RENOVACIÓN Y ACCIONES ===== //
     public void precargarCliente(Cliente cliente) {
         for (int i = 0; i < clientesProximos.size(); i++) {
             if (clientesProximos.get(i).getTelefono().equals(cliente.getTelefono())) {
@@ -299,6 +278,20 @@ public class RenovacionController {
                 break;
             }
         }
+    }
+
+    public void setClienteInactivo(Cliente cliente) {
+        clientesProximos.clear();
+        clientesProximos.add(cliente);
+        actualizarTablaClientes();
+        actualizarControlesPaginacion();
+
+        tablaClientes.getSelectionModel().selectFirst();
+        tablaClientes.scrollTo(0);
+
+        cargarHistorialPagos(cliente.getTelefono());
+        mostrarInformacionCliente(cliente);
+        panelDerecho.setVisible(true);
     }
 
     @FXML
@@ -347,7 +340,7 @@ public class RenovacionController {
         try (Connection conn = DatabaseUtil.getConnection()) {
             conn.setAutoCommit(false);
 
-            String sql = "UPDATE clientes SET tipoMembresia = ?, fecha_vencimiento = ? WHERE telefono = ?";
+            String sql = "UPDATE clientes SET tipoMembresia = ?, fecha_vencimiento = ?, activo = 1 WHERE telefono = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
 
             LocalDate nuevaFecha = calcularNuevaFecha(
@@ -382,7 +375,6 @@ public class RenovacionController {
                 conn.commit();
                 mostrarAlerta("Éxito", "Membresía renovada y pago registrado.");
 
-                // Recargar solo clientes próximos después de renovar
                 cargarClientesProximos();
                 actualizarTablaClientes();
                 actualizarControlesPaginacion();
@@ -397,9 +389,7 @@ public class RenovacionController {
             e.printStackTrace();
         }
     }
-    // ===== FIN RENOVACIÓN Y ACCIONES ===== //
 
-    // ===== MÉTODOS AUXILIARES ===== //
     private LocalDate calcularNuevaFecha(LocalDate fechaRenovacion, String membresia) {
         return switch (membresia) {
             case "1 Mes" -> fechaRenovacion.plusMonths(1);
@@ -441,7 +431,6 @@ public class RenovacionController {
         }
     }
 
-    // Método añadido para compatibilidad con DashboardController
     public void setModoTodosClientes(boolean modo) {
         if (modo) {
             cargarTodosClientesActivos();
@@ -452,5 +441,4 @@ public class RenovacionController {
         actualizarControlesPaginacion();
         ajustarAlturaTablas();
     }
-    // ===== FIN MÉTODOS AUXILIARES ===== //
 }

@@ -83,7 +83,7 @@ public class ListaClientesController implements Initializable {
         colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
         colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
 
-        // Configurar columna de nombre completo
+        // Columna Nombre Completo - Negrita y Centrado
         colNombreCompleto.setCellFactory(column -> new TableCell<Cliente, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -98,7 +98,7 @@ public class ListaClientesController implements Initializable {
             }
         });
 
-        // Configurar columna de teléfono
+        // Columna Teléfono - Negrita y Centrado
         colTelefono.setCellFactory(column -> new TableCell<Cliente, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -108,12 +108,12 @@ public class ListaClientesController implements Initializable {
                     setGraphic(null);
                 } else {
                     setText(item);
-                    setStyle("-fx-alignment: CENTER;");
+                    setStyle("-fx-alignment: CENTER; -fx-font-weight: bold;");
                 }
             }
         });
 
-        // Configurar columna de estado con indicador visual
+        // Columna Estado - Indicador Rojo y Negrita
         colEstado.setCellFactory(column -> new TableCell<Cliente, String>() {
             private final StackPane container = new StackPane();
             private final Circle indicador = new Circle(5);
@@ -125,7 +125,6 @@ public class ListaClientesController implements Initializable {
                 caja.setAlignment(Pos.CENTER);
                 container.getChildren().add(caja);
 
-                texto.setStyle("-fx-font-weight: bold;");
                 texto.setFont(Font.font("Arial", FontWeight.BOLD, 12));
             }
 
@@ -230,7 +229,7 @@ public class ListaClientesController implements Initializable {
                 double anchoNombre = anchoTotal * 0.40;   // 40%
                 double anchoTelefono = anchoTotal * 0.25;  // 25%
                 double anchoEstado = anchoTotal * 0.16;    // 20%
-                double anchoAcciones = anchoTotal * 0.16;  // 15%
+                double anchoAcciones = anchoTotal * 0.17;  // 15%
 
                 colNombreCompleto.setPrefWidth(anchoNombre);
                 colTelefono.setPrefWidth(anchoTelefono);
@@ -430,6 +429,17 @@ public class ListaClientesController implements Initializable {
     private void handleVolver() {
         Stage stage = (Stage) tablaClientes.getScene().getWindow();
         stage.close();
+    }
+
+    @FXML
+    private void handleVerInactivos() {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/lista_clientes_inactivos.fxml"));
+            Stage stage = (Stage) tablaClientes.getScene().getWindow();
+            stage.setScene(new Scene(root));
+        } catch (IOException e) {
+            mostrarAlerta("Error", "No se pudo abrir inactivos");
+        }
     }
 
     private void mostrarAlerta(String titulo, String mensaje) {

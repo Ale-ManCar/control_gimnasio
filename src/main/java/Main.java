@@ -5,6 +5,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import util.AlertScheduler;
 import util.DatabaseUtil;
+import util.EstadoClienteService;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -15,6 +16,7 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception {
         // Inicializa la base de datos
         DatabaseUtil.initDatabase();
+        EstadoClienteService.iniciarActualizacionDiaria();
 
         // Carga el dashboard al inicio
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/dashboard.fxml"));

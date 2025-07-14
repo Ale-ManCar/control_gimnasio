@@ -300,9 +300,10 @@ public class DashboardController implements Initializable {
     private void cargarClientesProximosAVencer() {
         ObservableList<Cliente> clientes = FXCollections.observableArrayList();
         String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento, " +
-                "(julianday(fecha_vencimiento) - julianday(date('now'))) AS dias_restantes " +
+                "(julianday(fecha_vencimiento) - julianday('now')) AS dias_restantes " +
                 "FROM clientes " +
-                "WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days') " +
+                "WHERE activo = 1 " +  // SOLO CLIENTES ACTIVOS
+                "AND fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days') " +
                 "ORDER BY fecha_vencimiento";
 
         try (Connection conn = DatabaseUtil.getConnection();
@@ -319,13 +320,12 @@ public class DashboardController implements Initializable {
                         rs.getString("tipoMembresia"),
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 );
-                //cliente.setDiasRestantes(rs.getInt("dias_restantes"));
+                cliente.setDiasRestantes(rs.getInt("dias_restantes"));  // DESCOMENTADO
                 clientes.add(cliente);
             }
 
             tablaClientesProximosAVencer.setItems(clientes);
             ajustarAlturaTabla();
-
             lblMensaje.setText(hayClientes ? "" : "No hay clientes próximos a vencer en los próximos 7 días.");
 
         } catch (SQLException e) {
