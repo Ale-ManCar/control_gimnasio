@@ -26,6 +26,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.Optional;
 
 public class ListaClientesInactivosController {
@@ -183,6 +184,8 @@ public class ListaClientesInactivosController {
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
+            ObservableList<Cliente> clientesTemp = FXCollections.observableArrayList();
+
             while (rs.next()) {
                 Cliente cliente = new Cliente(
                         rs.getString("nombres"),
@@ -193,6 +196,10 @@ public class ListaClientesInactivosController {
                 );
                 tablaClientes.getItems().add(cliente);
             }
+
+            // ORDENAMIENTO ALFABÉTICO
+            clientesTemp.sort(Comparator.comparing(Cliente::getNombreCompleto, String.CASE_INSENSITIVE_ORDER));
+            tablaClientes.getItems().setAll(clientesTemp);
             clientesOriginales.setAll(tablaClientes.getItems());
         } catch (SQLException e) {
             mostrarAlerta("Error", "No se pudieron cargar clientes inactivos");
@@ -279,6 +286,9 @@ public class ListaClientesInactivosController {
                 filtrados.add(cliente);
             }
         }
+
+        //  RESULTADOS ORDENADOS
+        filtrados.sort(Comparator.comparing(Cliente::getNombreCompleto, String.CASE_INSENSITIVE_ORDER));
         tablaClientes.setItems(filtrados);
     }
 

@@ -27,6 +27,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
@@ -228,8 +229,8 @@ public class ListaClientesController implements Initializable {
                 // Distribución proporcional del espacio
                 double anchoNombre = anchoTotal * 0.40;   // 40%
                 double anchoTelefono = anchoTotal * 0.25;  // 25%
-                double anchoEstado = anchoTotal * 0.16;    // 20%
-                double anchoAcciones = anchoTotal * 0.17;  // 15%
+                double anchoEstado = anchoTotal * 0.16;    // 16%
+                double anchoAcciones = anchoTotal * 0.17;  // 17%
 
                 colNombreCompleto.setPrefWidth(anchoNombre);
                 colTelefono.setPrefWidth(anchoTelefono);
@@ -347,6 +348,9 @@ public class ListaClientesController implements Initializable {
             }
         }
 
+        // RESULTADOS ORDENADOS
+        filtrados.sort(Comparator.comparing(Cliente::getNombreCompleto, String.CASE_INSENSITIVE_ORDER));
+
         tablaClientes.setItems(filtrados);
     }
 
@@ -410,6 +414,8 @@ public class ListaClientesController implements Initializable {
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
+            ObservableList<Cliente> clientesTemp = FXCollections.observableArrayList();
+
             while (rs.next()) {
                 Cliente cliente = new Cliente(
                         rs.getString("nombres"),
@@ -418,8 +424,13 @@ public class ListaClientesController implements Initializable {
                         rs.getString("tipoMembresia"),
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 );
-                tablaClientes.getItems().add(cliente);
+                clientesTemp.add(cliente);
             }
+
+            // ORDENAMIENTO ALFABÉTICO
+            clientesTemp.sort(Comparator.comparing(Cliente::getNombreCompleto, String.CASE_INSENSITIVE_ORDER));
+            tablaClientes.getItems().setAll(clientesTemp);
+
         } catch (SQLException e) {
             mostrarAlerta("Error de Base de Datos", "No se pudieron cargar los clientes");
         }
