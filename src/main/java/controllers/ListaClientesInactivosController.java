@@ -74,7 +74,7 @@ public class ListaClientesInactivosController {
                     setGraphic(null);
                 } else {
                     setText(item);
-                    setStyle("-fx-alignment: CENTER; -fx-font-weight: bold;");
+                    setStyle("-fx-alignment: CENTER; -fx-font-weight: bold; -fx-text-fill: black");
                 }
             }
         });
@@ -89,7 +89,7 @@ public class ListaClientesInactivosController {
                     setGraphic(null);
                 } else {
                     setText(item);
-                    setStyle("-fx-alignment: CENTER; -fx-font-weight: bold;");
+                    setStyle("-fx-alignment: CENTER; -fx-font-weight: bold; -fx-text-fill: black");
                 }
             }
         });
@@ -194,7 +194,7 @@ public class ListaClientesInactivosController {
                         rs.getString("tipoMembresia"),
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 );
-                tablaClientes.getItems().add(cliente);
+                clientesTemp.add(cliente);
             }
 
             // ORDENAMIENTO ALFABÉTICO
@@ -303,22 +303,35 @@ public class ListaClientesInactivosController {
             TableRow<Cliente> row = new TableRow<>();
             row.setStyle("-fx-background-radius: 5px;");
 
+            // Detectar selección y mantener azul claro
+            row.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
+                if (isNowSelected) {
+                    row.setStyle("-fx-background-color: #e6f2ff; -fx-background-radius: 5px;");
+                } else {
+                    // Si se deselecciona, vuelve al color normal
+                    row.setStyle("-fx-background-color: #ffffff; -fx-background-radius: 5px;");
+                }
+            });
+
             row.setOnMouseEntered(event -> {
-                if (!row.isEmpty()) {
+                if (!row.isEmpty() && !row.isSelected()) {
                     row.setStyle("-fx-background-color: #e6f2ff; -fx-background-radius: 5px;");
                     Tooltip tooltip = new Tooltip(row.getItem().getTooltipText());
                     tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-background-color: #333; -fx-text-fill: white;");
                     Tooltip.install(row, tooltip);
                 }
             });
+
             row.setOnMouseExited(event -> {
-                if (!row.isEmpty()) {
+                if (!row.isEmpty() && !row.isSelected()) {
                     row.setStyle("-fx-background-color: #ffffff; -fx-background-radius: 5px;");
                 }
             });
+
             return row;
         });
     }
+
 
     private void ajustarAnchoColumnas() {
         Platform.runLater(() -> {

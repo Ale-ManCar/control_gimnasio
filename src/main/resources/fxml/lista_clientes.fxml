@@ -31,19 +31,19 @@
 
     <!-- Tabla con diseño moderno -->
     <TableView fx:id="tablaClientes"
-               style="-fx-background-radius: 10px; -fx-scroll-bar-policy: never;">
+               style="-fx-background-radius: 10px; -fx-scroll-bar-policy: never; -fx-background-insets: 0; -fx-padding: 0; -fx-alignment: CENTER;">
         <columns>
             <TableColumn text="Cliente" fx:id="colNombreCompleto"
-                         style="-fx-alignment: CENTER;"
+                         style="-fx-alignment: CENTER; -fx-text-alignment: center;"
                          prefWidth="340"/>
             <TableColumn text="Teléfono" fx:id="colTelefono"
-                         style="-fx-alignment: CENTER;"
+                         style="-fx-alignment: CENTER; -fx-text-alignment: center;"
                          prefWidth="210"/>
             <TableColumn text="Estado" fx:id="colEstado"
-                         style="-fx-alignment: CENTER;"
+                         style="-fx-alignment: CENTER; -fx-text-alignment: center;"
                          prefWidth="170"/>
             <TableColumn text="Acciones" fx:id="colAcciones"
-                         style="-fx-alignment: CENTER;"
+                         style="-fx-alignment: CENTER; -fx-text-alignment: center;"
                          prefWidth="130"/>
         </columns>
     </TableView>
