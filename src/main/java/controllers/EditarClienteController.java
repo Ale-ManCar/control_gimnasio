@@ -26,7 +26,24 @@ public class EditarClienteController {
         txtApellidos.setText(cliente.getApellidos());
         txtTelefono.setText(cliente.getTelefono());
 
-        // Validación de máximo 10 dígitos para teléfono
+        // CONVERSIÓN NOMBRE Y APELLIDOS EN MAYÚSCULAS
+        txtNombres.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]*")) {
+                txtNombres.setText(oldVal);
+            } else {
+                txtNombres.setText(newVal.toUpperCase());
+            }
+        });
+
+        txtApellidos.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]*")) {
+                txtApellidos.setText(oldVal);
+            } else {
+                txtApellidos.setText(newVal.toUpperCase());
+            }
+        });
+
+        // TELÉFONO VALIDADO A 10 DÍGITOS
         txtTelefono.textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.matches("\\d*")) {
                 txtTelefono.setText(newValue.replaceAll("[^\\d]", ""));

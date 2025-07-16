@@ -29,9 +29,27 @@ public class RegistroClienteController {
             cbMembresia.setValue("1 Mes");
         }
 
+        // CONVERSIÓN NOMBRE Y APELLIDOS EN MAYÚSCULAS
+        txtNombres.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\\\s]*")) {
+                txtNombres.setText(oldVal);
+            } else {
+                txtNombres.setText(newVal.toUpperCase());
+            }
+        });
+
+        txtApellidos.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\\\s]*")) {
+                txtApellidos.setText(oldVal);
+            } else {
+                txtApellidos.setText(newVal.toUpperCase());
+            }
+        });
+
+        // TELÉFONO VALIDADO A 10 DÍGITOS
         txtTelefono.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal.matches("\\d*")) {
-                txtTelefono.setText(newVal.replaceAll("[^\\d]", ""));
+            if (!newVal.matches("\\d*") || newVal.length() > 10) {
+                txtTelefono.setText(oldVal);
             }
         });
 
