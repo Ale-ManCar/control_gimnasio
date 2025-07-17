@@ -1,5 +1,7 @@
 package controllers;
 
+import javafx.animation.FadeTransition;
+import javafx.animation.ScaleTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -8,7 +10,10 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.util.Duration;
 import models.Cliente;
 import util.DatabaseUtil;
 import javafx.scene.paint.Color;
@@ -45,6 +50,7 @@ public class ListaClientesController implements Initializable {
     @FXML private Label lblTitulo;
 
     private ObservableList<Cliente> clientesOriginales = FXCollections.observableArrayList();
+    private Cliente clienteEditado;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -369,32 +375,62 @@ public class ListaClientesController implements Initializable {
     }
 
     private void mostrarDialogoEdicion(Cliente cliente) {
-        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmacion.setTitle("Confirmar Edición");
-        confirmacion.setHeaderText("¿Está seguro de editar este cliente?");
-        confirmacion.setContentText("Cliente: " + cliente.getNombreCompleto());
+        try {
+            // SOLUCIÓN CORRECTA:
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/confirmar_edicion_dialog.fxml"));
+            VBox dialogContent = loader.load();
 
-        // Aplicar estilos al diálogo
-        DialogPane dialogPane = confirmacion.getDialogPane();
-        dialogPane.setStyle(
-                "-fx-background-color: #ffffff;" +
-                        "-fx-font-size: 14px;" +
-                        "-fx-border-radius: 10px;" +
-                        "-fx-background-radius: 10px;"
-        );
+            // Obtener el controlador desde el loader
+            ConfirmarEdicionDialogController controller = loader.getController();
+            controller.setNombreCliente(cliente.getNombreCompleto());
 
-        Optional<ButtonType> resultado = confirmacion.showAndWait();
-        if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
-            abrirVentanaEdicion(cliente);
+            // Crear el diálogo
+            Stage dialog = new Stage();
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.initOwner(tablaClientes.getScene().getWindow());
+            dialog.initStyle(StageStyle.TRANSPARENT);
+            dialog.setScene(new Scene(dialogContent));
+
+            // Animación de entrada
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(300), dialogContent);
+            fadeIn.setFromValue(0);
+            fadeIn.setToValue(1);
+
+            // Manejar botones
+            controller.btnConfirmar.setOnAction(e -> {
+                dialog.close();
+                abrirVentanaEdicion(cliente);
+            });
+
+            controller.btnCancelar.setOnAction(e -> dialog.close());
+
+            // Mostrar diálogo con animación
+            dialog.show();
+            fadeIn.play();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            mostrarAlerta("Error", "No se pudo cargar el diálogo de confirmación");
         }
     }
 
     private void abrirVentanaEdicion(Cliente cliente) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/editar_cliente.fxml"));
+            this.clienteEditado = cliente;
+
+            URL fxmlUrl = getClass().getResource("/fxml/editar_cliente.fxml");
+            if (fxmlUrl == null) {
+                throw new IOException("Archivo FXML no encontrado: /fxml/editar_cliente.fxml");
+            }
+
+            // Mensaje de depuración eliminado
+            FXMLLoader loader = new FXMLLoader(fxmlUrl);
             Parent root = loader.load();
 
             EditarClienteController controller = loader.getController();
+            if (controller == null) {
+                throw new IOException("Controlador no inicializado");
+            }
             controller.setCliente(cliente);
 
             Stage stage = new Stage();
@@ -403,16 +439,54 @@ public class ListaClientesController implements Initializable {
             stage.showAndWait();
 
             recargarClientes();
+
         } catch (IOException e) {
-            mostrarAlerta("Error", "No se pudo abrir la ventana de edición");
+            e.printStackTrace();
+            mostrarAlerta("Error", "No se pudo abrir la ventana de edición:\n" + e.getMessage());
         }
     }
 
+    private void aplicarEfectoExito(TableRow<Cliente> row) {
+        ScaleTransition scale = new ScaleTransition(Duration.millis(150), row);
+        scale.setFromX(1);
+        scale.setFromY(1);
+        scale.setToX(1.03);
+        scale.setToY(1.03);
+        scale.setCycleCount(4); // 2 pulsos (ida y vuelta dos veces)
+        scale.setAutoReverse(true);
+        scale.play();
+    }
+
     private void recargarClientes() {
+        // Guardar el teléfono del cliente editado
+        String telefonoEditado = clienteEditado != null ? clienteEditado.getTelefono() : null;
+
+        // Limpiar y recargar la tabla una sola vez
         tablaClientes.getItems().clear();
         cargarClientes();
         clientesOriginales.setAll(tablaClientes.getItems());
-        ajustarAnchoColumnas(); // Reajustar después de recargar
+
+        // Encontrar la fila del cliente editado
+        if (telefonoEditado != null) {
+            for (int i = 0; i < tablaClientes.getItems().size(); i++) {
+                Cliente c = tablaClientes.getItems().get(i);
+                if (c.getTelefono().equals(telefonoEditado)) {
+                    int finalI = i;
+                    // Esperar a que la tabla se renderice
+                    Platform.runLater(() -> {
+                        // Buscar la fila por índice
+                        TableRow<Cliente> row = (TableRow<Cliente>) tablaClientes.lookup(".table-row-cell:" + finalI);
+                        if (row != null) {
+                            aplicarEfectoExito(row);
+                        }
+                    });
+                    break;
+                }
+            }
+        }
+
+        // Limpiar referencia
+        clienteEditado = null;
     }
 
     private void cargarClientes() {
