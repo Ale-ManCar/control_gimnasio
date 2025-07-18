@@ -1,15 +1,21 @@
 package controllers;
 
-import javafx.animation.PauseTransition;
+import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 import util.DatabaseUtil;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -114,10 +120,10 @@ public class RegistroClienteController {
 
             conn.commit();
 
-            // Mostrar alerta de éxito
-            mostrarAlertaRedireccion();
+            // ✅ Mostrar UNA sola alerta de éxito con mensaje de redirección
+            mostrarAlertaExito();
 
-            // Programar retorno al dashboard después de 5 segundos
+            // ✅ Programar retorno al dashboard después de 5 segundos
             programarRetornoAlDashboard();
 
         } catch (SQLException e) {
@@ -125,26 +131,6 @@ public class RegistroClienteController {
         } catch (NumberFormatException e) {
             mostrarAlerta("Error", "El monto de pago no es válido");
         }
-    }
-
-    private void mostrarAlertaRedireccion() {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Éxito");
-            alert.setHeaderText(null);
-            alert.setContentText("Cliente registrado correctamente\n\nSerá redirigido al panel de control en 5 segundos...");
-
-            // Configurar estilo
-            DialogPane dialogPane = alert.getDialogPane();
-            dialogPane.setStyle(
-                    "-fx-background-color: #ffffff;" +
-                            "-fx-font-size: 14px;" +
-                            "-fx-border-radius: 10px;" +
-                            "-fx-background-radius: 10px;"
-            );
-
-            alert.show(); // Mostrar sin bloquear
-        });
     }
 
     private void programarRetornoAlDashboard() {
@@ -234,6 +220,66 @@ public class RegistroClienteController {
             );
 
             alert.showAndWait();
+        });
+    }
+
+    private void mostrarAlertaExito() {
+        Platform.runLater(() -> {
+            // Crear una alerta personalizada
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("¡Éxito!");
+            alert.setHeaderText(null);
+            alert.setContentText(
+                    "✅ Cliente registrado correctamente\n\n" +
+                            "Será redirigido al panel de control en 5 segundos..."
+            );
+
+            // Personalizar el diseño
+            DialogPane dialogPane = alert.getDialogPane();
+            dialogPane.setStyle(
+                    "-fx-background-color: #e8f5e9;" +  // Verde claro de fondo
+                            "-fx-font-size: 16px;" +
+                            "-fx-border-radius: 15px;" +
+                            "-fx-background-radius: 15px;" +
+                            "-fx-effect: dropshadow(three-pass-box, rgba(46, 204, 113, 0.5), 15, 0, 0, 3);" +
+                            "-fx-padding: 20px;"
+            );
+
+            // Estilo para el texto
+            Label contentLabel = (Label) dialogPane.lookup(".content.label");
+            contentLabel.setStyle(
+                    "-fx-text-fill: #27ae60;" +  // Verde oscuro
+                            "-fx-font-weight: bold;" +
+                            "-fx-font-size: 13px;"
+            );
+
+            // Agregar ícono de éxito
+            ImageView successIcon = new ImageView(new Image(
+                    getClass().getResource("/images/success.png").toExternalForm()
+            ));
+            successIcon.setFitWidth(60);
+            successIcon.setFitHeight(60);
+            alert.setGraphic(successIcon);
+
+            // Personalizar botón OK
+            Button okButton = (Button) dialogPane.lookupButton(ButtonType.OK);
+            okButton.setStyle(
+                    "-fx-background-color: #2ecc71;" +
+                            "-fx-text-fill: white;" +
+                            "-fx-font-weight: bold;" +
+                            "-fx-font-size: 14px;" +
+                            "-fx-background-radius: 10px;" +
+                            "-fx-padding: 8px 16px;"
+            );
+
+            // Animación de entrada
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(300), dialogPane);
+            fadeIn.setFromValue(0);
+            fadeIn.setToValue(1);
+
+            // Mostrar alerta
+            alert.show();
+            fadeIn.play();
         });
     }
 }

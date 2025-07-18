@@ -236,7 +236,7 @@ public class ListaClientesController implements Initializable {
                 double anchoNombre = anchoTotal * 0.40;   // 40%
                 double anchoTelefono = anchoTotal * 0.25;  // 25%
                 double anchoEstado = anchoTotal * 0.16;    // 16%
-                double anchoAcciones = anchoTotal * 0.17;  // 17%
+                double anchoAcciones = anchoTotal * 0.16;  // 17%
 
                 colNombreCompleto.setPrefWidth(anchoNombre);
                 colTelefono.setPrefWidth(anchoTelefono);

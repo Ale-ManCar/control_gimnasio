@@ -393,7 +393,7 @@ public class ListaClientesInactivosController {
                 colNombreCompleto.setPrefWidth(anchoTotal * 0.40);
                 colTelefono.setPrefWidth(anchoTotal * 0.25);
                 colEstado.setPrefWidth(anchoTotal * 0.16);
-                colAcciones.setPrefWidth(anchoTotal * 0.17);
+                colAcciones.setPrefWidth(anchoTotal * 0.16);
                 tablaClientes.requestLayout();
             }
         });
