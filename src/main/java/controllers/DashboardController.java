@@ -299,11 +299,12 @@ public class DashboardController implements Initializable {
 
     private void cargarClientesProximosAVencer() {
         ObservableList<Cliente> clientes = FXCollections.observableArrayList();
-        String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento, " +
-                "(julianday(fecha_vencimiento) - julianday('now')) AS dias_restantes " +
+        // Consulta modificada: quitamos el cálculo de días_restantes
+        String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
                 "FROM clientes " +
-                "WHERE activo = 1 " +  // SOLO CLIENTES ACTIVOS
-                "AND fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days') " +
+                "WHERE activo = 1 " +
+                "AND date(fecha_vencimiento) >= date('now') " +
+                "AND date(fecha_vencimiento) <= date('now', '+7 days') " +
                 "ORDER BY fecha_vencimiento";
 
         try (Connection conn = DatabaseUtil.getConnection();
@@ -320,7 +321,10 @@ public class DashboardController implements Initializable {
                         rs.getString("tipoMembresia"),
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 );
-                cliente.setDiasRestantes(rs.getInt("dias_restantes"));  // DESCOMENTADO
+
+                // Usamos el método setDiasRestantes() que corrige el cálculo
+                cliente.setDiasRestantes();
+
                 clientes.add(cliente);
             }
 

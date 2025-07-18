@@ -1,11 +1,14 @@
 package controllers;
 
+import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import util.DatabaseUtil;
 import java.io.IOException;
 import java.sql.Connection;
@@ -110,14 +113,69 @@ public class RegistroClienteController {
             }
 
             conn.commit();
-            mostrarAlerta("Éxito", "Cliente registrado correctamente");
-            limpiarCampos();
+
+            // Mostrar alerta de éxito
+            mostrarAlertaRedireccion();
+
+            // Programar retorno al dashboard después de 5 segundos
+            programarRetornoAlDashboard();
 
         } catch (SQLException e) {
             mostrarAlerta("Error", "No se pudo registrar el cliente/pago: " + e.getMessage());
         } catch (NumberFormatException e) {
             mostrarAlerta("Error", "El monto de pago no es válido");
         }
+    }
+
+    private void mostrarAlertaRedireccion() {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Éxito");
+            alert.setHeaderText(null);
+            alert.setContentText("Cliente registrado correctamente\n\nSerá redirigido al panel de control en 5 segundos...");
+
+            // Configurar estilo
+            DialogPane dialogPane = alert.getDialogPane();
+            dialogPane.setStyle(
+                    "-fx-background-color: #ffffff;" +
+                            "-fx-font-size: 14px;" +
+                            "-fx-border-radius: 10px;" +
+                            "-fx-background-radius: 10px;"
+            );
+
+            alert.show(); // Mostrar sin bloquear
+        });
+    }
+
+    private void programarRetornoAlDashboard() {
+        new Thread(() -> {
+            try {
+                // Esperar 5 segundos
+                Thread.sleep(5000);
+
+                Platform.runLater(() -> {
+                    try {
+                        // Cargar el dashboard
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
+                        Parent root = loader.load();
+
+                        // Obtener la ventana actual
+                        Stage stage = (Stage) btnSiguiente.getScene().getWindow();
+
+                        // Crear nueva escena
+                        Scene scene = new Scene(root);
+                        stage.setScene(scene);
+                        stage.setTitle("Panel de Control");
+                        stage.show();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        mostrarAlerta("Error", "No se pudo cargar el panel de control");
+                    }
+                });
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
     }
 
     @FXML
@@ -160,10 +218,22 @@ public class RegistroClienteController {
     }
 
     private void mostrarAlerta(String titulo, String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(titulo);
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle(titulo);
+            alert.setHeaderText(null);
+            alert.setContentText(mensaje);
+
+            // Configurar estilo
+            DialogPane dialogPane = alert.getDialogPane();
+            dialogPane.setStyle(
+                    "-fx-background-color: #ffffff;" +
+                            "-fx-font-size: 14px;" +
+                            "-fx-border-radius: 10px;" +
+                            "-fx-background-radius: 10px;"
+            );
+
+            alert.showAndWait();
+        });
     }
 }

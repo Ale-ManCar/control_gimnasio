@@ -64,7 +64,18 @@ public class Cliente {
         return getNombres() + " " + getApellidos();
     }
 
-    public void setDiasRestantes(int dias) {
+    public void setDiasRestantes() {
+        LocalDate fechaVenc = this.getFecha_vencimientoDate();
+        long dias = ChronoUnit.DAYS.between(LocalDate.now(), fechaVenc);
+
+        if (dias == 0) {
+            this.diasRestantes.set(0);  // Vence hoy
+        } else if (dias > 0) {
+            this.diasRestantes.set((int) dias);
+        } else {
+            this.diasRestantes.set(-1); // Ya venció
+        }
+    }public void setDiasRestantes(int dias) {
         this.diasRestantes.set(dias);
     }
 
