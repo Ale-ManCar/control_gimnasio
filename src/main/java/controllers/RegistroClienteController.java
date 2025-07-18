@@ -31,7 +31,7 @@ public class RegistroClienteController {
 
         // CONVERSIÓN NOMBRE Y APELLIDOS EN MAYÚSCULAS
         txtNombres.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal.matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\\\s]*")) {
+            if (!newVal.matches("[\\p{L} .'-]*")) {
                 txtNombres.setText(oldVal);
             } else {
                 txtNombres.setText(newVal.toUpperCase());
@@ -39,7 +39,7 @@ public class RegistroClienteController {
         });
 
         txtApellidos.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal.matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\\\s]*")) {
+            if (!newVal.matches("[\\p{L} .'-]*")) {
                 txtApellidos.setText(oldVal);
             } else {
                 txtApellidos.setText(newVal.toUpperCase());

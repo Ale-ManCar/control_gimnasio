@@ -5,12 +5,11 @@ import javafx.animation.PauseTransition;
 import javafx.animation.TranslateTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Label; // Changed from Text
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
@@ -21,9 +20,9 @@ public class ToastController {
     public static final int ERROR = 2;
     public static final int INFO = 3;
 
-    @FXML private static StackPane toastContainer;
+    @FXML private StackPane toastContainer;
     @FXML private ImageView imgIcon;
-    @FXML private Text lblMensaje;
+    @FXML private Label lblMensaje; // Changed from Text to Label
 
     public static void showToast(Stage ownerStage, String message, int type) {
         try {
@@ -31,21 +30,25 @@ public class ToastController {
                     ToastController.class.getResource("/fxml/toast.fxml")
             );
 
+            // Create controller instance before loading
+            ToastController controller = new ToastController();
+            loader.setController(controller);
+
             StackPane toast = loader.load();
-            ToastController controller = loader.getController();
 
             // Configurar según tipo
             switch (type) {
                 case SUCCESS:
-                    controller.imgIcon.setImage(new Image("/images/success-icon.png"));
+                    controller.imgIcon.setImage(new Image("/images/gym.png"));
+                    controller.toastContainer.setStyle("-fx-background-color: rgba(40,167,69,0.9);");
                     break;
                 case ERROR:
-                    controller.imgIcon.setImage(new Image("/images/error-icon.png"));
-                    toastContainer.setStyle("-fx-background-color: rgba(220,53,69,0.9);");
+                    controller.imgIcon.setImage(new Image("/images/gym.png"));
+                    controller.toastContainer.setStyle("-fx-background-color: rgba(220,53,69,0.9);");
                     break;
                 case INFO:
-                    controller.imgIcon.setImage(new Image("/images/info-icon.png"));
-                    toastContainer.setStyle("-fx-background-color: rgba(23,162,184,0.9);");
+                    controller.imgIcon.setImage(new Image("/images/gym.png"));
+                    controller.toastContainer.setStyle("-fx-background-color: rgba(23,162,184,0.9);");
                     break;
             }
 

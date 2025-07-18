@@ -1,5 +1,6 @@
 package controllers;
 
+import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -12,11 +13,15 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.util.Duration;
 import models.Cliente;
 import util.DatabaseUtil;
 
@@ -226,33 +231,81 @@ public class ListaClientesInactivosController {
     }
 
     private void eliminarCliente(Cliente cliente) {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Confirmar Eliminación");
-        confirm.setHeaderText("¿Eliminar cliente permanentemente?");
-        confirm.setContentText("Esta acción borrará todos los registros asociados");
+        try {
+            // Cargar el nuevo diálogo de eliminación
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/confirmar_eliminacion_dialog.fxml")
+            );
+            VBox dialogContent = loader.load();
 
-        Optional<ButtonType> result = confirm.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            try (Connection conn = DatabaseUtil.getConnection()) {
-                conn.setAutoCommit(false);
+            // Configurar datos
+            ConfirmarEliminacionDialogController controller = loader.getController();
+            controller.setNombreCliente(cliente.getNombreCompleto());
 
-                String deletePagos = "DELETE FROM pagos WHERE cliente_id = (SELECT id FROM clientes WHERE telefono = ?)";
-                try (PreparedStatement stmt = conn.prepareStatement(deletePagos)) {
-                    stmt.setString(1, cliente.getTelefono());
-                    stmt.executeUpdate();
-                }
+            // Crear diálogo
+            Stage dialog = new Stage();
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.initOwner(tablaClientes.getScene().getWindow());
+            dialog.initStyle(StageStyle.TRANSPARENT);
+            dialog.setScene(new Scene(dialogContent));
 
-                String deleteCliente = "DELETE FROM clientes WHERE telefono = ?";
-                try (PreparedStatement stmt = conn.prepareStatement(deleteCliente)) {
-                    stmt.setString(1, cliente.getTelefono());
-                    stmt.executeUpdate();
-                }
+            // Animación de entrada
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(300), dialogContent);
+            fadeIn.setFromValue(0);
+            fadeIn.setToValue(1);
 
-                conn.commit();
-                recargarClientes();
-            } catch (SQLException e) {
-                mostrarAlerta("Error", "No se pudo eliminar cliente");
+            // Manejar botones
+            controller.btnCancelar.setOnAction(e -> dialog.close());
+
+            controller.btnEliminar.setOnAction(e -> {
+                dialog.close();
+                ejecutarEliminacion(cliente);
+            });
+
+            // Mostrar diálogo
+            dialog.show();
+            fadeIn.play();
+
+        } catch (IOException e) {
+            mostrarAlerta("Error", "No se pudo cargar el diálogo de confirmación");
+        }
+    }
+
+    private void ejecutarEliminacion(Cliente cliente) {
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            conn.setAutoCommit(false);
+
+            // Eliminar pagos asociados
+            String deletePagos = "DELETE FROM pagos WHERE cliente_id = (SELECT id FROM clientes WHERE telefono = ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(deletePagos)) {
+                stmt.setString(1, cliente.getTelefono());
+                stmt.executeUpdate();
             }
+
+            // Eliminar cliente
+            String deleteCliente = "DELETE FROM clientes WHERE telefono = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(deleteCliente)) {
+                stmt.setString(1, cliente.getTelefono());
+                stmt.executeUpdate();
+            }
+
+            conn.commit();
+            recargarClientes();
+
+            // Mostrar notificación de éxito
+            mostrarToastExito("Cliente eliminado permanentemente");
+
+        } catch (SQLException e) {
+            mostrarAlerta("Error", "No se pudo eliminar cliente");
+        }
+    }
+
+    private void mostrarToastExito(String mensaje) {
+        try {
+            Stage stage = (Stage) tablaClientes.getScene().getWindow();
+            ToastController.showToast(stage, mensaje, ToastController.SUCCESS);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
