@@ -10,7 +10,7 @@
             fx:controller="controllers.RegistroClienteController"
             prefWidth="900"
             prefHeight="600"
-            style="-fx-background-color: linear-gradient(to bottom, #f0f4f8, #dfe6ed); -fx-font-family: 'Segoe UI', sans-serif;">
+            style="-fx-background-color: #f8f9fa; -fx-font-family: 'Segoe UI', sans-serif;">
 
     <center>
         <VBox alignment="TOP_CENTER" spacing="30">
@@ -18,10 +18,12 @@
                 <Insets top="60" right="40" bottom="40" left="40"/>
             </padding>
 
+            <!-- Título con estilo idéntico a editar_cliente -->
             <Label text="Registro de Cliente"
-                   style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                   style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #4A6CF7; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 2, 0, 1, 1);"/>
 
-            <VBox spacing="25" maxWidth="600" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 40; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 15, 0, 0, 4);">
+            <!-- Panel con mismos colores y efectos que editar_cliente -->
+            <VBox spacing="25" maxWidth="600" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 40; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 15, 0, 0, 4);">
 
                 <GridPane hgap="20" vgap="20">
                     <columnConstraints>
@@ -29,42 +31,56 @@
                         <ColumnConstraints hgrow="ALWAYS"/>
                     </columnConstraints>
 
+                    <!-- Campos con mismos estilos -->
                     <Label text="Nombres:" GridPane.rowIndex="0" GridPane.columnIndex="0"
-                           style="-fx-text-fill: #34495e; -fx-font-size: 14px;"/>
+                           style="-fx-text-fill: #495057; -fx-font-size: 14px; -fx-font-weight: bold;"/>
                     <TextField fx:id="txtNombres" GridPane.rowIndex="0" GridPane.columnIndex="1"
-                               style="-fx-background-color: #f9f9f9; -fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;"/>
+                               style="-fx-background-color: #f9f9f9; -fx-border-color: #ced4da; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;"/>
 
                     <Label text="Apellidos:" GridPane.rowIndex="1" GridPane.columnIndex="0"
-                           style="-fx-text-fill: #34495e; -fx-font-size: 14px;"/>
+                           style="-fx-text-fill: #495057; -fx-font-size: 14px; -fx-font-weight: bold;"/>
                     <TextField fx:id="txtApellidos" GridPane.rowIndex="1" GridPane.columnIndex="1"
-                               style="-fx-background-color: #f9f9f9; -fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;"/>
+                               style="-fx-background-color: #f9f9f9; -fx-border-color: #ced4da; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;"/>
 
                     <Label text="Teléfono:" GridPane.rowIndex="2" GridPane.columnIndex="0"
-                           style="-fx-text-fill: #34495e; -fx-font-size: 14px;"/>
+                           style="-fx-text-fill: #495057; -fx-font-size: 14px; -fx-font-weight: bold;"/>
                     <TextField fx:id="txtTelefono" GridPane.rowIndex="2" GridPane.columnIndex="1"
-                               style="-fx-background-color: #f9f9f9; -fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;"/>
+                               style="-fx-background-color: #f9f9f9; -fx-border-color: #ced4da; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;"/>
 
                     <Label text="Fecha de Inicio:" GridPane.rowIndex="3" GridPane.columnIndex="0"
-                           style="-fx-text-fill: #34495e; -fx-font-size: 14px;"/>
+                           style="-fx-text-fill: #495057; -fx-font-size: 14px; -fx-font-weight: bold;"/>
                     <DatePicker fx:id="dpFechaInicio" GridPane.rowIndex="3" GridPane.columnIndex="1"
-                                style="-fx-border-radius: 8; -fx-background-radius: 8;"/>
+                                style="-fx-background-color: #f9f9f9; -fx-border-color: #ced4da; -fx-border-radius: 8; -fx-background-radius: 8;"/>
 
                     <Label text="Membresía:" GridPane.rowIndex="4" GridPane.columnIndex="0"
-                           style="-fx-text-fill: #34495e; -fx-font-size: 14px;"/>
+                           style="-fx-text-fill: #495057; -fx-font-size: 14px; -fx-font-weight: bold;"/>
                     <ComboBox fx:id="cbMembresia" GridPane.rowIndex="4" GridPane.columnIndex="1"
-                              style="-fx-border-radius: 8; -fx-background-radius: 8;"/>
+                              style="-fx-background-color: #f9f9f9; -fx-border-color: #ced4da; -fx-border-radius: 8; -fx-background-radius: 8;"/>
 
                     <Label text="Monto de Pago:" GridPane.rowIndex="5" GridPane.columnIndex="0"
-                           style="-fx-text-fill: #34495e; -fx-font-size: 14px;"/>
+                           style="-fx-text-fill: #495057; -fx-font-size: 14px; -fx-font-weight: bold;"/>
                     <TextField fx:id="txtMontoPago" promptText="Monto de Pago" GridPane.rowIndex="5" GridPane.columnIndex="1"
-                               style="-fx-background-color: #f9f9f9; -fx-border-color: #bdc3c7; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;"/>
+                               style="-fx-background-color: #f9f9f9; -fx-border-color: #ced4da; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;"/>
                 </GridPane>
 
+                <!-- Botones con mismos colores y efectos -->
                 <HBox spacing="20" alignment="CENTER" style="-fx-padding: 20 0 0 0;">
                     <Button fx:id="btnSiguiente" text="Siguiente" onAction="#handleSiguiente"
-                            style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 10 20;"/>
-                    <Button fx:id="btnIrARenovaciones" text="Ir a Renovaciones" onAction="#handleIrARenovaciones"
-                            style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 10 20;"/>
+                            style="-fx-background-color: linear-gradient(to right, #4A6CF7, #2E8BFF);
+                                   -fx-text-fill: white;
+                                   -fx-font-weight: bold;
+                                   -fx-background-radius: 25;
+                                   -fx-padding: 10 30;
+                                   -fx-font-size: 14px;"/>
+
+                    <Button text="Volver al Dashboard"
+                            onAction="#handleVolverAlDashboard"
+                            fx:id="btnVolverAlDashboard"
+                            style="-fx-background-color: #6C757D;       -fx-text-fill: white;
+                             -fx-font-weight: bold;
+                             -fx-background-radius: 25;
+                             -fx-padding: 10 30;
+                             -fx-font-size: 14px;"/>
                 </HBox>
             </VBox>
         </VBox>

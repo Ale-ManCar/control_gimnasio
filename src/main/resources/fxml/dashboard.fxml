@@ -60,7 +60,7 @@
                                  style="-fx-alignment: CENTER; -fx-text-alignment: center;" />
                     <TableColumn text="Días Restantes" prefWidth="150" fx:id="colDiasRestantes"
                                  style="-fx-alignment: CENTER; -fx-text-alignment: center;" />
-                    <TableColumn fx:id="colAccion" prefWidth="110" resizable="false" sortable="false">
+                    <TableColumn text="Acciones" fx:id="colAccion" prefWidth="110" resizable="false" sortable="false">
                         <style><![CDATA[
                             -fx-padding: 0 5 0 0;
                         ]]></style>

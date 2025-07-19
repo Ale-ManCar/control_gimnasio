@@ -7,9 +7,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -28,7 +25,7 @@ public class RegistroClienteController {
     @FXML private DatePicker dpFechaInicio;
     @FXML private ComboBox<String> cbMembresia;
     @FXML private Button btnSiguiente;
-    @FXML private Button btnIrARenovaciones;
+    @FXML private Button btnVolverAlDashboard; // Botón renombrado
 
     @FXML
     public void initialize() {
@@ -164,15 +161,16 @@ public class RegistroClienteController {
         }).start();
     }
 
+    // Nuevo método para volver al dashboard
     @FXML
-    private void handleIrARenovaciones() {
+    private void handleVolverAlDashboard() {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/renovacion.fxml"));
-            Stage stage = (Stage) btnIrARenovaciones.getScene().getWindow();
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/dashboard.fxml"));
+            Stage stage = (Stage) btnVolverAlDashboard.getScene().getWindow();
             stage.setScene(new Scene(root));
-            stage.setTitle("Renovación de Membresías");
+            stage.setTitle("Panel de Control");
         } catch (IOException e) {
-            mostrarAlerta("Error", "No se pudo cargar la pantalla de renovaciones");
+            mostrarAlerta("Error", "No se pudo cargar el panel de control");
             e.printStackTrace();
         }
     }
