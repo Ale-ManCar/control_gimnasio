@@ -69,13 +69,13 @@
             </TableView>
 
             <!-- CONTENEDOR BOTON VER TODOS -->
-            <HBox alignment="CENTER" style="-fx-padding: 10px 0 20px 0;">
+            <!--HBox alignment="CENTER" style="-fx-padding: 10px 0 20px 0;">
                 <Button text="📋 Ver Todos" onAction="#handleVerTodos"
                         style="-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold;
                -fx-padding: 8px 15px; -fx-font-size: 14px; -fx-min-width: 120px;
                -fx-cursor: hand;"
                         fx:id="btnVerTodos"/>
-            </HBox>
+            </HBox-->
 
 
             <!-- BOTONES DE ACCIÓN -->
@@ -86,9 +86,9 @@
                         onAction="#handleRegistroCliente"
                         style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 15px; -fx-font-size: 14px; -fx-min-width: 120px; -fx-cursor: hand;" />
 
-                <Button text="Ver Ingresos Mensuales"
+                <!--Button text="Ver Ingresos Mensuales"
                         onAction="#handleVerIngresosMensuales"
-                        style="-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 15px; -fx-font-size: 14px; -fx-min-width: 120px; -fx-cursor: hand;"/>
+                        style="-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 15px; -fx-font-size: 14px; -fx-min-width: 120px; -fx-cursor: hand;"/-->
 
                 <Button text="Exportar PDF"
                         onAction="#handleExportarPDF"

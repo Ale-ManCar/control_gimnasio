@@ -151,11 +151,11 @@ public class DashboardController implements Initializable {
                 return row;
             });
 
-            btnVerTodos.setOnMouseEntered(e ->
-                    btnVerTodos.setStyle("-fx-backgroung-color: #8e44ad; -fx-text-fill: white; -fx-font-weight: bold;"));
+            //btnVerTodos.setOnMouseEntered(e ->
+                    //btnVerTodos.setStyle("-fx-backgroung-color: #8e44ad; -fx-text-fill: white; -fx-font-weight: bold;"));
 
-            btnVerTodos.setOnMouseExited(e ->
-                    btnVerTodos.setStyle("-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold;"));
+            //btnVerTodos.setOnMouseExited(e ->
+                    //btnVerTodos.setStyle("-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold;"));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -201,6 +201,7 @@ public class DashboardController implements Initializable {
         panePagos.prefWidthProperty().bind(cardPagos.widthProperty());
         panePagos.prefHeightProperty().bind(cardPagos.heightProperty());
         cardPagos.getChildren().add(panePagos);
+        panePagos.setOnMouseClicked(e -> handleVerIngresosMensuales(null));
 
         FXMLLoader loaderVencimientos = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
         Pane paneVencimientos = loaderVencimientos.load();
@@ -209,6 +210,7 @@ public class DashboardController implements Initializable {
         paneVencimientos.prefWidthProperty().bind(cardVencimientos.widthProperty());
         paneVencimientos.prefHeightProperty().bind(cardVencimientos.heightProperty());
         cardVencimientos.getChildren().add(paneVencimientos);
+        paneVencimientos.setOnMouseClicked(e -> handleVerTodos(null));
     }
 
     private void centrarContenidoColumnas() {
