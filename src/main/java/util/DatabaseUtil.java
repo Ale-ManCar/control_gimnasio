@@ -1,10 +1,15 @@
 package util;
 
 import java.sql.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.chart.PieChart;
+import models.PagoDetalle;
 import models.PagoMensual;
 
 public class DatabaseUtil {
@@ -155,20 +160,19 @@ public class DatabaseUtil {
         return stats;
     }
 
-    public static ObservableList<PagoMensual> getIngresosMensuales() throws SQLException {
+    public static ObservableList<PagoMensual> getIngresosMensuales(int año) throws SQLException {
         ObservableList<PagoMensual> data = FXCollections.observableArrayList();
-        String sql = """
-        SELECT strftime('%Y-%m', fecha_pago) AS mes, 
-               SUM(monto) AS total 
-        FROM pagos 
-        GROUP BY mes 
-        ORDER BY mes DESC 
-        LIMIT 6
-        """;
+        String sql = "SELECT strftime('%Y-%m', fecha_pago) AS mes, "
+                + "SUM(monto) AS total "
+                + "FROM pagos "
+                + "WHERE strftime('%Y', fecha_pago) = ? "
+                + "GROUP BY mes "
+                + "ORDER BY mes";
 
         try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, String.valueOf(año));
+            ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
                 String mes = rs.getString("mes");
@@ -177,5 +181,54 @@ public class DatabaseUtil {
             }
         }
         return data;
+    }
+
+    public static ObservableList<PieChart.Data> getDistribucionMembresias(int año) throws SQLException {
+        ObservableList<PieChart.Data> datos = FXCollections.observableArrayList();
+        String sql = "SELECT tipo_membresia, SUM(monto) AS total "
+                + "FROM pagos "
+                + "WHERE strftime('%Y', fecha_pago) = ? "
+                + "AND tipo_membresia IS NOT NULL "
+                + "GROUP BY tipo_membresia";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, String.valueOf(año));
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                datos.add(new PieChart.Data(
+                        rs.getString("tipo_membresia"),
+                        rs.getDouble("total")
+                ));
+            }
+        }
+        return datos;
+    }
+
+    public static List<PagoDetalle> getDetallesPagos(int año) throws SQLException {
+        List<PagoDetalle> detalles = new ArrayList<>();
+        String sql = "SELECT pagos.fecha_pago AS fecha, "
+                + "clientes.nombres || ' ' || clientes.apellidos AS cliente, "
+                + "pagos.tipo_membresia AS membresia, pagos.monto "
+                + "FROM pagos pagos "
+                + "JOIN clientes clientes ON pagos.cliente_id = clientes.id "
+                + "WHERE strftime('%Y', pagos.fecha_pago) = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, String.valueOf(año));
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                detalles.add(new PagoDetalle(
+                        LocalDate.parse(rs.getString("fecha")),
+                        rs.getString("cliente"),
+                        rs.getString("membresia"),
+                        rs.getDouble("monto")
+                ));
+            }
+        }
+        return detalles;
     }
 }
