@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 <?import javafx.scene.chart.BarChart?>
 <?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.chart.PieChart?>
-<?import javafx.scene.control.cell.PropertyValueFactory?>
-<?import javafx.geometry.Insets?>
 
 <AnchorPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -29,8 +29,10 @@
                 <Label text="Seleccionar Año:" style="-fx-font-weight: bold; -fx-text-fill: #34495e;"/>
                 <ComboBox fx:id="cbAnio" prefWidth="100"/>
 
-                <Button fx:id="btnExportarPDF" text="Exportar a PDF"
-                        style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 5 15;"/>
+                <!-- Botón con conexión directa al método -->
+                <Button fx:id="btnExportarPDF" text="Exportar a PDF" onAction="#handleExportarPDF"
+                        style="-fx-background-color: #3498db; -fx-text-fill: white;
+                               -fx-font-weight: bold; -fx-padding: 5 15; -fx-cursor: hand;"/>
             </HBox>
 
             <!-- Panel principal -->

@@ -14,6 +14,7 @@ import javafx.stage.Stage;
 import models.PagoDetalle;
 import models.PagoMensual;
 import util.DatabaseUtil;
+import util.ReporteUtil;
 
 import java.net.URL;
 import java.time.LocalDate;
@@ -310,7 +311,8 @@ public class IngresosMensualesController implements Initializable {
     @FXML
     private void handleExportarPDF(ActionEvent event) {
         // Implementar lógica de exportación a PDF
-        mostrarAlerta("Exportar PDF", "Función de exportación a PDF implementada próximamente");
+        ReporteUtil.generarReporteIngresos();
+        //mostrarAlerta("Exportar PDF", "Función de exportación a PDF implementada próximamente");
     }
 
     @FXML

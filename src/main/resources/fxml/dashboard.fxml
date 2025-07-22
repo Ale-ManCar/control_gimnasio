@@ -90,9 +90,9 @@
                         onAction="#handleVerIngresosMensuales"
                         style="-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 15px; -fx-font-size: 14px; -fx-min-width: 120px; -fx-cursor: hand;"/-->
 
-                <Button text="Exportar PDF"
+                <!--Button text="Exportar PDF"
                         onAction="#handleExportarPDF"
-                        style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 15px; -fx-font-size: 14px; -fx-min-width: 120px; -fx-cursor: hand;" />
+                        style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 15px; -fx-font-size: 14px; -fx-min-width: 120px; -fx-cursor: hand;" /-->
             </HBox>
         </VBox>
     </center>
