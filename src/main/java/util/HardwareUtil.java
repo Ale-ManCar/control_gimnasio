@@ -38,7 +38,7 @@ public class HardwareUtil {
 
             if (os.contains("win")) {
                 process = Runtime.getRuntime().exec(
-                        new String[]{"cmd", "/c", "wmic path win32_physicalmedia get SerialNumber"}
+                        new String[]{"cmd", "/c", "wmic diskdrive get serialnumber"}
                 );
             } else if (os.contains("linux")) {
                 process = Runtime.getRuntime().exec(
@@ -80,9 +80,9 @@ public class HardwareUtil {
                 hexString.append(String.format("%02x", b));
             }
 
-            return hexString.toString().substring(0, 32); // ID consistente de 32 caracteres
+            return hexString.toString().substring(0, 32);
         } catch (Exception e) {
-            return UUID.randomUUID().toString(); // Fallback único
+            return UUID.randomUUID().toString();
         }
     }
 }

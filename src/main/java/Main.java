@@ -1,26 +1,24 @@
+import controllers.ReactivacionController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.TextInputDialog;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import util.LicenseManager;
 import util.HardwareUtil;
+import util.LicenseManager;
 
 public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // Modo debug para desarrollo
-        if (isDebugMode()) {
-            showDebugInfo();
-        }
-
         if (!LicenseManager.validateLicense()) {
-            showLicenseError();
-            System.exit(1);
+            if (!showReactivationDialog(primaryStage)) {
+                showLicenseError();
+                System.exit(1);
+            }
         }
 
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/splash.fxml"));
@@ -30,19 +28,25 @@ public class Main extends Application {
         primaryStage.show();
     }
 
-    private boolean isDebugMode() {
-        return System.getProperty("debug") != null;
-    }
+    private boolean showReactivationDialog(Stage owner) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/reactivacion.fxml"));
+            Parent root = loader.load();
 
-    private void showDebugInfo() {
-        String hardwareId = HardwareUtil.getHardwareId();
-        String message = "HARDWARE ID: " + hardwareId + "\n\n";
+            ReactivacionController controller = loader.getController();
+            controller.setRequestCode(LicenseManager.generateReactivationRequest());
 
-        TextInputDialog dialog = new TextInputDialog(hardwareId);
-        dialog.setTitle("DEBUG MODE");
-        dialog.setHeaderText("Información de Licencia");
-        dialog.setContentText(message);
-        dialog.showAndWait();
+            Stage dialog = new Stage();
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.initOwner(owner);
+            dialog.setScene(new Scene(root));
+            dialog.showAndWait();
+
+            return controller.wasSuccess();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     private void showLicenseError() {
@@ -59,7 +63,6 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) {
-        // Para modo debug: agregar -Ddebug=true en VM options
         launch(args);
     }
 }

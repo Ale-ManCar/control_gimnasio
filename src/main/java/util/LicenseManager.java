@@ -56,4 +56,28 @@ public class LicenseManager {
         MessageDigest sha = MessageDigest.getInstance("SHA-256");
         return sha.digest(SECRET_KEY.getBytes("UTF-8"));
     }
+
+    public static String generateReactivationRequest() {
+        String hardwareId = HardwareUtil.getHardwareId();
+        return Base64.getEncoder().encodeToString(hardwareId.getBytes());
+    }
+
+    public static boolean applyReactivationCode(String code) {
+        try {
+            String hardwareId = new String(Base64.getDecoder().decode(code));
+            createLicense(hardwareId);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static String generateActivationCode(String requestCode) {
+        try {
+            String hardwareId = new String(Base64.getDecoder().decode(requestCode));
+            return encrypt(hardwareId);
+        } catch (Exception e) {
+            return "ERROR";
+        }
+    }
 }
