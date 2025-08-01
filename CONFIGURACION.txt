@@ -11,7 +11,7 @@
    - Abre WhatsApp Web en tu navegador
    - Escanea el QR cuando se ejecute el sistema
 
-4.- CONFIGURAR DIRECTO EN LOA BD
+4.- CONFIGURAR DIRECTO EN LA BD
 UPDATE config SET
    nombre_gimnasio = '[NOMBRE_REAL_DEL_GIMNASIO]',
    mensaje_whatsapp = 'Estimado [NOMBRE], tu membresía en [GIMNASIO] vence el [FECHA]. Renueva aquí: [LINK]'
@@ -21,3 +21,6 @@ WHERE id = 1;
 2. Abrir manualmente 'gimnasio-control.exe' la primera vez
 3. Escanear código QR de WhatsApp
 4. El servicio se iniciará automáticamente al reiniciar
+
+4.- NOMBRE DEL ARCHIVO EXE
+1. gymsystem.exe
