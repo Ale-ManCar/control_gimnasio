@@ -49,7 +49,7 @@ public class DatabaseUtil {
         String sqlConfig = "CREATE TABLE IF NOT EXISTS config (" +
                 "id INTEGER PRIMARY KEY," +
                 "nombre_gimnasio TEXT DEFAULT 'Mi Gimnasio'," +
-                "mensaje_whatsapp TEXT DEFAULT '¡Hola [NOMBRE]! Tu membresía en [GIMNASIO] vence en [DIAS] días')";
+                "mensaje_whatsapp TEXT DEFAULT '¡Hola [NOMBRE] [APELLIDO]! Tu membresía en [GIMNASIO] vence en [DIAS] días')";
 
         String sqlPagos = "CREATE TABLE IF NOT EXISTS pagos (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +

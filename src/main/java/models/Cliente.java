@@ -22,10 +22,7 @@ public class Cliente {
         this.telefono = new SimpleStringProperty(telefono);
         this.tipoMembresia = new SimpleStringProperty(tipoMembresia);
         this.fecha_vencimiento = new SimpleStringProperty(fecha_vencimiento.toString());
-        //this.diasRestantes.set(LocalDate.now().until(fecha_vencimiento).getDays());
-
-        long dias = ChronoUnit.DAYS.between(LocalDate.now(), fecha_vencimiento);
-        this.diasRestantes.set((int) dias);
+        setDiasRestantes();
     }
 
     public Cliente(String nombres, String apellidos, String telefono, LocalDate fecha_vencimiento) {
@@ -50,14 +47,16 @@ public class Cliente {
     public String getFecha_vencimiento() { return fecha_vencimiento.get(); }
     public int getDiasRestantes() { return diasRestantes.get(); }
 
-    // ESTADO DEL CLIENTE
+    // ESTADO DEL CLIENTE (CORREGIDO)
     public String getEstado() {
         if (fecha_vencimiento.get() == null || fecha_vencimiento.get().isEmpty())
             return "Inactivo";
 
         LocalDate vencimiento = LocalDate.parse(fecha_vencimiento.get());
-        long diasPasados =  ChronoUnit.DAYS.between(vencimiento, LocalDate.now());
-        return diasPasados <= 3 ? "Activo" : "Inactivo";
+        long diasRestantes = ChronoUnit.DAYS.between(LocalDate.now(), vencimiento);
+
+        // Activo si no ha vencido (diasRestantes >= 0)
+        return diasRestantes >= 0 ? "Activo" : "Inactivo";
     }
 
     public String getNombreCompleto() {
@@ -75,8 +74,14 @@ public class Cliente {
         } else {
             this.diasRestantes.set(-1); // Ya venció
         }
-    }public void setDiasRestantes(int dias) {
+    }
+
+    public void setDiasRestantes(int dias) {
         this.diasRestantes.set(dias);
+    }
+
+    public void setTipoMembresia(String tipo) {
+        this.tipoMembresia.set(tipo);
     }
 
     public LocalDate getFecha_vencimientoDate() {
