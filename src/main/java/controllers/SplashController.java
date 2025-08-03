@@ -30,7 +30,7 @@ public class SplashController {
     @FXML
     public void initialize() {
         // Cargar imagen del logo
-        imgLogo.setImage(new Image(getClass().getResourceAsStream("/images/mancar2.png")));
+        imgLogo.setImage(new Image("images/mancar2.png"));
 
         // Configurar transición de entrada
         FadeTransition fadeIn = new FadeTransition(Duration.seconds(1.5), rootPane);
