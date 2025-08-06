@@ -3,7 +3,7 @@
    - Guarda en: C:/driver/chromedriver.exe
 
 2. CONFIGURAR WhatsAppService.java:
-   - Línea 8: Ruta exacta de chromedriver
+   - Línea 18: Ruta exacta de chromedriver
    - Línea 9: Número de WhatsApp del gimnasio
    - Línea 11-13: Personaliza el mensaje base
 

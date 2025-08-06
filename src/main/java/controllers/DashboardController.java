@@ -403,4 +403,19 @@ public class DashboardController implements Initializable {
             lblMensaje.setText("Error al abrir todos los clientes");
         }
     }
+
+    @FXML
+    private void abrirInventario() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/inventario_ventas.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.setTitle("Gestión de Inventario y Ventas");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

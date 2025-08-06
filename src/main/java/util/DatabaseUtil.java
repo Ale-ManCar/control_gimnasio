@@ -2,19 +2,17 @@ package util;
 
 import java.sql.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.PieChart;
 import models.PagoDetalle;
 import models.PagoMensual;
+import models.Producto;
 
 public class DatabaseUtil {
     private static final String URL = "jdbc:sqlite:database/gimnasio.db";
-    private static final int BUSY_TIMEOUT_MS = 60000; // 60 segundos de timeout
+    private static final int BUSY_TIMEOUT_MS = 60000;
 
     public static Connection getConnection() throws SQLException {
         Connection conn = DriverManager.getConnection(URL);
@@ -49,7 +47,7 @@ public class DatabaseUtil {
         String sqlConfig = "CREATE TABLE IF NOT EXISTS config (" +
                 "id INTEGER PRIMARY KEY," +
                 "nombre_gimnasio TEXT DEFAULT 'Mi Gimnasio'," +
-                "mensaje_whatsapp TEXT DEFAULT '¡Hola *[NOMBRE] [APELLIDO]*! Tu membresía en [GIMNASIO] vence en [DIAS] días')";
+                "mensaje_whatsapp TEXT DEFAULT '¡Hola [NOMBRE] [APELLIDO]! Tu membresía en [GIMNASIO] vence en [DIAS] días')";
 
         String sqlPagos = "CREATE TABLE IF NOT EXISTS pagos (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -60,6 +58,12 @@ public class DatabaseUtil {
                 "monto REAL NOT NULL," +
                 "FOREIGN KEY (cliente_id) REFERENCES clientes(id))";
 
+        String sqlProductos = "CREATE TABLE IF NOT EXISTS productos (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "nombre TEXT NOT NULL UNIQUE," +
+                "stock INTEGER NOT NULL," +
+                "precio REAL NOT NULL)";
+
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
 
@@ -68,6 +72,7 @@ public class DatabaseUtil {
             stmt.execute(sqlAlertas);
             stmt.execute(sqlConfig);
             stmt.execute(sqlPagos);
+            stmt.execute(sqlProductos);
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
             conn.commit();
 
@@ -230,5 +235,41 @@ public class DatabaseUtil {
             }
         }
         return detalles;
+    }
+
+    // 🔽 Métodos relacionados con productos
+    public static void insertarProducto(Producto producto) throws SQLException {
+        String sql = "INSERT INTO productos (nombre, stock, precio) VALUES (?, ?, ?)";
+        executeUpdate(sql, producto.getNombre(), producto.getStock(), producto.getPrecio());
+    }
+
+    public static ObservableList<Producto> getProductos() throws SQLException {
+        ObservableList<Producto> productos = FXCollections.observableArrayList();
+        String sql = "SELECT id, nombre, stock, precio FROM productos";
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                Producto p = new Producto();
+                p.setId(rs.getInt("id"));
+                p.setNombre(rs.getString("nombre"));
+                p.setStock(rs.getInt("stock"));
+                p.setPrecio(rs.getDouble("precio"));
+                productos.add(p);
+            }
+        }
+        return productos;
+    }
+
+    public static void actualizarStockProducto(int id, int cantidadVendida) throws SQLException {
+        String sql = "UPDATE productos SET stock = stock - ? WHERE id = ?";
+        executeUpdate(sql, cantidadVendida, id);
+    }
+
+    public static void actualizarProducto(int id, double nuevoPrecio, int unidadesExtra) throws SQLException {
+        String sql = "UPDATE productos SET precio = ?, stock = stock + ? WHERE id = ?";
+        executeUpdate(sql, nuevoPrecio, unidadesExtra, id);
     }
 }
