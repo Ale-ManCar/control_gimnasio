@@ -18,6 +18,7 @@ import javafx.util.StringConverter;
 import models.Producto;
 import models.VentaItem;
 import util.DatabaseUtil;
+import util.EventBus;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -248,6 +249,8 @@ public class InventarioController {
             cargarProductos();
             actualizarTotalCarrito();
             mostrarDialogoVentaExitosa();
+
+            EventBus.fireVentaRealizadaEvent();
 
         } catch (Exception e) {
             mostrarAlerta("Error", "No se pudo completar la venta");

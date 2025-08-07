@@ -305,6 +305,8 @@ public class DatabaseUtil {
     public static void registrarVenta(double totalVenta) throws SQLException {
         String sql = "INSERT INTO ventas (fecha, total) VALUES (date('now'), ?)";
         executeUpdate(sql, totalVenta);
+
+        EventBus.fireVentaRealizadaEvent();
     }
 
     public static double obtenerTotalVentasDelMes() {

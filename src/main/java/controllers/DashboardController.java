@@ -18,6 +18,7 @@ import javafx.stage.Stage;
 import javafx.scene.Node;
 import models.Cliente;
 import util.DatabaseUtil;
+import util.EventBus;
 import util.ReporteUtil;
 
 import java.io.IOException;
@@ -161,6 +162,8 @@ public class DashboardController implements Initializable {
             e.printStackTrace();
             lblMensaje.setText("Error al inicializar el panel.");
         }
+
+        EventBus.registerListener(this::cargarDatosTarjetas);
     }
 
     private void configurarTablaSinScroll() {
