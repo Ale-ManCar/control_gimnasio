@@ -235,6 +235,11 @@ public class InventarioController {
         }
 
         try {
+            double totalVenta = carrito.stream().mapToDouble(VentaItem::getTotal).sum();
+
+            // Registrar la venta en la base de datos
+            DatabaseUtil.registrarVenta(totalVenta);
+
             for (VentaItem item : carrito) {
                 DatabaseUtil.actualizarStockProducto(item.getProducto().getId(), item.getUnidades());
             }
@@ -242,7 +247,6 @@ public class InventarioController {
             carrito.clear();
             cargarProductos();
             actualizarTotalCarrito();
-
             mostrarDialogoVentaExitosa();
 
         } catch (Exception e) {

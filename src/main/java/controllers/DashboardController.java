@@ -275,6 +275,21 @@ public class DashboardController implements Initializable {
                     ctrlVencimientos.setValor(rs.getString("total"));
                 }
             }
+
+            double totalVentas = DatabaseUtil.obtenerTotalVentasDelMes();
+            // Pagos de membresías + Ventas de productos
+            double ingresosTotales = totalPagos + totalVentas;
+            ctrlPagos.setValor(String.format("$ %.2f", ingresosTotales));
+
+            String tooltipText = String.format("Membresías: $%.2f\nVentas: $%.2f", totalPagos, totalVentas);
+            Tooltip tooltip = new Tooltip(tooltipText);
+
+            tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-background-color: #2D2D2D; "
+                    + "-fx-text-fill: #FFFFFF; -fx-border-width: 1px; -fx-border-color: #555555; "
+                    + "-fx-border-radius: 4px; -fx-background-radius: 4px;");
+
+            Tooltip.install(cardPagos, tooltip);
+
         } catch (SQLException e) {
             e.printStackTrace();
             lblMensaje.setText("Error al cargar datos métricos.");

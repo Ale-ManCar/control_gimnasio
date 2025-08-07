@@ -69,6 +69,11 @@ public class DatabaseUtil {
                 "peso_total REAL," + // Para KG/LB: peso total del envase
                 "peso_por_scoop REAL)"; // Para KG/LB: peso por scoop en gramos
 
+        String sqlVentas = "CREATE TABLE IF NOT EXISTS ventas (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "fecha TEXT NOT NULL DEFAULT (date('now'))," +
+                "total REAL NOT NULL)";
+
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
 
@@ -78,6 +83,7 @@ public class DatabaseUtil {
             stmt.execute(sqlConfig);
             stmt.execute(sqlPagos);
             stmt.execute(sqlProductos);
+            stmt.execute(sqlVentas);
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
             conn.commit();
 
@@ -172,10 +178,13 @@ public class DatabaseUtil {
 
     public static ObservableList<PagoMensual> getIngresosMensuales(int año) throws SQLException {
         ObservableList<PagoMensual> data = FXCollections.observableArrayList();
-        String sql = "SELECT strftime('%Y-%m', fecha_pago) AS mes, "
-                + "SUM(monto) AS total "
-                + "FROM pagos "
-                + "WHERE strftime('%Y', fecha_pago) = ? "
+
+        String sql = "SELECT mes, SUM(total) AS total FROM ("
+                + "SELECT strftime('%Y-%m', fecha_pago) AS mes, monto AS total FROM pagos "
+                + "UNION ALL "
+                + "SELECT strftime('%Y-%m', fecha) AS mes, total FROM ventas"
+                + ") "
+                + "WHERE substr(mes, 1, 4) = ? "
                 + "GROUP BY mes "
                 + "ORDER BY mes";
 
@@ -291,5 +300,27 @@ public class DatabaseUtil {
     public static void actualizarProducto(int id, double nuevoPrecio, int unidadesExtra) throws SQLException {
         String sql = "UPDATE productos SET precio = ?, stock = stock + ? WHERE id = ?";
         executeUpdate(sql, nuevoPrecio, unidadesExtra, id);
+    }
+
+    public static void registrarVenta(double totalVenta) throws SQLException {
+        String sql = "INSERT INTO ventas (fecha, total) VALUES (date('now'), ?)";
+        executeUpdate(sql, totalVenta);
+    }
+
+    public static double obtenerTotalVentasDelMes() {
+        double total = 0.0;
+        String sql = "SELECT SUM(total) AS total FROM ventas "
+                + "WHERE strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now')";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            if (rs.next()) {
+                total = rs.getDouble("total");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return total;
     }
 }
