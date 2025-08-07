@@ -62,7 +62,10 @@ public class DatabaseUtil {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "nombre TEXT NOT NULL UNIQUE," +
                 "stock INTEGER NOT NULL," +
-                "precio REAL NOT NULL)";
+                "precio REAL NOT NULL," + // Precio de venta (por unidad o por peso)
+                "tipo TEXT NOT NULL," +   // PACA, KG, LB
+                "precio_compra REAL NOT NULL," + // Precio de compra (por paca si es PACA, por unidad de peso si es KG/LB)
+                "unidades_por_paca INTEGER)"; // Solo para tipo PACAinser
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
@@ -239,13 +242,14 @@ public class DatabaseUtil {
 
     // 🔽 Métodos relacionados con productos
     public static void insertarProducto(Producto producto) throws SQLException {
-        String sql = "INSERT INTO productos (nombre, stock, precio) VALUES (?, ?, ?)";
-        executeUpdate(sql, producto.getNombre(), producto.getStock(), producto.getPrecio());
+        String sql = "INSERT INTO productos (nombre, stock, precio, tipo, precio_compra, unidades_por_paca) VALUES (?, ?, ?, ?, ?, ?)";
+        executeUpdate(sql, producto.getNombre(), producto.getStock(),
+                producto.getPrecio(), producto.getTipo(), producto.getPrecioCompra(), producto.getUnidadesPorPaca());
     }
 
     public static ObservableList<Producto> getProductos() throws SQLException {
         ObservableList<Producto> productos = FXCollections.observableArrayList();
-        String sql = "SELECT id, nombre, stock, precio FROM productos";
+        String sql = "SELECT id, nombre, stock, precio, tipo, precio_compra, unidades_por_paca FROM productos";
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
@@ -257,6 +261,9 @@ public class DatabaseUtil {
                 p.setNombre(rs.getString("nombre"));
                 p.setStock(rs.getInt("stock"));
                 p.setPrecio(rs.getDouble("precio"));
+                p.setTipo(rs.getString("tipo"));
+                p.setPrecioCompra(rs.getDouble("precio_compra"));
+                p.setUnidadesPorPaca(rs.getInt("unidades_por_paca")); // Nuevo campo
                 productos.add(p);
             }
         }
