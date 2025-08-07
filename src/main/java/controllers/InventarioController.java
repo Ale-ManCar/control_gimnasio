@@ -19,14 +19,15 @@ import models.Producto;
 import models.VentaItem;
 import util.DatabaseUtil;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public class InventarioController {
 
-    @FXML private TextField txtNombreProducto;
-    @FXML private TextField txtStock;
-    @FXML private TextField txtPrecio;
     @FXML private TableView<Producto> tablaProductos;
     @FXML private TableColumn<Producto, String> colProducto;
     @FXML private TableColumn<Producto, Integer> colUnidades;
@@ -203,7 +204,6 @@ public class InventarioController {
             return;
         }
 
-        // Verificar si el producto ya está en el carrito para sumar cantidades
         Optional<VentaItem> itemExistente = carrito.stream()
                 .filter(item -> item.getProducto().getId() == producto.getId())
                 .findFirst();
@@ -243,7 +243,6 @@ public class InventarioController {
             cargarProductos();
             actualizarTotalCarrito();
 
-            // Mostrar diálogo personalizado con diseño mejorado
             mostrarDialogoVentaExitosa();
 
         } catch (Exception e) {
@@ -261,7 +260,7 @@ public class InventarioController {
         contenido.setPadding(new Insets(20));
         contenido.setAlignment(Pos.CENTER);
 
-        Label icono = new Label("\u2714"); // ✔ check mark unicode
+        Label icono = new Label("\u2714");
         icono.setStyle("-fx-font-size: 48px; -fx-text-fill: #4CAF50;");
 
         Label titulo = new Label("¡Venta completada correctamente!");
@@ -276,12 +275,6 @@ public class InventarioController {
     private void actualizarTotalCarrito() {
         double totalVenta = carrito.stream().mapToDouble(VentaItem::getTotal).sum();
         lblTotalCarrito.setText(String.format("$%.2f", totalVenta));
-    }
-
-    private void limpiarFormulario() {
-        txtNombreProducto.clear();
-        txtStock.clear();
-        txtPrecio.clear();
     }
 
     private void limpiarVenta() {
@@ -301,106 +294,190 @@ public class InventarioController {
 
     @FXML
     private void handleIngresarProducto() {
-        // Crear diálogo personalizado
         Dialog<Producto> dialog = new Dialog<>();
         dialog.setTitle("Ingresar Nuevo Producto");
         dialog.setHeaderText("Complete los detalles del producto");
 
-        // Configurar botones
+        // Estilo para el diálogo
+        dialog.getDialogPane().setStyle("-fx-background-color: #f5f7fa; -fx-padding: 20;");
+        dialog.getDialogPane().getScene().getWindow().setOnShown(e -> {
+            Platform.runLater(() -> dialog.getDialogPane().requestLayout());
+        });
+
         ButtonType btnIngresar = new ButtonType("Ingresar", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(btnIngresar, ButtonType.CANCEL);
 
-        // Crear campos del formulario
+        // Botón personalizado
+        Button ingresarButton = (Button) dialog.getDialogPane().lookupButton(btnIngresar);
+        ingresarButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20;");
+
         GridPane grid = new GridPane();
-        grid.setHgap(10);
+        grid.setHgap(15);
         grid.setVgap(10);
-        grid.setPadding(new Insets(20, 150, 10, 10));
+        grid.setPadding(new Insets(15));
+        grid.setStyle("-fx-background-color: white; -fx-border-color: #e0e0e0; -fx-border-width: 1; -fx-border-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 0);");
+        grid.setPrefWidth(500);
 
-        TextField txtNombre = new TextField();
-        txtNombre.setPromptText("Nombre del producto");
-        TextField txtStock = new TextField();
-        txtStock.setPromptText("Cantidad en stock");
-        ComboBox<String> cbTipo = new ComboBox<>();
-        cbTipo.getItems().addAll("PACA", "KG", "LB");
-        cbTipo.setValue("KG"); // Valor por defecto
+        // Campos del formulario
+        TextField txtNombre = createStyledTextField("Nombre del producto", true);
+        ComboBox<String> cbTipo = createStyledComboBox("PACA", "KG", "LB");
+        TextField txtPesoTotal = createStyledTextField("Peso total (kg/lb)", false);
+        TextField txtPesoScoop = createStyledTextField("Peso por scoop (g)", false);
+        TextField txtPrecioCompra = createStyledTextField("Precio compra (envase)", true);
+        TextField txtPrecioVenta = createStyledTextField("Precio venta", true);
+        TextField txtUnidadesPorPaca = createStyledTextField("Unidades por paca", false);
 
-        TextField txtUnidadesPorPaca = new TextField("0");
-        txtUnidadesPorPaca.setPromptText("Unidades por paca");
-        TextField txtPrecioCompra = new TextField();
-        txtPrecioCompra.setPromptText("Precio de compra");
-        TextField txtPrecioVenta = new TextField();
-        txtPrecioVenta.setPromptText("Precio de venta");
+        // Labels para mostrar resultados
+        Label lblStockCalculado = new Label();
+        lblStockCalculado.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #2c3e50;");
 
-        // Etiquetas para mostrar ganancias/pérdidas
         Label lblResultado = new Label();
-        lblResultado.setStyle("-fx-font-weight: bold;");
+        lblResultado.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-padding: 8 0 0 0;");
+        lblResultado.setWrapText(true);
+        lblResultado.setMaxWidth(Double.MAX_VALUE);
 
-        // Añadir campos al grid
-        grid.add(new Label("Nombre:"), 0, 0);
-        grid.add(txtNombre, 1, 0);
-        grid.add(new Label("Stock:"), 0, 1);
-        grid.add(txtStock, 1, 1);
-        grid.add(new Label("Tipo:"), 0, 2);
-        grid.add(cbTipo, 1, 2);
-        grid.add(new Label("Unidades por paca:"), 0, 3);
-        grid.add(txtUnidadesPorPaca, 1, 3);
-        grid.add(new Label("Precio Compra:"), 0, 4);
-        grid.add(txtPrecioCompra, 1, 4);
-        grid.add(new Label("Precio Venta:"), 0, 5);
-        grid.add(txtPrecioVenta, 1, 5);
-        grid.add(lblResultado, 0, 6, 2, 1); // Ocupa 2 columnas
+        // Iconos para cada campo
+        Label iconNombre = createIconLabel("\uf5d1", "#3498db"); // FontAwesome: box
+        Label iconTipo = createIconLabel("\uf1b2", "#e74c3c");   // FontAwesome: cube
+        Label iconPrecioCompra = createIconLabel("\uf155", "#2ecc71"); // FontAwesome: money-bill
+        Label iconPrecioVenta = createIconLabel("\uf0d6", "#f39c12"); // FontAwesome: tag
+        Label iconUnidades = createIconLabel("\uf0e4", "#9b59b6"); // FontAwesome: cubes
+        Label iconPesoTotal = createIconLabel("\uf496", "#1abc9c"); // FontAwesome: weight
+        Label iconScoop = createIconLabel("\uf1e2", "#e67e22"); // FontAwesome: spoon
 
-        // Mostrar/ocultar campo de unidades según tipo
-        txtUnidadesPorPaca.setVisible(false);
+        // Organización de los campos en el grid
+        grid.add(iconNombre, 0, 0);
+        grid.add(txtNombre, 1, 0, 2, 1);
+
+        grid.add(iconTipo, 0, 1);
+        grid.add(cbTipo, 1, 1, 2, 1);
+
+        grid.add(iconPrecioCompra, 0, 2);
+        grid.add(txtPrecioCompra, 1, 2, 2, 1);
+
+        grid.add(iconPrecioVenta, 0, 3);
+        grid.add(txtPrecioVenta, 1, 3, 2, 1);
+
+        grid.add(iconUnidades, 0, 4);
+        grid.add(txtUnidadesPorPaca, 1, 4, 2, 1);
+
+        grid.add(iconPesoTotal, 0, 5);
+        grid.add(txtPesoTotal, 1, 5, 2, 1);
+
+        grid.add(iconScoop, 0, 6);
+        grid.add(txtPesoScoop, 1, 6, 2, 1);
+
+        grid.add(lblStockCalculado, 0, 7, 3, 1);
+        grid.add(lblResultado, 0, 8, 3, 1);
+
+        // Configuración inicial de visibilidad
+        txtPesoTotal.setVisible(false);
+        txtPesoScoop.setVisible(false);
+        iconPesoTotal.setVisible(false);
+        iconScoop.setVisible(false);
+
+        txtUnidadesPorPaca.setVisible(true);
+        iconUnidades.setVisible(true);
+
+        // Listener para cambiar visibilidad según el tipo
         cbTipo.valueProperty().addListener((obs, oldVal, newVal) -> {
             boolean esPaca = "PACA".equals(newVal);
+            boolean esSuplemento = "KG".equals(newVal) || "LB".equals(newVal);
+
+            // Actualizar visibilidad
             txtUnidadesPorPaca.setVisible(esPaca);
+            iconUnidades.setVisible(esPaca);
+            txtPesoTotal.setVisible(esSuplemento);
+            txtPesoScoop.setVisible(esSuplemento);
+            iconPesoTotal.setVisible(esSuplemento);
+            iconScoop.setVisible(esSuplemento);
+
+            // Actualizar placeholders
+            txtPrecioVenta.setPromptText(esSuplemento ?
+                    "Precio por scoop" : "Precio por unidad");
+
+            // Limpiar campos no relevantes
+            if (esPaca) {
+                txtPesoTotal.clear();
+                txtPesoScoop.clear();
+            } else {
+                txtUnidadesPorPaca.clear();
+            }
+
+            // Actualizar texto informativo
+            lblStockCalculado.setText(esPaca ?
+                    "Ingrese unidades por paca para calcular ganancias" :
+                    "Complete peso total y peso por scoop para calcular ganancias");
         });
 
-        // Listener para calcular ganancias en tiempo real
+        // Listener para cálculos en tiempo real
         ChangeListener<String> calculador = (observable, oldValue, newValue) -> {
             try {
                 String tipo = cbTipo.getValue();
                 double precioCompra = Double.parseDouble(txtPrecioCompra.getText());
                 double precioVenta = Double.parseDouble(txtPrecioVenta.getText());
-                int stock = Integer.parseInt(txtStock.getText());
 
-                double gananciaUnidad = 0;
+                int stock = 0;
                 String detalle = "";
+                double gananciaUnidad = 0;
+                String unidadTexto = "";
 
                 if ("PACA".equals(tipo)) {
                     int unidadesPorPaca = Integer.parseInt(txtUnidadesPorPaca.getText());
                     double costoPorUnidad = precioCompra / unidadesPorPaca;
                     gananciaUnidad = precioVenta - costoPorUnidad;
+                    stock = unidadesPorPaca;
                     detalle = String.format("(Costo por unidad: $%.2f)", costoPorUnidad);
-                } else {
-                    gananciaUnidad = precioVenta - precioCompra;
-                    detalle = String.format("(Costo por %s: $%.2f)", tipo, precioCompra);
+                    unidadTexto = "unidad";
+                    lblStockCalculado.setText(String.format("Unidades disponibles: %d | Costo/unidad: $%.2f",
+                            stock, costoPorUnidad));
+                }
+                else if ("KG".equals(tipo) || "LB".equals(tipo)) {
+                    double pesoTotal = Double.parseDouble(txtPesoTotal.getText());
+                    double pesoScoop = Double.parseDouble(txtPesoScoop.getText());
+
+                    if ("KG".equals(tipo)) {
+                        stock = (int) ((pesoTotal * 1000) / pesoScoop); // KG a gramos
+                    } else {
+                        stock = (int) ((pesoTotal * 453.592) / pesoScoop); // LB a gramos
+                    }
+
+                    double costoPorScoop = precioCompra / stock;
+                    gananciaUnidad = precioVenta - costoPorScoop;
+                    detalle = String.format("(Costo por scoop: $%.2f)", costoPorScoop);
+                    unidadTexto = "scoop";
+                    lblStockCalculado.setText(String.format("Servicios disponibles: %d | Costo/scoop: $%.2f",
+                            stock, costoPorScoop));
                 }
 
                 double gananciaTotal = gananciaUnidad * stock;
 
                 if (gananciaUnidad >= 0) {
-                    lblResultado.setText(String.format("GANANCIA: $%.2f por unidad | $%.2f total %s",
-                            gananciaUnidad, gananciaTotal, detalle));
-                    lblResultado.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
+                    lblResultado.setText(String.format("▲ GANANCIA: $%.2f/%s | TOTAL: $%.2f",
+                            gananciaUnidad, unidadTexto, gananciaTotal));
+                    lblResultado.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;");
                 } else {
-                    lblResultado.setText(String.format("PÉRDIDA: $%.2f por unidad | $%.2f total %s",
-                            Math.abs(gananciaUnidad), Math.abs(gananciaTotal), detalle));
-                    lblResultado.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                    lblResultado.setText(String.format("▼ $%.2f/%s | TOTAL: $%.2f",
+                            Math.abs(gananciaUnidad), unidadTexto, Math.abs(gananciaTotal)));
+                    lblResultado.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
                 }
             } catch (NumberFormatException e) {
-                lblResultado.setText("Complete todos los campos numéricos");
-                lblResultado.setStyle("-fx-text-fill: orange; -fx-font-weight: bold;");
+                lblResultado.setText("Complete los campos requeridos");
+                lblResultado.setStyle("-fx-text-fill: #f39c12; -fx-font-weight: bold;");
             }
         };
 
-        // Añadir listeners a los campos relevantes
+        // Añadir listeners
         txtPrecioCompra.textProperty().addListener(calculador);
         txtPrecioVenta.textProperty().addListener(calculador);
-        txtStock.textProperty().addListener(calculador);
+        txtPesoTotal.textProperty().addListener(calculador);
+        txtPesoScoop.textProperty().addListener(calculador);
         txtUnidadesPorPaca.textProperty().addListener(calculador);
         cbTipo.valueProperty().addListener((obs, oldVal, newVal) -> calculador.changed(null, null, null));
+
+        // Mensaje inicial
+        lblStockCalculado.setText("Seleccione tipo de producto y complete los campos");
+        lblStockCalculado.setStyle("-fx-text-fill: #7f8c8d; -fx-font-style: italic;");
 
         dialog.getDialogPane().setContent(grid);
 
@@ -409,31 +486,63 @@ public class InventarioController {
             if (dialogButton == btnIngresar) {
                 try {
                     String nombre = txtNombre.getText().trim();
-                    int stock = Integer.parseInt(txtStock.getText().trim());
                     String tipo = cbTipo.getValue();
-                    double precioCompra = Double.parseDouble(txtPrecioCompra.getText().trim());
-                    double precioVenta = Double.parseDouble(txtPrecioVenta.getText().trim());
+                    BigDecimal bdPrecioCompra = new BigDecimal(txtPrecioCompra.getText().trim());
+                    BigDecimal bdPrecioVenta = new BigDecimal(txtPrecioVenta.getText().trim());
+                    int stock = 0;
                     int unidadesPorPaca = 0;
-
-                    if ("PACA".equals(tipo)) {
-                        unidadesPorPaca = Integer.parseInt(txtUnidadesPorPaca.getText().trim());
-                    }
+                    BigDecimal bdPesoTotal = BigDecimal.ZERO;
+                    BigDecimal bdPesoScoop = BigDecimal.ZERO;
 
                     if (nombre.isEmpty()) {
                         mostrarAlerta("Error", "El nombre del producto es requerido");
                         return null;
                     }
 
-                    return new Producto(nombre, stock, precioVenta, tipo, precioCompra, unidadesPorPaca);
+                    if ("PACA".equals(tipo)) {
+                        unidadesPorPaca = Integer.parseInt(txtUnidadesPorPaca.getText().trim());
+                        stock = unidadesPorPaca;
+                    }
+                    else if ("KG".equals(tipo) || "LB".equals(tipo)) {
+                        bdPesoTotal = new BigDecimal(txtPesoTotal.getText().trim());
+                        bdPesoScoop = new BigDecimal(txtPesoScoop.getText().trim());
+
+                        if ("KG".equals(tipo)) {
+                            BigDecimal gramosTotal = bdPesoTotal.multiply(BigDecimal.valueOf(1000));
+                            BigDecimal scoops = gramosTotal.divide(bdPesoScoop, 0, RoundingMode.DOWN);
+                            stock = scoops.intValue();
+                        } else {
+                            BigDecimal gramosTotal = bdPesoTotal.multiply(BigDecimal.valueOf(453.592));
+                            BigDecimal scoops = gramosTotal.divide(bdPesoScoop, 0, RoundingMode.DOWN);
+                            stock = scoops.intValue();
+                        }
+                    }
+
+                    Producto nuevo = new Producto();
+                    nuevo.setNombre(nombre);
+                    nuevo.setTipo(tipo);
+                    nuevo.setPrecioCompra(bdPrecioCompra.doubleValue());
+                    nuevo.setPrecio(bdPrecioVenta.doubleValue());
+                    nuevo.setStock(stock);
+                    nuevo.setUnidadesPorPaca(unidadesPorPaca);
+                    nuevo.setPesoTotal(bdPesoTotal.doubleValue());
+                    nuevo.setPesoScoop(bdPesoScoop.doubleValue());
+
+                    return nuevo;
                 } catch (NumberFormatException e) {
-                    mostrarAlerta("Error", "Stock, Precio compra y Precio venta deben ser valores numéricos");
+                    mostrarAlerta("Error", "Valores numéricos inválidos: " + e.getMessage());
+                    return null;
+                } catch (ArithmeticException e) {
+                    mostrarAlerta("Error", "Error en cálculo matemático: " + e.getMessage());
+                    return null;
+                } catch (Exception e) {
+                    mostrarAlerta("Error", "Error inesperado: " + e.getMessage());
                     return null;
                 }
             }
             return null;
         });
 
-        // Procesar resultado
         Optional<Producto> resultado = dialog.showAndWait();
         resultado.ifPresent(producto -> {
             try {
@@ -445,6 +554,44 @@ public class InventarioController {
                 e.printStackTrace();
             }
         });
+    }
+
+    private TextField createStyledTextField(String prompt, boolean required) {
+        TextField field = new TextField();
+        field.setPromptText(prompt);
+        field.setStyle("-fx-padding: 8 12; -fx-background-radius: 4; -fx-border-radius: 4; " +
+                "-fx-background-color: #f8f9fa; -fx-border-color: #e0e0e0;");
+
+        if (required) {
+            field.setStyle(field.getStyle() + "-fx-border-color: #3498db; -fx-border-width: 1.5;");
+        }
+
+        return field;
+    }
+
+    private ComboBox<String> createStyledComboBox(String... items) {
+        ComboBox<String> combo = new ComboBox<>(FXCollections.observableArrayList(items));
+        combo.setValue(items[0]);
+        combo.setStyle("-fx-padding: 8 12; -fx-background-radius: 4; -fx-border-radius: 4; " +
+                "-fx-background-color: #f8f9fa; -fx-border-color: #3498db; -fx-border-width: 1.5;");
+        combo.setPrefWidth(200);
+        return combo;
+    }
+
+    private Label createIconLabel(String iconCode, String color) {
+        // Mapeo de códigos a emojis
+        Map<String, String> iconMap = new HashMap<>();
+        iconMap.put("\uf5d1", "📦");
+        iconMap.put("\uf1b2", "🧊");
+        iconMap.put("\uf155", "💵");
+        iconMap.put("\uf0d6", "🏷️");
+        iconMap.put("\uf0e4", "🧱");
+        iconMap.put("\uf496", "⚖️");
+        iconMap.put("\uf1e2", "🥄");
+
+        Label icon = new Label(iconMap.getOrDefault(iconCode, "•"));
+        icon.setStyle("-fx-font-size: 16px; -fx-text-fill: " + color + "; -fx-padding: 0 10 0 0;");
+        return icon;
     }
 
     @FXML

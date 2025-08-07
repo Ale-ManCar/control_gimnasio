@@ -62,10 +62,12 @@ public class DatabaseUtil {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "nombre TEXT NOT NULL UNIQUE," +
                 "stock INTEGER NOT NULL," +
-                "precio REAL NOT NULL," + // Precio de venta (por unidad o por peso)
+                "precio REAL NOT NULL," + // Precio de venta (por unidad o por scoop)
                 "tipo TEXT NOT NULL," +   // PACA, KG, LB
-                "precio_compra REAL NOT NULL," + // Precio de compra (por paca si es PACA, por unidad de peso si es KG/LB)
-                "unidades_por_paca INTEGER)"; // Solo para tipo PACAinser
+                "precio_compra REAL NOT NULL," + // Precio de compra (por paca o envase)
+                "unidades_por_paca INTEGER," + // Solo para tipo PACA
+                "peso_total REAL," + // Para KG/LB: peso total del envase
+                "peso_por_scoop REAL)"; // Para KG/LB: peso por scoop en gramos
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
@@ -240,16 +242,25 @@ public class DatabaseUtil {
         return detalles;
     }
 
-    // 🔽 Métodos relacionados con productos
+    // 🔽 Métodos relacionados con productos (ACTUALIZADOS)
     public static void insertarProducto(Producto producto) throws SQLException {
-        String sql = "INSERT INTO productos (nombre, stock, precio, tipo, precio_compra, unidades_por_paca) VALUES (?, ?, ?, ?, ?, ?)";
-        executeUpdate(sql, producto.getNombre(), producto.getStock(),
-                producto.getPrecio(), producto.getTipo(), producto.getPrecioCompra(), producto.getUnidadesPorPaca());
+        String sql = "INSERT INTO productos (nombre, stock, precio, tipo, precio_compra, unidades_por_paca, peso_total, peso_por_scoop) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        executeUpdate(sql,
+                producto.getNombre(),
+                producto.getStock(),
+                producto.getPrecio(),
+                producto.getTipo(),
+                producto.getPrecioCompra(),
+                producto.getUnidadesPorPaca(),
+                producto.getPesoTotal(),
+                producto.getPesoScoop()
+        );
     }
 
     public static ObservableList<Producto> getProductos() throws SQLException {
         ObservableList<Producto> productos = FXCollections.observableArrayList();
-        String sql = "SELECT id, nombre, stock, precio, tipo, precio_compra, unidades_por_paca FROM productos";
+        String sql = "SELECT id, nombre, stock, precio, tipo, precio_compra, unidades_por_paca, peso_total, peso_por_scoop FROM productos";
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
@@ -263,7 +274,9 @@ public class DatabaseUtil {
                 p.setPrecio(rs.getDouble("precio"));
                 p.setTipo(rs.getString("tipo"));
                 p.setPrecioCompra(rs.getDouble("precio_compra"));
-                p.setUnidadesPorPaca(rs.getInt("unidades_por_paca")); // Nuevo campo
+                p.setUnidadesPorPaca(rs.getInt("unidades_por_paca"));
+                p.setPesoTotal(rs.getDouble("peso_total"));
+                p.setPesoScoop(rs.getDouble("peso_por_scoop"));
                 productos.add(p);
             }
         }
