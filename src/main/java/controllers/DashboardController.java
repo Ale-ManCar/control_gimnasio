@@ -413,7 +413,7 @@ public class DashboardController implements Initializable {
     }
 
     public void handleExportarPDF() {
-        ReporteUtil.generarReporteIngresos();
+        ReporteUtil.generarReporteFinanciero();
     }
 
     @FXML

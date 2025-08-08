@@ -461,7 +461,7 @@ public class IngresosMensualesController implements Initializable {
     @FXML
     private void handleExportarPDF(ActionEvent event) {
         // Implementar lógica de exportación a PDF
-        ReporteUtil.generarReporteIngresos();
+        ReporteUtil.generarReporteFinanciero();
         //mostrarAlerta("Exportar PDF", "Función de exportación a PDF implementada próximamente");
     }
 
