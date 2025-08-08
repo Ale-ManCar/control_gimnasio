@@ -11,6 +11,7 @@ import javafx.scene.layout.VBox;
 import models.Cliente;
 import models.PagoHistorial;
 import util.DatabaseUtil;
+import util.EventBus;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -363,16 +364,20 @@ public class RenovacionController {
                 if (rs.next()) {
                     int clienteId = rs.getInt("id");
 
-                    String sqlPago = "INSERT INTO pagos (cliente_id, fecha_pago, fecha_vencimiento, monto) VALUES (?, ?, ?, ?)";
+                    String sqlPago = "INSERT INTO pagos (cliente_id, fecha_pago, fecha_vencimiento, tipo_membresia, monto) VALUES (?, ?, ?, ?, ?)";
                     PreparedStatement stmtPago = conn.prepareStatement(sqlPago);
                     stmtPago.setInt(1, clienteId);
                     stmtPago.setString(2, dpFechaRenovacion.getValue().toString());
                     stmtPago.setString(3, nuevaFecha.toString());
-                    stmtPago.setDouble(4, monto);
+                    stmtPago.setString(4, cbNuevaMembresia.getValue());
+                    stmtPago.setDouble(5, monto);
                     stmtPago.executeUpdate();
                 }
 
                 conn.commit();
+
+                EventBus.fireEvent(EventBus.EventType.DATOS_ACTUALIZADOS);
+
                 mostrarAlerta("Éxito", "Membresía renovada y pago registrado.");
 
                 cargarClientesProximos();

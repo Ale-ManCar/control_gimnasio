@@ -138,7 +138,6 @@ public class DatabaseUtil {
         }
     }
 
-    // Métodos para obtener datos específicos por mes/año
     public static double obtenerTotalPagosParaMes(int mes, int anio) {
         double total = 0.0;
         String sql = "SELECT SUM(monto) AS total FROM pagos " +
@@ -229,7 +228,6 @@ public class DatabaseUtil {
         return egresos;
     }
 
-    // Métodos originales (mantienen compatibilidad)
     public static double obtenerTotalPagosDelMesActual() {
         LocalDate hoy = LocalDate.now();
         return obtenerTotalPagosParaMes(hoy.getMonthValue(), hoy.getYear());
@@ -250,7 +248,6 @@ public class DatabaseUtil {
         return getEgresosParaMes(hoy.getMonthValue(), hoy.getYear());
     }
 
-    // Resto de métodos sin cambios...
     public static void testConnection() {
         try (Connection conn = getConnection()) {
             System.out.println("✅ Conexión exitosa a: " + URL);
@@ -334,6 +331,7 @@ public class DatabaseUtil {
         List<PagoDetalle> detalles = new ArrayList<>();
         String sql = "SELECT pagos.fecha_pago AS fecha, "
                 + "clientes.nombres || ' ' || clientes.apellidos AS cliente, "
+                + "clientes.id AS cliente_id, "
                 + "pagos.tipo_membresia AS membresia, pagos.monto "
                 + "FROM pagos pagos "
                 + "JOIN clientes clientes ON pagos.cliente_id = clientes.id "
@@ -348,12 +346,31 @@ public class DatabaseUtil {
                 detalles.add(new PagoDetalle(
                         LocalDate.parse(rs.getString("fecha")),
                         rs.getString("cliente"),
+                        rs.getInt("cliente_id"),
                         rs.getString("membresia"),
                         rs.getDouble("monto")
                 ));
             }
         }
         return detalles;
+    }
+
+    public static String obtenerTipoMembresiaActual(int clienteId) {
+        String sql = "SELECT tipoMembresia FROM clientes WHERE id = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, clienteId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString("tipoMembresia");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return "Desconocido";
     }
 
     public static void insertarProducto(Producto producto) throws SQLException {

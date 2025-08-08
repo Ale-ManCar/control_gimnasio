@@ -47,7 +47,6 @@ public class Cliente {
     public String getFecha_vencimiento() { return fecha_vencimiento.get(); }
     public int getDiasRestantes() { return diasRestantes.get(); }
 
-    // ESTADO DEL CLIENTE (CORREGIDO)
     public String getEstado() {
         if (fecha_vencimiento.get() == null || fecha_vencimiento.get().isEmpty())
             return "Inactivo";
@@ -55,7 +54,6 @@ public class Cliente {
         LocalDate vencimiento = LocalDate.parse(fecha_vencimiento.get());
         long diasRestantes = ChronoUnit.DAYS.between(LocalDate.now(), vencimiento);
 
-        // Activo si no ha vencido (diasRestantes >= 0)
         return diasRestantes >= 0 ? "Activo" : "Inactivo";
     }
 
@@ -68,11 +66,11 @@ public class Cliente {
         long dias = ChronoUnit.DAYS.between(LocalDate.now(), fechaVenc);
 
         if (dias == 0) {
-            this.diasRestantes.set(0);  // Vence hoy
+            this.diasRestantes.set(0);
         } else if (dias > 0) {
             this.diasRestantes.set((int) dias);
         } else {
-            this.diasRestantes.set(-1); // Ya venció
+            this.diasRestantes.set(-1);
         }
     }
 

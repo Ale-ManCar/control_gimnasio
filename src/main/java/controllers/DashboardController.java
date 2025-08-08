@@ -62,14 +62,21 @@ public class DashboardController implements Initializable {
                 Stage stage = (Stage) cardClientes.getScene().getWindow();
 
                 dashboardListener = eventType -> {
-                    if (eventType == EventBus.EventType.EGRESO_REGISTRADO) {
+                    if (eventType == EventBus.EventType.EGRESO_REGISTRADO ||
+                            eventType == EventBus.EventType.DATOS_ACTUALIZADOS ||
+                            eventType == EventBus.EventType.VENTA_REALIZADA) {
                         Platform.runLater(this::cargarDatosTarjetas);
                     }
                 };
                 EventBus.registerListener(EventBus.EventType.EGRESO_REGISTRADO, dashboardListener);
+                EventBus.registerListener(EventBus.EventType.DATOS_ACTUALIZADOS, dashboardListener);
+                EventBus.registerListener(EventBus.EventType.VENTA_REALIZADA, dashboardListener);
 
-                stage.setOnCloseRequest(e ->
-                        EventBus.unregisterListener(EventBus.EventType.EGRESO_REGISTRADO, dashboardListener));
+                stage.setOnCloseRequest(e -> {
+                    EventBus.unregisterListener(EventBus.EventType.EGRESO_REGISTRADO, dashboardListener);
+                    EventBus.unregisterListener(EventBus.EventType.DATOS_ACTUALIZADOS, dashboardListener);
+                    EventBus.unregisterListener(EventBus.EventType.VENTA_REALIZADA, dashboardListener);
+                });
             });
 
             configurarTablaSinScroll();
