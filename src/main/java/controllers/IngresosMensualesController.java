@@ -105,26 +105,22 @@ public class IngresosMensualesController implements Initializable {
     }
 
     private void configurarTabla() {
-        // Configurar las propiedades de las columnas
         colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
         colCliente.setCellValueFactory(new PropertyValueFactory<>("cliente"));
         colMembresia.setCellValueFactory(new PropertyValueFactory<>("membresia"));
         colMonto.setCellValueFactory(new PropertyValueFactory<>("monto"));
 
-        // Estilo para centrar todas las columnas
         String centerStyle = "-fx-alignment: CENTER;";
         colFecha.setStyle(centerStyle);
         colCliente.setStyle(centerStyle);
         colMembresia.setStyle(centerStyle);
         colMonto.setStyle(centerStyle);
 
-        // Ajustar el tamaño de las columnas para ocupar todo el espacio
         colFecha.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.15));
         colCliente.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.52));
         colMembresia.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.15));
         colMonto.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.15));
 
-        // Formatear columna de monto como moneda y centrar
         colMonto.setCellFactory(column -> new TableCell<PagoDetalle, Double>() {
             @Override
             protected void updateItem(Double monto, boolean empty) {
@@ -139,7 +135,6 @@ public class IngresosMensualesController implements Initializable {
             }
         });
 
-        // Formatear y centrar columna de fecha (ahora usando LocalDate)
         colFecha.setCellFactory(column -> new TableCell<PagoDetalle, LocalDate>() {
             private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -156,7 +151,6 @@ public class IngresosMensualesController implements Initializable {
             }
         });
 
-        // Formatear y centrar columna de cliente
         colCliente.setCellFactory(column -> new TableCell<PagoDetalle, String>() {
             @Override
             protected void updateItem(String cliente, boolean empty) {
@@ -171,7 +165,6 @@ public class IngresosMensualesController implements Initializable {
             }
         });
 
-        // Formatear y centrar columna de membresía
         colMembresia.setCellFactory(column -> new TableCell<PagoDetalle, String>() {
             @Override
             protected void updateItem(String membresia, boolean empty) {
@@ -187,12 +180,9 @@ public class IngresosMensualesController implements Initializable {
         });
 
         tablaDetalles.setItems(detallesPagos);
-
-        // Estilo general para la tabla
         tablaDetalles.setStyle("-fx-font-size: 14px;");
     }
 
-    // Método auxiliar para centrar y formatear columnas
     private <T> void centrarColumna(TableColumn<PagoDetalle, T> columna, Function<T, String> formateador) {
         columna.setCellFactory(column -> new TableCell<PagoDetalle, T>() {
             @Override
@@ -210,14 +200,12 @@ public class IngresosMensualesController implements Initializable {
     }
 
     private void configurarAnioSelector() {
-        // Obtener años disponibles (desde 2025 hasta el año actual +1)
         int añoInicial = 2025;
         for (int año = añoInicial; año <= anioActual + 1; año++) {
             cbAnio.getItems().add(año);
         }
         cbAnio.setValue(anioActual);
 
-        // Manejar cambio de año
         cbAnio.setOnAction(event -> cargarDatos(cbAnio.getValue()));
     }
 
@@ -238,7 +226,6 @@ public class IngresosMensualesController implements Initializable {
         colCategoria.setStyle(centerStyle);
         colMontoEgreso.setStyle(centerStyle);
 
-        // Formateadores
         colFechaEgreso.setCellFactory(column -> new TableCell<EgresoDetalle, LocalDate>() {
             private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -269,7 +256,6 @@ public class IngresosMensualesController implements Initializable {
             }
         });
 
-        // Centrar también las columnas de texto
         colDescripcion.setCellFactory(column -> new TableCell<EgresoDetalle, String>() {
             @Override
             protected void updateItem(String value, boolean empty) {
@@ -298,7 +284,6 @@ public class IngresosMensualesController implements Initializable {
             }
         });
 
-        // Estilo general para la tabla
         tablaEgresos.setStyle("-fx-font-size: 14px;");
     }
 
@@ -315,7 +300,6 @@ public class IngresosMensualesController implements Initializable {
             ObservableList<EgresoDetalle> egresos = DatabaseUtil.getDetallesEgresos(año);
             tablaEgresos.setItems(egresos);
 
-            // Asegurar que todas las celdas estén centradas
             for (TableColumn<EgresoDetalle, ?> col : tablaEgresos.getColumns()) {
                 col.setStyle("-fx-alignment: CENTER;");
             }
@@ -334,13 +318,12 @@ public class IngresosMensualesController implements Initializable {
 
         try {
             List<PagoMensual> ingresos = DatabaseUtil.getIngresosMensuales(año);
-            List<PagoMensual> egresos = DatabaseUtil.getEgresosMensuales(año); // NUEVO MÉTODO
+            List<PagoMensual> egresos = DatabaseUtil.getEgresosMensuales(año);
 
             for (int i = 0; i < ingresos.size(); i++) {
                 PagoMensual ingreso = ingresos.get(i);
                 String mes = obtenerNombreMes(ingreso.getMes());
 
-                // Buscar egresos correspondientes al mismo mes
                 double totalEgresos = 0;
                 for (PagoMensual egreso : egresos) {
                     if (egreso.getMes().equals(ingreso.getMes())) {
@@ -349,7 +332,6 @@ public class IngresosMensualesController implements Initializable {
                     }
                 }
 
-                // Añadir al gráfico
                 datosIngresos.getData().add(new XYChart.Data<>(mes, ingreso.getTotal()));
                 datosEgresos.getData().add(new XYChart.Data<>(mes, totalEgresos));
             }
@@ -357,7 +339,6 @@ public class IngresosMensualesController implements Initializable {
             barChart.getData().clear();
             barChart.getData().addAll(datosIngresos, datosEgresos);
 
-            // Estilo general del gráfico
             barChart.setStyle(
                     "-fx-background-color: white;" +
                             "-fx-background-radius: 10px;" +
@@ -365,11 +346,9 @@ public class IngresosMensualesController implements Initializable {
                             "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);"
             );
 
-            // Personalizar ejes
             barChart.getXAxis().setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
             barChart.getYAxis().setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
 
-            // Eliminar leyenda innecesaria
             barChart.setLegendVisible(false);
 
         } catch (Exception e) {
@@ -383,7 +362,6 @@ public class IngresosMensualesController implements Initializable {
             ObservableList<PieChart.Data> datosPie = DatabaseUtil.getDistribucionMembresias(año);
             pieChart.setData(datosPie);
 
-            // Estilo para las etiquetas
             pieChart.setLabelLineLength(15);
             pieChart.setLegendVisible(true);
         } catch (Exception e) {
@@ -396,7 +374,6 @@ public class IngresosMensualesController implements Initializable {
         try {
             detallesPagos.setAll(DatabaseUtil.getDetallesPagos(año));
 
-            // Ordenar por fecha descendente
             detallesPagos.sort(Comparator.comparing(PagoDetalle::getFecha).reversed());
         } catch (Exception e) {
             mostrarAlerta("Error", "No se pudieron cargar los detalles de pagos");
@@ -410,11 +387,10 @@ public class IngresosMensualesController implements Initializable {
                     .mapToDouble(PagoDetalle::getMonto)
                     .sum();
 
-            double totalEgresos = DatabaseUtil.getTotalEgresosAnual(año); // NUEVO MÉTODO
+            double totalEgresos = DatabaseUtil.getTotalEgresosAnual(año);
             double totalAnual = totalIngresos - totalEgresos;
             double promedioMensual = totalAnual / 12;
 
-            // Encontrar el mejor mes (considerando egresos)
             String mejorMes = "N/A";
             double maxUtilidad = Double.NEGATIVE_INFINITY;
 
@@ -460,9 +436,7 @@ public class IngresosMensualesController implements Initializable {
 
     @FXML
     private void handleExportarPDF(ActionEvent event) {
-        // Implementar lógica de exportación a PDF
-        ReporteUtil.generarReporteFinanciero();
-        //mostrarAlerta("Exportar PDF", "Función de exportación a PDF implementada próximamente");
+        ReporteUtil.generarReporteFinanciero(8, 2025);
     }
 
     @FXML

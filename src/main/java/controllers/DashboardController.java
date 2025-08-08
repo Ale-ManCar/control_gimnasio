@@ -127,7 +127,6 @@ public class DashboardController implements Initializable {
             cargarDatosTarjetas();
             cargarClientesProximosAVencer();
 
-            // TOOLTIPS Y COLORES DE FILA (RESTAURADO)
             tablaClientesProximosAVencer.setRowFactory(tv -> {
                 TableRow<Cliente> row = new TableRow<Cliente>() {
                     @Override
@@ -140,13 +139,13 @@ public class DashboardController implements Initializable {
                             String baseStyle = "";
 
                             if (dias >= 5 && dias <= 7) {
-                                baseStyle = "-fx-background-color: #e8f5e9;"; // Verde
+                                baseStyle = "-fx-background-color: #e8f5e9;";
                             } else if (dias >= 3 && dias <= 4) {
-                                baseStyle = "-fx-background-color: #fff3e0;"; // Amarillo
+                                baseStyle = "-fx-background-color: #fff3e0;";
                             } else if (dias >= 0 && dias <= 3) {
-                                baseStyle = "-fx-background-color: #ffebee;"; // Rojo
+                                baseStyle = "-fx-background-color: #ffebee;";
                             } else if (dias < 0) {
-                                baseStyle = "-fx-background-color: #ffcdd2;"; // Vencidos
+                                baseStyle = "-fx-background-color: #ffcdd2;";
                             }
 
                             setStyle(baseStyle + (isSelected() ?
@@ -171,12 +170,6 @@ public class DashboardController implements Initializable {
                 return row;
             });
 
-            //btnVerTodos.setOnMouseEntered(e ->
-                    //btnVerTodos.setStyle("-fx-backgroung-color: #8e44ad; -fx-text-fill: white; -fx-font-weight: bold;"));
-
-            //btnVerTodos.setOnMouseExited(e ->
-                    //btnVerTodos.setStyle("-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold;"));
-
         } catch (Exception e) {
             e.printStackTrace();
             lblMensaje.setText("Error al inicializar el panel.");
@@ -193,7 +186,6 @@ public class DashboardController implements Initializable {
                         "-fx-padding: 0;"
         );
 
-        // OCULTAR BARRAS SCROLLS
         tablaClientesProximosAVencer.skinProperty().addListener((obs, oldSkin, newSkin) -> {
             if (newSkin != null) {
                 ScrollBar vbar = (ScrollBar) tablaClientesProximosAVencer.lookup(".scroll-bar:vertical");
@@ -279,7 +271,6 @@ public class DashboardController implements Initializable {
 
     private void cargarDatosTarjetas() {
         try (Connection conn = DatabaseUtil.getConnection()) {
-            // Total clientes activos
             String sqlClientes = "SELECT COUNT(*) AS total FROM clientes WHERE activo = 1";
             try (PreparedStatement ps = conn.prepareStatement(sqlClientes);
                  ResultSet rs = ps.executeQuery()) {
@@ -288,7 +279,6 @@ public class DashboardController implements Initializable {
                 }
             }
 
-            // Próximos a vencer
             String sqlVencimientos = "SELECT COUNT(*) AS total FROM clientes WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days')";
             try (PreparedStatement ps = conn.prepareStatement(sqlVencimientos);
                  ResultSet rs = ps.executeQuery()) {
@@ -297,18 +287,14 @@ public class DashboardController implements Initializable {
                 }
             }
 
-            // Obtener todos los componentes financieros
             double totalPagos = DatabaseUtil.obtenerTotalPagosDelMesActual();
             double totalVentas = DatabaseUtil.obtenerTotalVentasDelMes();
             double totalEgresos = DatabaseUtil.obtenerTotalEgresosDelMes();
 
-            // Calcular balance: (Pagos + Ventas) - Egresos
             double balance = (totalPagos + totalVentas) - totalEgresos;
 
-            // Actualizar tarjeta de pagos con el balance
             ctrlPagos.setValor(String.format("$ %.2f", balance));
 
-            // Actualizar tooltip con el desglose completo
             String tooltipText = String.format(
                     "Membresías: $%.2f\nVentas: $%.2f\nEgresos: $%.2f",
                     totalPagos, totalVentas, totalEgresos
@@ -347,7 +333,6 @@ public class DashboardController implements Initializable {
 
     private void cargarClientesProximosAVencer() {
         ObservableList<Cliente> clientes = FXCollections.observableArrayList();
-        // Consulta modificada: quitamos el cálculo de días_restantes
         String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
                 "FROM clientes " +
                 "WHERE activo = 1 " +
@@ -370,7 +355,6 @@ public class DashboardController implements Initializable {
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 );
 
-                // Usamos el método setDiasRestantes() que corrige el cálculo
                 cliente.setDiasRestantes();
 
                 clientes.add(cliente);
@@ -413,7 +397,7 @@ public class DashboardController implements Initializable {
     }
 
     public void handleExportarPDF() {
-        ReporteUtil.generarReporteFinanciero();
+        ReporteUtil.generarReporteFinanciero(8, 2025);
     }
 
     @FXML

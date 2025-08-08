@@ -138,13 +138,18 @@ public class DatabaseUtil {
         }
     }
 
-    public static double obtenerTotalPagosDelMesActual() {
+    // Métodos para obtener datos específicos por mes/año
+    public static double obtenerTotalPagosParaMes(int mes, int anio) {
         double total = 0.0;
-        String sql = "SELECT SUM(monto) AS total FROM pagos WHERE strftime('%Y-%m', fecha_pago) = strftime('%Y-%m', 'now')";
+        String sql = "SELECT SUM(monto) AS total FROM pagos " +
+                "WHERE strftime('%Y', fecha_pago) = ? " +
+                "AND strftime('%m', fecha_pago) = ?";
 
         try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, String.format("%04d", anio));
+            pstmt.setString(2, String.format("%02d", mes));
+            ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
                 total = rs.getDouble("total");
@@ -152,10 +157,100 @@ public class DatabaseUtil {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return total;
     }
 
+    public static double obtenerTotalVentasParaMes(int mes, int anio) {
+        double total = 0.0;
+        String sql = "SELECT SUM(total) AS total FROM ventas " +
+                "WHERE strftime('%Y', fecha) = ? " +
+                "AND strftime('%m', fecha) = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, String.format("%04d", anio));
+            pstmt.setString(2, String.format("%02d", mes));
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                total = rs.getDouble("total");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return total;
+    }
+
+    public static double obtenerTotalEgresosParaMes(int mes, int anio) {
+        double total = 0.0;
+        String sql = "SELECT SUM(monto) AS total FROM egresos " +
+                "WHERE strftime('%Y', fecha) = ? " +
+                "AND strftime('%m', fecha) = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, String.format("%04d", anio));
+            pstmt.setString(2, String.format("%02d", mes));
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                total = rs.getDouble("total");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return total;
+    }
+
+    public static ObservableList<Egreso> getEgresosParaMes(int mes, int anio) {
+        ObservableList<Egreso> egresos = FXCollections.observableArrayList();
+        String sql = "SELECT id, descripcion, monto, fecha, categoria FROM egresos " +
+                "WHERE strftime('%Y', fecha) = ? " +
+                "AND strftime('%m', fecha) = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, String.format("%04d", anio));
+            stmt.setString(2, String.format("%02d", mes));
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Egreso e = new Egreso();
+                e.setId(rs.getInt("id"));
+                e.setDescripcion(rs.getString("descripcion"));
+                e.setMonto(rs.getDouble("monto"));
+                e.setFecha(LocalDate.parse(rs.getString("fecha")));
+                e.setCategoria(rs.getString("categoria"));
+                egresos.add(e);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return egresos;
+    }
+
+    // Métodos originales (mantienen compatibilidad)
+    public static double obtenerTotalPagosDelMesActual() {
+        LocalDate hoy = LocalDate.now();
+        return obtenerTotalPagosParaMes(hoy.getMonthValue(), hoy.getYear());
+    }
+
+    public static double obtenerTotalVentasDelMes() {
+        LocalDate hoy = LocalDate.now();
+        return obtenerTotalVentasParaMes(hoy.getMonthValue(), hoy.getYear());
+    }
+
+    public static double obtenerTotalEgresosDelMes() {
+        LocalDate hoy = LocalDate.now();
+        return obtenerTotalEgresosParaMes(hoy.getMonthValue(), hoy.getYear());
+    }
+
+    public static ObservableList<Egreso> getEgresosDelMes() {
+        LocalDate hoy = LocalDate.now();
+        return getEgresosParaMes(hoy.getMonthValue(), hoy.getYear());
+    }
+
+    // Resto de métodos sin cambios...
     public static void testConnection() {
         try (Connection conn = getConnection()) {
             System.out.println("✅ Conexión exitosa a: " + URL);
@@ -317,23 +412,6 @@ public class DatabaseUtil {
         EventBus.fireVentaRealizadaEvent();
     }
 
-    public static double obtenerTotalVentasDelMes() {
-        double total = 0.0;
-        String sql = "SELECT SUM(total) AS total FROM ventas " +
-                "WHERE strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now')";
-
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-            if (rs.next()) {
-                total = rs.getDouble("total");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return total;
-    }
-
     public static void insertarEgreso(Egreso egreso) throws SQLException {
         String sql = "INSERT INTO egresos (descripcion, monto, fecha, categoria) VALUES (?, ?, ?, ?)";
         executeUpdate(sql,
@@ -343,47 +421,6 @@ public class DatabaseUtil {
                 egreso.getCategoria());
 
         EventBus.fireEvent(EventBus.EventType.EGRESO_REGISTRADO);
-    }
-
-    public static double obtenerTotalEgresosDelMes() {
-        double total = 0.0;
-        String sql = "SELECT SUM(monto) AS total FROM egresos " +
-                "WHERE strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now')";
-
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-            if (rs.next()) {
-                total = rs.getDouble("total");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return total;
-    }
-
-    public static ObservableList<Egreso> getEgresosDelMes() {
-        ObservableList<Egreso> egresos = FXCollections.observableArrayList();
-        String sql = "SELECT id, descripcion, monto, fecha, categoria FROM egresos " +
-                "WHERE strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now')";
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                Egreso e = new Egreso();
-                e.setId(rs.getInt("id"));
-                e.setDescripcion(rs.getString("descripcion"));
-                e.setMonto(rs.getDouble("monto"));
-                e.setFecha(LocalDate.parse(rs.getString("fecha")));
-                e.setCategoria(rs.getString("categoria"));
-                egresos.add(e);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return egresos;
     }
 
     public static ObservableList<PagoMensual> getEgresosMensuales(int año) throws SQLException {

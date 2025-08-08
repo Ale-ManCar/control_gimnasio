@@ -22,6 +22,8 @@
 	<parameter name="totalVentas" class="java.lang.Double"/>
 	<parameter name="totalEgresos" class="java.lang.Double"/>
 	<parameter name="resultadoNeto" class="java.lang.Double"/>
+	<parameter name="mesReporte" class="java.lang.Integer"/>
+	<parameter name="anioReporte" class="java.lang.Integer"/>
 
 	<!-- Campos para el detalle de egresos -->
 	<field name="descripcion" class="java.lang.String"/>
@@ -42,10 +44,15 @@
 				<text><![CDATA[REPORTE FINANCIERO MENSUAL]]></text>
 			</staticText>
 
-			<textField pattern="EEEE, d 'de' MMMM 'de' yyyy">
+			<textField>
 				<reportElement x="0" y="50" width="555" height="20" forecolor="#FFFFFF"/>
 				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+				<textFieldExpression><![CDATA[
+					java.time.Month.of($P{mesReporte}).getDisplayName(
+						java.time.format.TextStyle.FULL,
+						new java.util.Locale("es")
+					).toUpperCase() + " " + $P{anioReporte}
+				]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
@@ -135,7 +142,6 @@
 
 	<summary>
 		<band height="220">
-			<!-- Sección de Resumen Financiero -->
 			<staticText>
 				<reportElement x="0" y="10" width="555" height="25" forecolor="#3F51B5"/>
 				<textElement textAlignment="Center">
@@ -144,7 +150,6 @@
 				<text><![CDATA[RESUMEN FINANCIERO]]></text>
 			</staticText>
 
-			<!-- Tabla de Resumen -->
 			<rectangle>
 				<reportElement x="50" y="45" width="455" height="150" backcolor="#F9F9F9"/>
 				<graphicElement>
@@ -152,7 +157,6 @@
 				</graphicElement>
 			</rectangle>
 
-			<!-- Ingresos -->
 			<staticText>
 				<reportElement x="70" y="60" width="200" height="20"/>
 				<textElement textAlignment="Left">
@@ -205,7 +209,6 @@
 				</graphicElement>
 			</line>
 
-			<!-- Egresos -->
 			<staticText>
 				<reportElement x="70" y="140" width="200" height="20"/>
 				<textElement textAlignment="Left">
@@ -228,7 +231,6 @@
 				</graphicElement>
 			</line>
 
-			<!-- Resultado Neto -->
 			<staticText>
 				<reportElement x="70" y="170" width="200" height="25"/>
 				<textElement textAlignment="Left">
