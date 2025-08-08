@@ -15,8 +15,6 @@
 		bottomMargin="20"
 		uuid="e73b923e-d8e0-437a-9cc5-c43cc7a35117">
 
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="Data Adapter"/>
-
 	<!-- Parámetros para los totales -->
 	<parameter name="totalMembresias" class="java.lang.Double"/>
 	<parameter name="totalVentas" class="java.lang.Double"/>
@@ -48,11 +46,11 @@
 				<reportElement x="0" y="50" width="555" height="20" forecolor="#FFFFFF"/>
 				<textElement textAlignment="Center"/>
 				<textFieldExpression><![CDATA[
-					java.time.Month.of($P{mesReporte}).getDisplayName(
-						java.time.format.TextStyle.FULL,
-						new java.util.Locale("es")
-					).toUpperCase() + " " + $P{anioReporte}
-				]]></textFieldExpression>
+                    java.time.Month.of($P{mesReporte}).getDisplayName(
+                        java.time.format.TextStyle.FULL,
+                        new java.util.Locale("es")
+                    ).toUpperCase() + " " + $P{anioReporte}
+                ]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
@@ -102,24 +100,24 @@
 	</columnHeader>
 
 	<detail>
-		<band height="25">
-			<textField>
-				<reportElement x="0" y="0" width="200" height="25"/>
+		<band height="25" splitType="Stretch">
+			<textField isStretchWithOverflow="true">
+				<reportElement x="0" y="0" width="200" height="25" positionType="Float"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{descripcion}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="200" y="0" width="120" height="25"/>
+				<reportElement x="200" y="0" width="120" height="25" positionType="Float"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{categoria}]]></textFieldExpression>
 			</textField>
 			<textField pattern="dd/MM/yyyy">
-				<reportElement x="320" y="0" width="100" height="25"/>
+				<reportElement x="320" y="0" width="100" height="25" positionType="Float"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{fecha}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="420" y="0" width="135" height="25"/>
+				<reportElement x="420" y="0" width="135" height="25" positionType="Float"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA["$" + new java.text.DecimalFormat("#,##0.00").format($F{monto})]]></textFieldExpression>
 			</textField>

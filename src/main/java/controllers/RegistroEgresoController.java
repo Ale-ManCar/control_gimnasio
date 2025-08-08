@@ -7,6 +7,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.stage.Stage;
 import models.Egreso;
 import util.DatabaseUtil;
@@ -15,6 +16,7 @@ import util.EventBus;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ResourceBundle;
+import java.util.function.UnaryOperator;
 
 public class RegistroEgresoController implements Initializable {
 
@@ -37,6 +39,20 @@ public class RegistroEgresoController implements Initializable {
                 "Otros"
         );
         cbCategoria.getSelectionModel().selectFirst();
+
+        // Configurar conversión a mayúsculas
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (!text.isEmpty()) {
+                change.setText(text.toUpperCase());
+            }
+            return change;
+        };
+        txtDescripcion.setTextFormatter(new TextFormatter<>(filter));
+
+        // Configurar TextArea para salto de línea automático
+        txtDescripcion.setWrapText(true);
+        txtDescripcion.setPrefRowCount(4);
 
         // Estilizar botones
         btnRegistrar.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; "
