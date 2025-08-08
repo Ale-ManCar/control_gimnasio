@@ -30,6 +30,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 public class DashboardController implements Initializable {
 
@@ -51,9 +52,26 @@ public class DashboardController implements Initializable {
     private MetricCardController ctrlPagos;
     private MetricCardController ctrlVencimientos;
 
+    private Consumer<EventBus.EventType> dashboardListener;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
+
+            Platform.runLater(() -> {
+                Stage stage = (Stage) cardClientes.getScene().getWindow();
+
+                dashboardListener = eventType -> {
+                    if (eventType == EventBus.EventType.EGRESO_REGISTRADO) {
+                        Platform.runLater(this::cargarDatosTarjetas);
+                    }
+                };
+                EventBus.registerListener(EventBus.EventType.EGRESO_REGISTRADO, dashboardListener);
+
+                stage.setOnCloseRequest(e ->
+                        EventBus.unregisterListener(EventBus.EventType.EGRESO_REGISTRADO, dashboardListener));
+            });
+
             configurarTablaSinScroll();
 
             colCliente.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));

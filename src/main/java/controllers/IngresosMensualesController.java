@@ -1,5 +1,6 @@
 package controllers;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -20,6 +21,7 @@ import models.EgresoDetalle;
 import models.PagoDetalle;
 import models.PagoMensual;
 import util.DatabaseUtil;
+import util.EventBus;
 import util.ReporteUtil;
 
 import java.io.IOException;
@@ -30,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -57,6 +60,7 @@ public class IngresosMensualesController implements Initializable {
 
     private ObservableList<PagoDetalle> detallesPagos = FXCollections.observableArrayList();
     private int anioActual = Year.now().getValue();
+    private Consumer<EventBus.EventType> eventConsumer;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -65,6 +69,22 @@ public class IngresosMensualesController implements Initializable {
         cargarDatos(anioActual);
         configurarTablaEgresos();
         configurarBotonEgreso();
+
+        eventConsumer = eventType -> {
+            if (eventType == EventBus.EventType.EGRESO_REGISTRADO) {
+                Platform.runLater(() -> {
+                    int selectedYear = cbAnio.getValue();
+                    cargarDatos(selectedYear);
+                });
+            }
+        };
+        EventBus.registerListener(EventBus.EventType.EGRESO_REGISTRADO, eventConsumer);
+
+        Platform.runLater(() -> {
+            Stage stage = (Stage) barChart.getScene().getWindow();
+            stage.setOnCloseRequest(e ->
+                    EventBus.unregisterListener(EventBus.EventType.EGRESO_REGISTRADO, eventConsumer));
+        });
     }
 
     private void configurarBotonEgreso() {
@@ -100,9 +120,9 @@ public class IngresosMensualesController implements Initializable {
 
         // Ajustar el tamaño de las columnas para ocupar todo el espacio
         colFecha.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.15));
-        colCliente.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.43));
-        colMembresia.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.20));
-        colMonto.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.19));
+        colCliente.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.52));
+        colMembresia.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.15));
+        colMonto.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.15));
 
         // Formatear columna de monto como moneda y centrar
         colMonto.setCellFactory(column -> new TableCell<PagoDetalle, Double>() {
@@ -190,7 +210,7 @@ public class IngresosMensualesController implements Initializable {
     }
 
     private void configurarAnioSelector() {
-        // Obtener años disponibles (desde 2023 hasta el año actual +1)
+        // Obtener años disponibles (desde 2025 hasta el año actual +1)
         int añoInicial = 2025;
         for (int año = añoInicial; año <= anioActual + 1; año++) {
             cbAnio.getItems().add(año);
@@ -206,6 +226,11 @@ public class IngresosMensualesController implements Initializable {
         colDescripcion.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
         colCategoria.setCellValueFactory(new PropertyValueFactory<>("categoria"));
         colMontoEgreso.setCellValueFactory(new PropertyValueFactory<>("monto"));
+
+        colFechaEgreso.prefWidthProperty().bind(tablaEgresos.widthProperty().multiply(0.15));
+        colDescripcion.prefWidthProperty().bind(tablaEgresos.widthProperty().multiply(0.52));
+        colCategoria.prefWidthProperty().bind(tablaEgresos.widthProperty().multiply(0.15));
+        colMontoEgreso.prefWidthProperty().bind(tablaEgresos.widthProperty().multiply(0.15));
 
         String centerStyle = "-fx-alignment: CENTER;";
         colFechaEgreso.setStyle(centerStyle);
@@ -239,7 +264,7 @@ public class IngresosMensualesController implements Initializable {
                     setStyle("");
                 } else {
                     setText(String.format("$%,.2f", monto));
-                    setStyle(centerStyle);
+                    setStyle(centerStyle + "-fx-font-weight: bold;");
                 }
             }
         });
@@ -272,6 +297,9 @@ public class IngresosMensualesController implements Initializable {
                 }
             }
         });
+
+        // Estilo general para la tabla
+        tablaEgresos.setStyle("-fx-font-size: 14px;");
     }
 
     private void cargarDatos(int año) {

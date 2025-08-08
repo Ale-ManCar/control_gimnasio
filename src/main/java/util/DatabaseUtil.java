@@ -341,6 +341,8 @@ public class DatabaseUtil {
                 egreso.getMonto(),
                 egreso.getFecha().toString(),
                 egreso.getCategoria());
+
+        EventBus.fireEvent(EventBus.EventType.EGRESO_REGISTRADO);
     }
 
     public static double obtenerTotalEgresosDelMes() {

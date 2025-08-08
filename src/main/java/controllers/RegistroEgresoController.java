@@ -29,7 +29,7 @@ public class RegistroEgresoController implements Initializable {
         // Configurar categorías
         cbCategoria.getItems().addAll(
                 "Alquiler",
-                "Servicios (agua/luz)",
+                "Servicios",
                 "Mantenimiento",
                 "Insumos",
                 "Salarios",
@@ -67,8 +67,9 @@ public class RegistroEgresoController implements Initializable {
             egreso.setCategoria(cbCategoria.getValue());
 
             DatabaseUtil.insertarEgreso(egreso);
-            EventBus.fireVentaRealizadaEvent();
+            EventBus.fireEvent(EventBus.EventType.EGRESO_REGISTRADO);
             cerrarVentana();
+
         } catch (NumberFormatException e) {
             mostrarError("El monto debe ser un número válido");
         } catch (Exception e) {
