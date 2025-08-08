@@ -6,6 +6,8 @@ import java.util.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.PieChart;
+import models.Egreso;
+import models.EgresoDetalle;
 import models.PagoDetalle;
 import models.PagoMensual;
 import models.Producto;
@@ -62,17 +64,24 @@ public class DatabaseUtil {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "nombre TEXT NOT NULL UNIQUE," +
                 "stock INTEGER NOT NULL," +
-                "precio REAL NOT NULL," + // Precio de venta (por unidad o por scoop)
-                "tipo TEXT NOT NULL," +   // PACA, KG, LB
-                "precio_compra REAL NOT NULL," + // Precio de compra (por paca o envase)
-                "unidades_por_paca INTEGER," + // Solo para tipo PACA
-                "peso_total REAL," + // Para KG/LB: peso total del envase
-                "peso_por_scoop REAL)"; // Para KG/LB: peso por scoop en gramos
+                "precio REAL NOT NULL," +
+                "tipo TEXT NOT NULL," +
+                "precio_compra REAL NOT NULL," +
+                "unidades_por_paca INTEGER," +
+                "peso_total REAL," +
+                "peso_por_scoop REAL)";
 
         String sqlVentas = "CREATE TABLE IF NOT EXISTS ventas (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "fecha TEXT NOT NULL DEFAULT (date('now'))," +
                 "total REAL NOT NULL)";
+
+        String sqlEgresos = "CREATE TABLE IF NOT EXISTS egresos (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "descripcion TEXT NOT NULL," +
+                "monto REAL NOT NULL," +
+                "fecha TEXT NOT NULL," +
+                "categoria TEXT NOT NULL)";
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
@@ -84,6 +93,7 @@ public class DatabaseUtil {
             stmt.execute(sqlPagos);
             stmt.execute(sqlProductos);
             stmt.execute(sqlVentas);
+            stmt.execute(sqlEgresos);
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
             conn.commit();
 
@@ -251,7 +261,6 @@ public class DatabaseUtil {
         return detalles;
     }
 
-    // 🔽 Métodos relacionados con productos (ACTUALIZADOS)
     public static void insertarProducto(Producto producto) throws SQLException {
         String sql = "INSERT INTO productos (nombre, stock, precio, tipo, precio_compra, unidades_por_paca, peso_total, peso_por_scoop) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -305,14 +314,13 @@ public class DatabaseUtil {
     public static void registrarVenta(double totalVenta) throws SQLException {
         String sql = "INSERT INTO ventas (fecha, total) VALUES (date('now'), ?)";
         executeUpdate(sql, totalVenta);
-
         EventBus.fireVentaRealizadaEvent();
     }
 
     public static double obtenerTotalVentasDelMes() {
         double total = 0.0;
-        String sql = "SELECT SUM(total) AS total FROM ventas "
-                + "WHERE strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now')";
+        String sql = "SELECT SUM(total) AS total FROM ventas " +
+                "WHERE strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now')";
 
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -324,5 +332,117 @@ public class DatabaseUtil {
             e.printStackTrace();
         }
         return total;
+    }
+
+    public static void insertarEgreso(Egreso egreso) throws SQLException {
+        String sql = "INSERT INTO egresos (descripcion, monto, fecha, categoria) VALUES (?, ?, ?, ?)";
+        executeUpdate(sql,
+                egreso.getDescripcion(),
+                egreso.getMonto(),
+                egreso.getFecha().toString(),
+                egreso.getCategoria());
+    }
+
+    public static double obtenerTotalEgresosDelMes() {
+        double total = 0.0;
+        String sql = "SELECT SUM(monto) AS total FROM egresos " +
+                "WHERE strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now')";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            if (rs.next()) {
+                total = rs.getDouble("total");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return total;
+    }
+
+    public static ObservableList<Egreso> getEgresosDelMes() {
+        ObservableList<Egreso> egresos = FXCollections.observableArrayList();
+        String sql = "SELECT id, descripcion, monto, fecha, categoria FROM egresos " +
+                "WHERE strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now')";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                Egreso e = new Egreso();
+                e.setId(rs.getInt("id"));
+                e.setDescripcion(rs.getString("descripcion"));
+                e.setMonto(rs.getDouble("monto"));
+                e.setFecha(LocalDate.parse(rs.getString("fecha")));
+                e.setCategoria(rs.getString("categoria"));
+                egresos.add(e);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return egresos;
+    }
+
+    public static ObservableList<PagoMensual> getEgresosMensuales(int año) throws SQLException {
+        ObservableList<PagoMensual> data = FXCollections.observableArrayList();
+        String sql = "SELECT strftime('%Y-%m', fecha) AS mes, SUM(monto) AS total " +
+                "FROM egresos " +
+                "WHERE strftime('%Y', fecha) = ? " +
+                "GROUP BY mes " +
+                "ORDER BY mes";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, String.valueOf(año));
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                String mes = rs.getString("mes");
+                double total = rs.getDouble("total");
+                data.add(new PagoMensual(mes, total));
+            }
+        }
+        return data;
+    }
+
+    public static double getTotalEgresosAnual(int año) throws SQLException {
+        double total = 0.0;
+        String sql = "SELECT SUM(monto) AS total FROM egresos WHERE strftime('%Y', fecha) = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, String.valueOf(año));
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                total = rs.getDouble("total");
+            }
+        }
+        return total;
+    }
+
+    public static ObservableList<EgresoDetalle> getDetallesEgresos(int año) throws SQLException {
+        ObservableList<EgresoDetalle> detalles = FXCollections.observableArrayList();
+        String sql = "SELECT descripcion, categoria, fecha, monto " +
+                "FROM egresos " +
+                "WHERE strftime('%Y', fecha) = ? " +
+                "ORDER BY fecha DESC";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, String.valueOf(año));
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                detalles.add(new EgresoDetalle(
+                        LocalDate.parse(rs.getString("fecha")),
+                        rs.getString("descripcion"),
+                        rs.getString("categoria"),
+                        rs.getDouble("monto")
+                ));
+            }
+        }
+        return detalles;
     }
 }

@@ -19,4 +19,8 @@ public class EventBus {
             listener.run();
         }
     }
+
+    public static void fireEgresoRegistradoEvent() {
+        fireVentaRealizadaEvent();
+    }
 }

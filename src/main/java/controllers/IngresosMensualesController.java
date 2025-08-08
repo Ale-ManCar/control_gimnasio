@@ -4,18 +4,25 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+
+import models.Egreso;
+import models.EgresoDetalle;
 import models.PagoDetalle;
 import models.PagoMensual;
 import util.DatabaseUtil;
 import util.ReporteUtil;
 
+import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.Year;
@@ -40,6 +47,13 @@ public class IngresosMensualesController implements Initializable {
     @FXML private Label lblPromedioMensual;
     @FXML private Label lblMejorMes;
     @FXML private Button btnExportarPDF;
+    @FXML private Button btnRegistrarEgreso;
+
+    @FXML private TableView<EgresoDetalle> tablaEgresos;
+    @FXML private TableColumn<EgresoDetalle, LocalDate> colFechaEgreso;
+    @FXML private TableColumn<EgresoDetalle, String> colDescripcion;
+    @FXML private TableColumn<EgresoDetalle, String> colCategoria;
+    @FXML private TableColumn<EgresoDetalle, Double> colMontoEgreso;
 
     private ObservableList<PagoDetalle> detallesPagos = FXCollections.observableArrayList();
     private int anioActual = Year.now().getValue();
@@ -49,6 +63,25 @@ public class IngresosMensualesController implements Initializable {
         configurarTabla();
         configurarAnioSelector();
         cargarDatos(anioActual);
+        configurarTablaEgresos();
+        configurarBotonEgreso();
+    }
+
+    private void configurarBotonEgreso() {
+        btnRegistrarEgreso.setOnAction(e -> abrirRegistroEgreso());
+    }
+
+    private void abrirRegistroEgreso() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/registro_egreso.fxml"));
+            Parent root = loader.load();
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Registrar Egreso");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void configurarTabla() {
@@ -69,7 +102,7 @@ public class IngresosMensualesController implements Initializable {
         colFecha.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.15));
         colCliente.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.43));
         colMembresia.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.20));
-        colMonto.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.20));
+        colMonto.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.19));
 
         // Formatear columna de monto como moneda y centrar
         colMonto.setCellFactory(column -> new TableCell<PagoDetalle, Double>() {
@@ -168,59 +201,133 @@ public class IngresosMensualesController implements Initializable {
         cbAnio.setOnAction(event -> cargarDatos(cbAnio.getValue()));
     }
 
+    private void configurarTablaEgresos() {
+        colFechaEgreso.setCellValueFactory(new PropertyValueFactory<>("fecha"));
+        colDescripcion.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
+        colCategoria.setCellValueFactory(new PropertyValueFactory<>("categoria"));
+        colMontoEgreso.setCellValueFactory(new PropertyValueFactory<>("monto"));
+
+        String centerStyle = "-fx-alignment: CENTER;";
+        colFechaEgreso.setStyle(centerStyle);
+        colDescripcion.setStyle(centerStyle);
+        colCategoria.setStyle(centerStyle);
+        colMontoEgreso.setStyle(centerStyle);
+
+        // Formateadores
+        colFechaEgreso.setCellFactory(column -> new TableCell<EgresoDetalle, LocalDate>() {
+            private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+            @Override
+            protected void updateItem(LocalDate fecha, boolean empty) {
+                super.updateItem(fecha, empty);
+                if (empty || fecha == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(fecha.format(formatter));
+                    setStyle(centerStyle);
+                }
+            }
+        });
+
+        colMontoEgreso.setCellFactory(column -> new TableCell<EgresoDetalle, Double>() {
+            @Override
+            protected void updateItem(Double monto, boolean empty) {
+                super.updateItem(monto, empty);
+                if (empty || monto == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(String.format("$%,.2f", monto));
+                    setStyle(centerStyle);
+                }
+            }
+        });
+
+        // Centrar también las columnas de texto
+        colDescripcion.setCellFactory(column -> new TableCell<EgresoDetalle, String>() {
+            @Override
+            protected void updateItem(String value, boolean empty) {
+                super.updateItem(value, empty);
+                if (empty || value == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(value);
+                    setStyle(centerStyle);
+                }
+            }
+        });
+
+        colCategoria.setCellFactory(column -> new TableCell<EgresoDetalle, String>() {
+            @Override
+            protected void updateItem(String value, boolean empty) {
+                super.updateItem(value, empty);
+                if (empty || value == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(value);
+                    setStyle(centerStyle);
+                }
+            }
+        });
+    }
+
     private void cargarDatos(int año) {
         cargarGraficoBarras(año);
         cargarGraficoCircular(año);
         cargarTablaDetalles(año);
         calcularMetricas(año);
+        cargarTablaEgresos(año);
+    }
+
+    private void cargarTablaEgresos(int año) {
+        try {
+            ObservableList<EgresoDetalle> egresos = DatabaseUtil.getDetallesEgresos(año);
+            tablaEgresos.setItems(egresos);
+
+            // Asegurar que todas las celdas estén centradas
+            for (TableColumn<EgresoDetalle, ?> col : tablaEgresos.getColumns()) {
+                col.setStyle("-fx-alignment: CENTER;");
+            }
+        } catch (Exception e) {
+            mostrarAlerta("Error", "No se pudieron cargar los egresos");
+            e.printStackTrace();
+        }
     }
 
     private void cargarGraficoBarras(int año) {
-        XYChart.Series<String, Number> datos = new XYChart.Series<>();
-        datos.setName("Ingresos Mensuales");
+        XYChart.Series<String, Number> datosIngresos = new XYChart.Series<>();
+        datosIngresos.setName("Ingresos");
+
+        XYChart.Series<String, Number> datosEgresos = new XYChart.Series<>();
+        datosEgresos.setName("Egresos");
 
         try {
             List<PagoMensual> ingresos = DatabaseUtil.getIngresosMensuales(año);
-
-            // Estilo moderno para las barras
-            String[] colores = {"#3498db", "#2ecc71", "#e74c3c", "#9b59b6", "#1abc9c",
-                    "#f1c40f", "#e67e22", "#d35400", "#34495e", "#16a085",
-                    "#8e44ad", "#27ae60"};
+            List<PagoMensual> egresos = DatabaseUtil.getEgresosMensuales(año); // NUEVO MÉTODO
 
             for (int i = 0; i < ingresos.size(); i++) {
                 PagoMensual ingreso = ingresos.get(i);
                 String mes = obtenerNombreMes(ingreso.getMes());
-                double total = ingreso.getTotal();
 
-                XYChart.Data<String, Number> data = new XYChart.Data<>(mes, total);
-                datos.getData().add(data);
-
-                // Aplicar estilo personalizado a cada barra
-                final int index = i;
-                data.nodeProperty().addListener((obs, oldNode, newNode) -> {
-                    if (newNode != null) {
-                        newNode.setStyle("-fx-bar-fill: " + colores[index % colores.length] + ";");
-
-                        // Efecto hover
-                        newNode.setOnMouseEntered(e -> {
-                            newNode.setStyle("-fx-bar-fill: derive(" + colores[index % colores.length] + ", 30%); " +
-                                    "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 0);");
-                        });
-
-                        newNode.setOnMouseExited(e -> {
-                            newNode.setStyle("-fx-bar-fill: " + colores[index % colores.length] + ";");
-                        });
-
-                        // Tooltip con información detallada
-                        Tooltip tooltip = new Tooltip(String.format("%s: $%,.2f", mes, total));
-                        tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
-                        Tooltip.install(newNode, tooltip);
+                // Buscar egresos correspondientes al mismo mes
+                double totalEgresos = 0;
+                for (PagoMensual egreso : egresos) {
+                    if (egreso.getMes().equals(ingreso.getMes())) {
+                        totalEgresos = egreso.getTotal();
+                        break;
                     }
-                });
+                }
+
+                // Añadir al gráfico
+                datosIngresos.getData().add(new XYChart.Data<>(mes, ingreso.getTotal()));
+                datosEgresos.getData().add(new XYChart.Data<>(mes, totalEgresos));
             }
 
             barChart.getData().clear();
-            barChart.getData().add(datos);
+            barChart.getData().addAll(datosIngresos, datosEgresos);
 
             // Estilo general del gráfico
             barChart.setStyle(
@@ -271,25 +378,40 @@ public class IngresosMensualesController implements Initializable {
 
     private void calcularMetricas(int año) {
         try {
-            double totalAnual = detallesPagos.stream()
+            double totalIngresos = detallesPagos.stream()
                     .mapToDouble(PagoDetalle::getMonto)
                     .sum();
 
+            double totalEgresos = DatabaseUtil.getTotalEgresosAnual(año); // NUEVO MÉTODO
+            double totalAnual = totalIngresos - totalEgresos;
             double promedioMensual = totalAnual / 12;
 
-            // Encontrar el mejor mes
+            // Encontrar el mejor mes (considerando egresos)
             String mejorMes = "N/A";
-            double maxMonto = 0;
-            for (PagoMensual ingreso : DatabaseUtil.getIngresosMensuales(año)) {
-                if (ingreso.getTotal() > maxMonto) {
-                    maxMonto = ingreso.getTotal();
+            double maxUtilidad = Double.NEGATIVE_INFINITY;
+
+            List<PagoMensual> ingresos = DatabaseUtil.getIngresosMensuales(año);
+            List<PagoMensual> egresos = DatabaseUtil.getEgresosMensuales(año);
+
+            for (PagoMensual ingreso : ingresos) {
+                double totalEgresosMes = 0;
+                for (PagoMensual egreso : egresos) {
+                    if (egreso.getMes().equals(ingreso.getMes())) {
+                        totalEgresosMes = egreso.getTotal();
+                        break;
+                    }
+                }
+
+                double utilidad = ingreso.getTotal() - totalEgresosMes;
+                if (utilidad > maxUtilidad) {
+                    maxUtilidad = utilidad;
                     mejorMes = obtenerNombreMes(ingreso.getMes());
                 }
             }
 
             lblTotalAnual.setText(String.format("$%,.2f", totalAnual));
             lblPromedioMensual.setText(String.format("$%,.2f", promedioMensual));
-            lblMejorMes.setText(mejorMes + ": $" + String.format("%,.2f", maxMonto));
+            lblMejorMes.setText(mejorMes + ": $" + String.format("%,.2f", maxUtilidad));
 
         } catch (Exception e) {
             mostrarAlerta("Error", "No se pudieron calcular las métricas");

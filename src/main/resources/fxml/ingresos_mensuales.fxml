@@ -12,7 +12,7 @@
 <AnchorPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controllers.IngresosMensualesController"
-            prefHeight="800" prefWidth="1200"
+            prefHeight="850" prefWidth="1200"
             style="-fx-background-color: #f8f9fa;">
 
     <children>
@@ -29,10 +29,13 @@
                 <Label text="Seleccionar Año:" style="-fx-font-weight: bold; -fx-text-fill: #34495e;"/>
                 <ComboBox fx:id="cbAnio" prefWidth="100"/>
 
-                <!-- Botón con conexión directa al método -->
                 <Button fx:id="btnExportarPDF" text="Exportar a PDF" onAction="#handleExportarPDF"
                         style="-fx-background-color: #3498db; -fx-text-fill: white;
                                -fx-font-weight: bold; -fx-padding: 5 15; -fx-cursor: hand;"/>
+
+                <Button fx:id="btnRegistrarEgreso" text="Registrar Egreso"
+                        style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold;"
+                        GridPane.columnIndex="3" GridPane.rowIndex="0"/>
             </HBox>
 
             <!-- Panel principal -->
@@ -42,7 +45,7 @@
                     <ColumnConstraints percentWidth="40"/>
                 </columnConstraints>
 
-                <!-- Columna izquierda: Gráfico de barras y tabla -->
+                <!-- Columna izquierda: Gráfico de barras y tablas -->
                 <VBox GridPane.columnIndex="0" spacing="20">
                     <Label text="Ingresos Mensuales"
                            style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
@@ -52,7 +55,7 @@
                               categoryGap="15"
                               barGap="5"
                               animated="false"
-                              prefHeight="300">
+                              prefHeight="250">
                         <xAxis>
                             <CategoryAxis label="Mes"/>
                         </xAxis>
@@ -64,12 +67,24 @@
                     <Label text="Detalle de Pagos"
                            style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
 
-                    <TableView fx:id="tablaDetalles" prefHeight="250">
+                    <TableView fx:id="tablaDetalles" prefHeight="200">
                         <columns>
                             <TableColumn fx:id="colFecha" text="Fecha" prefWidth="100"/>
-                            <TableColumn fx:id="colCliente" text="Cliente" prefWidth="200"/>
+                            <TableColumn fx:id="colCliente" text="Cliente" prefWidth="100"/>
                             <TableColumn fx:id="colMembresia" text="Membresía" prefWidth="120"/>
                             <TableColumn fx:id="colMonto" text="Monto" prefWidth="100"/>
+                        </columns>
+                    </TableView>
+
+                    <!-- SECCIÓN NUEVA: Tabla de egresos -->
+                    <Label text="Detalle de Egresos"
+                           style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                    <TableView fx:id="tablaEgresos" prefHeight="200">
+                        <columns>
+                            <TableColumn fx:id="colFechaEgreso" text="Fecha" prefWidth="100"/>
+                            <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="290"/>
+                            <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="150"/>
+                            <TableColumn fx:id="colMontoEgreso" text="Monto" prefWidth="120"/>
                         </columns>
                     </TableView>
                 </VBox>

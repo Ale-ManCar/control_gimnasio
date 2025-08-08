@@ -16,6 +16,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.scene.Node;
+
 import models.Cliente;
 import util.DatabaseUtil;
 import util.EventBus;
@@ -260,6 +261,7 @@ public class DashboardController implements Initializable {
 
     private void cargarDatosTarjetas() {
         try (Connection conn = DatabaseUtil.getConnection()) {
+            // Total clientes activos
             String sqlClientes = "SELECT COUNT(*) AS total FROM clientes WHERE activo = 1";
             try (PreparedStatement ps = conn.prepareStatement(sqlClientes);
                  ResultSet rs = ps.executeQuery()) {
@@ -268,9 +270,7 @@ public class DashboardController implements Initializable {
                 }
             }
 
-            double totalPagos = DatabaseUtil.obtenerTotalPagosDelMesActual();
-            ctrlPagos.setValor(String.format("$ %.2f", totalPagos));
-
+            // Próximos a vencer
             String sqlVencimientos = "SELECT COUNT(*) AS total FROM clientes WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days')";
             try (PreparedStatement ps = conn.prepareStatement(sqlVencimientos);
                  ResultSet rs = ps.executeQuery()) {
@@ -279,14 +279,24 @@ public class DashboardController implements Initializable {
                 }
             }
 
+            // Obtener todos los componentes financieros
+            double totalPagos = DatabaseUtil.obtenerTotalPagosDelMesActual();
             double totalVentas = DatabaseUtil.obtenerTotalVentasDelMes();
-            // Pagos de membresías + Ventas de productos
-            double ingresosTotales = totalPagos + totalVentas;
-            ctrlPagos.setValor(String.format("$ %.2f", ingresosTotales));
+            double totalEgresos = DatabaseUtil.obtenerTotalEgresosDelMes();
 
-            String tooltipText = String.format("Membresías: $%.2f\nVentas: $%.2f", totalPagos, totalVentas);
+            // Calcular balance: (Pagos + Ventas) - Egresos
+            double balance = (totalPagos + totalVentas) - totalEgresos;
+
+            // Actualizar tarjeta de pagos con el balance
+            ctrlPagos.setValor(String.format("$ %.2f", balance));
+
+            // Actualizar tooltip con el desglose completo
+            String tooltipText = String.format(
+                    "Membresías: $%.2f\nVentas: $%.2f\nEgresos: $%.2f",
+                    totalPagos, totalVentas, totalEgresos
+            );
+
             Tooltip tooltip = new Tooltip(tooltipText);
-
             tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-background-color: #2D2D2D; "
                     + "-fx-text-fill: #FFFFFF; -fx-border-width: 1px; -fx-border-color: #555555; "
                     + "-fx-border-radius: 4px; -fx-background-radius: 4px;");

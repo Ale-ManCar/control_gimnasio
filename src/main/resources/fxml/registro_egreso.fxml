@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controllers.RegistroEgresoController"
+      spacing="20" alignment="CENTER"
+      style="-fx-background-color: #f8f9fa; -fx-padding: 20;"
+      prefWidth="450" prefHeight="450">
+
+    <!-- Título -->
+    <Label text="Registro de Egreso"
+           style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"
+           alignment="CENTER" maxWidth="Infinity">
+        <padding>
+            <Insets bottom="10"/>
+        </padding>
+    </Label>
+
+    <!-- Formulario con efecto de tarjeta -->
+    <GridPane style="-fx-background-color: white; -fx-padding: 25; -fx-background-radius: 10;
+                     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="30"/>
+            <ColumnConstraints percentWidth="70"/>
+        </columnConstraints>
+        <padding><Insets top="10" bottom="10" left="10" right="10"/></padding>
+        <hgap>15</hgap>
+        <vgap>15</vgap>
+
+        <!-- Fila 1: Categoría -->
+        <Label text="Categoría:"
+               style="-fx-font-weight: bold; -fx-text-fill: #34495e;"
+               GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="cbCategoria" GridPane.rowIndex="0" GridPane.columnIndex="1"
+                  style="-fx-font-size: 14px; -fx-pref-height: 35px;"/>
+
+        <!-- Fila 2: Monto -->
+        <Label text="Monto ($):"
+               style="-fx-font-weight: bold; -fx-text-fill: #34495e;"
+               GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtMonto" GridPane.rowIndex="1" GridPane.columnIndex="1"
+                   style="-fx-font-size: 14px; -fx-pref-height: 35px;"/>
+
+        <!-- Fila 3: Descripción -->
+        <Label text="Descripción:"
+               style="-fx-font-weight: bold; -fx-text-fill: #34495e;"
+               GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextArea fx:id="txtDescripcion" GridPane.rowIndex="2" GridPane.columnIndex="1"
+                  style="-fx-font-size: 14px;"
+                  prefRowCount="4"/>
+
+        <!-- Fila 4: Botones -->
+        <HBox spacing="15" alignment="CENTER_RIGHT"
+              GridPane.columnIndex="1" GridPane.rowIndex="3">
+            <Button fx:id="btnRegistrar" text="Registrar" onAction="#handleRegistrar"/>
+            <Button fx:id="btnCancelar" text="Cancelar" onAction="#handleCancelar"/>
+        </HBox>
+    </GridPane>
+</VBox>
