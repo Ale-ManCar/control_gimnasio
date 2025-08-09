@@ -101,7 +101,7 @@
 
 	<detail>
 		<band height="25" splitType="Stretch">
-			<textField isStretchWithOverflow="true">
+			<textField textAdjust="StretchHeight">
 				<reportElement x="0" y="0" width="200" height="25" positionType="Float"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{descripcion}]]></textFieldExpression>

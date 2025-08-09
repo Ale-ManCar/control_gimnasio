@@ -94,7 +94,7 @@
                         onAction="#handleExportarPDF"
                         style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 15px; -fx-font-size: 14px; -fx-min-width: 120px; -fx-cursor: hand;" /-->
 
-                <Button text="Inventario / Ventas"
+                <Button text="Inventario"
                         onAction="#abrirInventario"
                         style="-fx-background-color: #e67e22; -fx-text-fill: white; -fx-font-weight: bold;
                    -fx-padding: 8px 15px; -fx-font-size: 14px; -fx-min-width: 140px; -fx-cursor: hand;" />

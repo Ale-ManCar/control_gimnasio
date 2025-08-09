@@ -83,11 +83,50 @@ public class InventarioController {
         colCarritoPrecio.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getPrecioUnitario()));
         colCarritoTotal.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getTotal()));
 
+        colCarritoNombre.prefWidthProperty().bind(tablaCarrito.widthProperty().multiply(0.35));
+        colCarritoUnidades.prefWidthProperty().bind(tablaCarrito.widthProperty().multiply(0.20));
+        colCarritoPrecio.prefWidthProperty().bind(tablaCarrito.widthProperty().multiply(0.20));
+        colCarritoTotal.prefWidthProperty().bind(tablaCarrito.widthProperty().multiply(0.20));
+
+        colCarritoNombre.setCellFactory(column -> new TableCell<VentaItem, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(item);
+                    setAlignment(Pos.CENTER);
+                }
+            }
+        });
+
+        colCarritoUnidades.setCellFactory(column -> new TableCell<VentaItem, Integer>() {
+            @Override
+            protected void updateItem(Integer item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(item.toString());
+                    setAlignment(Pos.CENTER);
+                }
+            }
+        });
+
         colCarritoPrecio.setCellFactory(column -> new TableCell<VentaItem, Double>() {
             @Override
             protected void updateItem(Double precio, boolean empty) {
                 super.updateItem(precio, empty);
-                setText(empty || precio == null ? null : String.format("$%.2f", precio));
+                if (empty || precio == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(String.format("$%.2f", precio));
+                    setAlignment(Pos.CENTER);
+                }
             }
         });
 
@@ -95,7 +134,13 @@ public class InventarioController {
             @Override
             protected void updateItem(Double total, boolean empty) {
                 super.updateItem(total, empty);
-                setText(empty || total == null ? null : String.format("$%.2f", total));
+                if (empty || total == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(String.format("$%.2f", total));
+                    setAlignment(Pos.CENTER);
+                }
             }
         });
 

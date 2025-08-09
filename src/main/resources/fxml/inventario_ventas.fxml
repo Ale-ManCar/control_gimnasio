@@ -27,24 +27,6 @@
                 <RowConstraints percentHeight="50" vgrow="ALWAYS"/>
             </rowConstraints>
 
-            <!-- INGRESAR PRODUCTO -->
-            <!--VBox style="-fx-background-color: #e8f5e9; -fx-padding: 15; -fx-border-color: #c8e6c9; -fx-border-width: 1; -fx-border-radius: 5;"
-                  spacing="10" GridPane.rowIndex="0" GridPane.columnIndex="0" VBox.vgrow="ALWAYS">
-                <Label text="INGRESAR NUEVO PRODUCTO" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
-                <VBox spacing="10" style="-fx-padding: 10;">
-                    <Label text="Nombre producto:"/>
-                    <TextField fx:id="txtNombreProducto" prefWidth="300"/>
-
-                    <Label text="Ingreso unidades (stock):"/>
-                    <TextField fx:id="txtStock" prefWidth="150"/>
-
-                    <Label text="Ingresar precio por unidad:"/>
-                    <TextField fx:id="txtPrecio" prefWidth="150"/>
-                </VBox>
-                <Button text="Ingresar Producto" onAction="#handleIngresarProducto"
-                        style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;"/>
-            </VBox-->
-
             <!-- VENDER PRODUCTO -->
             <VBox style="-fx-background-color: #ffebee; -fx-padding: 15; -fx-border-color: #ffcdd2; -fx-border-width: 1; -fx-border-radius: 5;"
                   spacing="10" GridPane.rowIndex="0" GridPane.columnIndex="1" VBox.vgrow="ALWAYS">
@@ -111,10 +93,10 @@
                 <Label text="CARRITO DE VENTA" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
                 <TableView fx:id="tablaCarrito" prefHeight="200" VBox.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn fx:id="colCarritoNombre" text="Producto"/>
-                        <TableColumn fx:id="colCarritoUnidades" text="Unidades"/>
-                        <TableColumn fx:id="colCarritoPrecio" text="P. Unitario"/>
-                        <TableColumn fx:id="colCarritoTotal" text="Total"/>
+                        <TableColumn fx:id="colCarritoNombre" text="PRODUCTO" />
+                        <TableColumn fx:id="colCarritoUnidades" text="UNIDADES" />
+                        <TableColumn fx:id="colCarritoPrecio" text="PRECIO" />
+                        <TableColumn fx:id="colCarritoTotal" text="TOTAL" />
                     </columns>
                 </TableView>
 
