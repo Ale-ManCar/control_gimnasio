@@ -79,7 +79,10 @@ public class ListaClientesInactivosController {
                     setGraphic(null);
                 } else {
                     setText(item);
-                    setStyle("-fx-alignment: CENTER; -fx-font-weight: bold; -fx-text-fill: black");
+                    setStyle("-fx-alignment: CENTER; "
+                            + "-fx-font-weight: bold; "
+                            + "-fx-text-fill: black; "
+                            + "-fx-background-color: transparent;");
                 }
             }
         });
@@ -94,7 +97,10 @@ public class ListaClientesInactivosController {
                     setGraphic(null);
                 } else {
                     setText(item);
-                    setStyle("-fx-alignment: CENTER; -fx-font-weight: bold; -fx-text-fill: black");
+                    setStyle("-fx-alignment: CENTER; "
+                            + "-fx-font-weight: bold; "
+                            + "-fx-text-fill: black; "
+                            + "-fx-background-color: transparent;");
                 }
             }
         });
@@ -124,7 +130,8 @@ public class ListaClientesInactivosController {
                     indicador.setFill(Color.web("#DC3545")); // Rojo
                     texto.setStyle("-fx-text-fill: #DC3545; -fx-font-weight: bold;");
                     setGraphic(container);
-                    setStyle("-fx-alignment: CENTER;");
+                    setStyle("-fx-alignment: CENTER; "
+                            + "-fx-background-color: transparent;");
                 }
             }
         });
@@ -354,30 +361,35 @@ public class ListaClientesInactivosController {
     private void configurarFilas() {
         tablaClientes.setRowFactory(tv -> {
             TableRow<Cliente> row = new TableRow<>();
-            row.setStyle("-fx-background-radius: 5px;");
+            // Borde inferior para todas las filas
+            row.setStyle("-fx-border-color: #e0e0e0; -fx-border-width: 0 0 1px 0;");
 
-            // Detectar selección y mantener azul claro
             row.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
                 if (isNowSelected) {
-                    row.setStyle("-fx-background-color: #e6f2ff; -fx-background-radius: 5px;");
+                    // Mantener borde inferior incluso cuando está seleccionada
+                    row.setStyle("-fx-background-color: #e6f2ff; "
+                            + "-fx-border-color: #e0e0e0; "
+                            + "-fx-border-width: 0 0 1px 0;");
                 } else {
-                    // Si se deselecciona, vuelve al color normal
-                    row.setStyle("-fx-background-color: #ffffff; -fx-background-radius: 5px;");
+                    row.setStyle("-fx-background-color: #ffffff; "
+                            + "-fx-border-color: #e0e0e0; "
+                            + "-fx-border-width: 0 0 1px 0;");
                 }
             });
 
             row.setOnMouseEntered(event -> {
                 if (!row.isEmpty() && !row.isSelected()) {
-                    row.setStyle("-fx-background-color: #e6f2ff; -fx-background-radius: 5px;");
-                    Tooltip tooltip = new Tooltip(row.getItem().getTooltipText());
-                    tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-background-color: #333; -fx-text-fill: white;");
-                    Tooltip.install(row, tooltip);
+                    row.setStyle("-fx-background-color: #e6f2ff; "
+                            + "-fx-border-color: #e0e0e0; "
+                            + "-fx-border-width: 0 0 1px 0;");
                 }
             });
 
             row.setOnMouseExited(event -> {
                 if (!row.isEmpty() && !row.isSelected()) {
-                    row.setStyle("-fx-background-color: #ffffff; -fx-background-radius: 5px;");
+                    row.setStyle("-fx-background-color: #ffffff; "
+                            + "-fx-border-color: #e0e0e0; "
+                            + "-fx-border-width: 0 0 1px 0;");
                 }
             });
 

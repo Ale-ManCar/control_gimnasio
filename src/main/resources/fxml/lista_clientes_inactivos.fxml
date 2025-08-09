@@ -29,13 +29,42 @@
                 style="-fx-background-color: #6C757D; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 15px; -fx-background-radius: 20px; -fx-border-radius: 20px;"/>
     </HBox>
 
-    <!-- Tabla centrada -->
-    <TableView fx:id="tablaClientes" style="-fx-background-radius: 10px;">
+    <!-- Tabla centrada con bordes -->
+    <TableView fx:id="tablaClientes"
+               style="
+                   -fx-background-radius: 10px;
+                   -fx-border-color: #e0e0e0;
+                   -fx-border-width: 1px;
+                   -fx-background-color: transparent;
+                   -fx-table-cell-border-color: #e0e0e0;
+               ">
         <columns>
-            <TableColumn fx:id="colNombreCompleto" text="Cliente" prefWidth="340" style="-fx-alignment: CENTER;"/>
-            <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="210" style="-fx-alignment: CENTER;"/>
-            <TableColumn fx:id="colEstado" text="Estado" prefWidth="170" style="-fx-alignment: CENTER;"/>
-            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="130" style="-fx-alignment: CENTER;"/>
+            <TableColumn fx:id="colNombreCompleto" text="Cliente" prefWidth="340"
+                         style="
+                             -fx-alignment: CENTER;
+                             -fx-border-color: #e0e0e0;
+                             -fx-border-width: 0 1px 0 0;
+                             -fx-background-color: transparent;
+                         "/>
+            <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="210"
+                         style="
+                             -fx-alignment: CENTER;
+                             -fx-border-color: #e0e0e0;
+                             -fx-border-width: 0 1px 0 0;
+                             -fx-background-color: transparent;
+                         "/>
+            <TableColumn fx:id="colEstado" text="Estado" prefWidth="170"
+                         style="
+                             -fx-alignment: CENTER;
+                             -fx-border-color: #e0e0e0;
+                             -fx-border-width: 0 1px 0 0;
+                             -fx-background-color: transparent;
+                         "/>
+            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="130"
+                         style="
+                             -fx-alignment: CENTER;
+                             -fx-background-color: transparent;
+                         "/>
         </columns>
     </TableView>
 
