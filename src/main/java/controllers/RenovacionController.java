@@ -12,6 +12,7 @@ import models.Cliente;
 import models.PagoHistorial;
 import util.DatabaseUtil;
 import util.EventBus;
+import util.WhatsAppService;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -375,6 +376,15 @@ public class RenovacionController {
                 }
 
                 conn.commit();
+
+                Cliente clienteRenovado = new Cliente(
+                        seleccionado.getNombres(),
+                        seleccionado.getApellidos(),
+                        seleccionado.getTelefono(),
+                        cbNuevaMembresia.getValue(),
+                        nuevaFecha
+                );
+                new Thread(() -> WhatsAppService.enviarAlertaRenovacion(clienteRenovado)).start();
 
                 EventBus.fireEvent(EventBus.EventType.DATOS_ACTUALIZADOS);
 

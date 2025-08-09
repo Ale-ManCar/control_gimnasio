@@ -12,6 +12,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 import util.DatabaseUtil;
+import util.WhatsAppService;
+import models.Cliente;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -25,7 +27,7 @@ public class RegistroClienteController {
     @FXML private DatePicker dpFechaInicio;
     @FXML private ComboBox<String> cbMembresia;
     @FXML private Button btnSiguiente;
-    @FXML private Button btnVolverAlDashboard; // Botón renombrado
+    @FXML private Button btnVolverAlDashboard;
 
     @FXML
     public void initialize() {
@@ -35,7 +37,6 @@ public class RegistroClienteController {
             cbMembresia.setValue("1 Mes");
         }
 
-        // CONVERSIÓN NOMBRE Y APELLIDOS EN MAYÚSCULAS
         txtNombres.textProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal.matches("[\\p{L} .'-]*")) {
                 txtNombres.setText(oldVal);
@@ -52,7 +53,6 @@ public class RegistroClienteController {
             }
         });
 
-        // TELÉFONO VALIDADO A 10 DÍGITOS
         txtTelefono.textProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal.matches("\\d*") || newVal.length() > 10) {
                 txtTelefono.setText(oldVal);
@@ -74,9 +74,8 @@ public class RegistroClienteController {
         }
 
         try (Connection conn = DatabaseUtil.getConnection()) {
-            conn.setAutoCommit(false); // Transacción
+            conn.setAutoCommit(false);
 
-            // Insertar cliente
             String sqlCliente = "INSERT INTO clientes (nombres, apellidos, telefono, tipoMembresia, fechaInicio, fecha_vencimiento, monto_pago) VALUES (?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement stmtCliente = conn.prepareStatement(sqlCliente, PreparedStatement.RETURN_GENERATED_KEYS);
 
@@ -118,35 +117,41 @@ public class RegistroClienteController {
 
             conn.commit();
 
-            // ✅ Mostrar UNA sola alerta de éxito con mensaje de redirección
+            // ✅ Mostrar alerta de éxito
             mostrarAlertaExito();
 
-            // ✅ Programar retorno al dashboard después de 5 segundos
+            // ✅ Enviar alerta de registro
+            Cliente nuevoCliente = new Cliente(
+                    txtNombres.getText().trim(),
+                    txtApellidos.getText().trim(),
+                    txtTelefono.getText().trim(),
+                    cbMembresia.getValue(),
+                    fechaVencimiento
+            );
+            new Thread(() -> WhatsAppService.enviarAlertaRegistro(nuevoCliente)).start();
+
+            // Programar retorno al dashboard
             programarRetornoAlDashboard();
 
         } catch (SQLException e) {
             mostrarAlerta("Error", "No se pudo registrar el cliente/pago: " + e.getMessage());
         } catch (NumberFormatException e) {
             mostrarAlerta("Error", "El monto de pago no es válido");
+        } catch (Exception e) {
+            mostrarAlerta("Error", "Error inesperado: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     private void programarRetornoAlDashboard() {
         new Thread(() -> {
             try {
-                // Esperar 5 segundos
                 Thread.sleep(5000);
-
                 Platform.runLater(() -> {
                     try {
-                        // Cargar el dashboard
                         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
                         Parent root = loader.load();
-
-                        // Obtener la ventana actual
                         Stage stage = (Stage) btnSiguiente.getScene().getWindow();
-
-                        // Crear nueva escena
                         Scene scene = new Scene(root);
                         stage.setScene(scene);
                         stage.setTitle("Panel de Control");
@@ -162,7 +167,6 @@ public class RegistroClienteController {
         }).start();
     }
 
-    // Nuevo método para volver al dashboard
     @FXML
     private void handleVolverAlDashboard() {
         try {
@@ -193,23 +197,12 @@ public class RegistroClienteController {
         return valor.trim();
     }
 
-    private void limpiarCampos() {
-        txtNombres.clear();
-        txtApellidos.clear();
-        txtTelefono.clear();
-        txtMontoPago.clear();
-        dpFechaInicio.setValue(null);
-        cbMembresia.setValue("1 Mes");
-    }
-
     private void mostrarAlerta(String titulo, String mensaje) {
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle(titulo);
             alert.setHeaderText(null);
             alert.setContentText(mensaje);
-
-            // Configurar estilo
             DialogPane dialogPane = alert.getDialogPane();
             dialogPane.setStyle(
                     "-fx-background-color: #ffffff;" +
@@ -217,14 +210,12 @@ public class RegistroClienteController {
                             "-fx-border-radius: 10px;" +
                             "-fx-background-radius: 10px;"
             );
-
             alert.showAndWait();
         });
     }
 
     private void mostrarAlertaExito() {
         Platform.runLater(() -> {
-            // Crear una alerta personalizada
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("¡Éxito!");
             alert.setHeaderText(null);
@@ -233,10 +224,9 @@ public class RegistroClienteController {
                             "Será redirigido al panel de control en 5 segundos..."
             );
 
-            // Personalizar el diseño
             DialogPane dialogPane = alert.getDialogPane();
             dialogPane.setStyle(
-                    "-fx-background-color: #e8f5e9;" +  // Verde claro de fondo
+                    "-fx-background-color: #e8f5e9;" +
                             "-fx-font-size: 16px;" +
                             "-fx-border-radius: 15px;" +
                             "-fx-background-radius: 15px;" +
@@ -244,15 +234,13 @@ public class RegistroClienteController {
                             "-fx-padding: 20px;"
             );
 
-            // Estilo para el texto
             Label contentLabel = (Label) dialogPane.lookup(".content.label");
             contentLabel.setStyle(
-                    "-fx-text-fill: #27ae60;" +  // Verde oscuro
+                    "-fx-text-fill: #27ae60;" +
                             "-fx-font-weight: bold;" +
                             "-fx-font-size: 13px;"
             );
 
-            // Agregar ícono de éxito
             ImageView successIcon = new ImageView(new Image(
                     getClass().getResource("/images/success.png").toExternalForm()
             ));
@@ -260,7 +248,6 @@ public class RegistroClienteController {
             successIcon.setFitHeight(60);
             alert.setGraphic(successIcon);
 
-            // Personalizar botón OK
             Button okButton = (Button) dialogPane.lookupButton(ButtonType.OK);
             okButton.setStyle(
                     "-fx-background-color: #2ecc71;" +
@@ -271,12 +258,9 @@ public class RegistroClienteController {
                             "-fx-padding: 8px 16px;"
             );
 
-            // Animación de entrada
             FadeTransition fadeIn = new FadeTransition(Duration.millis(300), dialogPane);
             fadeIn.setFromValue(0);
             fadeIn.setToValue(1);
-
-            // Mostrar alerta
             alert.show();
             fadeIn.play();
         });

@@ -7,6 +7,7 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.io.File;
 import java.sql.*;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -16,37 +17,56 @@ import java.nio.charset.StandardCharsets;
 
 public class WhatsAppService {
         private static final String RUTA_CHROME_DRIVER = "C:/driver/chromedriver.exe";
+        private static final String USER_DATA_DIR = "C:/whatsapp_session";
         private static final int LIMITE_DIARIO = 80;
         private static final LocalTime HORARIO_INICIO = LocalTime.of(9, 0);
         private static final LocalTime HORARIO_FIN = LocalTime.of(21, 0);
         private static final Object DB_LOCK = new Object();
         private static WebDriver driver = null;
 
+        static {
+                // Configuración inicial al cargar la clase
+                System.setProperty("webdriver.chrome.driver", RUTA_CHROME_DRIVER);
+                System.setProperty("webdriver.http.factory", "jdk-http-client");
+                crearDirectorioSesion();
+        }
+
         public static void enviarAlerta(Cliente cliente) {
+                enviarAlertaPersonalizada(cliente, "Vencimiento");
+        }
+
+        public static void enviarAlertaRegistro(Cliente cliente) {
+                enviarAlertaPersonalizada(cliente, "Registro");
+        }
+
+        public static void enviarAlertaRenovacion(Cliente cliente) {
+                enviarAlertaPersonalizada(cliente, "Renovación");
+        }
+
+        private static void enviarAlertaPersonalizada(Cliente cliente, String tipoAlerta) {
                 if (!validarCondicionesEnvio()) {
                         return;
                 }
 
-                if (driver == null) {
-                        iniciarDriver();
-                }
-
                 try {
-                        String telefonoNormalizado = normalizarTelefono(cliente.getTelefono());
+                        if (driver == null || !esDriverActivo()) {
+                                iniciarDriver();
+                        }
 
+                        String telefonoNormalizado = normalizarTelefono(cliente.getTelefono());
                         if (!validarFormatoTelefono(telefonoNormalizado)) {
-                                System.err.println(LocalDateTime.now() + " - Formato inválido: " + cliente.getTelefono() + " -> " + telefonoNormalizado);
+                                System.err.println(LocalDateTime.now() + " - Formato inválido: " + cliente.getTelefono());
                                 return;
                         }
 
-                        String mensaje = construirMensajePersonalizado(cliente);
+                        String mensaje = construirMensajePersonalizado(cliente, tipoAlerta);
                         String url = generarUrlWhatsApp(telefonoNormalizado, mensaje);
 
-                        System.out.println(LocalDateTime.now() + " - Intentando enviar a: " + telefonoNormalizado);
+                        System.out.println(LocalDateTime.now() + " - Intentando enviar (" + tipoAlerta + "): " + telefonoNormalizado);
                         driver.get(url);
 
                         if (!manejarPantallaInvitacion(driver)) {
-                                System.err.println(LocalDateTime.now() + " - No se pudo iniciar el chat con: " + telefonoNormalizado);
+                                System.err.println(LocalDateTime.now() + " - No se pudo iniciar el chat");
                                 return;
                         }
 
@@ -54,22 +74,48 @@ public class WhatsAppService {
                                 throw new RuntimeException("Tiempo de conexión agotado");
                         }
 
-                        enviarMensaje(telefonoNormalizado, mensaje);
+                        enviarMensaje(mensaje);
 
                         synchronized (DB_LOCK) {
-                                registrarEnvioExitoso(cliente);
+                                registrarEnvioExitoso(cliente, tipoAlerta);
                         }
 
-                        System.out.println(LocalDateTime.now() + " - Alerta enviada a: " + telefonoNormalizado + " - " + cliente.getNombres());
-
+                        System.out.println(LocalDateTime.now() + " - Alerta (" + tipoAlerta + ") enviada");
                         pausaAleatoria();
 
                 } catch (Exception e) {
-                        System.err.println(LocalDateTime.now() + " - Error enviando a " + cliente.getTelefono() + ": " + e.getMessage());
-                        if (driver != null) {
-                                driver.quit();
-                                driver = null;
+                        System.err.println(LocalDateTime.now() + " - Error enviando " + tipoAlerta + ": " + e.getMessage());
+                        reiniciarDriverCompleto();
+                }
+        }
+
+        private static void crearDirectorioSesion() {
+                File directorio = new File(USER_DATA_DIR);
+                if (!directorio.exists()) {
+                        if (directorio.mkdirs()) {
+                                System.out.println("Directorio de sesión creado: " + USER_DATA_DIR);
+                        } else {
+                                System.err.println("Error al crear directorio de sesión");
                         }
+                }
+        }
+
+        private static boolean esDriverActivo() {
+                try {
+                        driver.getCurrentUrl();
+                        return true;
+                } catch (Exception e) {
+                        return false;
+                }
+        }
+
+        private static void reiniciarDriverCompleto() {
+                cerrarDriver();
+                try {
+                        Thread.sleep(2000); // Esperar antes de reintentar
+                        iniciarDriver();
+                } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
                 }
         }
 
@@ -78,7 +124,7 @@ public class WhatsAppService {
                         By inviteButtonLocator = By.xpath("//div[@role='button' and contains(., 'Enviar invitación')]");
                         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
                         WebElement inviteButton = wait.until(ExpectedConditions.visibilityOfElementLocated(inviteButtonLocator));
-                        System.out.println(LocalDateTime.now() + " - Número no en contactos. Iniciando chat...");
+                        System.out.println(LocalDateTime.now() + " - Iniciando chat con nuevo contacto...");
                         inviteButton.click();
                         wait.until(ExpectedConditions.invisibilityOfElementLocated(inviteButtonLocator));
                         return true;
@@ -104,16 +150,35 @@ public class WhatsAppService {
 
         private static void iniciarDriver() {
                 ChromeOptions options = new ChromeOptions();
-                options.addArguments("--user-data-dir=C:/whatsapp_session");
-                configurarOpcionesChrome(options);
-                driver = new ChromeDriver(options);
-        }
-
-        private static void configurarOpcionesChrome(ChromeOptions options) {
+                options.addArguments("--user-data-dir=" + USER_DATA_DIR);
                 options.addArguments("--no-sandbox");
                 options.addArguments("--disable-dev-shm-usage");
                 options.addArguments("--window-size=1920,1080");
-                System.setProperty("webdriver.chrome.driver", RUTA_CHROME_DRIVER);
+                options.addArguments("--remote-debugging-port=9222");
+                options.addArguments("--disable-gpu");
+                options.addArguments("--disable-extensions");
+                options.addArguments("--disable-infobars");
+                options.addArguments("--disable-notifications");
+                options.addArguments("--disable-browser-side-navigation");
+                options.addArguments("--disable-features=VizDisplayCompositor");
+                options.addArguments("--disable-software-rasterizer");
+                options.addArguments("--log-level=3");
+                options.addArguments("--silent");
+                options.setExperimentalOption("excludeSwitches", new String[]{"enable-automation"});
+
+                try {
+                        driver = new ChromeDriver(options);
+                        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+                        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(60));
+                        System.out.println(LocalDateTime.now() + " - ChromeDriver iniciado exitosamente");
+                } catch (SessionNotCreatedException e) {
+                        System.err.println(LocalDateTime.now() + " - ERROR CRÍTICO: No se pudo iniciar ChromeDriver");
+                        System.err.println("Posibles soluciones:");
+                        System.err.println("1. Verifique que Chrome esté actualizado");
+                        System.err.println("2. Asegúrese que chromedriver.exe coincide con la versión de Chrome");
+                        System.err.println("3. Cierre todas las instancias de Chrome antes de ejecutar");
+                        throw new RuntimeException("Error fatal al iniciar ChromeDriver", e);
+                }
         }
 
         private static boolean validarCondicionesEnvio() {
@@ -147,38 +212,49 @@ public class WhatsAppService {
                 }
         }
 
-        private static String construirMensajePersonalizado(Cliente cliente) throws SQLException {
-                String sql = "SELECT mensaje_whatsapp FROM config WHERE id = 1";
+        private static String construirMensajePersonalizado(Cliente cliente, String tipoAlerta) throws SQLException {
+                String campo = "";
+                switch (tipoAlerta) {
+                        case "Vencimiento": campo = "mensaje_whatsapp"; break;
+                        case "Registro": campo = "mensaje_registro"; break;
+                        case "Renovación": campo = "mensaje_renovacion"; break;
+                        default: campo = "mensaje_whatsapp";
+                }
+
+                String sql = "SELECT " + campo + " FROM config WHERE id = 1";
                 try (Connection conn = DatabaseUtil.getConnection();
                      Statement stmt = conn.createStatement();
                      ResultSet rs = stmt.executeQuery(sql)) {
 
-                        String plantilla = rs.getString("mensaje_whatsapp");
+                        String plantilla = rs.getString(campo);
                         LocalDate fechaVenc = cliente.getFecha_vencimientoDate();
-
-                        long dias = ChronoUnit.DAYS.between(LocalDate.now(), fechaVenc);
                         String fechaFormateada = fechaVenc.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
-                        return plantilla.replace("[NOMBRE]", cliente.getNombres())
-                                .replace("[APELLIDO]", cliente.getApellidos())
-                                .replace("[GIMNASIO]", obtenerNombreGimnasio())
-                                .replace("[FECHA]", fechaFormateada)
-                                .replace("[DIAS]", String.valueOf(dias))
-                                .replace("[LINK]", obtenerLinkPago());
+                        if ("Vencimiento".equals(tipoAlerta)) {
+                                long dias = ChronoUnit.DAYS.between(LocalDate.now(), fechaVenc);
+                                return plantilla.replace("[NOMBRE]", cliente.getNombres())
+                                        .replace("[APELLIDO]", cliente.getApellidos())
+                                        .replace("[GIMNASIO]", obtenerNombreGimnasio())
+                                        .replace("[FECHA]", fechaFormateada)
+                                        .replace("[DIAS]", String.valueOf(dias))
+                                        .replace("[LINK]", obtenerLinkPago());
+                        } else {
+                                return plantilla.replace("[NOMBRE]", cliente.getNombres())
+                                        .replace("[APELLIDO]", cliente.getApellidos())
+                                        .replace("[GIMNASIO]", obtenerNombreGimnasio())
+                                        .replace("[MEMBRESIA]", cliente.getTipoMembresia())
+                                        .replace("[FECHA]", fechaFormateada);
+                        }
                 }
         }
 
-        private static void registrarEnvioExitoso(Cliente cliente) {
+        private static void registrarEnvioExitoso(Cliente cliente, String tipoAlerta) {
                 String sql = "INSERT INTO alertas_enviadas (telefono_cliente, fecha_envio, tipo_alerta) VALUES (?, ?, ?)";
                 try {
-                        LocalDate fechaVenc = cliente.getFecha_vencimientoDate();
-                        long dias = ChronoUnit.DAYS.between(LocalDate.now(), fechaVenc);
-
                         DatabaseUtil.executeUpdate(sql,
                                 cliente.getTelefono(),
                                 LocalDate.now().toString(),
-                                "Alerta a " + dias + " días");
-
+                                tipoAlerta);
                 } catch (Exception e) {
                         System.err.println("Error registrando envío: " + e.getMessage());
                 }
@@ -208,42 +284,30 @@ public class WhatsAppService {
                                 .until(ExpectedConditions.visibilityOfElementLocated(chatBoxLocator));
                         return true;
                 } catch (TimeoutException e) {
-                        System.out.println("⚠️ No se encontró el campo de chat. URL: " + driver.getCurrentUrl());
-                        System.out.println("⚠️ HTML parcial: " + driver.getPageSource().substring(0, 500));
+                        System.out.println("⚠️ No se encontró el campo de chat");
                         return false;
                 }
         }
 
-        public static void enviarMensaje(String numero, String mensaje) {
+        private static void enviarMensaje(String mensaje) {
                 try {
-                        String url = "https://web.whatsapp.com/send?phone=" + numero;
-                        driver.get(url);
-
                         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(60));
-
-                        // Espera a que el campo de entrada esté listo
-                        // Esperar a que el input esté disponible
                         WebElement inputBox = wait.until(ExpectedConditions.visibilityOfElementLocated(
                                 By.xpath("//div[@contenteditable='true' and @data-tab='10']")
                         ));
 
-// Limpiar el campo antes de escribir (Ctrl+A + Delete)
                         inputBox.click();
-                        inputBox.sendKeys(Keys.chord(Keys.CONTROL, "a")); // Selecciona todo
-                        inputBox.sendKeys(Keys.BACK_SPACE);              // Elimina lo seleccionado
-
-// Escribir y enviar mensaje
-                        inputBox.sendKeys(mensaje); // Solo una vez
-                        Thread.sleep(300);          // Espera mínima para evitar errores
+                        inputBox.sendKeys(Keys.chord(Keys.CONTROL, "a"));
+                        inputBox.sendKeys(Keys.BACK_SPACE);
+                        inputBox.sendKeys(mensaje);
+                        Thread.sleep(300);
                         inputBox.sendKeys(Keys.ENTER);
 
-
-                        System.out.println(LocalDateTime.now() + " - Mensaje enviado automáticamente a: " + numero);
+                        System.out.println(LocalDateTime.now() + " - Mensaje enviado automáticamente");
                 } catch (Exception e) {
-                        System.err.println(LocalDateTime.now() + " - Error enviando automáticamente a " + numero + ": " + e.getMessage());
+                        System.err.println(LocalDateTime.now() + " - Error enviando mensaje: " + e.getMessage());
                 }
         }
-
 
         private static void pausaAleatoria() throws InterruptedException {
                 Thread.sleep(5000 + (long) (Math.random() * 10000));
@@ -251,7 +315,12 @@ public class WhatsAppService {
 
         public static void cerrarDriver() {
                 if (driver != null) {
-                        driver.quit();
+                        try {
+                                driver.quit();
+                                System.out.println(LocalDateTime.now() + " - ChromeDriver cerrado correctamente");
+                        } catch (Exception e) {
+                                System.err.println("Error al cerrar el driver: " + e.getMessage());
+                        }
                         driver = null;
                 }
         }
