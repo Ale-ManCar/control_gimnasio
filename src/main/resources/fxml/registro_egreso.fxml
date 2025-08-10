@@ -1,28 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-
 <VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="controllers.RegistroEgresoController"
       spacing="20" alignment="CENTER"
-      style="-fx-background-color: #f8f9fa; -fx-padding: 20;"
+      style="-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e); -fx-padding: 30;"
       prefWidth="450" prefHeight="450">
-
-    <!-- Título -->
     <Label text="Registro de Egreso"
-           style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"
+           style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"
            alignment="CENTER" maxWidth="Infinity">
-        <padding>
-            <Insets bottom="10"/>
-        </padding>
+        <padding><Insets bottom="20"/></padding>
     </Label>
-
-    <!-- Formulario con efecto de tarjeta -->
-    <GridPane style="-fx-background-color: white; -fx-padding: 25; -fx-background-radius: 10;
-                     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);">
+    <GridPane style="-fx-background-color: rgba(255,255,255,0.1); -fx-padding: 25; -fx-background-radius: 15;
+                     -fx-border-color: rgba(255,255,255,0.2); -fx-border-width: 1; -fx-border-radius: 15;
+                     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 10, 0, 0, 0);">
         <columnConstraints>
             <ColumnConstraints percentWidth="30"/>
             <ColumnConstraints percentWidth="70"/>
@@ -30,34 +23,28 @@
         <padding><Insets top="10" bottom="10" left="10" right="10"/></padding>
         <hgap>15</hgap>
         <vgap>15</vgap>
-
-        <!-- Fila 1: Categoría -->
-        <Label text="Categoría:"
-               style="-fx-font-weight: bold; -fx-text-fill: #34495e;"
+        <Label text="Categoría:" style="-fx-font-weight: bold; -fx-text-fill: white;"
                GridPane.rowIndex="0" GridPane.columnIndex="0"/>
         <ComboBox fx:id="cbCategoria" GridPane.rowIndex="0" GridPane.columnIndex="1"
-                  style="-fx-font-size: 14px; -fx-pref-height: 35px;"/>
-
-        <!-- Fila 2: Monto -->
-        <Label text="Monto ($):"
-               style="-fx-font-weight: bold; -fx-text-fill: #34495e;"
+                  style="-fx-font-size: 14px; -fx-pref-height: 35px; -fx-background-color: rgba(255,255,255,0.9);"/>
+        <Label text="Monto ($):" style="-fx-font-weight: bold; -fx-text-fill: white;"
                GridPane.rowIndex="1" GridPane.columnIndex="0"/>
         <TextField fx:id="txtMonto" GridPane.rowIndex="1" GridPane.columnIndex="1"
-                   style="-fx-font-size: 14px; -fx-pref-height: 35px;"/>
-
-        <!-- Fila 3: Descripción -->
-        <Label text="Descripción:"
-               style="-fx-font-weight: bold; -fx-text-fill: #34495e;"
+                   style="-fx-font-size: 14px; -fx-pref-height: 35px; -fx-background-color: rgba(255,255,255,0.9);"/>
+        <Label text="Descripción:" style="-fx-font-weight: bold; -fx-text-fill: white;"
                GridPane.rowIndex="2" GridPane.columnIndex="0"/>
         <TextArea fx:id="txtDescripcion" GridPane.rowIndex="2" GridPane.columnIndex="1"
-                  style="-fx-font-size: 14px;"
+                  style="-fx-font-size: 14px; -fx-background-color: rgba(255,255,255,0.9);"
                   prefRowCount="4"/>
-
-        <!-- Fila 4: Botones -->
         <HBox spacing="15" alignment="CENTER_RIGHT"
               GridPane.columnIndex="1" GridPane.rowIndex="3">
-            <Button fx:id="btnRegistrar" text="Registrar" onAction="#handleRegistrar"/>
-            <Button fx:id="btnCancelar" text="Cancelar" onAction="#handleCancelar"/>
+            <Button fx:id="btnRegistrar" text="Registrar" onAction="#handleRegistrar"
+                    style="-fx-background-color: linear-gradient(to right, #4CAF50, #2ECC71);
+                           -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20; -fx-background-radius: 25;
+                           -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 5, 0, 0, 2);"/>
+            <Button fx:id="btnCancelar" text="Cancelar" onAction="#handleCancelar"
+                    style="-fx-background-color: #6C757D; -fx-text-fill: white; -fx-padding: 8 20; -fx-background-radius: 25;
+                           -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 5, 0, 0, 2);"/>
         </HBox>
     </GridPane>
 </VBox>

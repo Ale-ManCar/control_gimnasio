@@ -1,28 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-
-<?import javafx.geometry.Insets?>
-<VBox spacing="15" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.ReactivacionController">
-    <padding>
-        <Insets top="20" right="20" bottom="20" left="20"/>
-    </padding>
-
-    <Text text="Reactivación Requerida" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
-    <Text text="Se detectó un cambio de hardware" style="-fx-font-size: 14px;"/>
-    <Separator/>
-
-    <Label text="Siga estos pasos:" style="-fx-font-weight: bold;"/>
-    <Text text="1. Envíe este código al soporte técnico:"/>
-    <Label fx:id="lblRequestCode" style="-fx-font-family: monospace; -fx-font-size: 14px; -fx-border-color: #ccc; -fx-padding: 5px;"/>
-
-    <Text text="2. Ingrese el código de activación recibido:"/>
-    <TextField fx:id="txtActivationCode" promptText="Código de activación"/>
-
-    <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button fx:id="btnCancel" text="Cancelar" onAction="#handleCancel" style="-fx-background-color: #6c757d; -fx-text-fill: white;"/>
-        <Button fx:id="btnSubmit" text="Activar" onAction="#handleSubmit" style="-fx-background-color: #28a745; -fx-text-fill: white;"/>
+<VBox spacing="15" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controllers.ReactivacionController"
+      style="-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e); -fx-padding: 30; -fx-alignment: center;">
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+    <Text text="Reactivación Requerida" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-fill: white;"/>
+    <Text text="Se detectó un cambio de hardware" style="-fx-font-size: 16px; -fx-fill: #bdc3c7;"/>
+    <Separator style="-fx-padding: 10 0; -fx-background-color: rgba(255,255,255,0.2);"/>
+    <Label text="Siga estos pasos:" style="-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 16px;"/>
+    <Text text="1. Envíe este código al soporte técnico:" style="-fx-fill: white;"/>
+    <Label fx:id="lblRequestCode"
+           style="-fx-font-family: monospace; -fx-font-size: 16px; -fx-border-color: rgba(255,255,255,0.3);
+                  -fx-padding: 10px; -fx-background-color: rgba(0,0,0,0.2); -fx-text-fill: #2ecc71;"/>
+    <Text text="2. Ingrese el código de activación recibido:" style="-fx-fill: white;"/>
+    <TextField fx:id="txtActivationCode" promptText="Código de activación"
+               style="-fx-background-color: rgba(255,255,255,0.1); -fx-text-fill: white;
+                      -fx-border-color: rgba(255,255,255,0.3); -fx-border-radius: 5; -fx-padding: 10px;"/>
+    <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 20 0 0 0;">
+        <Button fx:id="btnCancel" text="Cancelar" onAction="#handleCancel"
+                style="-fx-background-color: #6c757d; -fx-text-fill: white; -fx-padding: 8 20; -fx-background-radius: 25;
+                       -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 5, 0, 0, 2);"/>
+        <Button fx:id="btnSubmit" text="Activar" onAction="#handleSubmit"
+                style="-fx-background-color: linear-gradient(to right, #4CAF50, #2ECC71); -fx-text-fill: white;
+                       -fx-padding: 8 30; -fx-background-radius: 25;
+                       -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 5, 0, 0, 2);"/>
     </HBox>
 </VBox>

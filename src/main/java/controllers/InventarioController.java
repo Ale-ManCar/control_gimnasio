@@ -14,6 +14,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 import javafx.util.StringConverter;
 import models.Producto;
 import models.VentaItem;
@@ -57,6 +58,35 @@ public class InventarioController {
         configurarComboBox();
         actualizarLabelCantidad();
         actualizarTotalCarrito();
+
+        // Aplicar bordes redondeados a las tablas
+        aplicarBordesRedondeadosTabla(tablaProductos);
+        aplicarBordesRedondeadosTabla(tablaCarrito);
+    }
+
+    // Nuevo método para bordes perfectos
+    private void aplicarBordesRedondeadosTabla(TableView<?> tabla) {
+        // Crear un rectángulo de recorte con esquinas redondeadas
+        Rectangle clip = new Rectangle();
+        clip.widthProperty().bind(tabla.widthProperty());
+        clip.heightProperty().bind(tabla.heightProperty());
+        clip.setArcWidth(15);  // Radio igual que en el CSS
+        clip.setArcHeight(15); // Radio igual que en el CSS
+        tabla.setClip(clip);
+
+        // Asegurar que el encabezado también se redondee
+        Platform.runLater(() -> {
+            Node header = tabla.lookup("TableHeaderRow");
+            if (header != null) {
+                header.setStyle("-fx-background-radius: 15 15 0 0;");
+                Rectangle headerClip = new Rectangle();
+                headerClip.setWidth(header.getBoundsInLocal().getWidth());
+                headerClip.setHeight(header.getBoundsInLocal().getHeight());
+                headerClip.setArcWidth(15);
+                headerClip.setArcHeight(15);
+                header.setClip(headerClip);
+            }
+        });
     }
 
     private void configurarTabla() {

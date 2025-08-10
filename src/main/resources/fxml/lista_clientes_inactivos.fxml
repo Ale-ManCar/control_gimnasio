@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.HBox?>
@@ -7,70 +6,49 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Button?>
-
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="controllers.ListaClientesInactivosController"
       spacing="20"
       alignment="CENTER"
-      style="-fx-padding: 25; -fx-background-color: #F8F9FA;"
+      style="-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e); -fx-padding: 25;"
       prefWidth="850" prefHeight="650">
-
-    <!-- Título centrado -->
     <Label fx:id="lblTitulo" text="Clientes Inactivos"
            style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #4A6CF7; -fx-padding: 0 0 15px 0;"
            alignment="CENTER"/>
-
-    <!-- Barra de búsqueda centrada -->
     <HBox spacing="10" alignment="CENTER" style="-fx-padding: 0 0 20 0;">
         <TextField fx:id="txtBuscar" promptText="Buscar cliente..."
-                   style="-fx-pref-width: 450px; -fx-font-size: 14px; -fx-padding: 8px 15px; -fx-background-radius: 20px; -fx-border-radius: 20px; -fx-border-color: #ced4da; -fx-background-color: #ffffff;"/>
+                   style="-fx-pref-width: 450px; -fx-font-size: 14px; -fx-padding: 10px 15px;
+                          -fx-background-radius: 20px; -fx-border-radius: 20px; -fx-border-color: rgba(255,255,255,0.3);
+                          -fx-background-color: rgba(255,255,255,0.1); -fx-text-fill: white;"/>
         <Button fx:id="btnLimpiar" text="Limpiar" onAction="#limpiarFiltro"
-                style="-fx-background-color: #6C757D; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 15px; -fx-background-radius: 20px; -fx-border-radius: 20px;"/>
+                style="-fx-background-color: #6C757D; -fx-text-fill: white; -fx-font-weight: bold;
+                       -fx-padding: 8px 15px; -fx-background-radius: 20px; -fx-border-radius: 20px;
+                       -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 5, 0, 0, 2);"/>
     </HBox>
-
-    <!-- Tabla centrada con bordes -->
     <TableView fx:id="tablaClientes"
-               style="
-                   -fx-background-radius: 10px;
-                   -fx-border-color: #e0e0e0;
-                   -fx-border-width: 1px;
-                   -fx-background-color: transparent;
-                   -fx-table-cell-border-color: #e0e0e0;
-               ">
+               style="-fx-background-radius: 15px; -fx-border-color: rgba(255,255,255,0.2);
+                      -fx-border-width: 1px; -fx-background-color: rgba(255,255,255,0.1);
+                      -fx-table-cell-border-color: rgba(255,255,255,0.2);">
         <columns>
             <TableColumn fx:id="colNombreCompleto" text="Cliente" prefWidth="340"
-                         style="
-                             -fx-alignment: CENTER;
-                             -fx-border-color: #e0e0e0;
-                             -fx-border-width: 0 1px 0 0;
-                             -fx-background-color: transparent;
-                         "/>
+                         style="-fx-alignment: CENTER; -fx-text-fill: white;
+                                -fx-border-color: rgba(255,255,255,0.2); -fx-border-width: 0 1px 0 0;"/>
             <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="210"
-                         style="
-                             -fx-alignment: CENTER;
-                             -fx-border-color: #e0e0e0;
-                             -fx-border-width: 0 1px 0 0;
-                             -fx-background-color: transparent;
-                         "/>
+                         style="-fx-alignment: CENTER; -fx-text-fill: white;
+                                -fx-border-color: rgba(255,255,255,0.2); -fx-border-width: 0 1px 0 0;"/>
             <TableColumn fx:id="colEstado" text="Estado" prefWidth="170"
-                         style="
-                             -fx-alignment: CENTER;
-                             -fx-border-color: #e0e0e0;
-                             -fx-border-width: 0 1px 0 0;
-                             -fx-background-color: transparent;
-                         "/>
+                         style="-fx-alignment: CENTER; -fx-text-fill: white;
+                                -fx-border-color: rgba(255,255,255,0.2); -fx-border-width: 0 1px 0 0;"/>
             <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="130"
-                         style="
-                             -fx-alignment: CENTER;
-                             -fx-background-color: transparent;
-                         "/>
+                         style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
         </columns>
     </TableView>
-
-    <!-- Botón centrado -->
     <HBox spacing="10" alignment="CENTER" style="-fx-padding: 20 0 0 0;">
         <Button text="Volver a Activos" onAction="#handleVolver"
-                style="-fx-background-color: #4A6CF7; -fx-text-fill: white; -fx-font-weight: bold; -fx-min-width: 220; -fx-font-size: 16px; -fx-padding: 10px 25px; -fx-background-radius: 25px; -fx-border-radius: 25px;"/>
+                style="-fx-background-color: linear-gradient(to right, #4A6CF7, #2E8BFF); -fx-text-fill: white;
+                       -fx-font-weight: bold; -fx-min-width: 220; -fx-font-size: 16px; -fx-padding: 10px 25px;
+                       -fx-background-radius: 25px; -fx-border-radius: 25px;
+                       -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
     </HBox>
 </VBox>
