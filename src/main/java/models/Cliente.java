@@ -52,9 +52,21 @@ public class Cliente {
             return "Inactivo";
 
         LocalDate vencimiento = LocalDate.parse(fecha_vencimiento.get());
-        long diasRestantes = ChronoUnit.DAYS.between(LocalDate.now(), vencimiento);
+        LocalDate hoy = LocalDate.now();
 
-        return diasRestantes >= 0 ? "Activo" : "Inactivo";
+        // Calcular días desde el vencimiento
+        long diasDesdeVencimiento = ChronoUnit.DAYS.between(vencimiento, hoy);
+
+        if (diasDesdeVencimiento < 0) {
+            // El cliente aún no ha vencido
+            return "Activo";
+        } else if (diasDesdeVencimiento <= 15) {
+            // Período de gracia de 14 días
+            return "Activo";
+        } else {
+            // Más de 14 días desde el vencimiento
+            return "Inactivo";
+        }
     }
 
     public String getNombreCompleto() {
@@ -87,10 +99,28 @@ public class Cliente {
     }
 
     public String getTooltipText() {
+        LocalDate vencimiento = getFecha_vencimientoDate();
+        LocalDate hoy = LocalDate.now();
+        long dias = ChronoUnit.DAYS.between(hoy, vencimiento);
+
+        String infoDias;
+        if (dias >= 0) {
+            // Antes del vencimiento
+            infoDias = "Días restantes: " + dias;
+        } else {
+            // Después del vencimiento (período de gracia)
+            long diasGraciaRestantes = 15 + dias; // dias es negativo, así que sumamos
+            if (diasGraciaRestantes > 0) {
+                infoDias = "Días de gracia restantes: " + diasGraciaRestantes;
+            } else {
+                infoDias = "Período de gracia terminado";
+            }
+        }
+
         return "Nombre: " + getNombres() + " " + getApellidos() + "\n" +
                 "Teléfono: " + getTelefono() + "\n" +
                 "Membresía: " + getTipoMembresia() + "\n" +
                 "Vence: " + getFecha_vencimiento() + "\n" +
-                "Días restantes: " + getDiasRestantes();
+                infoDias;
     }
 }

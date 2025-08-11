@@ -159,8 +159,10 @@ public class RenovacionController {
 
     private void cargarClientesProximos() {
         String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
-                "FROM clientes WHERE activo = 1 " +
-                "AND fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days') " +
+                "FROM clientes " +
+                "WHERE activo = 1 " +
+                "AND date(fecha_vencimiento) >= date('now', '-15 days') " +  // Incluye período de gracia
+                "AND date(fecha_vencimiento) <= date('now', '+7 days') " +   // Hasta 7 días en futuro
                 "ORDER BY fecha_vencimiento ASC";
 
         cargarClientesDesdeSQL(sql, clientesProximos);

@@ -442,9 +442,9 @@ public class ListaClientesInactivosController {
         Platform.runLater(() -> {
             double anchoTotal = tablaClientes.getWidth();
             if (anchoTotal > 0) {
-                colNombreCompleto.setPrefWidth(anchoTotal * 0.40);
-                colTelefono.setPrefWidth(anchoTotal * 0.25);
-                colEstado.setPrefWidth(anchoTotal * 0.20);
+                colNombreCompleto.setPrefWidth(anchoTotal * 0.52);
+                colTelefono.setPrefWidth(anchoTotal * 0.15);
+                colEstado.setPrefWidth(anchoTotal * 0.15);
                 colAcciones.setPrefWidth(anchoTotal * 0.15);
                 tablaClientes.requestLayout();
             }

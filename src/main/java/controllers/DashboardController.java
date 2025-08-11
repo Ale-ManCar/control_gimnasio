@@ -39,7 +39,7 @@ public class DashboardController implements Initializable {
     @FXML private AnchorPane cardVencimientos;
     @FXML private TableView<Cliente> tablaClientesProximosAVencer;
     @FXML private Label lblMensaje;
-    @FXML private Button btnVerTodos;
+//  @FXML private Button btnVerTodos;
 
     @FXML private TableColumn<Cliente, String> colCliente;
     @FXML private TableColumn<Cliente, String> colTelefono;
@@ -286,7 +286,9 @@ public class DashboardController implements Initializable {
                 }
             }
 
-            String sqlVencimientos = "SELECT COUNT(*) AS total FROM clientes WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 days')";
+            String sqlVencimientos = "SELECT COUNT(*) AS total FROM clientes " +
+                    "WHERE activo = 1 " +
+                    "AND date(fecha_vencimiento) BETWEEN date('now') AND date('now', '+7 days')";
             try (PreparedStatement ps = conn.prepareStatement(sqlVencimientos);
                  ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -343,8 +345,7 @@ public class DashboardController implements Initializable {
         String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
                 "FROM clientes " +
                 "WHERE activo = 1 " +
-                "AND date(fecha_vencimiento) >= date('now') " +
-                "AND date(fecha_vencimiento) <= date('now', '+7 days') " +
+                "AND date(fecha_vencimiento) BETWEEN date('now') AND date('now', '+7 days') " +
                 "ORDER BY fecha_vencimiento";
 
         try (Connection conn = DatabaseUtil.getConnection();

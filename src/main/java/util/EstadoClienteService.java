@@ -9,7 +9,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class EstadoClienteService {
-
     public static void iniciarActualizacionDiaria() {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleAtFixedRate(() -> {
@@ -18,7 +17,8 @@ public class EstadoClienteService {
     }
 
     private static void actualizarEstadosClientes() {
-        String sql = "UPDATE clientes SET activo = 0 WHERE date(fecha_vencimiento) < date('now')";
+        // Modificado: 15 días de gracia después del vencimiento
+        String sql = "UPDATE clientes SET activo = 0 WHERE date(fecha_vencimiento, '+15 days') < date('now')";
 
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
