@@ -33,7 +33,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Comparator;
-import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -51,6 +50,7 @@ public class ListaClientesController implements Initializable {
 
     private ObservableList<Cliente> clientesOriginales = FXCollections.observableArrayList();
     private Cliente clienteEditado;
+    private String estiloOriginalTabla;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -59,6 +59,7 @@ public class ListaClientesController implements Initializable {
         cargarClientes();
         configurarBusqueda();
 
+        estiloOriginalTabla = tablaClientes.getStyle();
         clientesOriginales.setAll(tablaClientes.getItems());
 
         configurarFilas();
@@ -67,7 +68,6 @@ public class ListaClientesController implements Initializable {
     }
 
     private void configurarEstilosGlobales() {
-        // Estilo para el título
         lblTitulo.setStyle(
                 "-fx-font-size: 24px;" +
                         "-fx-font-weight: bold;" +
@@ -75,7 +75,6 @@ public class ListaClientesController implements Initializable {
                         "-fx-padding: 0 0 15px 0;"
         );
 
-        // Estilo para la tabla
         tablaClientes.setStyle(
                 "-fx-font-size: 14px;" +
                         "-fx-background-color: #ffffff;" +
@@ -90,7 +89,6 @@ public class ListaClientesController implements Initializable {
         colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
         colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
 
-        // Columna Nombre Completo - Negrita y Centrado
         colNombreCompleto.setCellFactory(column -> new TableCell<Cliente, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -108,7 +106,6 @@ public class ListaClientesController implements Initializable {
             }
         });
 
-        // Columna Teléfono - Negrita y Centrado
         colTelefono.setCellFactory(column -> new TableCell<Cliente, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -126,7 +123,6 @@ public class ListaClientesController implements Initializable {
             }
         });
 
-        // Columna Estado - Indicador Rojo y Negrita
         colEstado.setCellFactory(column -> new TableCell<Cliente, String>() {
             private final StackPane container = new StackPane();
             private final Circle indicador = new Circle(5);
@@ -149,10 +145,10 @@ public class ListaClientesController implements Initializable {
                 } else {
                     texto.setText(estado);
                     if ("Activo".equals(estado)) {
-                        indicador.setFill(Color.web("#28A745")); // Verde
+                        indicador.setFill(Color.web("#28A745"));
                         texto.setStyle("-fx-text-fill: #28A745; -fx-font-weight: bold;");
                     } else {
-                        indicador.setFill(Color.web("#DC3545")); // Rojo
+                        indicador.setFill(Color.web("#DC3545"));
                         texto.setStyle("-fx-text-fill: #DC3545; -fx-font-weight: bold;");
                     }
                     setGraphic(container);
@@ -162,23 +158,19 @@ public class ListaClientesController implements Initializable {
             }
         });
 
-        // Configurar columna de acciones con ícono
         colAcciones.setCellFactory(param -> new TableCell<>() {
             private final Button btnEditar = new Button();
 
             {
-                // Estilo del botón editar
                 btnEditar.setStyle(
                         "-fx-background-color: transparent;" +
                                 "-fx-font-size: 16px;" +
                                 "-fx-cursor: hand;"
                 );
 
-                // Configurar ícono
                 btnEditar.setText("✏️");
                 btnEditar.setTooltip(new Tooltip("Editar cliente"));
 
-                // Efecto hover
                 btnEditar.setOnMouseEntered(e ->
                         btnEditar.setStyle("-fx-background-color: #e0f0ff; -fx-font-size: 16px; -fx-cursor: hand;")
                 );
@@ -205,26 +197,21 @@ public class ListaClientesController implements Initializable {
     }
 
     private void eliminarBarrasDesplazamiento() {
-        // Método 1: Estilo CSS para ocultar barras
         tablaClientes.setStyle(tablaClientes.getStyle() +
                 " -fx-scroll-bar-policy: never;"
         );
 
-        // Método 2: Eliminar mediante skin después de renderizar
         Platform.runLater(() -> {
-            // Buscar y eliminar las barras de desplazamiento
             for (javafx.scene.Node node : tablaClientes.lookupAll(".scroll-bar")) {
                 node.setVisible(false);
                 node.setManaged(false);
             }
 
-            // Eliminar el área del scrollbar
             for (javafx.scene.Node node : tablaClientes.lookupAll(".corner")) {
                 node.setVisible(false);
                 node.setManaged(false);
             }
 
-            // Eliminar el recuadro de desplazamiento
             for (javafx.scene.Node node : tablaClientes.lookupAll(".scroll-pane")) {
                 if (node instanceof javafx.scene.control.ScrollPane) {
                     ((ScrollPane) node).setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -235,27 +222,17 @@ public class ListaClientesController implements Initializable {
     }
 
     private void ajustarAnchoColumnas() {
-        // Ajustar después de que la tabla se haya renderizado
         Platform.runLater(() -> {
             double anchoTotal = tablaClientes.getWidth();
             if (anchoTotal > 0) {
-                // Distribución proporcional del espacio
-                double anchoNombre = anchoTotal * 0.40;   // 40%
-                double anchoTelefono = anchoTotal * 0.25;  // 25%
-                double anchoEstado = anchoTotal * 0.16;    // 16%
-                double anchoAcciones = anchoTotal * 0.16;  // 17%
-
-                colNombreCompleto.setPrefWidth(anchoNombre);
-                colTelefono.setPrefWidth(anchoTelefono);
-                colEstado.setPrefWidth(anchoEstado);
-                colAcciones.setPrefWidth(anchoAcciones);
-
-                // Forzar actualización
+                colNombreCompleto.setPrefWidth(anchoTotal * 0.40);
+                colTelefono.setPrefWidth(anchoTotal * 0.25);
+                colEstado.setPrefWidth(anchoTotal * 0.20);
+                colAcciones.setPrefWidth(anchoTotal * 0.15);
                 tablaClientes.requestLayout();
             }
         });
 
-        // Listener para cambios de tamaño
         tablaClientes.widthProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal.doubleValue() > 0) {
                 double anchoTotal = newVal.doubleValue();
@@ -263,12 +240,12 @@ public class ListaClientesController implements Initializable {
                 colTelefono.setPrefWidth(anchoTotal * 0.25);
                 colEstado.setPrefWidth(anchoTotal * 0.20);
                 colAcciones.setPrefWidth(anchoTotal * 0.15);
+                tablaClientes.requestLayout();
             }
         });
     }
 
     private void configurarBusqueda() {
-        // Configurar placeholder para búsqueda
         txtBuscar.setPromptText("Buscar cliente...");
         txtBuscar.setStyle(
                 "-fx-font-size: 14px;" +
@@ -279,7 +256,6 @@ public class ListaClientesController implements Initializable {
                         "-fx-background-color: #ffffff;"
         );
 
-        // Estilo para botón limpiar
         btnLimpiar.setStyle(
                 "-fx-background-color: #6C757D;" +
                         "-fx-text-fill: white;" +
@@ -312,7 +288,6 @@ public class ListaClientesController implements Initializable {
                 )
         );
 
-        // Listener para búsqueda en tiempo real
         txtBuscar.textProperty().addListener((observable, oldValue, newValue) -> {
             filtrarClientes();
         });
@@ -320,33 +295,63 @@ public class ListaClientesController implements Initializable {
 
     private void configurarFilas() {
         tablaClientes.setRowFactory(tv -> {
-            TableRow<Cliente> row = new TableRow<>();
-            // Borde inferior para todas las filas
-            row.setStyle("-fx-border-color: #e0e0e0; -fx-border-width: 0 0 1px 0;");
+            TableRow<Cliente> row = new TableRow<Cliente>() {
+                @Override
+                protected void updateItem(Cliente cliente, boolean empty) {
+                    super.updateItem(cliente, empty);
+
+                    if (empty || cliente == null) {
+                        setBackground(null);
+                        setGraphic(null);
+                        setStyle("");
+                        setTooltip(null);
+                    } else {
+                        // TOOLTIP ESTILO DASHBOARD
+                        Tooltip tooltip = new Tooltip(cliente.getTooltipText());
+                        tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+                        setTooltip(tooltip);
+
+                        if (isSelected()) {
+                            setStyle("-fx-background-color: #e6f2ff; "
+                                    + "-fx-border-color: #e0e0e0; "
+                                    + "-fx-border-width: 0 0 1px 0;");
+                        } else if (isHover()) {
+                            setStyle("-fx-background-color: #e6f2ff; "
+                                    + "-fx-border-color: #e0e0e0; "
+                                    + "-fx-border-width: 0 0 1px 0;");
+                        } else {
+                            setStyle("-fx-background-color: #ffffff; "
+                                    + "-fx-border-color: #e0e0e0; "
+                                    + "-fx-border-width: 0 0 1px 0;");
+                        }
+                    }
+                }
+            };
 
             row.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
                 if (isNowSelected) {
-                    // Mantener borde inferior incluso cuando está seleccionada
                     row.setStyle("-fx-background-color: #e6f2ff; "
                             + "-fx-border-color: #e0e0e0; "
                             + "-fx-border-width: 0 0 1px 0;");
                 } else {
-                    row.setStyle("-fx-background-color: #ffffff; "
-                            + "-fx-border-color: #e0e0e0; "
-                            + "-fx-border-width: 0 0 1px 0;");
+                    if (row.isHover()) {
+                        row.setStyle("-fx-background-color: #e6f2ff; "
+                                + "-fx-border-color: #e0e0e0; "
+                                + "-fx-border-width: 0 0 1px 0;");
+                    } else {
+                        row.setStyle("-fx-background-color: #ffffff; "
+                                + "-fx-border-color: #e0e0e0; "
+                                + "-fx-border-width: 0 0 1px 0;");
+                    }
                 }
             });
 
-            row.setOnMouseEntered(event -> {
-                if (!row.isEmpty() && !row.isSelected()) {
+            row.hoverProperty().addListener((obs, oldVal, isHovering) -> {
+                if (isHovering && !row.isSelected()) {
                     row.setStyle("-fx-background-color: #e6f2ff; "
                             + "-fx-border-color: #e0e0e0; "
                             + "-fx-border-width: 0 0 1px 0;");
-                }
-            });
-
-            row.setOnMouseExited(event -> {
-                if (!row.isEmpty() && !row.isSelected()) {
+                } else if (!row.isSelected()) {
                     row.setStyle("-fx-background-color: #ffffff; "
                             + "-fx-border-color: #e0e0e0; "
                             + "-fx-border-width: 0 0 1px 0;");
@@ -363,52 +368,61 @@ public class ListaClientesController implements Initializable {
 
         if (filtro.isEmpty()) {
             tablaClientes.setItems(clientesOriginales);
-            return;
-        }
-
-        ObservableList<Cliente> filtrados = FXCollections.observableArrayList();
-        for (Cliente cliente : clientesOriginales) {
-            if (cliente.getNombreCompleto().toLowerCase().contains(filtro) ||
-                    cliente.getTelefono().contains(filtro)) {
-                filtrados.add(cliente);
+        } else {
+            ObservableList<Cliente> filtrados = FXCollections.observableArrayList();
+            for (Cliente cliente : clientesOriginales) {
+                if (cliente.getNombreCompleto().toLowerCase().contains(filtro) ||
+                        cliente.getTelefono().contains(filtro)) {
+                    filtrados.add(cliente);
+                }
             }
+
+            filtrados.sort(Comparator.comparing(Cliente::getNombreCompleto, String.CASE_INSENSITIVE_ORDER));
+            tablaClientes.setItems(filtrados);
         }
 
-        // RESULTADOS ORDENADOS
-        filtrados.sort(Comparator.comparing(Cliente::getNombreCompleto, String.CASE_INSENSITIVE_ORDER));
-
-        tablaClientes.setItems(filtrados);
+        tablaClientes.refresh();
+        tablaClientes.requestLayout();
+        ajustarAnchoColumnas();
     }
 
     @FXML
     private void limpiarFiltro() {
+        Cliente seleccionado = tablaClientes.getSelectionModel().getSelectedItem();
+        int scrollPosition = tablaClientes.getSelectionModel().getSelectedIndex();
+
         txtBuscar.clear();
         tablaClientes.setItems(clientesOriginales);
+        tablaClientes.setStyle(estiloOriginalTabla);
+
+        if (seleccionado != null) {
+            tablaClientes.getSelectionModel().select(seleccionado);
+        }
+        tablaClientes.scrollTo(scrollPosition);
+
+        tablaClientes.refresh();
+        tablaClientes.requestLayout();
+        ajustarAnchoColumnas();
     }
 
     private void mostrarDialogoEdicion(Cliente cliente) {
         try {
-            // SOLUCIÓN CORRECTA:
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/confirmar_edicion_dialog.fxml"));
             VBox dialogContent = loader.load();
 
-            // Obtener el controlador desde el loader
             ConfirmarEdicionDialogController controller = loader.getController();
             controller.setNombreCliente(cliente.getNombreCompleto());
 
-            // Crear el diálogo
             Stage dialog = new Stage();
             dialog.initModality(Modality.APPLICATION_MODAL);
             dialog.initOwner(tablaClientes.getScene().getWindow());
             dialog.initStyle(StageStyle.TRANSPARENT);
             dialog.setScene(new Scene(dialogContent));
 
-            // Animación de entrada
             FadeTransition fadeIn = new FadeTransition(Duration.millis(300), dialogContent);
             fadeIn.setFromValue(0);
             fadeIn.setToValue(1);
 
-            // Manejar botones
             controller.btnConfirmar.setOnAction(e -> {
                 dialog.close();
                 abrirVentanaEdicion(cliente);
@@ -416,7 +430,6 @@ public class ListaClientesController implements Initializable {
 
             controller.btnCancelar.setOnAction(e -> dialog.close());
 
-            // Mostrar diálogo con animación
             dialog.show();
             fadeIn.play();
 
@@ -435,7 +448,6 @@ public class ListaClientesController implements Initializable {
                 throw new IOException("Archivo FXML no encontrado: /fxml/editar_cliente.fxml");
             }
 
-            // Mensaje de depuración eliminado
             FXMLLoader loader = new FXMLLoader(fxmlUrl);
             Parent root = loader.load();
 
@@ -464,29 +476,25 @@ public class ListaClientesController implements Initializable {
         scale.setFromY(1);
         scale.setToX(1.03);
         scale.setToY(1.03);
-        scale.setCycleCount(4); // 2 pulsos (ida y vuelta dos veces)
+        scale.setCycleCount(4);
         scale.setAutoReverse(true);
         scale.play();
     }
 
     private void recargarClientes() {
-        // Guardar el teléfono del cliente editado
         String telefonoEditado = clienteEditado != null ? clienteEditado.getTelefono() : null;
 
-        // Limpiar y recargar la tabla una sola vez
         tablaClientes.getItems().clear();
         cargarClientes();
         clientesOriginales.setAll(tablaClientes.getItems());
+        ajustarAnchoColumnas();
 
-        // Encontrar la fila del cliente editado
         if (telefonoEditado != null) {
             for (int i = 0; i < tablaClientes.getItems().size(); i++) {
                 Cliente c = tablaClientes.getItems().get(i);
                 if (c.getTelefono().equals(telefonoEditado)) {
                     int finalI = i;
-                    // Esperar a que la tabla se renderice
                     Platform.runLater(() -> {
-                        // Buscar la fila por índice
                         TableRow<Cliente> row = (TableRow<Cliente>) tablaClientes.lookup(".table-row-cell:" + finalI);
                         if (row != null) {
                             aplicarEfectoExito(row);
@@ -497,7 +505,6 @@ public class ListaClientesController implements Initializable {
             }
         }
 
-        // Limpiar referencia
         clienteEditado = null;
     }
 
@@ -521,7 +528,6 @@ public class ListaClientesController implements Initializable {
                 clientesTemp.add(cliente);
             }
 
-            // ORDENAMIENTO ALFABÉTICO
             clientesTemp.sort(Comparator.comparing(Cliente::getNombreCompleto, String.CASE_INSENSITIVE_ORDER));
             tablaClientes.getItems().setAll(clientesTemp);
 
@@ -553,7 +559,6 @@ public class ListaClientesController implements Initializable {
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
 
-        // Estilo para la alerta
         DialogPane dialogPane = alert.getDialogPane();
         dialogPane.setStyle(
                 "-fx-background-color: #ffffff;" +

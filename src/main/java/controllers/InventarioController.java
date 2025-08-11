@@ -58,41 +58,16 @@ public class InventarioController {
         configurarComboBox();
         actualizarLabelCantidad();
         actualizarTotalCarrito();
-
-        // Aplicar bordes redondeados a las tablas
-        aplicarBordesRedondeadosTabla(tablaProductos);
-        aplicarBordesRedondeadosTabla(tablaCarrito);
-    }
-
-    // Nuevo método para bordes perfectos
-    private void aplicarBordesRedondeadosTabla(TableView<?> tabla) {
-        // Crear un rectángulo de recorte con esquinas redondeadas
-        Rectangle clip = new Rectangle();
-        clip.widthProperty().bind(tabla.widthProperty());
-        clip.heightProperty().bind(tabla.heightProperty());
-        clip.setArcWidth(15);  // Radio igual que en el CSS
-        clip.setArcHeight(15); // Radio igual que en el CSS
-        tabla.setClip(clip);
-
-        // Asegurar que el encabezado también se redondee
-        Platform.runLater(() -> {
-            Node header = tabla.lookup("TableHeaderRow");
-            if (header != null) {
-                header.setStyle("-fx-background-radius: 15 15 0 0;");
-                Rectangle headerClip = new Rectangle();
-                headerClip.setWidth(header.getBoundsInLocal().getWidth());
-                headerClip.setHeight(header.getBoundsInLocal().getHeight());
-                headerClip.setArcWidth(15);
-                headerClip.setArcHeight(15);
-                header.setClip(headerClip);
-            }
-        });
     }
 
     private void configurarTabla() {
         colProducto.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colUnidades.setCellValueFactory(new PropertyValueFactory<>("stock"));
         colPrecio.setCellValueFactory(new PropertyValueFactory<>("precio"));
+
+        colProducto.prefWidthProperty().bind(tablaProductos.widthProperty().multiply(0.55));
+        colUnidades.prefWidthProperty().bind(tablaProductos.widthProperty().multiply(0.20));
+        colPrecio.prefWidthProperty().bind(tablaProductos.widthProperty().multiply(0.20));
 
         colPrecio.setCellFactory(column -> new TableCell<Producto, Double>() {
             @Override

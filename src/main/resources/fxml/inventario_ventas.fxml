@@ -24,7 +24,7 @@
             </rowConstraints>
 
             <!-- VENDER PRODUCTO -->
-            <VBox style="-fx-background-color: rgba(255,235,238,0.2); -fx-padding: 15; -fx-border-color: rgba(255,205,210,0.5); -fx-border-width: 1; -fx-border-radius: 15;"
+            <VBox style="-fx-background-color: rgba(255,235,238,0.2); -fx-padding: 15; -fx-border-color: rgba(255,205,210,0.5); -fx-border-width: 1; -fx-border-radius: 15; -fx-background-radius: 15;"
                   spacing="10" GridPane.rowIndex="0" GridPane.columnIndex="1" VBox.vgrow="ALWAYS">
                 <Label text="VENDER PRODUCTO" style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: white;"/>
                 <GridPane hgap="10" vgap="10" style="-fx-padding: 10 0;">
@@ -53,7 +53,7 @@
             </VBox>
 
             <!-- PRODUCTOS INGRESADOS -->
-            <VBox style="-fx-background-color: rgba(255,253,231,0.2); -fx-padding: 15; -fx-border-color: rgba(255,249,196,0.5); -fx-border-width: 1; -fx-border-radius: 15;"
+            <VBox style="-fx-background-color: rgba(255,253,231,0.2); -fx-padding: 15; -fx-border-color: rgba(255,249,196,0.5); -fx-border-width: 1; -fx-border-radius: 15; -fx-background-radius: 15;"
                   spacing="10" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.rowSpan="2" VBox.vgrow="ALWAYS">
                 <Label text="PRODUCTOS INGRESADOS" style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: white;"/>
                 <TableView fx:id="tablaProductos" VBox.vgrow="ALWAYS"
@@ -89,7 +89,7 @@
             </VBox>
 
             <!-- CARRITO DE VENTA -->
-            <VBox style="-fx-background-color: rgba(227,242,253,0.2); -fx-padding: 15; -fx-border-color: rgba(187,222,251,0.5); -fx-border-width: 1; -fx-border-radius: 15;"
+            <VBox style="-fx-background-color: rgba(227,242,253,0.2); -fx-padding: 15; -fx-border-color: rgba(187,222,251,0.5); -fx-border-width: 1; -fx-border-radius: 15; -fx-background-radius: 15"
                   spacing="10" GridPane.rowIndex="1" GridPane.columnIndex="1" VBox.vgrow="ALWAYS">
                 <Label text="CARRITO DE VENTA" style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: white;"/>
                 <TableView fx:id="tablaCarrito" prefHeight="200" VBox.vgrow="ALWAYS"

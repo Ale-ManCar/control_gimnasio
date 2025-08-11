@@ -32,7 +32,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Comparator;
-import java.util.Optional;
 
 public class ListaClientesInactivosController {
 
@@ -46,6 +45,7 @@ public class ListaClientesInactivosController {
     @FXML private Label lblTitulo;
 
     private ObservableList<Cliente> clientesOriginales = FXCollections.observableArrayList();
+    private String estiloOriginalTabla;
 
     @FXML
     public void initialize() {
@@ -56,6 +56,8 @@ public class ListaClientesInactivosController {
         ajustarAnchoColumnas();
         eliminarBarrasDesplazamiento();
         configurarFilas();
+
+        estiloOriginalTabla = tablaClientes.getStyle();
     }
 
     private void configurarEstilos() {
@@ -69,7 +71,6 @@ public class ListaClientesInactivosController {
         colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
         colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
 
-        // Columna Nombre Completo - Negrita y Centrado
         colNombreCompleto.setCellFactory(column -> new TableCell<Cliente, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -87,7 +88,6 @@ public class ListaClientesInactivosController {
             }
         });
 
-        // Columna Teléfono - Negrita y Centrado
         colTelefono.setCellFactory(column -> new TableCell<Cliente, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -105,7 +105,6 @@ public class ListaClientesInactivosController {
             }
         });
 
-        // Columna Estado - Indicador Rojo y Negrita
         colEstado.setCellFactory(column -> new TableCell<Cliente, String>() {
             private final StackPane container = new StackPane();
             private final Circle indicador = new Circle(5);
@@ -127,7 +126,7 @@ public class ListaClientesInactivosController {
                     setGraphic(null);
                 } else {
                     texto.setText(estado);
-                    indicador.setFill(Color.web("#DC3545")); // Rojo
+                    indicador.setFill(Color.web("#DC3545"));
                     texto.setStyle("-fx-text-fill: #DC3545; -fx-font-weight: bold;");
                     setGraphic(container);
                     setStyle("-fx-alignment: CENTER; "
@@ -136,7 +135,6 @@ public class ListaClientesInactivosController {
             }
         });
 
-        // Columna Acciones - Íconos
         colAcciones.setCellFactory(param -> new TableCell<>() {
             private final Button btnActivar = new Button("🔄");
             private final Button btnEliminar = new Button("🗑️");
@@ -209,7 +207,6 @@ public class ListaClientesInactivosController {
                 clientesTemp.add(cliente);
             }
 
-            // ORDENAMIENTO ALFABÉTICO
             clientesTemp.sort(Comparator.comparing(Cliente::getNombreCompleto, String.CASE_INSENSITIVE_ORDER));
             tablaClientes.getItems().setAll(clientesTemp);
             clientesOriginales.setAll(tablaClientes.getItems());
@@ -239,29 +236,24 @@ public class ListaClientesInactivosController {
 
     private void eliminarCliente(Cliente cliente) {
         try {
-            // Cargar el nuevo diálogo de eliminación
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/fxml/confirmar_eliminacion_dialog.fxml")
             );
             VBox dialogContent = loader.load();
 
-            // Configurar datos
             ConfirmarEliminacionDialogController controller = loader.getController();
             controller.setNombreCliente(cliente.getNombreCompleto());
 
-            // Crear diálogo
             Stage dialog = new Stage();
             dialog.initModality(Modality.APPLICATION_MODAL);
             dialog.initOwner(tablaClientes.getScene().getWindow());
             dialog.initStyle(StageStyle.TRANSPARENT);
             dialog.setScene(new Scene(dialogContent));
 
-            // Animación de entrada
             FadeTransition fadeIn = new FadeTransition(Duration.millis(300), dialogContent);
             fadeIn.setFromValue(0);
             fadeIn.setToValue(1);
 
-            // Manejar botones
             controller.btnCancelar.setOnAction(e -> dialog.close());
 
             controller.btnEliminar.setOnAction(e -> {
@@ -269,7 +261,6 @@ public class ListaClientesInactivosController {
                 ejecutarEliminacion(cliente);
             });
 
-            // Mostrar diálogo
             dialog.show();
             fadeIn.play();
 
@@ -282,14 +273,12 @@ public class ListaClientesInactivosController {
         try (Connection conn = DatabaseUtil.getConnection()) {
             conn.setAutoCommit(false);
 
-            // Eliminar pagos asociados
             String deletePagos = "DELETE FROM pagos WHERE cliente_id = (SELECT id FROM clientes WHERE telefono = ?)";
             try (PreparedStatement stmt = conn.prepareStatement(deletePagos)) {
                 stmt.setString(1, cliente.getTelefono());
                 stmt.executeUpdate();
             }
 
-            // Eliminar cliente
             String deleteCliente = "DELETE FROM clientes WHERE telefono = ?";
             try (PreparedStatement stmt = conn.prepareStatement(deleteCliente)) {
                 stmt.setString(1, cliente.getTelefono());
@@ -298,8 +287,6 @@ public class ListaClientesInactivosController {
 
             conn.commit();
             recargarClientes();
-
-            // Mostrar notificación de éxito
             mostrarToastExito("Cliente eliminado permanentemente");
 
         } catch (SQLException e) {
@@ -319,6 +306,8 @@ public class ListaClientesInactivosController {
     private void recargarClientes() {
         tablaClientes.getItems().clear();
         cargarClientes();
+        clientesOriginales.setAll(tablaClientes.getItems());
+        Platform.runLater(this::ajustarAnchoColumnas);
     }
 
     private void configurarBusqueda() {
@@ -329,7 +318,14 @@ public class ListaClientesInactivosController {
         btnLimpiar.setOnMouseEntered(e -> btnLimpiar.setStyle("-fx-background-color: #5a6268; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 15px; -fx-background-radius: 20px; -fx-border-radius: 20px; -fx-cursor: hand;"));
         btnLimpiar.setOnMouseExited(e -> btnLimpiar.setStyle("-fx-background-color: #6C757D; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 15px; -fx-background-radius: 20px; -fx-border-radius: 20px; -fx-cursor: hand;"));
 
-        txtBuscar.textProperty().addListener((observable, oldValue, newValue) -> filtrarClientes());
+        txtBuscar.textProperty().addListener((observable, oldValue, newValue) -> {
+            filtrarClientes();
+            Platform.runLater(() -> {
+                ajustarAnchoColumnas();
+                tablaClientes.refresh();
+                tablaClientes.requestLayout();
+            });
+        });
     }
 
     private void filtrarClientes() {
@@ -337,56 +333,101 @@ public class ListaClientesInactivosController {
 
         if (filtro.isEmpty()) {
             tablaClientes.setItems(clientesOriginales);
-            return;
-        }
-
-        ObservableList<Cliente> filtrados = FXCollections.observableArrayList();
-        for (Cliente cliente : clientesOriginales) {
-            if (cliente.getNombreCompleto().toLowerCase().contains(filtro) || cliente.getTelefono().contains(filtro)) {
-                filtrados.add(cliente);
+        } else {
+            ObservableList<Cliente> filtrados = FXCollections.observableArrayList();
+            for (Cliente cliente : clientesOriginales) {
+                if (cliente.getNombreCompleto().toLowerCase().contains(filtro) || cliente.getTelefono().contains(filtro)) {
+                    filtrados.add(cliente);
+                }
             }
+
+            filtrados.sort(Comparator.comparing(Cliente::getNombreCompleto, String.CASE_INSENSITIVE_ORDER));
+            tablaClientes.setItems(filtrados);
         }
 
-        //  RESULTADOS ORDENADOS
-        filtrados.sort(Comparator.comparing(Cliente::getNombreCompleto, String.CASE_INSENSITIVE_ORDER));
-        tablaClientes.setItems(filtrados);
+        tablaClientes.refresh();
+        tablaClientes.requestLayout();
+        ajustarAnchoColumnas();
     }
 
     @FXML
     private void limpiarFiltro() {
+        Cliente seleccionado = tablaClientes.getSelectionModel().getSelectedItem();
+        int scrollPosition = tablaClientes.getSelectionModel().getSelectedIndex();
+
         txtBuscar.clear();
         tablaClientes.setItems(clientesOriginales);
+        tablaClientes.setStyle(estiloOriginalTabla);
+
+        if (seleccionado != null) {
+            tablaClientes.getSelectionModel().select(seleccionado);
+        }
+        tablaClientes.scrollTo(scrollPosition);
+
+        tablaClientes.refresh();
+        tablaClientes.requestLayout();
+        ajustarAnchoColumnas();
     }
 
     private void configurarFilas() {
         tablaClientes.setRowFactory(tv -> {
-            TableRow<Cliente> row = new TableRow<>();
-            // Borde inferior para todas las filas
-            row.setStyle("-fx-border-color: #e0e0e0; -fx-border-width: 0 0 1px 0;");
+            TableRow<Cliente> row = new TableRow<Cliente>() {
+                @Override
+                protected void updateItem(Cliente cliente, boolean empty) {
+                    super.updateItem(cliente, empty);
+
+                    if (empty || cliente == null) {
+                        setBackground(null);
+                        setGraphic(null);
+                        setStyle("");
+                        setTooltip(null);
+                    } else {
+                        // TOOLTIP ESTILO DASHBOARD
+                        Tooltip tooltip = new Tooltip(cliente.getTooltipText());
+                        tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+                        setTooltip(tooltip);
+
+                        if (isSelected()) {
+                            setStyle("-fx-background-color: #e6f2ff; "
+                                    + "-fx-border-color: #e0e0e0; "
+                                    + "-fx-border-width: 0 0 1px 0;");
+                        } else if (isHover()) {
+                            setStyle("-fx-background-color: #e6f2ff; "
+                                    + "-fx-border-color: #e0e0e0; "
+                                    + "-fx-border-width: 0 0 1px 0;");
+                        } else {
+                            setStyle("-fx-background-color: #ffffff; "
+                                    + "-fx-border-color: #e0e0e0; "
+                                    + "-fx-border-width: 0 0 1px 0;");
+                        }
+                    }
+                }
+            };
 
             row.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
                 if (isNowSelected) {
-                    // Mantener borde inferior incluso cuando está seleccionada
                     row.setStyle("-fx-background-color: #e6f2ff; "
                             + "-fx-border-color: #e0e0e0; "
                             + "-fx-border-width: 0 0 1px 0;");
                 } else {
-                    row.setStyle("-fx-background-color: #ffffff; "
-                            + "-fx-border-color: #e0e0e0; "
-                            + "-fx-border-width: 0 0 1px 0;");
+                    if (row.isHover()) {
+                        row.setStyle("-fx-background-color: #e6f2ff; "
+                                + "-fx-border-color: #e0e0e0; "
+                                + "-fx-border-width: 0 0 1px 0;");
+                    } else {
+                        row.setStyle("-fx-background-color: #ffffff; "
+                                + "-fx-border-color: #e0e0e0; "
+                                + "-fx-border-width: 0 0 1px 0;");
+                    }
                 }
             });
 
-            row.setOnMouseEntered(event -> {
-                if (!row.isEmpty() && !row.isSelected()) {
+            row.hoverProperty().addListener((obs, oldVal, isHovering) -> {
+                if (isHovering && !row.isSelected()) {
                     row.setStyle("-fx-background-color: #e6f2ff; "
                             + "-fx-border-color: #e0e0e0; "
                             + "-fx-border-width: 0 0 1px 0;");
-                }
-            });
-
-            row.setOnMouseExited(event -> {
-                if (!row.isEmpty() && !row.isSelected()) {
+                } else if (!row.isSelected()) {
                     row.setStyle("-fx-background-color: #ffffff; "
                             + "-fx-border-color: #e0e0e0; "
                             + "-fx-border-width: 0 0 1px 0;");
@@ -397,15 +438,14 @@ public class ListaClientesInactivosController {
         });
     }
 
-
     private void ajustarAnchoColumnas() {
         Platform.runLater(() -> {
             double anchoTotal = tablaClientes.getWidth();
             if (anchoTotal > 0) {
                 colNombreCompleto.setPrefWidth(anchoTotal * 0.40);
                 colTelefono.setPrefWidth(anchoTotal * 0.25);
-                colEstado.setPrefWidth(anchoTotal * 0.16);
-                colAcciones.setPrefWidth(anchoTotal * 0.16);
+                colEstado.setPrefWidth(anchoTotal * 0.20);
+                colAcciones.setPrefWidth(anchoTotal * 0.15);
                 tablaClientes.requestLayout();
             }
         });
@@ -417,6 +457,7 @@ public class ListaClientesInactivosController {
                 colTelefono.setPrefWidth(anchoTotal * 0.25);
                 colEstado.setPrefWidth(anchoTotal * 0.20);
                 colAcciones.setPrefWidth(anchoTotal * 0.15);
+                tablaClientes.requestLayout();
             }
         });
     }
