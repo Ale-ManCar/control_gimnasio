@@ -34,15 +34,9 @@
                 </GridPane>
                 <HBox spacing="20" alignment="CENTER" style="-fx-padding: 20 0 0 0;">
                     <Button fx:id="btnGuardar" text="Guardar" onAction="#guardarCoach" style="-fx-background-color: linear-gradient(to right, #4A6CF7, #2E8BFF); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25; -fx-padding: 10 30; -fx-font-size: 14px; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
+                    <Button text="Ver Lista de Coaches" onAction="#abrirListaCoaches" style="-fx-background-color: #17A2B8; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25; -fx-padding: 10 30; -fx-font-size: 14px; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
                     <Button fx:id="btnVolver" text="Volver al Dashboard" onAction="#volverDashboard" style="-fx-background-color: #6C757D; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25; -fx-padding: 10 30; -fx-font-size: 14px; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
                 </HBox>
-                <TableView fx:id="tablaCoaches" style="-fx-background-color: rgba(255,255,255,0.1); -fx-border-color: rgba(255,255,255,0.2); -fx-border-radius: 10; -fx-background-radius: 10;">
-                    <columns>
-                        <TableColumn fx:id="colNombre" text="Coach" prefWidth="300" style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
-                        <TableColumn fx:id="colArea" text="Área" prefWidth="150" style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
-                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="120" style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
-                    </columns>
-                </TableView>
             </VBox>
         </VBox>
     </center>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.ListaCoachesController"
+            prefWidth="900" prefHeight="600"
+            style="-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e);">
+    <center>
+        <VBox alignment="TOP_CENTER" spacing="30" style="-fx-padding: 40;">
+            <Label text="Lista de Coaches"
+                   style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #4A6CF7; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 1, 1);"/>
+            <TableView fx:id="tablaCoaches" style="-fx-background-color: rgba(255,255,255,0.1); -fx-border-color: rgba(255,255,255,0.2); -fx-border-radius: 10; -fx-background-radius: 10;">
+                <columns>
+                    <TableColumn fx:id="colNombre" text="Coach" prefWidth="300" style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
+                    <TableColumn fx:id="colArea" text="Área" prefWidth="150" style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
+                    <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="120" style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
+                </columns>
+            </TableView>
+            <HBox spacing="20" alignment="CENTER" style="-fx-padding: 20 0 0 0;">
+                <Button text="Volver al Registro" onAction="#volverRegistro" style="-fx-background-color: #6C757D; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25; -fx-padding: 10 30; -fx-font-size: 14px; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
+            </HBox>
+        </VBox>
+    </center>
+</BorderPane>

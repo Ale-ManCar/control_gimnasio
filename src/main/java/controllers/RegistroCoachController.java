@@ -1,27 +1,21 @@
 package controllers;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import models.Coach;
 import util.DatabaseUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class RegistroCoachController {
@@ -31,39 +25,12 @@ public class RegistroCoachController {
     @FXML private TextField txtTelefono;
     @FXML private ComboBox<String> cbArea;
     @FXML private ImageView imgFoto;
-    @FXML private TableView<Coach> tablaCoaches;
-    @FXML private TableColumn<Coach, String> colNombre;
-    @FXML private TableColumn<Coach, String> colArea;
-    @FXML private TableColumn<Coach, Void> colAcciones;
 
-    private final ObservableList<Coach> coaches = FXCollections.observableArrayList();
     private String fotoPath = null;
 
     @FXML
     public void initialize() {
         cbArea.getItems().addAll("Maquinas", "Bailoterapia", "Crossfit");
-
-        colNombre.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
-        colArea.setCellValueFactory(new PropertyValueFactory<>("area"));
-
-        colAcciones.setCellFactory(col -> new TableCell<>() {
-            private final Button btnPerfil = new Button("Perfil");
-            {
-                btnPerfil.setOnAction(e -> {
-                    Coach coach = getTableView().getItems().get(getIndex());
-                    verPerfil(coach);
-                });
-                btnPerfil.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5px;");
-            }
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : btnPerfil);
-            }
-        });
-
-        tablaCoaches.setItems(coaches);
-        cargarCoaches();
     }
 
     @FXML
@@ -95,30 +62,8 @@ public class RegistroCoachController {
             stmt.setString(5, fotoPath);
             stmt.executeUpdate();
             limpiarFormulario();
-            cargarCoaches();
         } catch (SQLException e) {
             mostrarAlerta("No se pudo guardar el coach: " + e.getMessage());
-        }
-    }
-
-    private void cargarCoaches() {
-        coaches.clear();
-        String sql = "SELECT id, nombres, apellidos, area, telefono, foto_path FROM coaches";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                coaches.add(new Coach(
-                        rs.getInt("id"),
-                        rs.getString("nombres"),
-                        rs.getString("apellidos"),
-                        rs.getString("area"),
-                        rs.getString("telefono"),
-                        rs.getString("foto_path")
-                ));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -150,16 +95,13 @@ public class RegistroCoachController {
         }
     }
 
-    private void verPerfil(Coach coach) {
+    @FXML
+    private void abrirListaCoaches(ActionEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/perfil_coach.fxml"));
-            Parent root = loader.load();
-            PerfilCoachController controller = loader.getController();
-            controller.setCoach(coach);
-            Stage stage = new Stage();
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/lista_coaches.fxml"));
+            Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
-            stage.setTitle("Perfil del Coach");
-            stage.show();
+            stage.setTitle("Lista de Coaches");
         } catch (IOException e) {
             e.printStackTrace();
         }
