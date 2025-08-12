@@ -14,6 +14,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.Node;
 import javafx.stage.Stage;
 import models.Cliente;
 import models.Coach;
@@ -46,6 +47,8 @@ public class PerfilCoachController {
         configurarEstilosTabla();
         configurarFilas();
         configurarBusqueda();
+        ajustarColumnas();
+        ocultarScrollBars();
     }
 
     private void configurarColumnas() {
@@ -85,6 +88,21 @@ public class PerfilCoachController {
                 }
             }
         });
+    }
+
+    private void ajustarColumnas() {
+        tablaClientes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        colCliente.prefWidthProperty().bind(tablaClientes.widthProperty().multiply(0.6));
+        colTelefono.prefWidthProperty().bind(tablaClientes.widthProperty().multiply(0.4));
+    }
+
+    private void ocultarScrollBars() {
+        tablaClientes.skinProperty().addListener((obs, oldSkin, newSkin) ->
+                tablaClientes.lookupAll(".scroll-bar").forEach(node -> {
+                    node.setVisible(false);
+                    node.setManaged(false);
+                })
+        );
     }
 
     private void configurarEstilosTabla() {

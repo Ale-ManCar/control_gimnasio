@@ -10,6 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.Node;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -53,6 +54,8 @@ public class ListaCoachesController {
         cargarCoaches();
         coachesOriginales.setAll(coaches);
         configurarBusqueda();
+        ajustarColumnas();
+        ocultarScrollBars();
     }
 
     private void configurarColumnas() {
@@ -138,6 +141,22 @@ public class ListaCoachesController {
                 setGraphic(empty ? null : contenedor);
             }
         });
+    }
+
+    private void ajustarColumnas() {
+        tablaCoaches.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        colNombre.prefWidthProperty().bind(tablaCoaches.widthProperty().multiply(0.4));
+        colArea.prefWidthProperty().bind(tablaCoaches.widthProperty().multiply(0.3));
+        colAcciones.prefWidthProperty().bind(tablaCoaches.widthProperty().multiply(0.2));
+    }
+
+    private void ocultarScrollBars() {
+        tablaCoaches.skinProperty().addListener((obs, oldSkin, newSkin) ->
+                tablaCoaches.lookupAll(".scroll-bar").forEach(node -> {
+                    node.setVisible(false);
+                    node.setManaged(false);
+                })
+        );
     }
 
     private void configurarEstilosTabla() {
