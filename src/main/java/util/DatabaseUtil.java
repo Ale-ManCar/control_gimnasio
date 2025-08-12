@@ -62,6 +62,14 @@ public class DatabaseUtil {
                 "monto REAL NOT NULL," +
                 "FOREIGN KEY (cliente_id) REFERENCES clientes(id))";
 
+        String sqlCoaches = "CREATE TABLE IF NOT EXISTS coaches (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "nombres TEXT NOT NULL," +
+                "apellidos TEXT NOT NULL," +
+                "telefono TEXT," +
+                "area TEXT NOT NULL," +
+                "foto_path TEXT)";
+
         String sqlProductos = "CREATE TABLE IF NOT EXISTS productos (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "nombre TEXT NOT NULL UNIQUE," +
@@ -96,6 +104,9 @@ public class DatabaseUtil {
             stmt.execute(sqlProductos);
             stmt.execute(sqlVentas);
             stmt.execute(sqlEgresos);
+            stmt.execute(sqlCoaches);
+            try { stmt.execute("ALTER TABLE clientes ADD COLUMN area TEXT"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE clientes ADD COLUMN coach_id INTEGER REFERENCES coaches(id)"); } catch (SQLException ignored) {}
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
             conn.commit();
 

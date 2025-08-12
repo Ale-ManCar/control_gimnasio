@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.PerfilCoachController"
+            prefWidth="600" prefHeight="500"
+            style="-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e);">
+    <center>
+        <VBox spacing="20" alignment="TOP_CENTER" style="-fx-padding: 30;">
+            <HBox spacing="20" alignment="CENTER">
+                <ImageView fx:id="imgFoto" fitHeight="120" fitWidth="120" preserveRatio="true"/>
+                <VBox spacing="10">
+                    <Label fx:id="lblNombre" style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+                    <Label fx:id="lblArea" style="-fx-text-fill: white;"/>
+                    <Label fx:id="lblTelefono" style="-fx-text-fill: white;"/>
+                </VBox>
+            </HBox>
+            <TableView fx:id="tablaClientes" style="-fx-background-color: rgba(255,255,255,0.1); -fx-border-color: rgba(255,255,255,0.2); -fx-border-radius: 10; -fx-background-radius: 10;" prefHeight="300">
+                <columns>
+                    <TableColumn fx:id="colCliente" text="Cliente" prefWidth="250" style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
+                    <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="200" style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>

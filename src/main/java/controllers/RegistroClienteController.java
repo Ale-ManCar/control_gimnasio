@@ -14,6 +14,9 @@ import javafx.util.Duration;
 import util.DatabaseUtil;
 import util.WhatsAppService;
 import models.Cliente;
+import models.Coach;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -26,8 +29,12 @@ public class RegistroClienteController {
     @FXML private TextField txtNombres, txtApellidos, txtTelefono, txtMontoPago;
     @FXML private DatePicker dpFechaInicio;
     @FXML private ComboBox<String> cbMembresia;
+    @FXML private ComboBox<String> cbArea;
+    @FXML private ComboBox<Coach> cbCoach;
     @FXML private Button btnSiguiente;
     @FXML private Button btnVolverAlDashboard;
+
+    private final ObservableList<Coach> coaches = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
@@ -35,6 +42,31 @@ public class RegistroClienteController {
             cbMembresia.getItems().clear();
             cbMembresia.getItems().addAll("1 Mes", "3 Meses", "6 Meses", "1 Año");
             cbMembresia.setValue("1 Mes");
+        }
+
+        if (cbArea != null) {
+            cbArea.getItems().addAll("Maquinas", "Bailoterapia", "Crossfit");
+            cbArea.valueProperty().addListener((obs, old, val) -> {
+                if (val != null) cargarCoachesPorArea(val);
+            });
+        }
+
+        if (cbCoach != null) {
+            cbCoach.setItems(coaches);
+            cbCoach.setCellFactory(lv -> new ListCell<>() {
+                @Override
+                protected void updateItem(Coach item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : item.getNombreCompleto());
+                }
+            });
+            cbCoach.setButtonCell(new ListCell<>() {
+                @Override
+                protected void updateItem(Coach item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : item.getNombreCompleto());
+                }
+            });
         }
 
         txtNombres.textProperty().addListener((obs, oldVal, newVal) -> {
@@ -68,7 +100,8 @@ public class RegistroClienteController {
 
     @FXML
     private void handleSiguiente() {
-        if (cbMembresia.getValue() == null || dpFechaInicio.getValue() == null) {
+        if (cbMembresia.getValue() == null || dpFechaInicio.getValue() == null ||
+                cbArea.getValue() == null || cbCoach.getValue() == null) {
             mostrarAlerta("Error", "Debe completar todos los campos");
             return;
         }
@@ -76,7 +109,7 @@ public class RegistroClienteController {
         try (Connection conn = DatabaseUtil.getConnection()) {
             conn.setAutoCommit(false);
 
-            String sqlCliente = "INSERT INTO clientes (nombres, apellidos, telefono, tipoMembresia, fechaInicio, fecha_vencimiento, monto_pago) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            String sqlCliente = "INSERT INTO clientes (nombres, apellidos, telefono, tipoMembresia, fechaInicio, fecha_vencimiento, monto_pago, area, coach_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement stmtCliente = conn.prepareStatement(sqlCliente, PreparedStatement.RETURN_GENERATED_KEYS);
 
             stmtCliente.setString(1, validarCampo(txtNombres.getText(), "Nombres"));
@@ -95,6 +128,8 @@ public class RegistroClienteController {
                 return;
             }
             stmtCliente.setDouble(7, monto);
+            stmtCliente.setString(8, cbArea.getValue());
+            stmtCliente.setInt(9, cbCoach.getValue().getId());
 
             stmtCliente.executeUpdate();
 
@@ -139,6 +174,28 @@ public class RegistroClienteController {
             mostrarAlerta("Error", "El monto de pago no es válido");
         } catch (Exception e) {
             mostrarAlerta("Error", "Error inesperado: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void cargarCoachesPorArea(String area) {
+        coaches.clear();
+        String sql = "SELECT id, nombres, apellidos, area, telefono, foto_path FROM coaches WHERE area = ?";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, area);
+            var rs = stmt.executeQuery();
+            while (rs.next()) {
+                coaches.add(new Coach(
+                        rs.getInt("id"),
+                        rs.getString("nombres"),
+                        rs.getString("apellidos"),
+                        rs.getString("area"),
+                        rs.getString("telefono"),
+                        rs.getString("foto_path")
+                ));
+            }
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }

@@ -59,9 +59,19 @@
                             </FXCollections>
                         </items>
                     </ComboBox>
-                    <Label text="Monto de Pago:" GridPane.rowIndex="5" GridPane.columnIndex="0"
+                    <Label text="Área:" GridPane.rowIndex="5" GridPane.columnIndex="0"
                            style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
-                    <TextField fx:id="txtMontoPago" promptText="Monto de Pago" GridPane.rowIndex="5" GridPane.columnIndex="1"
+                    <ComboBox fx:id="cbArea" GridPane.rowIndex="5" GridPane.columnIndex="1"
+                              style="-fx-background-color: rgba(255,255,255,0.9); -fx-border-color: #ced4da;
+                                     -fx-border-radius: 8; -fx-background-radius: 8;"/>
+                    <Label text="Coach:" GridPane.rowIndex="6" GridPane.columnIndex="0"
+                           style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    <ComboBox fx:id="cbCoach" GridPane.rowIndex="6" GridPane.columnIndex="1"
+                              style="-fx-background-color: rgba(255,255,255,0.9); -fx-border-color: #ced4da;
+                                     -fx-border-radius: 8; -fx-background-radius: 8;"/>
+                    <Label text="Monto de Pago:" GridPane.rowIndex="7" GridPane.columnIndex="0"
+                           style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    <TextField fx:id="txtMontoPago" promptText="Monto de Pago" GridPane.rowIndex="7" GridPane.columnIndex="1"
                                style="-fx-background-color: rgba(255,255,255,0.9); -fx-border-color: #ced4da;
                                       -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10;"/>
                 </GridPane>

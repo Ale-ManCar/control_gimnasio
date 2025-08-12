@@ -424,6 +424,21 @@ public class DashboardController implements Initializable {
     }
 
     @FXML
+    private void handleRegistroCoach(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/registro_coach.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Registro de Coach");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            lblMensaje.setText("No se pudo abrir el formulario de coaches.");
+        }
+    }
+
+    @FXML
     private void handleVerTodos(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/renovacion.fxml"));

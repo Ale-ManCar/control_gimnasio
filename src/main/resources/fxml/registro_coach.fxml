@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.RegistroCoachController"
+            prefWidth="900" prefHeight="600"
+            style="-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e);">
+    <center>
+        <VBox alignment="TOP_CENTER" spacing="30" style="-fx-padding: 40;">
+            <Label text="Registro de Coach"
+                   style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #4A6CF7; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 1, 1);"/>
+            <VBox spacing="20" maxWidth="700" style="-fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 15; -fx-padding: 40; -fx-border-color: rgba(255,255,255,0.2); -fx-border-width: 1; -fx-border-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 15, 0, 0, 4);">
+                <GridPane hgap="20" vgap="15">
+                    <columnConstraints>
+                        <ColumnConstraints halignment="RIGHT" minWidth="120"/>
+                        <ColumnConstraints hgrow="ALWAYS"/>
+                    </columnConstraints>
+                    <Label text="Nombres:" GridPane.rowIndex="0" GridPane.columnIndex="0" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    <TextField fx:id="txtNombres" GridPane.rowIndex="0" GridPane.columnIndex="1" style="-fx-background-color: rgba(255,255,255,0.9); -fx-border-color: #ced4da; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10;"/>
+                    <Label text="Apellidos:" GridPane.rowIndex="1" GridPane.columnIndex="0" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    <TextField fx:id="txtApellidos" GridPane.rowIndex="1" GridPane.columnIndex="1" style="-fx-background-color: rgba(255,255,255,0.9); -fx-border-color: #ced4da; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10;"/>
+                    <Label text="Teléfono:" GridPane.rowIndex="2" GridPane.columnIndex="0" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    <TextField fx:id="txtTelefono" GridPane.rowIndex="2" GridPane.columnIndex="1" style="-fx-background-color: rgba(255,255,255,0.9); -fx-border-color: #ced4da; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10;"/>
+                    <Label text="Área:" GridPane.rowIndex="3" GridPane.columnIndex="0" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    <ComboBox fx:id="cbArea" GridPane.rowIndex="3" GridPane.columnIndex="1" style="-fx-background-color: rgba(255,255,255,0.9); -fx-border-color: #ced4da; -fx-border-radius: 8; -fx-background-radius: 8;"/>
+                    <Label text="Foto:" GridPane.rowIndex="4" GridPane.columnIndex="0" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    <HBox spacing="10" GridPane.rowIndex="4" GridPane.columnIndex="1">
+                        <ImageView fx:id="imgFoto" fitHeight="80" fitWidth="80" preserveRatio="true"/>
+                        <Button text="Seleccionar" onAction="#seleccionarFoto" style="-fx-background-color: #6C757D; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 8 15;"/>
+                    </HBox>
+                </GridPane>
+                <HBox spacing="20" alignment="CENTER" style="-fx-padding: 20 0 0 0;">
+                    <Button fx:id="btnGuardar" text="Guardar" onAction="#guardarCoach" style="-fx-background-color: linear-gradient(to right, #4A6CF7, #2E8BFF); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25; -fx-padding: 10 30; -fx-font-size: 14px; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
+                    <Button fx:id="btnVolver" text="Volver al Dashboard" onAction="#volverDashboard" style="-fx-background-color: #6C757D; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25; -fx-padding: 10 30; -fx-font-size: 14px; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
+                </HBox>
+                <TableView fx:id="tablaCoaches" style="-fx-background-color: rgba(255,255,255,0.1); -fx-border-color: rgba(255,255,255,0.2); -fx-border-radius: 10; -fx-background-radius: 10;">
+                    <columns>
+                        <TableColumn fx:id="colNombre" text="Coach" prefWidth="300" style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
+                        <TableColumn fx:id="colArea" text="Área" prefWidth="150" style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
+                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="120" style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
+                    </columns>
+                </TableView>
+            </VBox>
+        </VBox>
+    </center>
+</BorderPane>
