@@ -1,11 +1,15 @@
 package controllers;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
@@ -31,12 +35,17 @@ public class PerfilCoachController {
     @FXML private TableView<Cliente> tablaClientes;
     @FXML private TableColumn<Cliente, String> colCliente;
     @FXML private TableColumn<Cliente, String> colTelefono;
+    @FXML private TextField txtBuscar;
+    @FXML private Button btnLimpiar;
+
+    private final ObservableList<Cliente> clientesOriginales = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
         configurarColumnas();
         configurarEstilosTabla();
         configurarFilas();
+        configurarBusqueda();
     }
 
     private void configurarColumnas() {
@@ -153,6 +162,89 @@ public class PerfilCoachController {
         });
     }
 
+    private void configurarBusqueda() {
+        txtBuscar.setPromptText("Buscar cliente...");
+        txtBuscar.setStyle(
+                "-fx-font-size: 14px;" +
+                        "-fx-padding: 8px 15px;" +
+                        "-fx-background-radius: 20px;" +
+                        "-fx-border-radius: 20px;" +
+                        "-fx-border-color: #ced4da;" +
+                        "-fx-background-color: #ffffff;"
+        );
+
+        btnLimpiar.setStyle(
+                "-fx-background-color: #6C757D;" +
+                        "-fx-text-fill: white;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-padding: 8px 15px;" +
+                        "-fx-background-radius: 20px;" +
+                        "-fx-border-radius: 20px;" +
+                        "-fx-cursor: hand;"
+        );
+        btnLimpiar.setOnMouseEntered(e ->
+                btnLimpiar.setStyle(
+                        "-fx-background-color: #5a6268;" +
+                                "-fx-text-fill: white;" +
+                                "-fx-font-weight: bold;" +
+                                "-fx-padding: 8px 15px;" +
+                                "-fx-background-radius: 20px;" +
+                                "-fx-border-radius: 20px;" +
+                                "-fx-cursor: hand;"
+                )
+        );
+        btnLimpiar.setOnMouseExited(e ->
+                btnLimpiar.setStyle(
+                        "-fx-background-color: #6C757D;" +
+                                "-fx-text-fill: white;" +
+                                "-fx-font-weight: bold;" +
+                                "-fx-padding: 8px 15px;" +
+                                "-fx-background-radius: 20px;" +
+                                "-fx-border-radius: 20px;" +
+                                "-fx-cursor: hand;"
+                )
+        );
+
+        txtBuscar.textProperty().addListener((observable, oldValue, newValue) -> {
+            filtrarClientes();
+        });
+    }
+
+    private void filtrarClientes() {
+        String filtro = txtBuscar.getText().trim().toLowerCase();
+
+        if (filtro.isEmpty()) {
+            tablaClientes.setItems(clientesOriginales);
+        } else {
+            ObservableList<Cliente> filtrados = FXCollections.observableArrayList();
+            for (Cliente cliente : clientesOriginales) {
+                if (cliente.getNombreCompleto().toLowerCase().contains(filtro) ||
+                        cliente.getTelefono().contains(filtro)) {
+                    filtrados.add(cliente);
+                }
+            }
+            tablaClientes.setItems(filtrados);
+        }
+
+        tablaClientes.refresh();
+    }
+
+    @FXML
+    private void limpiarFiltro() {
+        Cliente seleccionado = tablaClientes.getSelectionModel().getSelectedItem();
+        int scrollPosition = tablaClientes.getSelectionModel().getSelectedIndex();
+
+        txtBuscar.clear();
+        tablaClientes.setItems(clientesOriginales);
+
+        if (seleccionado != null) {
+            tablaClientes.getSelectionModel().select(seleccionado);
+        }
+        tablaClientes.scrollTo(scrollPosition);
+
+        tablaClientes.refresh();
+    }
+
     public void setCoach(Coach coach) {
         lblNombre.setText(coach.getNombreCompleto());
         lblArea.setText("Área: " + coach.getArea());
@@ -161,6 +253,7 @@ public class PerfilCoachController {
             imgFoto.setImage(new Image(new File(coach.getFotoPath()).toURI().toString()));
         }
         cargarClientes(coach.getId());
+        clientesOriginales.setAll(tablaClientes.getItems());
     }
 
     private void cargarClientes(int coachId) {

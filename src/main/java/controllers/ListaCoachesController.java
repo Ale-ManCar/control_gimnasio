@@ -12,6 +12,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
@@ -30,17 +31,21 @@ public class ListaCoachesController {
     @FXML private TableColumn<Coach, String> colNombre;
     @FXML private TableColumn<Coach, String> colArea;
     @FXML private TableColumn<Coach, Void> colAcciones;
+    @FXML private TextField txtBuscar;
+    @FXML private Button btnLimpiar;
 
     private final ObservableList<Coach> coaches = FXCollections.observableArrayList();
+    private final ObservableList<Coach> coachesOriginales = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
         configurarColumnas();
         configurarEstilosTabla();
         configurarFilas();
-
         tablaCoaches.setItems(coaches);
         cargarCoaches();
+        coachesOriginales.setAll(coaches);
+        configurarBusqueda();
     }
 
     private void configurarColumnas() {
@@ -188,6 +193,89 @@ public class ListaCoachesController {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    private void configurarBusqueda() {
+        txtBuscar.setPromptText("Buscar coach...");
+        txtBuscar.setStyle(
+                "-fx-font-size: 14px;" +
+                        "-fx-padding: 8px 15px;" +
+                        "-fx-background-radius: 20px;" +
+                        "-fx-border-radius: 20px;" +
+                        "-fx-border-color: #ced4da;" +
+                        "-fx-background-color: #ffffff;"
+        );
+
+        btnLimpiar.setStyle(
+                "-fx-background-color: #6C757D;" +
+                        "-fx-text-fill: white;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-padding: 8px 15px;" +
+                        "-fx-background-radius: 20px;" +
+                        "-fx-border-radius: 20px;" +
+                        "-fx-cursor: hand;"
+        );
+        btnLimpiar.setOnMouseEntered(e ->
+                btnLimpiar.setStyle(
+                        "-fx-background-color: #5a6268;" +
+                                "-fx-text-fill: white;" +
+                                "-fx-font-weight: bold;" +
+                                "-fx-padding: 8px 15px;" +
+                                "-fx-background-radius: 20px;" +
+                                "-fx-border-radius: 20px;" +
+                                "-fx-cursor: hand;"
+                )
+        );
+        btnLimpiar.setOnMouseExited(e ->
+                btnLimpiar.setStyle(
+                        "-fx-background-color: #6C757D;" +
+                                "-fx-text-fill: white;" +
+                                "-fx-font-weight: bold;" +
+                                "-fx-padding: 8px 15px;" +
+                                "-fx-background-radius: 20px;" +
+                                "-fx-border-radius: 20px;" +
+                                "-fx-cursor: hand;"
+                )
+        );
+
+        txtBuscar.textProperty().addListener((observable, oldValue, newValue) -> {
+            filtrarCoaches();
+        });
+    }
+
+    private void filtrarCoaches() {
+        String filtro = txtBuscar.getText().trim().toLowerCase();
+
+        if (filtro.isEmpty()) {
+            tablaCoaches.setItems(coachesOriginales);
+        } else {
+            ObservableList<Coach> filtrados = FXCollections.observableArrayList();
+            for (Coach coach : coachesOriginales) {
+                if (coach.getNombreCompleto().toLowerCase().contains(filtro) ||
+                        coach.getArea().toLowerCase().contains(filtro)) {
+                    filtrados.add(coach);
+                }
+            }
+            tablaCoaches.setItems(filtrados);
+        }
+
+        tablaCoaches.refresh();
+    }
+
+    @FXML
+    private void limpiarFiltro() {
+        Coach seleccionado = tablaCoaches.getSelectionModel().getSelectedItem();
+        int scrollPosition = tablaCoaches.getSelectionModel().getSelectedIndex();
+
+        txtBuscar.clear();
+        tablaCoaches.setItems(coachesOriginales);
+
+        if (seleccionado != null) {
+            tablaCoaches.getSelectionModel().select(seleccionado);
+        }
+        tablaCoaches.scrollTo(scrollPosition);
+
+        tablaCoaches.refresh();
     }
 
     private void verPerfil(Coach coach) {
