@@ -353,27 +353,61 @@ public class InventarioController {
     private void handleIngresarProducto() {
         Dialog<Producto> dialog = new Dialog<>();
         dialog.setTitle("Ingresar Nuevo Producto");
-        dialog.setHeaderText("Complete los detalles del producto");
+        dialog.setHeaderText(null);
 
         // Estilo para el diálogo
-        dialog.getDialogPane().setStyle("-fx-background-color: #f5f7fa; -fx-padding: 20;");
-        dialog.getDialogPane().getScene().getWindow().setOnShown(e -> {
-            Platform.runLater(() -> dialog.getDialogPane().requestLayout());
-        });
+        dialog.getDialogPane().setStyle(
+                "-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e);" +
+                        "-fx-padding: 20;" +
+                        "-fx-background-radius: 10;" +
+                        "-fx-border-radius: 10;" +
+                        "-fx-border-color: rgba(255,255,255,0.1);" +
+                        "-fx-border-width: 1;" +
+                        "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 10, 0, 0, 0);");
+        dialog.getDialogPane().getScene().getWindow().setOnShown(e ->
+                Platform.runLater(() -> dialog.getDialogPane().requestLayout()));
 
         ButtonType btnIngresar = new ButtonType("Ingresar", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(btnIngresar, ButtonType.CANCEL);
 
         // Botón personalizado
         Button ingresarButton = (Button) dialog.getDialogPane().lookupButton(btnIngresar);
-        ingresarButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20;");
+
+        ingresarButton.setStyle(
+                "-fx-background-color: linear-gradient(to right, #4CAF50, #2ECC71);" +
+                        "-fx-text-fill: white;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-background-radius: 25;" +
+                        "-fx-padding: 8 20;");
+
+        Button cancelarButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
+        cancelarButton.setStyle(
+                "-fx-background-color: #6C757D;" +
+                        "-fx-text-fill: white;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-background-radius: 25;" +
+                        "-fx-padding: 8 20;");
 
         GridPane grid = new GridPane();
         grid.setHgap(15);
         grid.setVgap(10);
-        grid.setPadding(new Insets(15));
-        grid.setStyle("-fx-background-color: white; -fx-border-color: #e0e0e0; -fx-border-width: 1; -fx-border-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 0);");
+        grid.setPadding(new Insets(20));
+        grid.setStyle(
+                "-fx-background-color: rgba(255,255,255,0.1);" +
+                        "-fx-border-color: rgba(255,255,255,0.2);" +
+                        "-fx-border-width: 1;" +
+                        "-fx-background-radius: 10;" +
+                        "-fx-border-radius: 10;" +
+                        "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 0);");
         grid.setPrefWidth(500);
+
+        VBox contenedor = new VBox(15);
+        contenedor.setAlignment(Pos.TOP_CENTER);
+        Label titulo = new Label("Ingresar Nuevo Producto");
+        titulo.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;");
+        Label subtitulo = new Label("Complete los detalles del producto");
+        subtitulo.setStyle("-fx-text-fill: #bdc3c7; -fx-padding: 0 0 10 0;");
+        contenedor.getChildren().addAll(titulo, subtitulo, grid);
 
         // Campos del formulario
         TextField txtNombre = createStyledTextField("Nombre del producto", true);
@@ -536,7 +570,7 @@ public class InventarioController {
         lblStockCalculado.setText("Seleccione tipo de producto y complete los campos");
         lblStockCalculado.setStyle("-fx-text-fill: #7f8c8d; -fx-font-style: italic;");
 
-        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().setContent(contenedor);
 
         // Convertir resultado a objeto Producto
         dialog.setResultConverter(dialogButton -> {
@@ -616,8 +650,13 @@ public class InventarioController {
     private TextField createStyledTextField(String prompt, boolean required) {
         TextField field = new TextField();
         field.setPromptText(prompt);
-        field.setStyle("-fx-padding: 8 12; -fx-background-radius: 4; -fx-border-radius: 4; " +
-                "-fx-background-color: #f8f9fa; -fx-border-color: #e0e0e0;");
+        field.setStyle(
+                "-fx-padding: 8 12;" +
+                        "-fx-background-color: rgba(255,255,255,0.9);" +
+                        "-fx-text-fill: #2c3e50;" +
+                        "-fx-background-radius: 8;" +
+                        "-fx-border-radius: 8;" +
+                        "-fx-border-color: transparent;");
 
         if (required) {
             field.setStyle(field.getStyle() + "-fx-border-color: #3498db; -fx-border-width: 1.5;");
@@ -629,8 +668,13 @@ public class InventarioController {
     private ComboBox<String> createStyledComboBox(String... items) {
         ComboBox<String> combo = new ComboBox<>(FXCollections.observableArrayList(items));
         combo.setValue(items[0]);
-        combo.setStyle("-fx-padding: 8 12; -fx-background-radius: 4; -fx-border-radius: 4; " +
-                "-fx-background-color: #f8f9fa; -fx-border-color: #3498db; -fx-border-width: 1.5;");
+        combo.setStyle(
+                "-fx-padding: 8 12;" +
+                        "-fx-background-color: rgba(255,255,255,0.9);" +
+                        "-fx-background-radius: 8;" +
+                        "-fx-border-radius: 8;" +
+                        "-fx-border-color: #3498db;" +
+                        "-fx-border-width: 1.5;");
         combo.setPrefWidth(200);
         return combo;
     }
