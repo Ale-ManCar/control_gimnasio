@@ -7,6 +7,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.stage.Stage;
 import models.Cliente;
 import models.Coach;
 import util.DatabaseUtil;
@@ -62,5 +63,11 @@ public class PerfilCoachController {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    @FXML
+    private void handleCerrar() {
+        Stage stage = (Stage) tablaClientes.getScene().getWindow();
+        stage.close();
     }
 }

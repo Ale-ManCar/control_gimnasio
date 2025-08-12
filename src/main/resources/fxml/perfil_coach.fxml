@@ -1,28 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.control.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.*?>
-<BorderPane xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="controllers.PerfilCoachController"
-            prefWidth="600" prefHeight="500"
-            style="-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e);">
-    <center>
-        <VBox spacing="20" alignment="TOP_CENTER" style="-fx-padding: 30;">
-            <HBox spacing="20" alignment="CENTER">
-                <ImageView fx:id="imgFoto" fitHeight="120" fitWidth="120" preserveRatio="true"/>
-                <VBox spacing="10">
-                    <Label fx:id="lblNombre" style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"/>
-                    <Label fx:id="lblArea" style="-fx-text-fill: white;"/>
-                    <Label fx:id="lblTelefono" style="-fx-text-fill: white;"/>
-                </VBox>
-            </HBox>
-            <TableView fx:id="tablaClientes" style="-fx-background-color: rgba(255,255,255,0.1); -fx-border-color: rgba(255,255,255,0.2); -fx-border-radius: 10; -fx-background-radius: 10;" prefHeight="300">
-                <columns>
-                    <TableColumn fx:id="colCliente" text="Cliente" prefWidth="250" style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
-                    <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="200" style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
-                </columns>
-            </TableView>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controllers.PerfilCoachController"
+      spacing="20"
+      style="-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e); -fx-padding: 25;"
+      prefWidth="850" prefHeight="650">
+    <HBox spacing="20" alignment="CENTER">
+        <ImageView fx:id="imgFoto" fitHeight="120" fitWidth="120" preserveRatio="true"/>
+        <VBox spacing="10">
+            <Label fx:id="lblNombre" style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+            <Label fx:id="lblArea" style="-fx-text-fill: white;"/>
+            <Label fx:id="lblTelefono" style="-fx-text-fill: white;"/>
         </VBox>
-    </center>
-</BorderPane>
+    </HBox>
+    <HBox spacing="10" style="-fx-padding: 0 0 20 0;" alignment="CENTER">
+        <TextField
+                style="-fx-pref-width: 450px; -fx-font-size: 14px; -fx-padding: 10px 15px; -fx-background-radius: 20px; -fx-border-radius: 20px; -fx-border-color: rgba(255,255,255,0.3); -fx-background-color: rgba(255,255,255,0.1); -fx-text-fill: white;"
+                promptText="Buscar cliente..."/>
+        <Button text="Limpiar"
+                style="-fx-background-color: #6C757D; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 15px; -fx-background-radius: 20px; -fx-border-radius: 20px; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 5, 0, 0, 2);"/>
+    </HBox>
+    <TableView fx:id="tablaClientes"
+               style="-fx-background-radius: 15px; -fx-border-color: rgba(255,255,255,0.2); -fx-border-width: 1px; -fx-background-color: rgba(255,255,255,0.1); -fx-table-cell-border-color: rgba(255,255,255,0.2);"
+               prefHeight="300">
+        <columns>
+            <TableColumn fx:id="colCliente" text="Cliente" prefWidth="340"
+                         style="-fx-alignment: CENTER; -fx-text-fill: white; -fx-border-color: rgba(255,255,255,0.2); -fx-border-width: 0 1px 0 0;"/>
+            <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="210"
+                         style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
+        </columns>
+    </TableView>
+    <HBox alignment="CENTER" style="-fx-padding: 20 0 0 0;">
+        <Button text="Cerrar" onAction="#handleCerrar"
+                style="-fx-background-color: linear-gradient(to right, #4A6CF7, #2E8BFF); -fx-text-fill: white; -fx-font-weight: bold; -fx-min-width: 220; -fx-font-size: 16px; -fx-padding: 10px 25px; -fx-background-radius: 25px; -fx-border-radius: 25px; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
+    </HBox>
+</VBox>
