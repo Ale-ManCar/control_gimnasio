@@ -10,7 +10,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import models.Coach;
@@ -33,8 +35,51 @@ public class ListaCoachesController {
 
     @FXML
     public void initialize() {
+        configurarColumnas();
+        configurarEstilosTabla();
+        configurarFilas();
+
+        tablaCoaches.setItems(coaches);
+        cargarCoaches();
+    }
+
+    private void configurarColumnas() {
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
         colArea.setCellValueFactory(new PropertyValueFactory<>("area"));
+
+        colNombre.setCellFactory(column -> new TableCell<Coach, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(item);
+                    setStyle("-fx-alignment: CENTER; " +
+                            "-fx-font-weight: bold; " +
+                            "-fx-text-fill: black; " +
+                            "-fx-background-color: transparent;");
+                }
+            }
+        });
+
+        colArea.setCellFactory(column -> new TableCell<Coach, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(item);
+                    setStyle("-fx-alignment: CENTER; " +
+                            "-fx-font-weight: bold; " +
+                            "-fx-text-fill: black; " +
+                            "-fx-background-color: transparent;");
+                }
+            }
+        });
 
         colAcciones.setCellFactory(col -> new TableCell<>() {
             private final Button btnPerfil = new Button("Perfil");
@@ -51,9 +96,77 @@ public class ListaCoachesController {
                 setGraphic(empty ? null : btnPerfil);
             }
         });
+    }
 
-        tablaCoaches.setItems(coaches);
-        cargarCoaches();
+    private void configurarEstilosTabla() {
+        tablaCoaches.setStyle(
+                "-fx-font-size: 14px;" +
+                        "-fx-background-color: #ffffff;" +
+                        "-fx-border-radius: 10px;" +
+                        "-fx-background-radius: 10px;" +
+                        "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);"
+        );
+    }
+
+    private void configurarFilas() {
+        tablaCoaches.setRowFactory(tv -> {
+            TableRow<Coach> row = new TableRow<>() {
+                @Override
+                protected void updateItem(Coach coach, boolean empty) {
+                    super.updateItem(coach, empty);
+                    if (empty || coach == null) {
+                        setStyle("");
+                        setTooltip(null);
+                    } else {
+                        if (isSelected()) {
+                            setStyle("-fx-background-color: #e6f2ff; " +
+                                    "-fx-border-color: #e0e0e0; " +
+                                    "-fx-border-width: 0 0 1px 0;");
+                        } else if (isHover()) {
+                            setStyle("-fx-background-color: #e6f2ff; " +
+                                    "-fx-border-color: #e0e0e0; " +
+                                    "-fx-border-width: 0 0 1px 0;");
+                        } else {
+                            setStyle("-fx-background-color: #ffffff; " +
+                                    "-fx-border-color: #e0e0e0; " +
+                                    "-fx-border-width: 0 0 1px 0;");
+                        }
+                    }
+                }
+            };
+
+            row.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
+                if (isNowSelected) {
+                    row.setStyle("-fx-background-color: #e6f2ff; " +
+                            "-fx-border-color: #e0e0e0; " +
+                            "-fx-border-width: 0 0 1px 0;");
+                } else {
+                    if (row.isHover()) {
+                        row.setStyle("-fx-background-color: #e6f2ff; " +
+                                "-fx-border-color: #e0e0e0; " +
+                                "-fx-border-width: 0 0 1px 0;");
+                    } else {
+                        row.setStyle("-fx-background-color: #ffffff; " +
+                                "-fx-border-color: #e0e0e0; " +
+                                "-fx-border-width: 0 0 1px 0;");
+                    }
+                }
+            });
+
+            row.hoverProperty().addListener((obs, oldVal, isHovering) -> {
+                if (isHovering && !row.isSelected()) {
+                    row.setStyle("-fx-background-color: #e6f2ff; " +
+                            "-fx-border-color: #e0e0e0; " +
+                            "-fx-border-width: 0 0 1px 0;");
+                } else if (!row.isSelected()) {
+                    row.setStyle("-fx-background-color: #ffffff; " +
+                            "-fx-border-color: #e0e0e0; " +
+                            "-fx-border-width: 0 0 1px 0;");
+                }
+            });
+
+            return row;
+        });
     }
 
     private void cargarCoaches() {
