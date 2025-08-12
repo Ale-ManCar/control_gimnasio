@@ -11,6 +11,7 @@ import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import util.DatabaseUtil;
+import models.Coach;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,12 +26,27 @@ public class RegistroCoachController {
     @FXML private TextField txtTelefono;
     @FXML private ComboBox<String> cbArea;
     @FXML private ImageView imgFoto;
+    @FXML private Button btnGuardar;
 
     private String fotoPath = null;
+    private Coach coachEditando = null;
 
     @FXML
     public void initialize() {
         cbArea.getItems().addAll("Maquinas", "Bailoterapia", "Crossfit");
+    }
+
+    public void setCoach(Coach coach) {
+        this.coachEditando = coach;
+        txtNombres.setText(coach.getNombres());
+        txtApellidos.setText(coach.getApellidos());
+        txtTelefono.setText(coach.getTelefono());
+        cbArea.setValue(coach.getArea());
+        fotoPath = coach.getFotoPath();
+        if (fotoPath != null) {
+            imgFoto.setImage(new Image(new File(fotoPath).toURI().toString()));
+        }
+        btnGuardar.setText("Actualizar");
     }
 
     @FXML
@@ -52,18 +68,36 @@ public class RegistroCoachController {
             return;
         }
 
-        String sql = "INSERT INTO coaches (nombres, apellidos, telefono, area, foto_path) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, txtNombres.getText().trim());
-            stmt.setString(2, txtApellidos.getText().trim());
-            stmt.setString(3, txtTelefono.getText().trim());
-            stmt.setString(4, cbArea.getValue());
-            stmt.setString(5, fotoPath);
-            stmt.executeUpdate();
-            limpiarFormulario();
-        } catch (SQLException e) {
-            mostrarAlerta("No se pudo guardar el coach: " + e.getMessage());
+        if (coachEditando == null) {
+            String sql = "INSERT INTO coaches (nombres, apellidos, telefono, area, foto_path) VALUES (?, ?, ?, ?, ?)";
+            try (Connection conn = DatabaseUtil.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, txtNombres.getText().trim());
+                stmt.setString(2, txtApellidos.getText().trim());
+                stmt.setString(3, txtTelefono.getText().trim());
+                stmt.setString(4, cbArea.getValue());
+                stmt.setString(5, fotoPath);
+                stmt.executeUpdate();
+                limpiarFormulario();
+            } catch (SQLException e) {
+                mostrarAlerta("No se pudo guardar el coach: " + e.getMessage());
+            }
+        } else {
+            String sql = "UPDATE coaches SET nombres = ?, apellidos = ?, telefono = ?, area = ?, foto_path = ? WHERE id = ?";
+            try (Connection conn = DatabaseUtil.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, txtNombres.getText().trim());
+                stmt.setString(2, txtApellidos.getText().trim());
+                stmt.setString(3, txtTelefono.getText().trim());
+                stmt.setString(4, cbArea.getValue());
+                stmt.setString(5, fotoPath);
+                stmt.setInt(6, coachEditando.getId());
+                stmt.executeUpdate();
+                Stage stage = (Stage) btnGuardar.getScene().getWindow();
+                stage.close();
+            } catch (SQLException e) {
+                mostrarAlerta("No se pudo actualizar el coach: " + e.getMessage());
+            }
         }
     }
 

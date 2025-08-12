@@ -7,7 +7,9 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -15,6 +17,10 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
+import javafx.geometry.Pos;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.javafx.FontIcon;
 import javafx.stage.Stage;
 import models.Coach;
 import util.DatabaseUtil;
@@ -87,18 +93,44 @@ public class ListaCoachesController {
         });
 
         colAcciones.setCellFactory(col -> new TableCell<>() {
-            private final Button btnPerfil = new Button("Perfil");
+            //private final Button btnPerfil = new Button("Perfil")
+            private final Button btnPerfil = new Button();
+            private final Button btnEditar = new Button();
+            private final Button btnEliminar = new Button();
+            private final HBox contenedor = new HBox(10);;
             {
                 btnPerfil.setOnAction(e -> {
                     Coach coach = getTableView().getItems().get(getIndex());
                     verPerfil(coach);
                 });
-                btnPerfil.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5px;");
+               // btnPerfil.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5px;");
+
+                btnEditar.setGraphic(new FontIcon(FontAwesomeSolid.EDIT));
+                btnEditar.setOnAction(e -> {
+                    Coach coach = getTableView().getItems().get(getIndex());
+                    editarCoach(coach);
+                });
+
+                btnEliminar.setGraphic(new FontIcon(FontAwesomeSolid.TRASH));
+                btnEliminar.setOnAction(e -> {
+                    Coach coach = getTableView().getItems().get(getIndex());
+                    eliminarCoach(coach);
+                });
+
+                String estilo = "-fx-background-color: transparent; -fx-cursor: hand;";
+                btnPerfil.setStyle(estilo);
+                btnEditar.setStyle(estilo);
+                btnEliminar.setStyle(estilo + "-fx-text-fill: red;");
+
+                contenedor.getChildren().addAll(btnPerfil, btnEditar, btnEliminar);
+                contenedor.setAlignment(Pos.CENTER);
             }
+
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                setGraphic(empty ? null : btnPerfil);
+                //setGraphic(empty ? null : btnPerfil);
+                setGraphic(empty ? null : contenedor);
             }
         });
     }
@@ -289,6 +321,40 @@ public class ListaCoachesController {
             stage.setTitle("Perfil del Coach");
             stage.show();
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void editarCoach(Coach coach) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/registro_coach.fxml"));
+            Parent root = loader.load();
+            RegistroCoachController controller = loader.getController();
+            controller.setCoach(coach);
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Editar Coach");
+            stage.showAndWait();
+            cargarCoaches();
+            coachesOriginales.setAll(coaches);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void eliminarCoach(Coach coach) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "¿Desea eliminar este coach?", ButtonType.OK, ButtonType.CANCEL);
+        if (alert.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
+            return;
+        }
+        String sql = "DELETE FROM coaches WHERE id = ?";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, coach.getId());
+            stmt.executeUpdate();
+            coaches.remove(coach);
+            coachesOriginales.remove(coach);
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
