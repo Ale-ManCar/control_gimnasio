@@ -26,6 +26,7 @@ import util.EventBus;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.SQLException;
+import java.util.Locale;
 import java.util.Optional;
 
 public class InventarioController {
@@ -329,6 +330,43 @@ public class InventarioController {
         dialog.showAndWait();
     }
 
+    private void mostrarDialogoProductoRegistrado() {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Producto Registrado");
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+        dialog.getDialogPane().setStyle(
+                "-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e);" +
+                        "-fx-padding: 20;" +
+                        "-fx-background-radius: 10;" +
+                        "-fx-border-radius: 10;" +
+                        "-fx-border-color: rgba(255,255,255,0.1);" +
+                        "-fx-border-width: 1;" +
+                        "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 10, 0, 0, 0);");
+
+        Button ok = (Button) dialog.getDialogPane().lookupButton(ButtonType.OK);
+        ok.setStyle(
+                "-fx-background-color: linear-gradient(to right, #4CAF50, #2ECC71);" +
+                        "-fx-text-fill: white;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-background-radius: 25;" +
+                        "-fx-padding: 8 20;");
+
+        VBox contenido = new VBox(15);
+        contenido.setPadding(new Insets(20));
+        contenido.setAlignment(Pos.CENTER);
+
+        Label icono = new Label("\u2714");
+        icono.setStyle("-fx-font-size: 48px; -fx-text-fill: #4CAF50;");
+
+        Label titulo = new Label("¡Producto registrado correctamente!");
+        titulo.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2E7D32;");
+
+        contenido.getChildren().addAll(icono, titulo);
+        dialog.getDialogPane().setContent(contenido);
+
+        dialog.showAndWait();
+    }
+
     private void actualizarTotalCarrito() {
         double totalVenta = carrito.stream().mapToDouble(VentaItem::getTotal).sum();
         lblTotalCarrito.setText(String.format("$%.2f", totalVenta));
@@ -417,6 +455,17 @@ public class InventarioController {
         TextField txtPrecioCompra = createStyledTextField("Precio compra (envase)", true);
         TextField txtPrecioVenta = createStyledTextField("Precio venta", true);
         TextField txtUnidadesPorPaca = createStyledTextField("Unidades por paca", false);
+
+        // Formateadores
+        txtNombre.setTextFormatter(new TextFormatter<>(change -> {
+            change.setText(change.getText().toUpperCase());
+            return change;
+        }));
+        txtPrecioCompra.setTextFormatter(createNumericFormatter(true));
+        txtPrecioVenta.setTextFormatter(createNumericFormatter(true));
+        txtPesoTotal.setTextFormatter(createNumericFormatter(true));
+        txtPesoScoop.setTextFormatter(createNumericFormatter(true));
+        txtUnidadesPorPaca.setTextFormatter(createNumericFormatter(false));
 
         // Labels para mostrar resultados
         Label lblStockCalculado = new Label();
@@ -576,7 +625,7 @@ public class InventarioController {
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == btnIngresar) {
                 try {
-                    String nombre = txtNombre.getText().trim();
+                    String nombre = txtNombre.getText().trim().toLowerCase();
                     String tipo = cbTipo.getValue();
                     BigDecimal bdPrecioCompra = new BigDecimal(txtPrecioCompra.getText().trim());
                     BigDecimal bdPrecioVenta = new BigDecimal(txtPrecioVenta.getText().trim());
@@ -639,7 +688,7 @@ public class InventarioController {
             try {
                 DatabaseUtil.insertarProducto(producto);
                 cargarProductos();
-                mostrarAlerta("Éxito", "Producto registrado correctamente");
+                mostrarDialogoProductoRegistrado();
             } catch (Exception e) {
                 mostrarAlerta("Error", "No se pudo registrar el producto");
                 e.printStackTrace();
@@ -677,6 +726,12 @@ public class InventarioController {
                         "-fx-border-width: 1.5;");
         combo.setPrefWidth(200);
         return combo;
+    }
+
+    private TextFormatter<String> createNumericFormatter(boolean allowDecimal) {
+        String pattern = allowDecimal ? "\\d*(\\.\\d*)?" : "\\d*";
+        return new TextFormatter<>(change ->
+                change.getControlNewText().matches(pattern) ? change : null);
     }
 
     private Label createIconLabel(String iconCode, String color) {
