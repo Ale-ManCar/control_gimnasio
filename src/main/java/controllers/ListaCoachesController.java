@@ -21,6 +21,7 @@ import javafx.scene.layout.HBox;
 import javafx.geometry.Pos;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.javafx.FontIcon;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import models.Coach;
 import util.DatabaseUtil;
@@ -93,25 +94,30 @@ public class ListaCoachesController {
         });
 
         colAcciones.setCellFactory(col -> new TableCell<>() {
-            //private final Button btnPerfil = new Button("Perfil")
             private final Button btnPerfil = new Button();
             private final Button btnEditar = new Button();
             private final Button btnEliminar = new Button();
-            private final HBox contenedor = new HBox(10);;
+            private final HBox contenedor = new HBox(10);
             {
+                FontIcon iconPerfil = new FontIcon(FontAwesomeSolid.USER);
+                iconPerfil.setIconColor(Color.web("#007bff"));
+                btnPerfil.setGraphic(iconPerfil);
                 btnPerfil.setOnAction(e -> {
                     Coach coach = getTableView().getItems().get(getIndex());
                     verPerfil(coach);
                 });
-               // btnPerfil.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5px;");
 
-                btnEditar.setGraphic(new FontIcon(FontAwesomeSolid.EDIT));
+                FontIcon iconEditar = new FontIcon(FontAwesomeSolid.EDIT);
+                iconEditar.setIconColor(Color.web("#28a745"));
+                btnEditar.setGraphic(iconEditar);
                 btnEditar.setOnAction(e -> {
                     Coach coach = getTableView().getItems().get(getIndex());
                     editarCoach(coach);
                 });
 
-                btnEliminar.setGraphic(new FontIcon(FontAwesomeSolid.TRASH));
+                FontIcon iconEliminar = new FontIcon(FontAwesomeSolid.TRASH);
+                iconEliminar.setIconColor(Color.web("#dc3545"));
+                btnEliminar.setGraphic(iconEliminar);
                 btnEliminar.setOnAction(e -> {
                     Coach coach = getTableView().getItems().get(getIndex());
                     eliminarCoach(coach);
@@ -120,7 +126,7 @@ public class ListaCoachesController {
                 String estilo = "-fx-background-color: transparent; -fx-cursor: hand;";
                 btnPerfil.setStyle(estilo);
                 btnEditar.setStyle(estilo);
-                btnEliminar.setStyle(estilo + "-fx-text-fill: red;");
+                btnEliminar.setStyle(estilo);
 
                 contenedor.getChildren().addAll(btnPerfil, btnEditar, btnEliminar);
                 contenedor.setAlignment(Pos.CENTER);
@@ -129,7 +135,6 @@ public class ListaCoachesController {
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                //setGraphic(empty ? null : btnPerfil);
                 setGraphic(empty ? null : contenedor);
             }
         });
