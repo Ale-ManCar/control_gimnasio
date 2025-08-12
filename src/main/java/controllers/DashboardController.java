@@ -16,6 +16,10 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.scene.Node;
+import javafx.scene.paint.Color;
+
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import models.Cliente;
 import util.DatabaseUtil;
@@ -106,13 +110,17 @@ public class DashboardController implements Initializable {
             });
 
             colAccion.setCellFactory(column -> new TableCell<Cliente, Void>() {
-                private final Button btnRenovar = new Button("🔄 Renovar");
+                private final Button btnReactivar = new Button();
 
                 {
-                    btnRenovar.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;"
-                            + " -fx-padding: 5px 10px; -fx-background-radius: 5px;");
+                    FontIcon iconoReactivar = new FontIcon(FontAwesomeSolid.REDO);
+                    iconoReactivar.setIconColor(Color.web("#28a745"));
+                    iconoReactivar.setIconSize(18);
+                    btnReactivar.setGraphic(iconoReactivar);
+                    btnReactivar.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
+                    btnReactivar.setTooltip(new Tooltip("Reactivar cliente"));
 
-                    btnRenovar.setOnAction(event -> {
+                    btnReactivar.setOnAction(event -> {
                         Cliente cliente = getTableView().getItems().get(getIndex());
                         abrirRenovacionConCliente(cliente);
                     });
@@ -124,7 +132,7 @@ public class DashboardController implements Initializable {
                     if (empty) {
                         setGraphic(null);
                     } else {
-                        setGraphic(btnRenovar);
+                        setGraphic(btnReactivar);
                     }
                 }
             });
