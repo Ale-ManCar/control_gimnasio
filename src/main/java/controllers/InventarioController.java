@@ -15,17 +15,17 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.paint.Paint;
 import javafx.util.StringConverter;
 import models.Producto;
 import models.VentaItem;
+import org.kordamp.ikonli.javafx.FontIcon;
 import util.DatabaseUtil;
 import util.EventBus;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 public class InventarioController {
@@ -428,13 +428,13 @@ public class InventarioController {
         lblResultado.setMaxWidth(Double.MAX_VALUE);
 
         // Iconos para cada campo
-        Label iconNombre = createIconLabel("\uf5d1", "#3498db"); // FontAwesome: box
-        Label iconTipo = createIconLabel("\uf1b2", "#e74c3c");   // FontAwesome: cube
-        Label iconPrecioCompra = createIconLabel("\uf155", "#2ecc71"); // FontAwesome: money-bill
-        Label iconPrecioVenta = createIconLabel("\uf0d6", "#f39c12"); // FontAwesome: tag
-        Label iconUnidades = createIconLabel("\uf0e4", "#9b59b6"); // FontAwesome: cubes
-        Label iconPesoTotal = createIconLabel("\uf496", "#1abc9c"); // FontAwesome: weight
-        Label iconScoop = createIconLabel("\uf1e2", "#e67e22"); // FontAwesome: spoon
+        Label iconNombre = createIconLabel("fas-box", "#3498db"); // Caja
+        Label iconTipo = createIconLabel("fas-cube", "#e74c3c");   // Tipo
+        Label iconPrecioCompra = createIconLabel("fas-money-bill-wave", "#2ecc71"); // Precio de compra
+        Label iconPrecioVenta = createIconLabel("fas-tag", "#f39c12"); // Precio de venta
+        Label iconUnidades = createIconLabel("fas-cubes", "#9b59b6"); // Unidades
+        Label iconPesoTotal = createIconLabel("fas-weight", "#1abc9c"); // Peso total
+        Label iconScoop = createIconLabel("fas-utensil-spoon", "#e67e22"); // Peso por scoop
 
         // Organización de los campos en el grid
         grid.add(iconNombre, 0, 0);
@@ -681,18 +681,13 @@ public class InventarioController {
 
     private Label createIconLabel(String iconCode, String color) {
         // Mapeo de códigos a emojis
-        Map<String, String> iconMap = new HashMap<>();
-        iconMap.put("\uf5d1", "📦");
-        iconMap.put("\uf1b2", "🧊");
-        iconMap.put("\uf155", "💵");
-        iconMap.put("\uf0d6", "🏷️");
-        iconMap.put("\uf0e4", "🧱");
-        iconMap.put("\uf496", "⚖️");
-        iconMap.put("\uf1e2", "🥄");
-
-        Label icon = new Label(iconMap.getOrDefault(iconCode, "•"));
-        icon.setStyle("-fx-font-size: 16px; -fx-text-fill: " + color + "; -fx-padding: 0 10 0 0;");
-        return icon;
+        FontIcon icon = new FontIcon(iconCode);
+        icon.setIconSize(16);
+        icon.setIconColor(Paint.valueOf(color));
+        Label wrapper = new Label();
+        wrapper.setGraphic(icon);
+        wrapper.setStyle("-fx-padding: 0 10 0 0;");
+        return wrapper;
     }
 
     @FXML
