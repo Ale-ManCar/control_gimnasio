@@ -412,7 +412,7 @@ public class DatabaseUtil {
             while (rs.next()) {
                 Producto p = new Producto();
                 p.setId(rs.getInt("id"));
-                p.setNombre(rs.getString("nombre"));
+                p.setNombre(rs.getString("nombre").toUpperCase(Locale.ROOT));
                 p.setStock(rs.getInt("stock"));
                 p.setPrecio(rs.getDouble("precio"));
                 p.setTipo(rs.getString("tipo"));
