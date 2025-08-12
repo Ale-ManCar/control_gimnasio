@@ -376,9 +376,25 @@ public class ListaCoachesController {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, coach.getId());
             stmt.executeUpdate();
-            coaches.remove(coach);
-            coachesOriginales.remove(coach);
+            recargarCoaches();
+            mostrarToastExito("Coach eliminado correctamente");;
         } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void recargarCoaches() {
+        tablaCoaches.getItems().clear();
+        cargarCoaches();
+        coachesOriginales.setAll(coaches);
+        filtrarCoaches();
+    }
+
+    private void mostrarToastExito(String mensaje) {
+        try {
+            Stage stage = (Stage) tablaCoaches.getScene().getWindow();
+            ToastController.showToast(stage, mensaje, ToastController.SUCCESS);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
