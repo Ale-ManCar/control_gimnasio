@@ -34,6 +34,19 @@ public class RegistroCoachController {
     @FXML
     public void initialize() {
         cbArea.getItems().addAll("Maquinas", "Bailoterapia", "Crossfit");
+
+        txtNombres.setTextFormatter(new TextFormatter<>(change -> {
+            change.setText(change.getText().toUpperCase());
+            return change;
+        }));
+
+        txtApellidos.setTextFormatter(new TextFormatter<>(change -> {
+            change.setText(change.getText().toUpperCase());
+            return change;
+        }));
+
+        txtTelefono.setTextFormatter(new TextFormatter<>(change ->
+                change.getControlNewText().matches("\\d{0,10}") ? change : null));
     }
 
     public void setCoach(Coach coach) {
@@ -68,12 +81,17 @@ public class RegistroCoachController {
             return;
         }
 
+        if (txtTelefono.getText().length() != 10) {
+            mostrarAlerta("El número de teléfono debe tener exactamente 10 dígitos");
+            return;
+        }
+
         if (coachEditando == null) {
             String sql = "INSERT INTO coaches (nombres, apellidos, telefono, area, foto_path) VALUES (?, ?, ?, ?, ?)";
             try (Connection conn = DatabaseUtil.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, txtNombres.getText().trim());
-                stmt.setString(2, txtApellidos.getText().trim());
+                stmt.setString(1, txtNombres.getText().trim().toUpperCase());
+                stmt.setString(2, txtApellidos.getText().trim().toUpperCase());
                 stmt.setString(3, txtTelefono.getText().trim());
                 stmt.setString(4, cbArea.getValue());
                 stmt.setString(5, fotoPath);
@@ -86,8 +104,8 @@ public class RegistroCoachController {
             String sql = "UPDATE coaches SET nombres = ?, apellidos = ?, telefono = ?, area = ?, foto_path = ? WHERE id = ?";
             try (Connection conn = DatabaseUtil.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, txtNombres.getText().trim());
-                stmt.setString(2, txtApellidos.getText().trim());
+                stmt.setString(1, txtNombres.getText().trim().toUpperCase());
+                stmt.setString(2, txtApellidos.getText().trim().toUpperCase());
                 stmt.setString(3, txtTelefono.getText().trim());
                 stmt.setString(4, cbArea.getValue());
                 stmt.setString(5, fotoPath);

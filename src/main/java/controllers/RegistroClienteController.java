@@ -101,7 +101,7 @@ public class RegistroClienteController {
     @FXML
     private void handleSiguiente() {
         if (cbMembresia.getValue() == null || dpFechaInicio.getValue() == null ||
-                cbArea.getValue() == null || cbCoach.getValue() == null) {
+                cbArea.getValue() == null) {
             mostrarAlerta("Error", "Debe completar todos los campos");
             return;
         }
@@ -129,7 +129,11 @@ public class RegistroClienteController {
             }
             stmtCliente.setDouble(7, monto);
             stmtCliente.setString(8, cbArea.getValue());
-            stmtCliente.setInt(9, cbCoach.getValue().getId());
+            if (cbCoach.getValue() != null) {
+                stmtCliente.setInt(9, cbCoach.getValue().getId());
+            } else {
+                stmtCliente.setNull(9, java.sql.Types.INTEGER);
+            }
 
             stmtCliente.executeUpdate();
 
