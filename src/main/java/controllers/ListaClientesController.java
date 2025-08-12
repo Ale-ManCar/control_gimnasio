@@ -24,6 +24,8 @@ import javafx.geometry.Pos;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.layout.VBox;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.IOException;
 import java.net.URL;
@@ -162,20 +164,18 @@ public class ListaClientesController implements Initializable {
             private final Button btnEditar = new Button();
 
             {
-                btnEditar.setStyle(
-                        "-fx-background-color: transparent;" +
-                                "-fx-font-size: 16px;" +
-                                "-fx-cursor: hand;"
-                );
-
-                btnEditar.setText("✏️");
+                FontIcon iconoEditar = new FontIcon(FontAwesomeSolid.EDIT);
+                iconoEditar.setIconColor(Color.web("#28a745"));
+                iconoEditar.setIconSize(18);
+                btnEditar.setGraphic(iconoEditar);
+                btnEditar.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
                 btnEditar.setTooltip(new Tooltip("Editar cliente"));
 
                 btnEditar.setOnMouseEntered(e ->
                         btnEditar.setStyle("-fx-background-color: #e0f0ff; -fx-font-size: 16px; -fx-cursor: hand;")
                 );
                 btnEditar.setOnMouseExited(e ->
-                        btnEditar.setStyle("-fx-background-color: transparent; -fx-font-size: 16px; -fx-cursor: hand;")
+                        btnEditar.setStyle("-fx-background-color: #e0f0ff; -fx-cursor: hand;")
                 );
 
                 btnEditar.setOnAction(event -> {

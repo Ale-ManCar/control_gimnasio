@@ -18,6 +18,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.javafx.FontIcon;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -136,14 +138,24 @@ public class ListaClientesInactivosController {
         });
 
         colAcciones.setCellFactory(param -> new TableCell<>() {
-            private final Button btnActivar = new Button("🔄");
-            private final Button btnEliminar = new Button("🗑️");
+            private final Button btnActivar = new Button();
+            private final Button btnEliminar = new Button();
             private final HBox container = new HBox(10, btnActivar, btnEliminar);
 
             {
                 container.setAlignment(Pos.CENTER);
 
-                String estiloBase = "-fx-background-color: transparent; -fx-font-size: 16px; -fx-cursor: hand;";
+                FontIcon iconoActivar = new FontIcon(FontAwesomeSolid.REDO);
+                iconoActivar.setIconColor(Color.web("#28a745"));
+                iconoActivar.setIconSize(18);
+                btnActivar.setGraphic(iconoActivar);
+
+                FontIcon iconoEliminar = new FontIcon(FontAwesomeSolid.TRASH);
+                iconoEliminar.setIconColor(Color.web("#dc3545"));
+                iconoEliminar.setIconSize(18);
+                btnEliminar.setGraphic(iconoEliminar);
+
+                String estiloBase = "-fx-background-color: transparent; -fx-cursor: hand;";
                 btnActivar.setStyle(estiloBase);
                 btnEliminar.setStyle(estiloBase);
 
