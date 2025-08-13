@@ -49,9 +49,10 @@
                            style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
                     <ComboBox fx:id="cbMembresia" GridPane.rowIndex="4" GridPane.columnIndex="1"
                               style="-fx-background-color: rgba(255,255,255,0.9); -fx-border-color: #ced4da;
-                                     -fx-border-radius: 8; -fx-background-radius: 8;" value="1 Mes">
+                                     -fx-border-radius: 8; -fx-background-radius: 8;" value="Diario">
                         <items>
                             <FXCollections fx:factory="observableArrayList">
+                                <String fx:value="Diario"/>
                                 <String fx:value="1 Mes"/>
                                 <String fx:value="3 Meses"/>
                                 <String fx:value="6 Meses"/>

@@ -40,9 +40,12 @@ public class RegistroClienteController {
     public void initialize() {
         if (cbMembresia != null) {
             cbMembresia.getItems().clear();
-            cbMembresia.getItems().addAll("1 Mes", "3 Meses", "6 Meses", "1 Año");
-            cbMembresia.setValue("1 Mes");
+            cbMembresia.getItems().addAll("Diario", "1 Mes", "3 Meses", "6 Meses", "1 Año");
+            cbMembresia.setValue("Diario");
+            cbMembresia.valueProperty().addListener((obs, oldVal, newVal) -> ajustarCamposPorMembresia(newVal));
         }
+
+        ajustarCamposPorMembresia(cbMembresia.getValue());
 
         if (cbArea != null) {
             cbArea.getItems().addAll("Maquinas", "Bailoterapia", "Crossfit");
@@ -98,10 +101,46 @@ public class RegistroClienteController {
         });
     }
 
+    private void ajustarCamposPorMembresia(String membresia) {
+        boolean diario = "Diario".equals(membresia);
+        if (txtNombres != null) {
+            txtNombres.setDisable(diario);
+            if (diario) txtNombres.clear();
+        }
+        if (txtApellidos != null) {
+            txtApellidos.setDisable(diario);
+            if (diario) txtApellidos.clear();
+        }
+        if (txtTelefono != null) {
+            txtTelefono.setDisable(diario);
+            if (diario) txtTelefono.clear();
+        }
+        if (dpFechaInicio != null) {
+            dpFechaInicio.setDisable(diario);
+            if (diario) {
+                dpFechaInicio.setValue(LocalDate.now());
+            }
+        }
+        if (cbArea != null) {
+            cbArea.setDisable(diario);
+            if (diario) cbArea.setValue(null);
+        }
+        if (cbCoach != null) {
+            cbCoach.setDisable(diario);
+            if (diario) cbCoach.setValue(null);
+        }
+    }
+
     @FXML
     private void handleSiguiente() {
-        if (cbMembresia.getValue() == null || dpFechaInicio.getValue() == null ||
-                cbArea.getValue() == null) {
+        if (cbMembresia.getValue() == null) {
+            mostrarAlerta("Error", "Debe seleccionar la membresía");
+            return;
+        }
+
+        boolean diario = "Diario".equals(cbMembresia.getValue());
+
+        if (!diario && (dpFechaInicio.getValue() == null || cbArea.getValue() == null)) {
             mostrarAlerta("Error", "Debe completar todos los campos");
             return;
         }
@@ -112,27 +151,43 @@ public class RegistroClienteController {
             String sqlCliente = "INSERT INTO clientes (nombres, apellidos, telefono, tipoMembresia, fechaInicio, fecha_vencimiento, monto_pago, area, coach_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement stmtCliente = conn.prepareStatement(sqlCliente, PreparedStatement.RETURN_GENERATED_KEYS);
 
-            stmtCliente.setString(1, validarCampo(txtNombres.getText(), "Nombres"));
-            stmtCliente.setString(2, validarCampo(txtApellidos.getText(), "Apellidos"));
-            stmtCliente.setString(3, validarCampo(txtTelefono.getText(), "Teléfono"));
-            stmtCliente.setString(4, cbMembresia.getValue());
-            stmtCliente.setString(5, dpFechaInicio.getValue().toString());
-
-            LocalDate fechaVencimiento = calcularVencimiento(dpFechaInicio.getValue(), cbMembresia.getValue());
-            stmtCliente.setString(6, fechaVencimiento.toString());
-
             String montoStr = validarCampo(txtMontoPago.getText(), "Monto de Pago");
             double monto = Double.parseDouble(montoStr);
             if (monto <= 0) {
                 mostrarAlerta("Error", "El monto de pago debe ser mayor a 0");
                 return;
             }
-            stmtCliente.setDouble(7, monto);
-            stmtCliente.setString(8, cbArea.getValue());
-            if (cbCoach.getValue() != null) {
-                stmtCliente.setInt(9, cbCoach.getValue().getId());
+
+            LocalDate fechaInicio = diario ? LocalDate.now() : dpFechaInicio.getValue();
+            LocalDate fechaVencimiento = diario ? fechaInicio : calcularVencimiento(fechaInicio, cbMembresia.getValue());
+
+            if (diario) {
+                stmtCliente.setString(1, "CLIENTE");
+                stmtCliente.setString(2, "DIARIO");
+                String telefono = String.valueOf(System.currentTimeMillis());
+                telefono = telefono.substring(telefono.length() - 10);
+                stmtCliente.setString(3, telefono);
             } else {
+                stmtCliente.setString(1, validarCampo(txtNombres.getText(), "Nombres"));
+                stmtCliente.setString(2, validarCampo(txtApellidos.getText(), "Apellidos"));
+                stmtCliente.setString(3, validarCampo(txtTelefono.getText(), "Teléfono"));
+            }
+
+            stmtCliente.setString(4, cbMembresia.getValue());
+            stmtCliente.setString(5, fechaInicio.toString());
+            stmtCliente.setString(6, fechaVencimiento.toString());
+            stmtCliente.setDouble(7, monto);
+
+            if (diario) {
+                stmtCliente.setNull(8, java.sql.Types.VARCHAR);
                 stmtCliente.setNull(9, java.sql.Types.INTEGER);
+            } else {
+                stmtCliente.setString(8, cbArea.getValue());
+                if (cbCoach.getValue() != null) {
+                    stmtCliente.setInt(9, cbCoach.getValue().getId());
+                } else {
+                    stmtCliente.setNull(9, java.sql.Types.INTEGER);
+                }
             }
 
             stmtCliente.executeUpdate();
@@ -147,7 +202,7 @@ public class RegistroClienteController {
                 String sqlPago = "INSERT INTO pagos (cliente_id, fecha_pago, fecha_vencimiento, tipo_membresia, monto) VALUES (?, ?, ?, ?, ?)";
                 PreparedStatement stmtPago = conn.prepareStatement(sqlPago);
                 stmtPago.setInt(1, clienteId);
-                stmtPago.setString(2, dpFechaInicio.getValue().toString());
+                stmtPago.setString(2, fechaInicio.toString());
                 stmtPago.setString(3, fechaVencimiento.toString());
                 stmtPago.setString(4, cbMembresia.getValue());
                 stmtPago.setDouble(5, monto);
@@ -160,14 +215,16 @@ public class RegistroClienteController {
             mostrarAlertaExito();
 
             // ✅ Enviar alerta de registro
-            Cliente nuevoCliente = new Cliente(
-                    txtNombres.getText().trim(),
-                    txtApellidos.getText().trim(),
-                    txtTelefono.getText().trim(),
-                    cbMembresia.getValue(),
-                    fechaVencimiento
-            );
-            new Thread(() -> WhatsAppService.enviarAlertaRegistro(nuevoCliente)).start();
+            if (!diario) {
+                Cliente nuevoCliente = new Cliente(
+                        txtNombres.getText().trim(),
+                        txtApellidos.getText().trim(),
+                        txtTelefono.getText().trim(),
+                        cbMembresia.getValue(),
+                        fechaVencimiento
+                );
+                new Thread(() -> WhatsAppService.enviarAlertaRegistro(nuevoCliente)).start();
+            }
 
             // Programar retorno al dashboard
             programarRetornoAlDashboard();

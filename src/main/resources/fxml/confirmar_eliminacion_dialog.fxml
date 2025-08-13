@@ -24,7 +24,8 @@
     <Label text="Confirmar Eliminación"
            style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #DC3545;" />
 
-    <Label text="¿Eliminar permanentemente este cliente?"
+    <Label fx:id="lblPregunta"
+           text="¿Eliminar permanentemente este elemento?"
            style="-fx-font-size: 14px; -fx-text-fill: #555555; -fx-wrap-text: true;"
            maxWidth="350"
            textAlignment="CENTER" />
@@ -34,7 +35,7 @@
            maxWidth="350"
            textAlignment="CENTER" />
 
-    <Label text="Esta acción borrará todos los registros asociados"
+    <Label text="⚠️ Esta acción borrará todos los registros asociados"
            style="-fx-font-size: 13px; -fx-text-fill: #DC3545; -fx-font-style: italic; -fx-wrap-text: true;"
            maxWidth="350"
            textAlignment="CENTER" />
