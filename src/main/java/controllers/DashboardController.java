@@ -25,6 +25,8 @@ import models.Cliente;
 import util.DatabaseUtil;
 import util.EventBus;
 import util.ReporteUtil;
+import util.SessionManager;
+import util.AuditoriaUtil;
 
 import java.io.IOException;
 import java.net.URL;
@@ -43,6 +45,10 @@ public class DashboardController implements Initializable {
     @FXML private AnchorPane cardVencimientos;
     @FXML private TableView<Cliente> tablaClientesProximosAVencer;
     @FXML private Label lblMensaje;
+    @FXML private Label lblUsuarioRol;
+    @FXML private Button btnEgresos;
+    @FXML private Button btnAuditoria;
+    @FXML private Button btnLogout;
 //  @FXML private Button btnVerTodos;
 
     @FXML private TableColumn<Cliente, String> colCliente;
@@ -77,6 +83,7 @@ public class DashboardController implements Initializable {
                 EventBus.registerListener(EventBus.EventType.VENTA_REALIZADA, dashboardListener);
 
                 stage.setOnCloseRequest(e -> {
+                    AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "LOGOUT", "USUARIO", SessionManager.getUsuarioActual().getId(), "Cierre de sesión");
                     EventBus.unregisterListener(EventBus.EventType.EGRESO_REGISTRADO, dashboardListener);
                     EventBus.unregisterListener(EventBus.EventType.DATOS_ACTUALIZADOS, dashboardListener);
                     EventBus.unregisterListener(EventBus.EventType.VENTA_REALIZADA, dashboardListener);
@@ -141,6 +148,11 @@ public class DashboardController implements Initializable {
             inicializarTarjetasMetricas();
             cargarDatosTarjetas();
             cargarClientesProximosAVencer();
+            lblUsuarioRol.setText(SessionManager.getUsuarioActual().getNombre() + " (" + SessionManager.getUsuarioActual().getRol() + ")");
+            if (!SessionManager.isAdmin()) {
+                btnEgresos.setVisible(false);
+                btnAuditoria.setVisible(false);
+            }
 
             tablaClientesProximosAVencer.setRowFactory(tv -> {
                 TableRow<Cliente> row = new TableRow<Cliente>() {
@@ -211,6 +223,19 @@ public class DashboardController implements Initializable {
         });
 
         tablaClientesProximosAVencer.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    }
+
+    @FXML
+    private void abrirRegistroEgreso(ActionEvent event) {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/registro_egreso.fxml"));
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Registrar Egreso");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void inicializarTarjetasMetricas() throws IOException {
@@ -473,6 +498,32 @@ public class DashboardController implements Initializable {
 
             Stage stage = new Stage();
             stage.setTitle("Gestión de Inventario y Ventas");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void abrirAuditoria(ActionEvent event) {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/auditoria.fxml"));
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void handleLogout(ActionEvent event) {
+        AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "LOGOUT", "USUARIO", SessionManager.getUsuarioActual().getId(), "Cierre de sesión");
+        SessionManager.clear();
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/login.fxml"));
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.show();
         } catch (IOException e) {

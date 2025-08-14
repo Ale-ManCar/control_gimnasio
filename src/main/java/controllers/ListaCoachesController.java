@@ -26,6 +26,8 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import models.Coach;
 import util.DatabaseUtil;
+import util.SessionManager;
+import util.AuditoriaUtil;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -131,7 +133,11 @@ public class ListaCoachesController {
                 btnEditar.setStyle(estilo);
                 btnEliminar.setStyle(estilo);
 
-                contenedor.getChildren().addAll(btnPerfil, btnEditar, btnEliminar);
+                if (SessionManager.isAdmin()) {
+                    contenedor.getChildren().addAll(btnPerfil, btnEditar, btnEliminar);
+                } else {
+                    contenedor.getChildren().addAll(btnPerfil, btnEditar);
+                }
                 contenedor.setAlignment(Pos.CENTER);
             }
 
@@ -377,7 +383,8 @@ public class ListaCoachesController {
             stmt.setInt(1, coach.getId());
             stmt.executeUpdate();
             recargarCoaches();
-            mostrarToastExito("Coach eliminado correctamente");;
+            mostrarToastExito("Coach eliminado correctamente");
+            AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "DELETE", "COACH", coach.getId(), coach.getNombreCompleto());
         } catch (SQLException e) {
             e.printStackTrace();
         }

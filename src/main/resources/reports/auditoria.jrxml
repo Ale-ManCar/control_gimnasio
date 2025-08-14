@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="auditoria" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="e8f5a1a1-0000-0000-0000-000000000001">
+    <field name="usuario" class="java.lang.String"/>
+    <field name="fechaHora" class="java.time.LocalDateTime"/>
+    <field name="accion" class="java.lang.String"/>
+    <field name="entidad" class="java.lang.String"/>
+    <field name="idEntidad" class="java.lang.Integer"/>
+    <field name="detalle" class="java.lang.String"/>
+    <title>
+        <band height="40" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="555" height="30" uuid="e8f5a1a1-0000-0000-0000-000000000002"/>
+                <textElement textAlignment="Center">
+                    <font size="18" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Reporte de Auditoría]]></text>
+            </staticText>
+        </band>
+    </title>
+    <columnHeader>
+        <band height="20" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="80" height="20" uuid="e8f5a1a1-0000-0000-0000-000000000003"/>
+                <text><![CDATA[Usuario]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="80" y="0" width="120" height="20" uuid="e8f5a1a1-0000-0000-0000-000000000004"/>
+                <text><![CDATA[Fecha/Hora]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="200" y="0" width="70" height="20" uuid="e8f5a1a1-0000-0000-0000-000000000005"/>
+                <text><![CDATA[Acción]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="270" y="0" width="80" height="20" uuid="e8f5a1a1-0000-0000-0000-000000000006"/>
+                <text><![CDATA[Entidad]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="350" y="0" width="70" height="20" uuid="e8f5a1a1-0000-0000-0000-000000000007"/>
+                <text><![CDATA[ID]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="420" y="0" width="135" height="20" uuid="e8f5a1a1-0000-0000-0000-000000000008"/>
+                <text><![CDATA[Detalle]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+    <detail>
+        <band height="20" splitType="Stretch">
+            <textField>
+                <reportElement x="0" y="0" width="80" height="20" uuid="e8f5a1a1-0000-0000-0000-000000000009"/>
+                <textFieldExpression><![CDATA[$F{usuario}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="80" y="0" width="120" height="20" uuid="e8f5a1a1-0000-0000-0000-000000000010"/>
+                <textFieldExpression><![CDATA[$F{fechaHora}.toString()]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="200" y="0" width="70" height="20" uuid="e8f5a1a1-0000-0000-0000-000000000011"/>
+                <textFieldExpression><![CDATA[$F{accion}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="270" y="0" width="80" height="20" uuid="e8f5a1a1-0000-0000-0000-000000000012"/>
+                <textFieldExpression><![CDATA[$F{entidad}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="350" y="0" width="70" height="20" uuid="e8f5a1a1-0000-0000-0000-000000000013"/>
+                <textFieldExpression><![CDATA[$F{idEntidad}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="420" y="0" width="135" height="20" uuid="e8f5a1a1-0000-0000-0000-000000000014"/>
+                <textFieldExpression><![CDATA[$F{detalle}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+</jasperReport>

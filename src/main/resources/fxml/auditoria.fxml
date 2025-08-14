@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.AuditoriaController" prefWidth="800" prefHeight="600">
+    <top>
+        <HBox spacing="10" padding="10">
+            <DatePicker fx:id="dpDesde" promptText="Desde"/>
+            <DatePicker fx:id="dpHasta" promptText="Hasta"/>
+            <TextField fx:id="txtUsuario" promptText="Usuario"/>
+            <TextField fx:id="txtAccion" promptText="Acción"/>
+            <TextField fx:id="txtEntidad" promptText="Entidad"/>
+            <Button fx:id="btnFiltrar" text="Filtrar" onAction="#handleFiltrar"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="btnExportarCSV" text="Exportar CSV" onAction="#handleExportarCSV"/>
+            <Button fx:id="btnExportarPDF" text="Exportar PDF" onAction="#handleExportarPDF"/>
+        </HBox>
+    </top>
+    <center>
+        <TableView fx:id="tablaAuditoria">
+            <columns>
+                <TableColumn fx:id="colUsuario" text="Usuario"/>
+                <TableColumn fx:id="colFecha" text="Fecha/Hora"/>
+                <TableColumn fx:id="colAccion" text="Acción"/>
+                <TableColumn fx:id="colEntidad" text="Entidad"/>
+                <TableColumn fx:id="colIdEntidad" text="ID"/>
+                <TableColumn fx:id="colDetalle" text="Detalle"/>
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>

@@ -7,6 +7,7 @@ import javafx.scene.control.Alert;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import util.DatabaseUtil;
 import util.HardwareUtil;
 import util.LicenseManager;
 
@@ -21,7 +22,8 @@ public class Main extends Application {
             }
         }
 
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/splash.fxml"));
+        DatabaseUtil.initDatabase();
+        Parent root = FXMLLoader.load(getClass().getResource("/fxml/login.fxml"));
         Scene scene = new Scene(root);
         primaryStage.initStyle(StageStyle.UNDECORATED);
         primaryStage.setScene(scene);

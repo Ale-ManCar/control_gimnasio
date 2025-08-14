@@ -12,6 +12,8 @@ import javafx.stage.Stage;
 import models.Egreso;
 import util.DatabaseUtil;
 import util.EventBus;
+import util.SessionManager;
+import util.AuditoriaUtil;
 
 import java.net.URL;
 import java.time.LocalDate;
@@ -28,6 +30,11 @@ public class RegistroEgresoController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        if (!SessionManager.isAdmin()) {
+            btnRegistrar.setDisable(true);
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Permiso denegado", javafx.scene.control.ButtonType.OK);
+            alert.showAndWait();
+        }
         // Configurar categorías
         cbCategoria.getItems().addAll(
                 "Alquiler",
@@ -83,6 +90,7 @@ public class RegistroEgresoController implements Initializable {
             egreso.setCategoria(cbCategoria.getValue());
 
             DatabaseUtil.insertarEgreso(egreso);
+            AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "CREATE", "EGRESO", null, egreso.getDescripcion());
             EventBus.fireEvent(EventBus.EventType.EGRESO_REGISTRADO);
             cerrarVentana();
 

@@ -2,6 +2,7 @@ package util;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -11,6 +12,8 @@ import models.EgresoDetalle;
 import models.PagoDetalle;
 import models.PagoMensual;
 import models.Producto;
+import models.Usuario;
+import util.SecurityUtil;
 
 public class DatabaseUtil {
     private static final String URL = "jdbc:sqlite:database/gimnasio.db";
@@ -93,6 +96,23 @@ public class DatabaseUtil {
                 "fecha TEXT NOT NULL," +
                 "categoria TEXT NOT NULL)";
 
+        String sqlUsuarios = "CREATE TABLE IF NOT EXISTS usuarios (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "nombre TEXT NOT NULL UNIQUE," +
+                "password TEXT NOT NULL," +
+                "rol TEXT NOT NULL," +
+                "activo BOOLEAN DEFAULT TRUE," +
+                "ultimo_ingreso TEXT)";
+
+        String sqlAuditoria = "CREATE TABLE IF NOT EXISTS auditoria (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "usuario TEXT NOT NULL," +
+                "fecha_hora TEXT NOT NULL," +
+                "accion TEXT NOT NULL," +
+                "entidad TEXT NOT NULL," +
+                "id_entidad INTEGER," +
+                "detalle TEXT)";
+
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
 
@@ -105,9 +125,13 @@ public class DatabaseUtil {
             stmt.execute(sqlVentas);
             stmt.execute(sqlEgresos);
             stmt.execute(sqlCoaches);
+            stmt.execute(sqlUsuarios);
+            stmt.execute(sqlAuditoria);
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN area TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN coach_id INTEGER REFERENCES coaches(id)"); } catch (SQLException ignored) {}
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
+            String adminHash = SecurityUtil.hashPassword("admin123");
+            stmt.execute("INSERT OR IGNORE INTO usuarios (id,nombre,password,rol,activo) VALUES (1,'admin','" + adminHash + "','ADMIN',1)");
             conn.commit();
 
             System.out.println("Base de datos inicializada correctamente");
@@ -148,6 +172,43 @@ public class DatabaseUtil {
         } finally {
             if (stmt != null) stmt.close();
             if (conn != null) conn.close();
+        }
+    }
+
+    public static Usuario obtenerUsuarioPorNombre(String nombre) {
+        String sql = "SELECT * FROM usuarios WHERE nombre = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, nombre);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                Usuario u = new Usuario();
+                u.setId(rs.getInt("id"));
+                u.setNombre(rs.getString("nombre"));
+                u.setPasswordHash(rs.getString("password"));
+                u.setRol(rs.getString("rol"));
+                u.setActivo(rs.getBoolean("activo"));
+                String ultimo = rs.getString("ultimo_ingreso");
+                if (ultimo != null) {
+                    u.setUltimoIngreso(LocalDateTime.parse(ultimo));
+                }
+                return u;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void actualizarUltimoIngreso(int userId) {
+        String sql = "UPDATE usuarios SET ultimo_ingreso = ? WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, LocalDateTime.now().toString());
+            pstmt.setInt(2, userId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
