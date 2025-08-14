@@ -1,9 +1,11 @@
 package controllers;
 
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
@@ -12,6 +14,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import models.Auditoria;
 import util.AuditoriaUtil;
 import util.SessionManager;
@@ -41,19 +44,19 @@ public class AuditoriaController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        if (!SessionManager.isAdmin()) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Permiso denegado");
-            alert.showAndWait();
-            ((javafx.stage.Stage) btnFiltrar.getScene().getWindow()).close();
-            return;
-        }
-        colUsuario.setCellValueFactory(new PropertyValueFactory<>("usuario"));
-        colFecha.setCellValueFactory(new PropertyValueFactory<>("fechaHora"));
-        colAccion.setCellValueFactory(new PropertyValueFactory<>("accion"));
-        colEntidad.setCellValueFactory(new PropertyValueFactory<>("entidad"));
-        colIdEntidad.setCellValueFactory(new PropertyValueFactory<>("idEntidad"));
-        colDetalle.setCellValueFactory(new PropertyValueFactory<>("detalle"));
-        cargarAuditoria();
+        Platform.runLater(() -> {
+            if (!SessionManager.isAdmin()) {
+                denyAccess(btnFiltrar);
+                return;
+            }
+            colUsuario.setCellValueFactory(new PropertyValueFactory<>("usuario"));
+            colFecha.setCellValueFactory(new PropertyValueFactory<>("fechaHora"));
+            colAccion.setCellValueFactory(new PropertyValueFactory<>("accion"));
+            colEntidad.setCellValueFactory(new PropertyValueFactory<>("entidad"));
+            colIdEntidad.setCellValueFactory(new PropertyValueFactory<>("idEntidad"));
+            colDetalle.setCellValueFactory(new PropertyValueFactory<>("detalle"));
+            cargarAuditoria();
+        });
     }
 
     private void cargarAuditoria() {
@@ -64,13 +67,19 @@ public class AuditoriaController implements Initializable {
 
     @FXML
     private void handleFiltrar(ActionEvent e) {
-        if (!SessionManager.isAdmin()) return;
+        if (!SessionManager.isAdmin()) {
+            denyAccess((Node) e.getSource());
+            return;
+        }
         cargarAuditoria();
     }
 
     @FXML
     private void handleExportarCSV(ActionEvent e) {
-        if (!SessionManager.isAdmin()) return;
+        if (!SessionManager.isAdmin()) {
+            denyAccess((Node) e.getSource());
+            return;
+        }
         try {
             FileChooser fc = new FileChooser();
             fc.setInitialFileName("auditoria.csv");
@@ -85,7 +94,10 @@ public class AuditoriaController implements Initializable {
 
     @FXML
     private void handleExportarPDF(ActionEvent e) {
-        if (!SessionManager.isAdmin()) return;
+        if (!SessionManager.isAdmin()) {
+            denyAccess((Node) e.getSource());
+            return;
+        }
         try {
             FileChooser fc = new FileChooser();
             fc.setInitialFileName("auditoria.pdf");
@@ -96,5 +108,12 @@ public class AuditoriaController implements Initializable {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    private void denyAccess(Node node) {
+        Alert alert = new Alert(Alert.AlertType.ERROR, "Permiso denegado");
+        alert.showAndWait();
+        Stage stage = (Stage) node.getScene().getWindow();
+        stage.close();
     }
 }
