@@ -373,6 +373,11 @@ public class ListaCoachesController {
     }
 
     private void eliminarCoach(Coach coach) {
+        if (!SessionManager.isAdmin()) {
+            Alert permisoAlert = new Alert(Alert.AlertType.ERROR, "Permiso denegado", ButtonType.OK);
+            permisoAlert.showAndWait();
+            return;
+        }
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "¿Desea eliminar este coach?", ButtonType.OK, ButtonType.CANCEL);
         if (alert.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
             return;
