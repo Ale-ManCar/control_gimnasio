@@ -23,11 +23,11 @@ public class LoginController {
 
     @FXML
     private void handleLogin(ActionEvent event) {
-        String nombre = txtUsuario.getText();
-        String pass = txtPassword.getText();
+        String nombre = txtUsuario.getText().trim();
+        String passwordIngresado = txtPassword.getText();
         Usuario usuario = DatabaseUtil.obtenerUsuarioPorNombre(nombre);
         if (usuario == null || !usuario.isActivo() ||
-                !SecurityUtil.verifyPassword(pass, usuario.getPasswordHash())) {
+                !SecurityUtil.verifyPassword(passwordIngresado, usuario.getPasswordHash())) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setHeaderText(null);
             alert.setContentText("Credenciales inválidas o usuario inactivo");

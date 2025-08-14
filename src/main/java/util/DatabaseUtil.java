@@ -130,7 +130,8 @@ public class DatabaseUtil {
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN area TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN coach_id INTEGER REFERENCES coaches(id)"); } catch (SQLException ignored) {}
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
-            String adminHash = SecurityUtil.hashPassword("admin123");
+            // Inicializamos un usuario administrador con contraseña cifrada utilizando BCrypt
+            final String adminHash = SecurityUtil.hashPassword("admin123");
             stmt.execute("INSERT OR IGNORE INTO usuarios (id,nombre,password,rol,activo) VALUES (1,'admin','" + adminHash + "','ADMIN',1)");
             conn.commit();
 
@@ -175,6 +176,11 @@ public class DatabaseUtil {
         }
     }
 
+    /**
+     * Obtiene un usuario por su nombre. La contraseña recuperada está en formato
+     * de hash BCrypt, por lo que debe verificarse utilizando
+     * {@link util.SecurityUtil#verifyPassword(String, String)}.
+     */
     public static Usuario obtenerUsuarioPorNombre(String nombre) {
         String sql = "SELECT * FROM usuarios WHERE nombre = ?";
         try (Connection conn = getConnection();
