@@ -11,6 +11,7 @@ import models.Usuario;
 import util.DatabaseUtil;
 import util.SecurityUtil;
 import util.SessionManager;
+import util.AuditoriaUtil;
 
 import java.net.URL;
 import java.sql.Connection;
@@ -114,8 +115,22 @@ public class UsuariosController implements Initializable {
             if (usuarioSeleccionado == null) {
                 String hash = SecurityUtil.hashPassword(password != null ? password : "");
                 String sql = "INSERT INTO usuarios(nombre, password, rol, activo) VALUES(?,?,?,?)";
-                DatabaseUtil.executeUpdate(sql, nombre, hash, rol, activo ? 1 : 0);
+                Integer id = null;
+                try (Connection conn = DatabaseUtil.getConnection();
+                     PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                    stmt.setString(1, nombre);
+                    stmt.setString(2, hash);
+                    stmt.setString(3, rol);
+                    stmt.setInt(4, activo ? 1 : 0);
+                    stmt.executeUpdate();
+                    ResultSet rs = stmt.getGeneratedKeys();
+                    if (rs.next()) {
+                        id = rs.getInt(1);
+                    }
+                }
+                AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "CREATE", "USUARIO", id, nombre);
             } else {
+                boolean estadoPrevio = usuarioSeleccionado.isActivo();
                 if (password != null && !password.isBlank()) {
                     String hash = SecurityUtil.hashPassword(password);
                     String sql = "UPDATE usuarios SET nombre=?, password=?, rol=?, activo=? WHERE id=?";
@@ -123,6 +138,10 @@ public class UsuariosController implements Initializable {
                 } else {
                     String sql = "UPDATE usuarios SET nombre=?, rol=?, activo=? WHERE id=?";
                     DatabaseUtil.executeUpdate(sql, nombre, rol, activo ? 1 : 0, usuarioSeleccionado.getId());
+                }
+                AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "UPDATE", "USUARIO", usuarioSeleccionado.getId(), nombre);
+                if (estadoPrevio != activo) {
+                    AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "STATUS_CHANGE", "USUARIO", usuarioSeleccionado.getId(), activo ? "ACTIVO" : "INACTIVO");
                 }
             }
             cargarUsuarios();
@@ -147,6 +166,7 @@ public class UsuariosController implements Initializable {
             if (btn == ButtonType.OK) {
                 try {
                     DatabaseUtil.executeUpdate("DELETE FROM usuarios WHERE id=?", usuarioSeleccionado.getId());
+                    AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "DELETE", "USUARIO", usuarioSeleccionado.getId(), usuarioSeleccionado.getNombre());
                     cargarUsuarios();
                     nuevoUsuario();
                 } catch (SQLException e) {
