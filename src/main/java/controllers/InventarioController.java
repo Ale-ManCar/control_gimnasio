@@ -37,6 +37,7 @@ public class InventarioController {
     @FXML private TableColumn<Producto, String> colProducto;
     @FXML private TableColumn<Producto, Integer> colUnidades;
     @FXML private TableColumn<Producto, Double> colPrecio;
+    @FXML private TableColumn<Producto, Void> colAcciones = new TableColumn<>("ACCIONES");
     @FXML private ComboBox<Producto> cbProductos;
     @FXML private Label lblCantidad;
     @FXML private Label lblTotalVenta;
@@ -76,6 +77,7 @@ public class InventarioController {
         colProducto.prefWidthProperty().bind(tablaProductos.widthProperty().multiply(0.55));
         colUnidades.prefWidthProperty().bind(tablaProductos.widthProperty().multiply(0.20));
         colPrecio.prefWidthProperty().bind(tablaProductos.widthProperty().multiply(0.20));
+        colAcciones.prefWidthProperty().bind(tablaProductos.widthProperty().multiply(0.15));
 
         colPrecio.setCellFactory(column -> new TableCell<Producto, Double>() {
             @Override
@@ -88,6 +90,32 @@ public class InventarioController {
                 }
             }
         });
+
+        colAcciones.setCellFactory(col -> new TableCell<>() {
+            private final Button btnEliminar = new Button("Eliminar");
+
+            {
+                btnEliminar.setOnAction(e -> {
+                    tablaProductos.getSelectionModel().select(getIndex());
+                    handleEliminarProducto();
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else if (SessionManager.isAdmin()) {
+                    setGraphic(btnEliminar);
+                    setAlignment(Pos.CENTER);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        });
+
+        tablaProductos.getColumns().add(colAcciones);
     }
 
     private void configurarTablaCarrito() {
@@ -892,9 +920,14 @@ public class InventarioController {
     @FXML
     private void handleEliminarProducto() {
         if (!SessionManager.isAdmin()) {
-            mostrarAlerta("Permiso denegado", "Solo un administrador puede eliminar productos.");
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Permiso denegado");
+            alert.setHeaderText(null);
+            alert.setContentText("Solo un administrador puede eliminar productos.");
+            alert.showAndWait();
             return;
         }
+
         Producto seleccionado = tablaProductos.getSelectionModel().getSelectedItem();
         if (seleccionado == null) {
             mostrarAlerta("Advertencia", "Debe seleccionar un producto para eliminar.");
