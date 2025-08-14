@@ -26,6 +26,8 @@ import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import models.Cliente;
 import util.DatabaseUtil;
+import util.AuditoriaUtil;
+import util.SessionManager;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -285,19 +287,36 @@ public class ListaClientesInactivosController {
         try (Connection conn = DatabaseUtil.getConnection()) {
             conn.setAutoCommit(false);
 
-            String deletePagos = "DELETE FROM pagos WHERE cliente_id = (SELECT id FROM clientes WHERE telefono = ?)";
+            Integer clienteId = null;
+            String sqlId = "SELECT id FROM clientes WHERE telefono = ?";
+            try (PreparedStatement stmtId = conn.prepareStatement(sqlId)) {
+                stmtId.setString(1, cliente.getTelefono());
+                ResultSet rs = stmtId.executeQuery();
+                if (rs.next()) {
+                    clienteId = rs.getInt("id");
+                }
+            }
+
+            String deletePagos = "DELETE FROM pagos WHERE cliente_id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(deletePagos)) {
-                stmt.setString(1, cliente.getTelefono());
+                stmt.setInt(1, clienteId);
                 stmt.executeUpdate();
             }
 
-            String deleteCliente = "DELETE FROM clientes WHERE telefono = ?";
+            String deleteCliente = "DELETE FROM clientes WHERE id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(deleteCliente)) {
-                stmt.setString(1, cliente.getTelefono());
+                stmt.setInt(1, clienteId);
                 stmt.executeUpdate();
             }
 
             conn.commit();
+            AuditoriaUtil.registrar(
+                    SessionManager.getUsuarioActual().getNombre(),
+                    "DELETE",
+                    "CLIENTE",
+                    clienteId,
+                    cliente.getNombreCompleto() + " - " + cliente.getTelefono()
+            );
             recargarClientes();
             mostrarToastExito("Cliente eliminado permanentemente");
 

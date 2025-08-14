@@ -13,6 +13,8 @@ import models.PagoHistorial;
 import util.DatabaseUtil;
 import util.EventBus;
 import util.WhatsAppService;
+import util.AuditoriaUtil;
+import util.SessionManager;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -357,6 +359,7 @@ public class RenovacionController {
             stmt.setString(3, seleccionado.getTelefono());
 
             int filasActualizadas = stmt.executeUpdate();
+            Integer clienteId = null;
 
             if (filasActualizadas > 0) {
                 String sqlId = "SELECT id FROM clientes WHERE telefono = ?";
@@ -365,7 +368,7 @@ public class RenovacionController {
                 ResultSet rs = stmtId.executeQuery();
 
                 if (rs.next()) {
-                    int clienteId = rs.getInt("id");
+                    clienteId = rs.getInt("id");
 
                     String sqlPago = "INSERT INTO pagos (cliente_id, fecha_pago, fecha_vencimiento, tipo_membresia, monto) VALUES (?, ?, ?, ?, ?)";
                     PreparedStatement stmtPago = conn.prepareStatement(sqlPago);
@@ -378,6 +381,21 @@ public class RenovacionController {
                 }
 
                 conn.commit();
+
+                AuditoriaUtil.registrar(
+                        SessionManager.getUsuarioActual().getNombre(),
+                        "UPDATE",
+                        "CLIENTE",
+                        clienteId,
+                        "Membresía: " + cbNuevaMembresia.getValue() + ", Vence: " + nuevaFecha
+                );
+                AuditoriaUtil.registrar(
+                        SessionManager.getUsuarioActual().getNombre(),
+                        "CREATE",
+                        "PAGO",
+                        null,
+                        "Cliente ID: " + clienteId + ", Monto: " + monto
+                );
 
                 Cliente clienteRenovado = new Cliente(
                         seleccionado.getNombres(),

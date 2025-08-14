@@ -6,6 +6,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import util.AuditoriaUtil;
+import util.SessionManager;
 
 public class ReactivacionController {
 
@@ -34,6 +36,13 @@ public class ReactivacionController {
 
         if (util.LicenseManager.applyReactivationCode(code)) {
             success = true;
+            AuditoriaUtil.registrar(
+                    SessionManager.getUsuarioActual() != null ? SessionManager.getUsuarioActual().getNombre() : "SISTEMA",
+                    "UPDATE",
+                    "LICENCIA",
+                    null,
+                    "Código: " + code
+            );
             closeWindow();
         } else {
             showError("Código de activación inválido");
