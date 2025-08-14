@@ -142,7 +142,7 @@ public class ListaClientesInactivosController {
         colAcciones.setCellFactory(param -> new TableCell<>() {
             private final Button btnActivar = new Button();
             private final Button btnEliminar = new Button();
-            private final HBox container = new HBox(10, btnActivar, btnEliminar);
+            private final HBox container = new HBox(10);
 
             {
                 container.setAlignment(Pos.CENTER);
@@ -178,8 +178,9 @@ public class ListaClientesInactivosController {
                 btnActivar.setTooltip(new Tooltip("Reactivar cliente"));
                 btnEliminar.setTooltip(new Tooltip("Eliminar cliente permanentemente"));
 
-                if (!SessionManager.isAdmin()) {
-                    container.getChildren().remove(btnEliminar);
+                container.getChildren().add(btnActivar);
+                if (SessionManager.isAdmin()) {
+                    container.getChildren().add(btnEliminar);
                 }
 
                 btnActivar.setOnAction(event -> {
