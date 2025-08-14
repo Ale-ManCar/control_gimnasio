@@ -27,7 +27,7 @@ public class LoginController {
         String pass = txtPassword.getText();
         Usuario usuario = DatabaseUtil.obtenerUsuarioPorNombre(nombre);
         if (usuario == null || !usuario.isActivo() ||
-                !usuario.getPasswordHash().equals(SecurityUtil.hashPassword(pass))) {
+                !SecurityUtil.verifyPassword(pass, usuario.getPasswordHash())) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setHeaderText(null);
             alert.setContentText("Credenciales inválidas o usuario inactivo");

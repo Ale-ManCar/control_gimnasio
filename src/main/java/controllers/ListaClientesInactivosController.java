@@ -178,6 +178,10 @@ public class ListaClientesInactivosController {
                 btnActivar.setTooltip(new Tooltip("Reactivar cliente"));
                 btnEliminar.setTooltip(new Tooltip("Eliminar cliente permanentemente"));
 
+                if (!SessionManager.isAdmin()) {
+                    container.getChildren().remove(btnEliminar);
+                }
+
                 btnActivar.setOnAction(event -> {
                     Cliente cliente = getTableView().getItems().get(getIndex());
                     activarCliente(cliente);
@@ -249,6 +253,10 @@ public class ListaClientesInactivosController {
     }
 
     private void eliminarCliente(Cliente cliente) {
+        if (!SessionManager.isAdmin()) {
+            mostrarAlerta("Permiso denegado", "Solo un administrador puede eliminar clientes.");
+            return;
+        }
         try {
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/fxml/confirmar_eliminacion_dialog.fxml")
@@ -284,6 +292,10 @@ public class ListaClientesInactivosController {
     }
 
     private void ejecutarEliminacion(Cliente cliente) {
+        if (!SessionManager.isAdmin()) {
+            mostrarAlerta("Permiso denegado", "Solo un administrador puede eliminar clientes.");
+            return;
+        }
         try (Connection conn = DatabaseUtil.getConnection()) {
             conn.setAutoCommit(false);
 

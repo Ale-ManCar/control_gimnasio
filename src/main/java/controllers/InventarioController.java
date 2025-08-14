@@ -53,6 +53,8 @@ public class InventarioController {
 
     private int cantidadActual = 1;
 
+    @FXML private Button btnEliminarProducto;
+
     @FXML
     public void initialize() {
         configurarTabla();
@@ -61,6 +63,9 @@ public class InventarioController {
         configurarComboBox();
         actualizarLabelCantidad();
         actualizarTotalCarrito();
+        if (!SessionManager.isAdmin()) {
+            btnEliminarProducto.setVisible(false);
+        }
     }
 
     private void configurarTabla() {
@@ -886,6 +891,10 @@ public class InventarioController {
 
     @FXML
     private void handleEliminarProducto() {
+        if (!SessionManager.isAdmin()) {
+            mostrarAlerta("Permiso denegado", "Solo un administrador puede eliminar productos.");
+            return;
+        }
         Producto seleccionado = tablaProductos.getSelectionModel().getSelectedItem();
         if (seleccionado == null) {
             mostrarAlerta("Advertencia", "Debe seleccionar un producto para eliminar.");

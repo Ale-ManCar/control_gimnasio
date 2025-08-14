@@ -73,6 +73,13 @@
             <artifactId>ikonli-fontawesome5-pack</artifactId>
             <version>12.3.1</version>
         </dependency>
+
+        <!-- BCrypt for password hashing -->
+        <dependency>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+            <version>0.4</version>
+        </dependency>
     </dependencies>
 
 </project>

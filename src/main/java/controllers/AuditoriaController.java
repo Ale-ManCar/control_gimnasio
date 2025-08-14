@@ -44,6 +44,7 @@ public class AuditoriaController implements Initializable {
         if (!SessionManager.isAdmin()) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Permiso denegado");
             alert.showAndWait();
+            ((javafx.stage.Stage) btnFiltrar.getScene().getWindow()).close();
             return;
         }
         colUsuario.setCellValueFactory(new PropertyValueFactory<>("usuario"));
@@ -63,11 +64,13 @@ public class AuditoriaController implements Initializable {
 
     @FXML
     private void handleFiltrar(ActionEvent e) {
+        if (!SessionManager.isAdmin()) return;
         cargarAuditoria();
     }
 
     @FXML
     private void handleExportarCSV(ActionEvent e) {
+        if (!SessionManager.isAdmin()) return;
         try {
             FileChooser fc = new FileChooser();
             fc.setInitialFileName("auditoria.csv");
@@ -82,6 +85,7 @@ public class AuditoriaController implements Initializable {
 
     @FXML
     private void handleExportarPDF(ActionEvent e) {
+        if (!SessionManager.isAdmin()) return;
         try {
             FileChooser fc = new FileChooser();
             fc.setInitialFileName("auditoria.pdf");
