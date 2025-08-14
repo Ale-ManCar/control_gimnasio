@@ -48,6 +48,7 @@ public class DashboardController implements Initializable {
     @FXML private Label lblUsuarioRol;
     @FXML private Button btnEgresos;
     @FXML private Button btnAuditoria;
+    @FXML private Button btnUsuarios;
     @FXML private Button btnLogout;
 //  @FXML private Button btnVerTodos;
 
@@ -152,6 +153,7 @@ public class DashboardController implements Initializable {
             if (!SessionManager.isAdmin()) {
                 btnEgresos.setVisible(false);
                 btnAuditoria.setVisible(false);
+                btnUsuarios.setVisible(false);
             }
 
             tablaClientesProximosAVencer.setRowFactory(tv -> {
@@ -511,6 +513,19 @@ public class DashboardController implements Initializable {
             Parent root = FXMLLoader.load(getClass().getResource("/fxml/auditoria.fxml"));
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void abrirUsuarios(ActionEvent event) {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/usuarios.fxml"));
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Gestión de Usuarios");
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
