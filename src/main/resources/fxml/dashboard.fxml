@@ -85,6 +85,16 @@
                 <Button fx:id="btnUsuarios" text="Usuarios" onAction="#abrirUsuarios"
                         style="-fx-background-color: linear-gradient(to right, #7f8c8d, #95a5a6); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;
                 -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
+                <Button fx:id="btnProveedores" text="Proveedores" onAction="#abrirProveedores"
+                        style="-fx-background-color: linear-gradient(to right, #7f8c8d, #95a5a6); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
+                <Button fx:id="btnComparador" text="Comparador" onAction="#abrirComparador"
+                        style="-fx-background-color: linear-gradient(to right, #7f8c8d, #95a5a6); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
+                <Button fx:id="btnConfiguracion" text="Configuración" onAction="#abrirConfiguracion"
+                        style="-fx-background-color: linear-gradient(to right, #7f8c8d, #95a5a6); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
+                <Button fx:id="btnRespaldos" text="Respaldos" onAction="#abrirRespaldos"
+                        style="-fx-background-color: linear-gradient(to right, #7f8c8d, #95a5a6); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
+                <Button fx:id="btnReportes" text="Reportes" onAction="#abrirReportes"
+                        style="-fx-background-color: linear-gradient(to right, #7f8c8d, #95a5a6); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
                 <Button fx:id="btnLogout" text="Cerrar Sesión" onAction="#handleLogout"
                         style="-fx-background-color: linear-gradient(to right, #c0392b, #e74c3c); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;
                 -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
