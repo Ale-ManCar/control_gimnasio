@@ -13,6 +13,8 @@ import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 import util.DatabaseUtil;
 import util.WhatsAppService;
+import util.AuditoriaUtil;
+import util.SessionManager;
 import models.Cliente;
 import models.Coach;
 import javafx.collections.FXCollections;
@@ -210,6 +212,21 @@ public class RegistroClienteController {
             }
 
             conn.commit();
+
+            AuditoriaUtil.registrar(
+                    SessionManager.getUsuarioActual().getNombre(),
+                    "CREATE",
+                    "CLIENTE",
+                    clienteId == -1 ? null : clienteId,
+                    diario ? "CLIENTE DIARIO" : txtNombres.getText().trim() + " " + txtApellidos.getText().trim()
+            );
+            AuditoriaUtil.registrar(
+                    SessionManager.getUsuarioActual().getNombre(),
+                    "CREATE",
+                    "PAGO",
+                    null,
+                    "Cliente ID: " + (clienteId == -1 ? "N/A" : clienteId) + ", Monto: " + monto
+            );
 
             // ✅ Mostrar alerta de éxito
             mostrarAlertaExito();

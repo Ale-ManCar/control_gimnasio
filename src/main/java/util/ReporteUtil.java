@@ -59,6 +59,13 @@ public class ReporteUtil {
                 String pdfPath = System.getProperty("user.dir") + File.separator + nombreArchivo;
                 JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
                 System.out.println("✅ Reporte financiero generado en: " + pdfPath);
+                AuditoriaUtil.registrar(
+                        SessionManager.getUsuarioActual().getNombre(),
+                        "REPORT",
+                        "REPORTE_FINANCIERO",
+                        null,
+                        nombreArchivo
+                );
             }
 
         } catch (Exception e) {

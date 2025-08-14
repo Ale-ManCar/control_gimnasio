@@ -8,6 +8,8 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import models.Cliente;
 import util.DatabaseUtil;
+import util.AuditoriaUtil;
+import util.SessionManager;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -166,6 +168,13 @@ public class EditarClienteController {
             System.out.println("Filas afectadas: " + filasAfectadas); // Para depuración
 
             if (filasAfectadas > 0) {
+                AuditoriaUtil.registrar(
+                        SessionManager.getUsuarioActual().getNombre(),
+                        "UPDATE",
+                        "CLIENTE",
+                        null,
+                        telefono
+                );
                 cerrarVentana();
             } else {
                 mostrarAlerta("Error", "No se pudo actualizar el cliente");

@@ -11,6 +11,8 @@ import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import util.DatabaseUtil;
+import util.AuditoriaUtil;
+import util.SessionManager;
 import models.Coach;
 
 import java.io.File;
@@ -89,13 +91,25 @@ public class RegistroCoachController {
         if (coachEditando == null) {
             String sql = "INSERT INTO coaches (nombres, apellidos, telefono, area, foto_path) VALUES (?, ?, ?, ?, ?)";
             try (Connection conn = DatabaseUtil.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+                 PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, txtNombres.getText().trim().toUpperCase());
                 stmt.setString(2, txtApellidos.getText().trim().toUpperCase());
                 stmt.setString(3, txtTelefono.getText().trim());
                 stmt.setString(4, cbArea.getValue());
                 stmt.setString(5, fotoPath);
                 stmt.executeUpdate();
+                int id = -1;
+                var rs = stmt.getGeneratedKeys();
+                if (rs.next()) {
+                    id = rs.getInt(1);
+                }
+                AuditoriaUtil.registrar(
+                        SessionManager.getUsuarioActual().getNombre(),
+                        "CREATE",
+                        "COACH",
+                        id == -1 ? null : id,
+                        txtNombres.getText().trim() + " " + txtApellidos.getText().trim()
+                );
                 limpiarFormulario();
             } catch (SQLException e) {
                 mostrarAlerta("No se pudo guardar el coach: " + e.getMessage());
@@ -111,6 +125,13 @@ public class RegistroCoachController {
                 stmt.setString(5, fotoPath);
                 stmt.setInt(6, coachEditando.getId());
                 stmt.executeUpdate();
+                AuditoriaUtil.registrar(
+                        SessionManager.getUsuarioActual().getNombre(),
+                        "UPDATE",
+                        "COACH",
+                        coachEditando.getId(),
+                        txtNombres.getText().trim() + " " + txtApellidos.getText().trim()
+                );
                 Stage stage = (Stage) btnGuardar.getScene().getWindow();
                 stage.close();
             } catch (SQLException e) {

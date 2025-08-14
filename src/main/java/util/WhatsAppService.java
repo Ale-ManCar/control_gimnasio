@@ -80,6 +80,14 @@ public class WhatsAppService {
                                 registrarEnvioExitoso(cliente, tipoAlerta);
                         }
 
+                        AuditoriaUtil.registrar(
+                                SessionManager.getUsuarioActual() != null ? SessionManager.getUsuarioActual().getNombre() : "SISTEMA",
+                                "SEND_MESSAGE",
+                                "WHATSAPP",
+                                null,
+                                tipoAlerta + " -> " + cliente.getTelefono()
+                        );
+
                         System.out.println(LocalDateTime.now() + " - Alerta (" + tipoAlerta + ") enviada");
                         pausaAleatoria();
 

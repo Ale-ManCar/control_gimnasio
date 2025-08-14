@@ -22,6 +22,8 @@ import models.VentaItem;
 import org.kordamp.ikonli.javafx.FontIcon;
 import util.DatabaseUtil;
 import util.EventBus;
+import util.AuditoriaUtil;
+import util.SessionManager;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -291,9 +293,23 @@ public class InventarioController {
 
             // Registrar la venta en la base de datos
             DatabaseUtil.registrarVenta(totalVenta);
+            AuditoriaUtil.registrar(
+                    SessionManager.getUsuarioActual().getNombre(),
+                    "CREATE",
+                    "VENTA",
+                    null,
+                    "Total: " + totalVenta
+            );
 
             for (VentaItem item : carrito) {
                 DatabaseUtil.actualizarStockProducto(item.getProducto().getId(), item.getUnidades());
+                AuditoriaUtil.registrar(
+                        SessionManager.getUsuarioActual().getNombre(),
+                        "UPDATE",
+                        "PRODUCTO",
+                        item.getProducto().getId(),
+                        "Stock -" + item.getUnidades()
+                );
             }
 
             carrito.clear();
@@ -687,6 +703,13 @@ public class InventarioController {
         resultado.ifPresent(producto -> {
             try {
                 DatabaseUtil.insertarProducto(producto);
+                AuditoriaUtil.registrar(
+                        SessionManager.getUsuarioActual().getNombre(),
+                        "CREATE",
+                        "PRODUCTO",
+                        null,
+                        producto.getNombre()
+                );
                 cargarProductos();
                 mostrarDialogoProductoRegistrado();
             } catch (Exception e) {
@@ -827,6 +850,13 @@ public class InventarioController {
         resultado.ifPresent(prod -> {
             try {
                 DatabaseUtil.actualizarProducto(prod.getId(), prod.getPrecio(), prod.getStock());
+                AuditoriaUtil.registrar(
+                        SessionManager.getUsuarioActual().getNombre(),
+                        "UPDATE",
+                        "PRODUCTO",
+                        prod.getId(),
+                        "Precio: " + prod.getPrecio() + ", +" + prod.getStock() + " unidades"
+                );
                 mostrarAlerta("Éxito", "Producto actualizado correctamente.");
                 cargarProductos();
             } catch (Exception e) {
@@ -899,6 +929,13 @@ public class InventarioController {
         if (resultado.isPresent() && resultado.get() == btnEliminar) {
             try {
                 eliminarProducto(seleccionado.getId());
+                AuditoriaUtil.registrar(
+                        SessionManager.getUsuarioActual().getNombre(),
+                        "DELETE",
+                        "PRODUCTO",
+                        seleccionado.getId(),
+                        seleccionado.getNombre()
+                );
                 mostrarAlerta("Éxito", "Producto eliminado correctamente.");
                 cargarProductos();
             } catch (Exception e) {

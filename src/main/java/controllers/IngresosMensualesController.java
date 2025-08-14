@@ -23,6 +23,8 @@ import models.PagoMensual;
 import util.DatabaseUtil;
 import util.EventBus;
 import util.ReporteUtil;
+import util.AuditoriaUtil;
+import util.SessionManager;
 
 import java.io.IOException;
 import java.net.URL;
@@ -436,7 +438,16 @@ public class IngresosMensualesController implements Initializable {
 
     @FXML
     private void handleExportarPDF(ActionEvent event) {
-        ReporteUtil.generarReporteFinanciero(8, 2025);
+        int mes = 8;
+        int anio = 2025;
+        ReporteUtil.generarReporteFinanciero(mes, anio);
+        AuditoriaUtil.registrar(
+                SessionManager.getUsuarioActual().getNombre(),
+                "REPORT",
+                "REPORTE_FINANCIERO",
+                null,
+                "Mes: " + mes + ", Año: " + anio
+        );
     }
 
     @FXML
