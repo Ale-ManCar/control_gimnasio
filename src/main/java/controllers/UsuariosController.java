@@ -132,4 +132,28 @@ public class UsuariosController implements Initializable {
             new Alert(Alert.AlertType.ERROR, "Error al guardar usuario").showAndWait();
         }
     }
+
+    @FXML
+    private void eliminarUsuario() {
+        if (!verificarAdmin()) return;
+
+        if (usuarioSeleccionado == null) {
+            new Alert(Alert.AlertType.WARNING, "Seleccione un usuario").showAndWait();
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Eliminar usuario seleccionado?", ButtonType.OK, ButtonType.CANCEL);
+        confirm.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                try {
+                    DatabaseUtil.executeUpdate("DELETE FROM usuarios WHERE id=?", usuarioSeleccionado.getId());
+                    cargarUsuarios();
+                    nuevoUsuario();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    new Alert(Alert.AlertType.ERROR, "Error al eliminar usuario").showAndWait();
+                }
+            }
+        });
+    }
 }
