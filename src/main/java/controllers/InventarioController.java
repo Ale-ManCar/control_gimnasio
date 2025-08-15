@@ -31,6 +31,7 @@ import java.math.RoundingMode;
 import java.sql.SQLException;
 import java.util.Locale;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 public class InventarioController {
 
@@ -346,6 +347,16 @@ public class InventarioController {
 
             for (VentaItem item : carrito) {
                 DatabaseUtil.actualizarStockProducto(item.getProducto().getId(), item.getUnidades());
+                int nuevoSaldo = item.getProducto().getStock() - item.getUnidades();
+                DatabaseUtil.insertMovimientoInventario(
+                        item.getProducto().getId(),
+                        "SALIDA",
+                        item.getUnidades(),
+                        "Venta",
+                        SessionManager.getUsuarioActual().getNombre(),
+                        LocalDateTime.now(),
+                        nuevoSaldo
+                );
                 AuditoriaUtil.registrar(
                         SessionManager.getUsuarioActual().getNombre(),
                         "UPDATE",
@@ -901,6 +912,16 @@ public class InventarioController {
         resultado.ifPresent(prod -> {
             try {
                 DatabaseUtil.actualizarProducto(prod.getId(), prod.getPrecio(), prod.getStock());
+                int nuevoSaldo = seleccionado.getStock() + prod.getStock();
+                DatabaseUtil.insertMovimientoInventario(
+                        prod.getId(),
+                        "ENTRADA",
+                        prod.getStock(),
+                        "Compra",
+                        SessionManager.getUsuarioActual().getNombre(),
+                        LocalDateTime.now(),
+                        nuevoSaldo
+                );
                 AuditoriaUtil.registrar(
                         SessionManager.getUsuarioActual().getNombre(),
                         "UPDATE",
