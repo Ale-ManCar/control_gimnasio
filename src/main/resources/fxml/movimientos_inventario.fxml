@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.MovimientosInventarioController"
+            prefWidth="700" prefHeight="400" style="-fx-background-color: white;">
+    <top>
+        <Label fx:id="lblProducto" text="Historial de Movimientos"
+               style="-fx-font-size: 16px; -fx-font-weight: bold;"
+               BorderPane.alignment="CENTER"/>
+    </top>
+    <center>
+        <TableView fx:id="tablaMovimientos" prefHeight="350">
+            <columns>
+                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="120"/>
+                <TableColumn fx:id="colTipo" text="Tipo" prefWidth="80"/>
+                <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="80"/>
+                <TableColumn fx:id="colSaldo" text="Saldo" prefWidth="80"/>
+                <TableColumn fx:id="colUsuario" text="Usuario" prefWidth="120"/>
+                <TableColumn fx:id="colMotivo" text="Motivo" prefWidth="150"/>
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>

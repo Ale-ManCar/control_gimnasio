@@ -7,9 +7,11 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
@@ -25,6 +27,9 @@ import util.DatabaseUtil;
 import util.EventBus;
 import util.AuditoriaUtil;
 import util.SessionManager;
+import javafx.scene.Scene;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -32,6 +37,7 @@ import java.sql.SQLException;
 import java.util.Locale;
 import java.util.Optional;
 import java.time.LocalDateTime;
+import java.io.IOException;
 
 public class InventarioController {
 
@@ -78,6 +84,17 @@ public class InventarioController {
                 }
             }
         }
+
+        tablaProductos.setRowFactory(tv -> {
+            TableRow<Producto> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (!row.isEmpty() && event.getClickCount() == 2) {
+                    Producto prod = row.getItem();
+                    mostrarHistorialProducto(prod);
+                }
+            });
+            return row;
+        });
     }
 
     private void configurarTabla() {
@@ -447,6 +464,24 @@ public class InventarioController {
         cantidadActual = 1;
         actualizarLabelCantidad();
         lblTotalVenta.setText("");
+    }
+
+    private void mostrarHistorialProducto(Producto producto) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/movimientos_inventario.fxml"));
+            Parent root = loader.load();
+            MovimientosInventarioController controller = loader.getController();
+            controller.setProducto(producto);
+
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Movimientos de " + producto.getNombre());
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            mostrarAlerta("Error", "No se pudo abrir el historial de movimientos.");
+        }
     }
 
     private void mostrarAlerta(String titulo, String mensaje) {
