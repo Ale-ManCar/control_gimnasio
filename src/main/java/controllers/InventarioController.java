@@ -14,6 +14,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.paint.Paint;
 import javafx.util.StringConverter;
@@ -66,6 +67,15 @@ public class InventarioController {
         actualizarTotalCarrito();
         if (!SessionManager.isAdmin()) {
             btnEliminarProducto.setVisible(false);
+            Node parent = btnEliminarProducto.getParent();
+            if (parent instanceof Pane) {
+                for (Node node : ((Pane) parent).getChildren()) {
+                    if (node instanceof Button && node != btnEliminarProducto) {
+                        node.setVisible(false);
+                        ((Button) node).setDisable(true);
+                    }
+                }
+            }
         }
     }
 
@@ -438,6 +448,10 @@ public class InventarioController {
 
     @FXML
     private void handleIngresarProducto() {
+        if (!SessionManager.isAdmin()) {
+            mostrarAlerta("Permiso denegado", "Solo un administrador puede realizar esta acción.");
+            return;
+        }
         Dialog<Producto> dialog = new Dialog<>();
         dialog.setTitle("Ingresar Nuevo Producto");
         dialog.setHeaderText(null);
@@ -803,6 +817,10 @@ public class InventarioController {
 
     @FXML
     private void handleEditarProducto() {
+        if (!SessionManager.isAdmin()) {
+            mostrarAlerta("Permiso denegado", "Solo un administrador puede realizar esta acción.");
+            return;
+        }
         Producto seleccionado = tablaProductos.getSelectionModel().getSelectedItem();
         if (seleccionado == null) {
             mostrarAlerta("Advertencia", "Debe seleccionar un producto para editar.");
