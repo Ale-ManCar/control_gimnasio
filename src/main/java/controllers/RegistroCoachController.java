@@ -35,6 +35,12 @@ public class RegistroCoachController {
 
     @FXML
     public void initialize() {
+        if (!SessionManager.isAdmin()) {
+            btnGuardar.setDisable(true);
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Permiso denegado", ButtonType.OK);
+            alert.showAndWait();
+        }
+
         cbArea.getItems().addAll("Maquinas", "Bailoterapia", "Crossfit");
 
         txtNombres.setTextFormatter(new TextFormatter<>(change -> {
@@ -77,6 +83,13 @@ public class RegistroCoachController {
 
     @FXML
     private void guardarCoach(ActionEvent event) {
+        if (!SessionManager.isAdmin()) {
+            btnGuardar.setDisable(true);
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Permiso denegado", ButtonType.OK);
+            alert.showAndWait();
+            return;
+        }
+
         if (txtNombres.getText().isEmpty() || txtApellidos.getText().isEmpty() ||
                 cbArea.getValue() == null) {
             mostrarAlerta("Debe completar todos los campos");
