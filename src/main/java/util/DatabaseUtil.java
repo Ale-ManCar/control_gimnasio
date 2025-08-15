@@ -13,6 +13,7 @@ import models.PagoDetalle;
 import models.PagoMensual;
 import models.Producto;
 import models.Usuario;
+import models.MovimientoInventario;
 import util.SecurityUtil;
 
 public class DatabaseUtil {
@@ -96,6 +97,17 @@ public class DatabaseUtil {
                 "fecha TEXT NOT NULL," +
                 "categoria TEXT NOT NULL)";
 
+        String sqlMovimientosInventario = "CREATE TABLE IF NOT EXISTS movimientos_inventario (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "producto_id INTEGER NOT NULL," +
+                "tipo TEXT NOT NULL," +
+                "cantidad INTEGER NOT NULL," +
+                "motivo TEXT," +
+                "usuario TEXT NOT NULL," +
+                "fecha TEXT NOT NULL," +
+                "saldo INTEGER NOT NULL," +
+                "FOREIGN KEY (producto_id) REFERENCES productos(id))";
+
         String sqlUsuarios = "CREATE TABLE IF NOT EXISTS usuarios (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "nombre TEXT NOT NULL UNIQUE," +
@@ -127,6 +139,7 @@ public class DatabaseUtil {
             stmt.execute(sqlCoaches);
             stmt.execute(sqlUsuarios);
             stmt.execute(sqlAuditoria);
+            stmt.execute(sqlMovimientosInventario);
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN area TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN coach_id INTEGER REFERENCES coaches(id)"); } catch (SQLException ignored) {}
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
@@ -501,6 +514,40 @@ public class DatabaseUtil {
     public static void actualizarProducto(int id, double nuevoPrecio, int unidadesExtra) throws SQLException {
         String sql = "UPDATE productos SET precio = ?, stock = stock + ? WHERE id = ?";
         executeUpdate(sql, nuevoPrecio, unidadesExtra, id);
+    }
+
+    public static void insertMovimientoInventario(int productoId, String tipo, int cantidad,
+                                                  String motivo, String usuario, LocalDateTime fecha,
+                                                  int saldo) throws SQLException {
+        String sql = "INSERT INTO movimientos_inventario " +
+                "(producto_id, tipo, cantidad, motivo, usuario, fecha, saldo) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        executeUpdate(sql, productoId, tipo, cantidad, motivo, usuario, fecha.toString(), saldo);
+    }
+
+    public static ObservableList<MovimientoInventario> getMovimientosPorProducto(int productoId) throws SQLException {
+        ObservableList<MovimientoInventario> movimientos = FXCollections.observableArrayList();
+        String sql = "SELECT * FROM movimientos_inventario WHERE producto_id = ? ORDER BY fecha DESC";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, productoId);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                MovimientoInventario m = new MovimientoInventario();
+                m.setId(rs.getInt("id"));
+                m.setProductoId(rs.getInt("producto_id"));
+                m.setTipo(rs.getString("tipo"));
+                m.setCantidad(rs.getInt("cantidad"));
+                m.setMotivo(rs.getString("motivo"));
+                m.setUsuario(rs.getString("usuario"));
+                m.setFecha(LocalDateTime.parse(rs.getString("fecha")));
+                m.setSaldo(rs.getInt("saldo"));
+                movimientos.add(m);
+            }
+        }
+        return movimientos;
     }
 
     public static void registrarVenta(double totalVenta) throws SQLException {
