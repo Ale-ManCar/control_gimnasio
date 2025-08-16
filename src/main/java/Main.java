@@ -23,7 +23,8 @@ public class Main extends Application {
         }
 
         DatabaseUtil.initDatabase();
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/login.fxml"));
+        String ruta = DatabaseUtil.countUsuarios() == 0 ? "/fxml/crear_admin.fxml" : "/fxml/login.fxml";
+        Parent root = FXMLLoader.load(getClass().getResource(ruta));
         Scene scene = new Scene(root);
         primaryStage.initStyle(StageStyle.UNDECORATED);
         primaryStage.setScene(scene);

@@ -231,6 +231,39 @@ public class DatabaseUtil {
         }
     }
 
+    public static int countUsuarios() {
+        String sql = "SELECT COUNT(*) FROM usuarios";
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public static Integer insertUsuario(String nombre, String passwordHash, String rol, boolean activo) {
+        String sql = "INSERT INTO usuarios(nombre, password, rol, activo) VALUES(?,?,?,?)";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, nombre);
+            stmt.setString(2, passwordHash);
+            stmt.setString(3, rol);
+            stmt.setInt(4, activo ? 1 : 0);
+            stmt.executeUpdate();
+            ResultSet rs = stmt.getGeneratedKeys();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static double obtenerTotalPagosParaMes(int mes, int anio) {
         double total = 0.0;
         String sql = "SELECT SUM(monto) AS total FROM pagos " +
