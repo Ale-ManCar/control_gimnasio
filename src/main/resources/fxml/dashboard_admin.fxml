@@ -1,52 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
-<BorderPane xmlns="http://javafx.com/javafx/21"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="controllers.AdminDashboardController"
-            prefWidth="900" prefHeight="600"
-            stylesheets="@../css/dashboard_admin.css"
-            styleClass="dashboard-root">
-    <top>
-        <VBox alignment="CENTER" styleClass="top-bar">
-            <Label text="Panel de Control" styleClass="dashboard-title"/>
-            <Label fx:id="lblUsuarioRol" styleClass="dashboard-user"/>
-        </VBox>
-    </top>
-    <left>
-        <VBox spacing="10" alignment="TOP_CENTER" styleClass="side-menu">
-            <Button text="Resumen Ventas" onAction="#abrirReportes" styleClass="nav-button">
-                <graphic>
-                    <FontIcon iconLiteral="fas-chart-line"/>
-                </graphic>
-            </Button>
-            <Button text="Usuarios" onAction="#abrirUsuarios" styleClass="nav-button">
-                <graphic>
-                    <FontIcon iconLiteral="fas-users"/>
-                </graphic>
-            </Button>
-            <Button text="Auditoría" onAction="#abrirAuditoria" styleClass="nav-button">
-                <graphic>
-                    <FontIcon iconLiteral="fas-file-alt"/>
-                </graphic>
-            </Button>
-            <Button text="Proveedores" onAction="#abrirProveedores" styleClass="nav-button">
-                <graphic>
-                    <FontIcon iconLiteral="fas-truck"/>
-                </graphic>
-            </Button>
-        </VBox>
-    </left>
-    <center>
-        <FlowPane fx:id="metricsContainer" hgap="20" vgap="20" alignment="CENTER"/>
-    </center>
 
-    <bottom>
-        <Label fx:id="lblMensaje" styleClass="status-bar"/>
-    </bottom>
-</BorderPane>
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controllers.AdminDashboardController"
+      prefWidth="900" prefHeight="600"
+      stylesheets="@../css/dashboard_admin.css"
+      styleClass="dashboard-root">
+
+    <children>
+    <!-- Encabezado -->
+    <HBox alignment="CENTER_LEFT" spacing="15" styleClass="header">
+        <ImageView fx:id="imgLogo" fitHeight="40" fitWidth="40" />
+        <Label text="Panel de Control" styleClass="dashboard-title" />
+        <Region HBox.hgrow="ALWAYS" />
+        <ComboBox fx:id="cmbPeriodo" prefWidth="120" />
+        <ComboBox fx:id="cmbArea" prefWidth="150" />
+        <Label fx:id="lblUsuarioRol" styleClass="dashboard-user" />
+    </HBox>
+
+    <!-- Contenido principal -->
+    <HBox spacing="20" alignment="TOP_CENTER" VBox.vgrow="ALWAYS" styleClass="main-content">
+        <GridPane fx:id="metricsContainer" hgap="20" vgap="20" />
+        <VBox spacing="10" alignment="TOP_CENTER" styleClass="right-panel">
+            <Label text="Reportes en los últimos 7 días" styleClass="panel-title" />
+            <ListView fx:id="lstReportes" prefHeight="150" />
+            <Label text="Vencimientos" styleClass="panel-title" />
+            <ListView fx:id="lstVencimientos" prefHeight="200" />
+        </VBox>
+    </HBox>
+
+    <!-- Barra inferior -->
+    <HBox alignment="CENTER" spacing="15" styleClass="bottom-bar">
+    <Button fx:id="btnUsuarios" text="Usuarios" onAction="#abrirUsuarios" styleClass="nav-button">
+        <graphic><FontIcon iconLiteral="fas-users" /></graphic>
+    </Button>
+    <Button fx:id="btnAuditoria" text="Auditoría" onAction="#abrirAuditoria" styleClass="nav-button">
+        <graphic><FontIcon iconLiteral="fas-file-alt" /></graphic>
+    </Button>
+    <Button fx:id="btnProveedores" text="Proveedores" onAction="#abrirProveedores" styleClass="nav-button">
+        <graphic><FontIcon iconLiteral="fas-truck" /></graphic>
+            </Button>
+    <Button fx:id="btnComparador" text="Comparador de precios" onAction="#abrirComparador" styleClass="nav-button">
+        <graphic><FontIcon iconLiteral="fas-balance-scale" /></graphic>
+            </Button>
+    <Button fx:id="btnRespaldos" text="Respaldos" onAction="#abrirRespaldos" styleClass="nav-button">
+        <graphic><FontIcon iconLiteral="fas-database" /></graphic>
+            </Button>
+    <Button fx:id="btnConfiguracion" text="Configuración" onAction="#abrirConfiguracion" styleClass="nav-button">
+        <graphic><FontIcon iconLiteral="fas-cog" /></graphic>
+            </Button>
+    </HBox>
+    </children>
+</VBox>
