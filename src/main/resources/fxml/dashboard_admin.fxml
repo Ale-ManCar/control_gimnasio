@@ -12,7 +12,7 @@
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="controllers.DashboardController"
+            fx:controller="controllers.AdminDashboardController"
             prefWidth="900" prefHeight="600"
             style="-fx-background-color: linear-gradient(to bottom, #1e3c72, #2a5298);">
 
