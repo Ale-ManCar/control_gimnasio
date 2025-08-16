@@ -1,114 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.geometry.Insets?>
+
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controllers.AdminDashboardController"
             prefWidth="900" prefHeight="600"
-            style="-fx-background-color: linear-gradient(to bottom, #1e3c72, #2a5298);">
-
+            stylesheets="@../css/dashboard_admin.css"
+            styleClass="dashboard-root">
     <top>
-        <VBox alignment="CENTER" style="-fx-background-color: rgba(0,0,0,0.3); -fx-background-radius: 0 0 15 15; -fx-padding: 15;">
-            <Label text="PANEL DE CONTROL"
-                   style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #FFD700; -fx-padding: 0 0 5 0;"/>
-            <Label fx:id="lblUsuarioRol" text=""
-                   style="-fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 0 0 5 0;"/>
-            <Label text="Dashboard"
-                   style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: white; -fx-padding: 0 0 15 0;"/>
+        <VBox alignment="CENTER" styleClass="top-bar">
+            <Label text="Panel de Control" styleClass="dashboard-title"/>
+            <Label fx:id="lblUsuarioRol" styleClass="dashboard-user"/>
         </VBox>
     </top>
-
-    <center>
-        <VBox spacing="20" alignment="TOP_CENTER" prefWidth="1100" style="-fx-padding: 20;">
-            <HBox spacing="20" alignment="CENTER">
-                <AnchorPane fx:id="cardClientes" prefWidth="200" prefHeight="120"
-                            style="-fx-background-color: rgba(76,175,80,0.9); -fx-background-radius: 15;
-                                   -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10, 0, 0, 5);"/>
-                <AnchorPane fx:id="cardPagos" prefWidth="200" prefHeight="120"
-                            style="-fx-background-color: rgba(33,150,243,0.9); -fx-background-radius: 15;
-                                   -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10, 0, 0, 5);"/>
-                <AnchorPane fx:id="cardVencimientos" prefWidth="200" prefHeight="120"
-                            style="-fx-background-color: rgba(255,152,0,0.9); -fx-background-radius: 15;
-                                   -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10, 0, 0, 5);"/>
-            </HBox>
-
-            <Label text="Clientes Próximos a Vencer"
-                   style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white; -fx-padding: 10 0 5 0;"/>
-
-            <TableView fx:id="tablaClientesProximosAVencer" prefHeight="400"
-                       style="-fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 15;
-                              -fx-border-radius: 15; -fx-border-color: rgba(255,255,255,0.2);">
-                <columns>
-                    <TableColumn fx:id="colAlerta" prefWidth="50" sortable="false" resizable="false"
-                                 style="-fx-alignment: CENTER; -fx-text-fill: white;" text=" "/>
-                    <TableColumn text="Cliente" prefWidth="250" fx:id="colCliente"
-                                 style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
-                    <TableColumn text="Teléfono" prefWidth="150" fx:id="colTelefono"
-                                 style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
-                    <TableColumn text="Vencimiento" prefWidth="150" fx:id="colVencimiento"
-                                 style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
-                    <TableColumn text="Días Restantes" prefWidth="150" fx:id="colDiasRestantes"
-                                 style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
-                    <TableColumn text="Acciones" fx:id="colAccion" prefWidth="110" resizable="false" sortable="false"
-                                 style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
-                </columns>
-            </TableView>
-
-            <HBox spacing="10" alignment="CENTER_RIGHT">
-                <Region fx:id="regionSpacer" HBox.hgrow="ALWAYS"/>
-                <Button text="Registrar Cliente" onAction="#handleRegistroCliente"
-                        style="-fx-background-color: linear-gradient(to right, #4A6CF7, #2E8BFF); -fx-text-fill: white; -fx-font-weight: bold;
-                               -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;
-                               -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
-                <Button text="Registrar Coach" onAction="#handleRegistroCoach"
-                        style="-fx-background-color: linear-gradient(to right, #9b59b6, #8e44ad); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;
-                -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
-                <Button text="Inventario" onAction="#abrirInventario"
-                        style="-fx-background-color: linear-gradient(to right, #e67e22, #e74c3c); -fx-text-fill: white; -fx-font-weight: bold;
-                               -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;
-                               -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
-                <Button fx:id="btnEgresos" text="Registrar Egreso" onAction="#abrirRegistroEgreso"
-                        style="-fx-background-color: linear-gradient(to right, #16a085, #27ae60); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;
-                -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
-                <Button fx:id="btnAuditoria" text="Auditoría" onAction="#abrirAuditoria"
-                        style="-fx-background-color: linear-gradient(to right, #34495e, #2c3e50); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;
-                -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
-                <Button fx:id="btnUsuarios" text="Usuarios" onAction="#abrirUsuarios"
-                        style="-fx-background-color: linear-gradient(to right, #7f8c8d, #95a5a6); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;
-                -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
-                <Button fx:id="btnProveedores" text="Proveedores" onAction="#abrirProveedores"
-                        style="-fx-background-color: linear-gradient(to right, #7f8c8d, #95a5a6); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
-                <Button fx:id="btnComparador" text="Comparador" onAction="#abrirComparador"
-                        style="-fx-background-color: linear-gradient(to right, #7f8c8d, #95a5a6); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
-                <Button fx:id="btnConfiguracion" text="Configuración" onAction="#abrirConfiguracion"
-                        style="-fx-background-color: linear-gradient(to right, #7f8c8d, #95a5a6); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
-                <Button fx:id="btnRespaldos" text="Respaldos" onAction="#abrirRespaldos"
-                        style="-fx-background-color: linear-gradient(to right, #7f8c8d, #95a5a6); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
-                <Button fx:id="btnReportes" text="Reportes" onAction="#abrirReportes"
-                        style="-fx-background-color: linear-gradient(to right, #7f8c8d, #95a5a6); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
-                <Button fx:id="btnLogout" text="Cerrar Sesión" onAction="#handleLogout"
-                        style="-fx-background-color: linear-gradient(to right, #c0392b, #e74c3c); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;
-                -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
-                <!--Button text="Ver Todos" fx:id="btnVerTodos" onAction="#handleVerTodos"
-                        style="-fx-background-color: linear-gradient(to right, #9b59b6, #8e44ad); -fx-text-fill: white; -fx-font-weight: bold;
-                               -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;
-                               -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/-->
-            </HBox>
+    <left>
+        <VBox spacing="10" alignment="TOP_CENTER" styleClass="side-menu">
+            <Button text="Resumen Ventas" onAction="#abrirReportes" styleClass="nav-button">
+                <graphic>
+                    <FontIcon iconLiteral="fas-chart-line"/>
+                </graphic>
+            </Button>
+            <Button text="Usuarios" onAction="#abrirUsuarios" styleClass="nav-button">
+                <graphic>
+                    <FontIcon iconLiteral="fas-users"/>
+                </graphic>
+            </Button>
+            <Button text="Auditoría" onAction="#abrirAuditoria" styleClass="nav-button">
+                <graphic>
+                    <FontIcon iconLiteral="fas-file-alt"/>
+                </graphic>
+            </Button>
+            <Button text="Proveedores" onAction="#abrirProveedores" styleClass="nav-button">
+                <graphic>
+                    <FontIcon iconLiteral="fas-truck"/>
+                </graphic>
+            </Button>
         </VBox>
+    </left>
+    <center>
+        <FlowPane fx:id="metricsContainer" hgap="20" vgap="20" alignment="CENTER"/>
     </center>
 
     <bottom>
-        <Label fx:id="lblMensaje"
-               style="-fx-font-size: 14px; -fx-padding: 10; -fx-text-fill: white; -fx-alignment: CENTER;
-                      -fx-background-color: rgba(0,0,0,0.3); -fx-background-radius: 15 15 0 0;"/>
+        <Label fx:id="lblMensaje" styleClass="status-bar"/>
     </bottom>
 </BorderPane>
