@@ -35,6 +35,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
@@ -73,6 +74,7 @@ public class DashboardController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
+            verificarCierreMensual();
 
             Platform.runLater(() -> {
                 Stage stage = (Stage) cardClientes.getScene().getWindow();
@@ -215,6 +217,36 @@ public class DashboardController implements Initializable {
         }
 
         EventBus.registerListener(this::cargarDatosTarjetas);
+    }
+
+    private void verificarCierreMensual() {
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "SELECT MAX(fecha) AS fecha FROM movimientos_inventario WHERE tipo = 'SALDO_INICIAL'");
+             ResultSet rs = stmt.executeQuery()) {
+
+            LocalDateTime ultima = null;
+            if (rs.next()) {
+                String fechaStr = rs.getString("fecha");
+                if (fechaStr != null) {
+                    ultima = LocalDateTime.parse(fechaStr);
+                }
+            }
+
+            LocalDate proximoMes = LocalDate.now().plusMonths(1).withDayOfMonth(1);
+            if (ultima == null || ultima.toLocalDate().isBefore(proximoMes)) {
+                ReporteUtil.cierreMensual();
+                AuditoriaUtil.registrar(
+                        SessionManager.getUsuarioActual().getNombre(),
+                        "CIERRE_MENSUAL",
+                        "INVENTARIO",
+                        null,
+                        "Saldo inicial generado"
+                );
+            }
+        } catch (SQLException e) {
+            System.err.println("Error verificando cierre mensual: " + e.getMessage());
+        }
     }
 
     private void configurarTablaSinScroll() {
