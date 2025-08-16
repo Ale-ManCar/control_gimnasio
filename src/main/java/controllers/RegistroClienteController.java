@@ -284,7 +284,10 @@ public class RegistroClienteController {
                 Thread.sleep(5000);
                 Platform.runLater(() -> {
                     try {
-                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
+                        String fxml = SessionManager.isAdmin()
+                                ? "/fxml/dashboard_admin.fxml"
+                                : "/fxml/dashboard_operador.fxml";
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
                         Parent root = loader.load();
                         Stage stage = (Stage) btnSiguiente.getScene().getWindow();
                         Scene scene = new Scene(root);
@@ -305,7 +308,10 @@ public class RegistroClienteController {
     @FXML
     private void handleVolverAlDashboard() {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/dashboard.fxml"));
+            String fxml = SessionManager.isAdmin()
+                    ? "/fxml/dashboard_admin.fxml"
+                    : "/fxml/dashboard_operador.fxml";
+            Parent root = FXMLLoader.load(getClass().getResource(fxml));
             Stage stage = (Stage) btnVolverAlDashboard.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Panel de Control");

@@ -39,7 +39,7 @@ import java.time.LocalDateTime;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
-public class DashboardController implements Initializable {
+public class OperadorDashboardController implements Initializable {
 
     @FXML private AnchorPane cardClientes;
     @FXML private AnchorPane cardPagos;
@@ -47,16 +47,7 @@ public class DashboardController implements Initializable {
     @FXML private TableView<Cliente> tablaClientesProximosAVencer;
     @FXML private Label lblMensaje;
     @FXML private Label lblUsuarioRol;
-    @FXML private Button btnEgresos;
-    @FXML private Button btnAuditoria;
-    @FXML private Button btnUsuarios;
-    @FXML private Button btnProveedores;
-    @FXML private Button btnComparador;
-    @FXML private Button btnConfiguracion;
-    @FXML private Button btnRespaldos;
-    @FXML private Button btnReportes;
     @FXML private Button btnLogout;
-//  @FXML private Button btnVerTodos;
 
     @FXML private TableColumn<Cliente, String> colCliente;
     @FXML private TableColumn<Cliente, String> colTelefono;
@@ -157,16 +148,6 @@ public class DashboardController implements Initializable {
             cargarDatosTarjetas();
             cargarClientesProximosAVencer();
             lblUsuarioRol.setText(SessionManager.getUsuarioActual().getNombre() + " (" + SessionManager.getUsuarioActual().getRol() + ")");
-            if (!SessionManager.isAdmin()) {
-                btnEgresos.setVisible(false);
-                btnAuditoria.setVisible(false);
-                btnUsuarios.setVisible(false);
-                btnProveedores.setVisible(false);
-                btnComparador.setVisible(false);
-                btnConfiguracion.setVisible(false);
-                btnRespaldos.setVisible(false);
-                btnReportes.setVisible(false);
-            }
 
             tablaClientesProximosAVencer.setRowFactory(tv -> {
                 TableRow<Cliente> row = new TableRow<Cliente>() {
@@ -267,19 +248,6 @@ public class DashboardController implements Initializable {
         });
 
         tablaClientesProximosAVencer.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-    }
-
-    @FXML
-    private void abrirRegistroEgreso(ActionEvent event) {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/registro_egreso.fxml"));
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Registrar Egreso");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private void inicializarTarjetasMetricas() throws IOException {
@@ -546,119 +514,6 @@ public class DashboardController implements Initializable {
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    @FXML
-    private void abrirAuditoria(ActionEvent event) {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/auditoria.fxml"));
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    private void abrirUsuarios(ActionEvent event) {
-        if (!SessionManager.isAdmin()) {
-            return;
-        }
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/usuarios.fxml"));
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Gestión de Usuarios");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    private void abrirProveedores(ActionEvent event) {
-        if (!SessionManager.isAdmin()) {
-            return;
-        }
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/proveedores.fxml"));
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Gestión de Proveedores");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            lblMensaje.setText("Error al abrir proveedores");
-        }
-    }
-
-    @FXML
-    private void abrirComparador(ActionEvent event) {
-        if (!SessionManager.isAdmin()) {
-            return;
-        }
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/comparador.fxml"));
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Comparador");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            lblMensaje.setText("Error al abrir comparador");
-        }
-    }
-
-    @FXML
-    private void abrirConfiguracion(ActionEvent event) {
-        if (!SessionManager.isAdmin()) {
-            return;
-        }
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/configuracion.fxml"));
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Configuración");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            lblMensaje.setText("Error al abrir configuración");
-        }
-    }
-
-    @FXML
-    private void abrirRespaldos(ActionEvent event) {
-        if (!SessionManager.isAdmin()) {
-            return;
-        }
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/respaldos.fxml"));
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Respaldos");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            lblMensaje.setText("Error al abrir respaldos");
-        }
-    }
-
-    @FXML
-    private void abrirReportes(ActionEvent event) {
-        if (!SessionManager.isAdmin()) {
-            return;
-        }
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/reportes.fxml"));
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Reportes");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            lblMensaje.setText("Error al abrir reportes");
         }
     }
 

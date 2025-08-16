@@ -17,6 +17,7 @@ import javafx.util.Duration;
 import util.AlertScheduler;
 import util.DatabaseUtil;
 import util.EstadoClienteService;
+import util.SessionManager;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -94,7 +95,10 @@ public class SplashController {
 
                 // Abrir dashboard
                 Stage stage = new Stage();
-                Parent root = FXMLLoader.load(getClass().getResource("/fxml/dashboard.fxml"));
+                String fxml = SessionManager.isAdmin()
+                        ? "/fxml/dashboard_admin.fxml"
+                        : "/fxml/dashboard_operador.fxml";
+                Parent root = FXMLLoader.load(getClass().getResource(fxml));
                 Scene scene = new Scene(root, 900, 650);
                 stage.setScene(scene);
                 stage.setTitle("Panel de Control - Gimnasio");

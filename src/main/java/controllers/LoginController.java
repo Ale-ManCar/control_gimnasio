@@ -38,7 +38,10 @@ public class LoginController {
         DatabaseUtil.actualizarUltimoIngreso(usuario.getId());
         AuditoriaUtil.registrar(usuario.getNombre(), "LOGIN", "USUARIO", usuario.getId(), "Inicio de sesión");
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/dashboard.fxml"));
+            String fxml = SessionManager.isAdmin()
+                    ? "/fxml/dashboard_admin.fxml"
+                    : "/fxml/dashboard_operador.fxml";
+            Parent root = FXMLLoader.load(getClass().getResource(fxml));
             Stage stage = (Stage) btnLogin.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.show();
