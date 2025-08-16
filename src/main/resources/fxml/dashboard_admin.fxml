@@ -50,16 +50,16 @@
     </Button>
     <Button fx:id="btnProveedores" text="Proveedores" onAction="#abrirProveedores" styleClass="nav-button">
         <graphic><FontIcon iconLiteral="fas-truck" /></graphic>
-            </Button>
-    <Button fx:id="btnComparador" text="Comparador de precios" onAction="#abrirComparador" styleClass="nav-button">
+    </Button>
+        <Button fx:id="btnComparador" text="Comparador de precios" onAction="#abrirComparadorPrecios" styleClass="nav-button">
         <graphic><FontIcon iconLiteral="fas-balance-scale" /></graphic>
-            </Button>
+        </Button>
     <Button fx:id="btnRespaldos" text="Respaldos" onAction="#abrirRespaldos" styleClass="nav-button">
         <graphic><FontIcon iconLiteral="fas-database" /></graphic>
-            </Button>
+    </Button>
     <Button fx:id="btnConfiguracion" text="Configuración" onAction="#abrirConfiguracion" styleClass="nav-button">
         <graphic><FontIcon iconLiteral="fas-cog" /></graphic>
-            </Button>
+    </Button>
     </HBox>
     </children>
 </VBox>

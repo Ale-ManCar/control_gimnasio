@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.effect.DropShadow?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="controllers.MetricCardController"
@@ -15,6 +16,8 @@
              -fx-cursor: hand;"
       spacing="5" alignment="CENTER"
       prefWidth="200" prefHeight="120">
+
+    <FontIcon fx:id="icono" iconSize="36" iconColor="#1e88e5" />
 
     <Label fx:id="lblTitulo"
            style="-fx-font-size: 14px;

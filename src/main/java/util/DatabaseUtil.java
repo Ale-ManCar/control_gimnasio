@@ -245,6 +245,62 @@ public class DatabaseUtil {
         return 0;
     }
 
+    public static int contarClientesActivos(LocalDate inicio, LocalDate fin) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM clientes WHERE activo = 1 AND date(fechaInicio) BETWEEN ? AND ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, inicio.toString());
+            ps.setString(2, fin.toString());
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getInt(1) : 0;
+        }
+    }
+
+    public static int contarClientesInactivos(LocalDate inicio, LocalDate fin) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM clientes WHERE activo = 0 AND date(fechaInicio) BETWEEN ? AND ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, inicio.toString());
+            ps.setString(2, fin.toString());
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getInt(1) : 0;
+        }
+    }
+
+    public static int contarMembresiasNuevas(LocalDate inicio, LocalDate fin) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM pagos WHERE date(fecha_pago) BETWEEN ? AND ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, inicio.toString());
+            ps.setString(2, fin.toString());
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getInt(1) : 0;
+        }
+    }
+
+    public static int contarProductosStockCritico() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM productos WHERE stock <= 5";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : 0;
+        }
+    }
+
+    public static String obtenerTopProductoVendido(LocalDate inicio, LocalDate fin) throws SQLException {
+        String sql = "SELECT p.nombre, SUM(mi.cantidad) AS total FROM movimientos_inventario mi " +
+                "JOIN productos p ON mi.producto_id = p.id " +
+                "WHERE mi.tipo = 'VENTA' AND date(mi.fecha) BETWEEN ? AND ? " +
+                "GROUP BY mi.producto_id ORDER BY total DESC LIMIT 1";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, inicio.toString());
+            ps.setString(2, fin.toString());
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getString("nombre") : null;
+        }
+    }
+
     public static Integer insertUsuario(String nombre, String passwordHash, String rol, boolean activo) {
         String sql = "INSERT INTO usuarios(nombre, password, rol, activo) VALUES(?,?,?,?)";
         try (Connection conn = getConnection();

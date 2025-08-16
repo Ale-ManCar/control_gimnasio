@@ -10,6 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
@@ -39,6 +40,12 @@ public class AdminDashboardController implements Initializable {
     @FXML private ListView<String> lstReportes;
     @FXML private ListView<String> lstVencimientos;
     @FXML private Label lblUsuarioRol;
+    @FXML private Button btnUsuarios;
+    @FXML private Button btnAuditoria;
+    @FXML private Button btnProveedores;
+    @FXML private Button btnComparador;
+    @FXML private Button btnRespaldos;
+    @FXML private Button btnConfiguracion;
 
     private MetricCardController ctrlClientesActivos;
     private MetricCardController ctrlClientesInactivos;
@@ -57,6 +64,9 @@ public class AdminDashboardController implements Initializable {
             cmbPeriodo.setValue("Hoy");
             cmbArea.getItems().addAll("Todas las áreas", "Ventas", "Membresías");
             cmbArea.setValue("Todas las áreas");
+
+            cmbPeriodo.valueProperty().addListener((obs, o, n) -> cargarDatosTarjetas());
+            cmbArea.valueProperty().addListener((obs, o, n) -> cargarDatosTarjetas());
 
             Platform.runLater(() -> {
                 Stage stage = (Stage) metricsContainer.getScene().getWindow();
@@ -102,6 +112,7 @@ public class AdminDashboardController implements Initializable {
         Pane paneActivos = loaderActivos.load();
         ctrlClientesActivos = loaderActivos.getController();
         ctrlClientesActivos.setTitulo("Clientes Activos");
+        ctrlClientesActivos.setIcon("fas-user-check", "#2e7d32");
         metricsContainer.add(paneActivos, 0, 0);
         paneActivos.setOnMouseClicked(e -> abrirListaClientes());
 
@@ -109,49 +120,67 @@ public class AdminDashboardController implements Initializable {
         Pane paneInactivos = loaderInactivos.load();
         ctrlClientesInactivos = loaderInactivos.getController();
         ctrlClientesInactivos.setTitulo("Clientes Inactivos");
+        ctrlClientesInactivos.setIcon("fas-user-slash", "#c62828");
         metricsContainer.add(paneInactivos, 1, 0);
 
         FXMLLoader loaderMembresias = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
         Pane paneMembresias = loaderMembresias.load();
         ctrlMembresias = loaderMembresias.getController();
         ctrlMembresias.setTitulo("Membresías Nuevas");
+        ctrlMembresias.setIcon("fas-id-card", "#1565c0");
         metricsContainer.add(paneMembresias, 0, 1);
 
         FXMLLoader loaderStock = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
         Pane paneStock = loaderStock.load();
         ctrlStockCritico = loaderStock.getController();
         ctrlStockCritico.setTitulo("Stock Crítico");
+        ctrlStockCritico.setIcon("fas-exclamation-triangle", "#f57c00");
         metricsContainer.add(paneStock, 1, 1);
 
         FXMLLoader loaderTop = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
         Pane paneTop = loaderTop.load();
         ctrlTopVentas = loaderTop.getController();
         ctrlTopVentas.setTitulo("Top de Ventas");
+        ctrlTopVentas.setIcon("fas-chart-line", "#6a1b9a");
         metricsContainer.add(paneTop, 0, 2);
     }
 
     private void cargarDatosTarjetas() {
-        try (Connection conn = DatabaseUtil.getConnection()) {
-            String sqlActivos = "SELECT COUNT(*) AS total FROM clientes WHERE activo = 1";
-            try (PreparedStatement ps = conn.prepareStatement(sqlActivos);
-                 ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    ctrlClientesActivos.setValor(rs.getString("total"));
-                }
+        LocalDate hoy = LocalDate.now();
+        LocalDate inicio = hoy;
+        LocalDate fin = hoy;
+
+        String periodo = cmbPeriodo.getValue();
+        if ("Esta semana".equals(periodo)) {
+            inicio = hoy.minusDays(hoy.getDayOfWeek().getValue() - 1);
+            fin = inicio.plusDays(6);
+        } else if ("Este mes".equals(periodo)) {
+            inicio = hoy.withDayOfMonth(1);
+            fin = hoy.withDayOfMonth(hoy.lengthOfMonth());
+        }
+
+        String area = cmbArea.getValue();
+
+        try {
+            if (!"Ventas".equals(area)) {
+                ctrlClientesActivos.setValor(String.valueOf(DatabaseUtil.contarClientesActivos(inicio, fin)));
+                ctrlClientesInactivos.setValor(String.valueOf(DatabaseUtil.contarClientesInactivos(inicio, fin)));
+                ctrlMembresias.setValor(String.valueOf(DatabaseUtil.contarMembresiasNuevas(inicio, fin)));
+            } else {
+                ctrlClientesActivos.setValor("-");
+                ctrlClientesInactivos.setValor("-");
+                ctrlMembresias.setValor("-");
             }
 
-            String sqlInactivos = "SELECT COUNT(*) AS total FROM clientes WHERE activo = 0";
-            try (PreparedStatement ps = conn.prepareStatement(sqlInactivos);
-                 ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    ctrlClientesInactivos.setValor(rs.getString("total"));
-                }
+            if (!"Membresías".equals(area)) {
+                int criticos = DatabaseUtil.contarProductosStockCritico();
+                ctrlStockCritico.setValor(String.valueOf(criticos));
+                String top = DatabaseUtil.obtenerTopProductoVendido(inicio, fin);
+                ctrlTopVentas.setValor(top != null ? top : "N/A");
+            } else {
+                ctrlStockCritico.setValor("-");
+                ctrlTopVentas.setValor("-");
             }
-
-            ctrlMembresias.setValor("0");
-            ctrlStockCritico.setValor("0");
-            ctrlTopVentas.setValor("0");
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -232,49 +261,30 @@ public class AdminDashboardController implements Initializable {
 
     @FXML
     private void abrirAuditoria(ActionEvent event) {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/auditoria.fxml"));
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        abrirVentana("/fxml/auditoria.fxml", "Auditoría");
     }
 
     @FXML
     private void abrirUsuarios(ActionEvent event) {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/usuarios.fxml"));
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Gestión de Usuarios");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        abrirVentana("/fxml/usuarios.fxml", "Gestión de Usuarios");
     }
 
     @FXML
     private void abrirProveedores(ActionEvent event) {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/proveedores.fxml"));
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Gestión de Proveedores");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        abrirVentana("/fxml/proveedores.fxml", "Gestión de Proveedores");
     }
 
     @FXML
     private void abrirReportes(ActionEvent event) {
+        abrirVentana("/fxml/reportes.fxml", "Reportes");
+    }
+
+    private void abrirVentana(String recurso, String titulo) {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/reportes.fxml"));
+            Parent root = FXMLLoader.load(getClass().getResource(recurso));
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
-            stage.setTitle("Reportes");
+            stage.setTitle(titulo);
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
@@ -282,17 +292,17 @@ public class AdminDashboardController implements Initializable {
     }
 
     @FXML
-    private void abrirComparador(ActionEvent event) {
-        // TODO implementar comparador de precios
+    private void abrirComparadorPrecios(ActionEvent event) {
+        abrirVentana("/fxml/comparador_precios.fxml", "Comparador de Precios");
     }
 
     @FXML
     private void abrirRespaldos(ActionEvent event) {
-        // TODO implementar respaldos
+        abrirVentana("/fxml/respaldos.fxml", "Respaldos");
     }
 
     @FXML
     private void abrirConfiguracion(ActionEvent event) {
-        // TODO implementar configuracion
+        abrirVentana("/fxml/configuracion.fxml", "Configuración");
     }
 }
