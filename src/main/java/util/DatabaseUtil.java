@@ -41,6 +41,8 @@ public class DatabaseUtil {
                 "fechaInicio TEXT NOT NULL," +
                 "fecha_vencimiento TEXT NOT NULL," +
                 "monto_pago REAL NOT NULL," +
+                "area TEXT," +
+                "coach_id INTEGER REFERENCES coaches(id)," +
                 "activo BOOLEAN DEFAULT TRUE)";
 
         String sqlAlertas = "CREATE TABLE IF NOT EXISTS alertas_enviadas (" +
@@ -95,7 +97,19 @@ public class DatabaseUtil {
                 "descripcion TEXT NOT NULL," +
                 "monto REAL NOT NULL," +
                 "fecha TEXT NOT NULL," +
-                "categoria TEXT NOT NULL)";
+                "categoria TEXT NOT NULL," +
+                "numero_factura TEXT," +
+                "proveedor_id INTEGER," +
+                "adjunto TEXT)";
+
+        String sqlEgresoDetalles = "CREATE TABLE IF NOT EXISTS egreso_detalles (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "egreso_id INTEGER NOT NULL," +
+                "producto_id INTEGER NOT NULL," +
+                "cantidad INTEGER NOT NULL," +
+                "costo REAL NOT NULL," +
+                "FOREIGN KEY (egreso_id) REFERENCES egresos(id)," +
+                "FOREIGN KEY (producto_id) REFERENCES productos(id))";
 
         String sqlMovimientosInventario = "CREATE TABLE IF NOT EXISTS movimientos_inventario (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -136,12 +150,11 @@ public class DatabaseUtil {
             stmt.execute(sqlProductos);
             stmt.execute(sqlVentas);
             stmt.execute(sqlEgresos);
+            stmt.execute(sqlEgresoDetalles);
             stmt.execute(sqlCoaches);
             stmt.execute(sqlUsuarios);
             stmt.execute(sqlAuditoria);
             stmt.execute(sqlMovimientosInventario);
-            try { stmt.execute("ALTER TABLE clientes ADD COLUMN area TEXT"); } catch (SQLException ignored) {}
-            try { stmt.execute("ALTER TABLE clientes ADD COLUMN coach_id INTEGER REFERENCES coaches(id)"); } catch (SQLException ignored) {}
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
             // Inicializamos un usuario administrador con contraseña cifrada utilizando BCrypt
             final String adminHash = SecurityUtil.hashPassword("admin123");
@@ -646,14 +659,22 @@ public class DatabaseUtil {
     }
 
     public static void insertarEgreso(Egreso egreso) throws SQLException {
-        String sql = "INSERT INTO egresos (descripcion, monto, fecha, categoria) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO egresos (descripcion, monto, fecha, categoria, numero_factura, proveedor_id, adjunto) VALUES (?, ?, ?, ?, ?, ?, ?)";
         executeUpdate(sql,
                 egreso.getDescripcion(),
                 egreso.getMonto(),
                 egreso.getFecha().toString(),
-                egreso.getCategoria());
+                egreso.getCategoria(),
+                egreso.getNumeroFactura(),
+                egreso.getProveedorId(),
+                egreso.getRutaAdjunto());
 
         EventBus.fireEvent(EventBus.EventType.EGRESO_REGISTRADO);
+    }
+
+    public static void insertarEgresoDetalle(int egresoId, int productoId, int cantidad, double costo) throws SQLException {
+        String sql = "INSERT INTO egreso_detalles (egreso_id, producto_id, cantidad, costo) VALUES (?, ?, ?, ?)";
+        executeUpdate(sql, egresoId, productoId, cantidad, costo);
     }
 
     public static ObservableList<PagoMensual> getEgresosMensuales(int año) throws SQLException {

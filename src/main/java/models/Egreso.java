@@ -8,6 +8,9 @@ public class Egreso {
     private double monto;
     private LocalDate fecha;
     private String categoria;
+    private String numeroFactura;
+    private int proveedorId;
+    private String rutaAdjunto;
 
     public Egreso() {}
 
@@ -29,4 +32,13 @@ public class Egreso {
     public void setFecha(LocalDate fecha) { this.fecha = fecha; }
     public String getCategoria() { return categoria; }
     public void setCategoria(String categoria) { this.categoria = categoria; }
+
+    public String getNumeroFactura() { return numeroFactura; }
+    public void setNumeroFactura(String numeroFactura) { this.numeroFactura = numeroFactura; }
+
+    public int getProveedorId() { return proveedorId; }
+    public void setProveedorId(int proveedorId) { this.proveedorId = proveedorId; }
+
+    public String getRutaAdjunto() { return rutaAdjunto; }
+    public void setRutaAdjunto(String rutaAdjunto) { this.rutaAdjunto = rutaAdjunto; }
 }
