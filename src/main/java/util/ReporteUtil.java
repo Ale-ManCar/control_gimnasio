@@ -4,9 +4,11 @@ import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.view.JasperViewer;
 import models.Egreso;
+import models.Producto;
 import java.io.InputStream;
 import java.io.File;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,5 +80,42 @@ public class ReporteUtil {
     public static void generarReporteFinanciero() {
         LocalDate hoy = LocalDate.now();
         generarReporteFinanciero(hoy.getMonthValue(), hoy.getYear());
+    }
+
+    /**
+     * Registra el saldo inicial de cada producto al inicio del nuevo mes.
+     * Este movimiento sirve como punto de partida para el Kardex.
+     */
+    public static void cierreMensual(int mes, int anio) {
+        try {
+            List<Producto> productos = DatabaseUtil.getProductos();
+            LocalDateTime fecha = LocalDate.of(anio, mes, 1)
+                    .plusMonths(1)
+                    .atStartOfDay();
+            String usuario = SessionManager.getUsuarioActual() != null
+                    ? SessionManager.getUsuarioActual().getNombre()
+                    : "SISTEMA";
+
+            for (Producto p : productos) {
+                DatabaseUtil.insertMovimientoInventario(
+                        p.getId(),
+                        "SALDO_INICIAL",
+                        p.getStock(),
+                        "Saldo inicial",
+                        usuario,
+                        fecha,
+                        p.getStock()
+                );
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Error durante el cierre mensual: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // Variante que toma el mes y año actuales
+    public static void cierreMensual() {
+        LocalDate hoy = LocalDate.now();
+        cierreMensual(hoy.getMonthValue(), hoy.getYear());
     }
 }
