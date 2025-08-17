@@ -107,6 +107,14 @@ public class ReporteUtil {
                         p.getStock()
                 );
             }
+
+            AuditoriaUtil.registrar(
+                    usuario,
+                    "CIERRE_MENSUAL",
+                    "INVENTARIO",
+                    null,
+                    String.format("Saldo inicial generado %02d/%d", mes, anio)
+            );
         } catch (Exception e) {
             System.err.println("❌ Error durante el cierre mensual: " + e.getMessage());
             e.printStackTrace();

@@ -312,6 +312,15 @@ public class RegistroEgresoController implements Initializable {
                             LocalDateTime.now(),
                             nuevoSaldo
                     );
+                    AuditoriaUtil.registrar(
+                            SessionManager.getUsuarioActual().getNombre(),
+                            "CREATE",
+                            "MOVIMIENTO_INVENTARIO",
+                            null,
+                            "Entrada de " + item.getCantidad() + " unidades del producto "
+                                    + item.getProducto().getNombre() +
+                                    " (Egreso #" + egresoId + ")"
+                    );
                     AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(),
                             "UPDATE", "PRODUCTO", item.getProducto().getId(),
                             "+" + item.getCantidad() + " unidades");
