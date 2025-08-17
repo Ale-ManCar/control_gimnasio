@@ -13,6 +13,7 @@ import models.PagoDetalle;
 import models.PagoMensual;
 import models.Producto;
 import models.Proveedor;
+import models.Cotizacion;
 import models.Usuario;
 import models.MovimientoInventario;
 import util.SecurityUtil;
@@ -95,6 +96,17 @@ public class DatabaseUtil {
                 "peso_total REAL," +
                 "peso_por_scoop REAL)";
 
+        String sqlCotizaciones = "CREATE TABLE IF NOT EXISTS cotizaciones (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "proveedor_id INTEGER NOT NULL," +
+                "producto_id INTEGER NOT NULL," +
+                "presentacion TEXT," +
+                "precio REAL NOT NULL," +
+                "vigencia TEXT," +
+                "condiciones TEXT," +
+                "FOREIGN KEY (proveedor_id) REFERENCES proveedores(id)," +
+                "FOREIGN KEY (producto_id) REFERENCES productos(id))";
+
         String sqlVentas = "CREATE TABLE IF NOT EXISTS ventas (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "fecha TEXT NOT NULL DEFAULT (date('now'))," +
@@ -158,6 +170,7 @@ public class DatabaseUtil {
             stmt.execute(sqlProductos);
             stmt.execute(sqlVentas);
             stmt.execute(sqlProveedores);
+            stmt.execute(sqlCotizaciones);
             stmt.execute(sqlEgresos);
             stmt.execute(sqlEgresoDetalles);
             stmt.execute(sqlCoaches);
@@ -713,6 +726,66 @@ public class DatabaseUtil {
             if (updateStmt != null) try { updateStmt.close(); } catch (SQLException ignored) {}
             if (conn != null) try { conn.close(); } catch (SQLException ignored) {}
         }
+    }
+
+    public static int insertarCotizacion(Cotizacion cotizacion) throws SQLException {
+        String sql = "INSERT INTO cotizaciones (proveedor_id, producto_id, presentacion, precio, vigencia, condiciones) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, cotizacion.getProveedorId());
+            stmt.setInt(2, cotizacion.getProductoId());
+            stmt.setString(3, cotizacion.getPresentacion());
+            stmt.setDouble(4, cotizacion.getPrecio());
+            stmt.setString(5, cotizacion.getVigencia());
+            stmt.setString(6, cotizacion.getCondiciones());
+            stmt.executeUpdate();
+            ResultSet rs = stmt.getGeneratedKeys();
+            if (rs.next()) {
+                int id = rs.getInt(1);
+                cotizacion.setId(id);
+                return id;
+            }
+        }
+        return -1;
+    }
+
+    public static void actualizarCotizacion(Cotizacion cotizacion) throws SQLException {
+        String sql = "UPDATE cotizaciones SET proveedor_id = ?, producto_id = ?, presentacion = ?, precio = ?, vigencia = ?, condiciones = ? WHERE id = ?";
+        executeUpdate(sql,
+                cotizacion.getProveedorId(),
+                cotizacion.getProductoId(),
+                cotizacion.getPresentacion(),
+                cotizacion.getPrecio(),
+                cotizacion.getVigencia(),
+                cotizacion.getCondiciones(),
+                cotizacion.getId());
+    }
+
+    public static void eliminarCotizacion(int id) throws SQLException {
+        String sql = "DELETE FROM cotizaciones WHERE id = ?";
+        executeUpdate(sql, id);
+    }
+
+    public static ObservableList<Cotizacion> getCotizacionesPorProducto(int productoId) throws SQLException {
+        ObservableList<Cotizacion> cotizaciones = FXCollections.observableArrayList();
+        String sql = "SELECT id, proveedor_id, producto_id, presentacion, precio, vigencia, condiciones FROM cotizaciones WHERE producto_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, productoId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Cotizacion c = new Cotizacion();
+                c.setId(rs.getInt("id"));
+                c.setProveedorId(rs.getInt("proveedor_id"));
+                c.setProductoId(rs.getInt("producto_id"));
+                c.setPresentacion(rs.getString("presentacion"));
+                c.setPrecio(rs.getDouble("precio"));
+                c.setVigencia(rs.getString("vigencia"));
+                c.setCondiciones(rs.getString("condiciones"));
+                cotizaciones.add(c);
+            }
+        }
+        return cotizaciones;
     }
 
     public static void insertMovimientoInventario(int productoId, String tipo, int cantidad,
