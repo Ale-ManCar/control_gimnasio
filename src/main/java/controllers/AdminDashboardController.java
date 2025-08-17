@@ -293,7 +293,7 @@ public class AdminDashboardController implements Initializable {
 
     @FXML
     private void abrirComparadorPrecios(ActionEvent event) {
-        abrirVentana("/fxml/comparador_precios.fxml", "Comparador de Precios");
+        abrirVentana("/fxml/comparador.fxml", "Comparador de Precios");
     }
 
     @FXML

@@ -7,12 +7,17 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 import models.Proveedor;
 import models.Cotizacion;
 import models.Producto;
 import util.DatabaseUtil;
 import util.AuditoriaUtil;
 import util.SessionManager;
+import java.io.IOException;
 
 import java.net.URL;
 import java.sql.*;
@@ -246,6 +251,18 @@ public class ProveedoresController implements Initializable {
         } catch (SQLException e) {
             e.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "Error guardando cotización").showAndWait();
+        }
+    }
+    @FXML
+    private void abrirComparador() {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/comparador.fxml"));
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Comparador de Precios");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

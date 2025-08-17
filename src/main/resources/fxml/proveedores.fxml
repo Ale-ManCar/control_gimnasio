@@ -32,6 +32,8 @@
                     style="-fx-background-color: #4A6CF7; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20; -fx-background-radius: 20;"/>
         </VBox>
     </HBox>
+    <Button text="Comparador de precios" onAction="#abrirComparador"
+            style="-fx-background-color: #6C757D; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20; -fx-background-radius: 20;"/>
     <Label text="Cotizaciones" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
     <TableView fx:id="tablaCotizaciones" prefHeight="200"
                style="-fx-background-color: rgba(255,255,255,0.1); -fx-border-color: rgba(255,255,255,0.2);">
