@@ -658,18 +658,43 @@ public class DatabaseUtil {
         EventBus.fireVentaRealizadaEvent();
     }
 
-    public static void insertarEgreso(Egreso egreso) throws SQLException {
+    public static int insertarEgreso(Egreso egreso) throws SQLException {
         String sql = "INSERT INTO egresos (descripcion, monto, fecha, categoria, numero_factura, proveedor_id, adjunto) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        executeUpdate(sql,
-                egreso.getDescripcion(),
-                egreso.getMonto(),
-                egreso.getFecha().toString(),
-                egreso.getCategoria(),
-                egreso.getNumeroFactura(),
-                egreso.getProveedorId(),
-                egreso.getRutaAdjunto());
-
-        EventBus.fireEvent(EventBus.EventType.EGRESO_REGISTRADO);
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+            stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            stmt.setString(1, egreso.getDescripcion());
+            stmt.setDouble(2, egreso.getMonto());
+            stmt.setString(3, egreso.getFecha().toString());
+            stmt.setString(4, egreso.getCategoria());
+            stmt.setString(5, egreso.getNumeroFactura());
+            stmt.setInt(6, egreso.getProveedorId());
+            stmt.setString(7, egreso.getRutaAdjunto());
+            stmt.executeUpdate();
+            ResultSet rs = stmt.getGeneratedKeys();
+            int id = -1;
+            if (rs.next()) {
+                id = rs.getInt(1);
+            }
+            conn.commit();
+            EventBus.fireEvent(EventBus.EventType.EGRESO_REGISTRADO);
+            return id;
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    System.err.println("Error al hacer rollback: " + ex.getMessage());
+                }
+            }
+            throw e;
+        } finally {
+            if (stmt != null) stmt.close();
+            if (conn != null) conn.close();
+        }
     }
 
     public static void insertarEgresoDetalle(int egresoId, int productoId, int cantidad, double costo) throws SQLException {

@@ -3,6 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
+
 <VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="controllers.RegistroEgresoController"
       spacing="20" alignment="CENTER"
@@ -23,21 +24,60 @@
         <padding><Insets top="10" bottom="10" left="10" right="10"/></padding>
         <hgap>15</hgap>
         <vgap>15</vgap>
+
         <Label text="Categoría:" style="-fx-font-weight: bold; -fx-text-fill: white;"
                GridPane.rowIndex="0" GridPane.columnIndex="0"/>
         <ComboBox fx:id="cbCategoria" GridPane.rowIndex="0" GridPane.columnIndex="1"
                   style="-fx-font-size: 14px; -fx-pref-height: 35px; -fx-background-color: rgba(255,255,255,0.9);"/>
+
         <Label text="Monto ($):" style="-fx-font-weight: bold; -fx-text-fill: white;"
                GridPane.rowIndex="1" GridPane.columnIndex="0"/>
         <TextField fx:id="txtMonto" GridPane.rowIndex="1" GridPane.columnIndex="1"
                    style="-fx-font-size: 14px; -fx-pref-height: 35px; -fx-background-color: rgba(255,255,255,0.9);"/>
+
         <Label text="Descripción:" style="-fx-font-weight: bold; -fx-text-fill: white;"
                GridPane.rowIndex="2" GridPane.columnIndex="0"/>
         <TextArea fx:id="txtDescripcion" GridPane.rowIndex="2" GridPane.columnIndex="1"
                   style="-fx-font-size: 14px; -fx-background-color: rgba(255,255,255,0.9);"
                   prefRowCount="4"/>
+
+        <!-- Campos para compras -->
+        <Label fx:id="lblNumeroFactura" text="Número de factura:" style="-fx-font-weight: bold; -fx-text-fill: white;"
+               GridPane.rowIndex="3" GridPane.columnIndex="0" visible="false" managed="false"/>
+        <TextField fx:id="txtNumeroFactura" GridPane.rowIndex="3" GridPane.columnIndex="1"
+                   style="-fx-font-size: 14px; -fx-pref-height: 35px; -fx-background-color: rgba(255,255,255,0.9);"
+                   visible="false" managed="false"/>
+
+        <Label fx:id="lblProveedor" text="Proveedor:" style="-fx-font-weight: bold; -fx-text-fill: white;"
+               GridPane.rowIndex="4" GridPane.columnIndex="0" visible="false" managed="false"/>
+        <ComboBox fx:id="cbProveedor" GridPane.rowIndex="4" GridPane.columnIndex="1"
+                  style="-fx-font-size: 14px; -fx-pref-height: 35px; -fx-background-color: rgba(255,255,255,0.9);"
+                  visible="false" managed="false"/>
+
+        <TableView fx:id="tablaItems" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.columnSpan="2"
+                   visible="false" managed="false" prefHeight="150">
+            <columns>
+                <TableColumn fx:id="colProducto" text="Producto" prefWidth="150"/>
+                <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="80"/>
+                <TableColumn fx:id="colCosto" text="Costo" prefWidth="80"/>
+            </columns>
+        </TableView>
+
+        <HBox fx:id="boxItemsButtons" spacing="10" alignment="CENTER_RIGHT"
+              GridPane.rowIndex="6" GridPane.columnIndex="1" GridPane.columnSpan="2"
+              visible="false" managed="false">
+            <Button fx:id="btnAgregarItem" text="Agregar Ítem" onAction="#handleAgregarItem"/>
+            <Button fx:id="btnEliminarItem" text="Eliminar Ítem" onAction="#handleEliminarItem"/>
+        </HBox>
+
+        <Button fx:id="btnAdjuntarFactura" text="Adjuntar factura"
+                GridPane.rowIndex="7" GridPane.columnIndex="1" GridPane.columnSpan="2"
+                visible="false" managed="false"
+                onAction="#handleAdjuntarFactura"
+                style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-padding: 8 20; -fx-background-radius: 25;"/>
+
         <HBox spacing="15" alignment="CENTER_RIGHT"
-              GridPane.columnIndex="1" GridPane.rowIndex="3">
+              GridPane.columnIndex="1" GridPane.rowIndex="8" GridPane.columnSpan="2">
             <Button fx:id="btnRegistrar" text="Registrar" onAction="#handleRegistrar"
                     style="-fx-background-color: linear-gradient(to right, #4CAF50, #2ECC71);
                            -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20; -fx-background-radius: 25;
