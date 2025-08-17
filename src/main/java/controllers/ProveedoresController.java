@@ -150,7 +150,12 @@ public class ProveedoresController implements Initializable {
             if (proveedorSeleccionado == null) {
                 Integer id = DatabaseUtil.insertarProveedor(nombre, telefono, email);
                 if (id != null) {
-                    AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "CREATE", "PROVEEDOR", id, nombre);
+                    AuditoriaUtil.registrar(
+                            SessionManager.getUsuarioActual().getNombre(),
+                            "ALTA_PROVEEDOR",
+                            "PROVEEDOR",
+                            id,
+                            nombre);
                     if (!activo) {
                         DatabaseUtil.cambiarEstadoProveedor(id, false);
                         AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "STATUS_CHANGE", "PROVEEDOR", id, "INACTIVO");
@@ -160,7 +165,12 @@ public class ProveedoresController implements Initializable {
                 int id = proveedorSeleccionado.getId();
                 boolean estadoPrevio = proveedorSeleccionado.isActivo();
                 DatabaseUtil.actualizarProveedor(id, nombre, telefono, email);
-                AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "UPDATE", "PROVEEDOR", id, nombre);
+                AuditoriaUtil.registrar(
+                        SessionManager.getUsuarioActual().getNombre(),
+                        "EDICION_PROVEEDOR",
+                        "PROVEEDOR",
+                        id,
+                        nombre);
                 if (estadoPrevio != activo) {
                     DatabaseUtil.cambiarEstadoProveedor(id, activo);
                     AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "STATUS_CHANGE", "PROVEEDOR", id, activo ? "ACTIVO" : "INACTIVO");
@@ -237,7 +247,12 @@ public class ProveedoresController implements Initializable {
                 Cotizacion c = new Cotizacion(proveedorSeleccionado.getId(), prod.getId(),
                         presentacion, precio, vigencia, condiciones);
                 int id = DatabaseUtil.insertarCotizacion(c);
-                AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "CREATE", "COTIZACION", id, "Proveedor: " + proveedorSeleccionado.getNombre());
+                AuditoriaUtil.registrar(
+                        SessionManager.getUsuarioActual().getNombre(),
+                        "ALTA_COTIZACION",
+                        "COTIZACION",
+                        id,
+                        "Proveedor: " + proveedorSeleccionado.getNombre());
             } else {
                 cotizacionSeleccionada.setProductoId(prod.getId());
                 cotizacionSeleccionada.setPresentacion(presentacion);
@@ -245,7 +260,12 @@ public class ProveedoresController implements Initializable {
                 cotizacionSeleccionada.setVigencia(vigencia);
                 cotizacionSeleccionada.setCondiciones(condiciones);
                 DatabaseUtil.actualizarCotizacion(cotizacionSeleccionada);
-                AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "UPDATE", "COTIZACION", cotizacionSeleccionada.getId(), "Proveedor: " + proveedorSeleccionado.getNombre());
+                AuditoriaUtil.registrar(
+                        SessionManager.getUsuarioActual().getNombre(),
+                        "EDICION_COTIZACION",
+                        "COTIZACION",
+                        cotizacionSeleccionada.getId(),
+                        "Proveedor: " + proveedorSeleccionado.getNombre());
             }
             cargarCotizaciones(proveedorSeleccionado.getId());
         } catch (SQLException e) {

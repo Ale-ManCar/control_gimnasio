@@ -145,7 +145,7 @@ public class ComparadorPreciosController implements Initializable {
         String proveedor = mapaProveedores.get(seleccionada.getProveedorId());
         AuditoriaUtil.registrar(
                 SessionManager.getUsuarioActual().getNombre(),
-                "COMPRA",
+                "EDICION_COTIZACION",
                 "COTIZACION",
                 seleccionada.getId(),
                 "Proveedor: " + proveedor
