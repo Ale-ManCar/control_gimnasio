@@ -79,7 +79,10 @@ public class DatabaseUtil {
 
         String sqlProveedores = "CREATE TABLE IF NOT EXISTS proveedores (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "nombre TEXT NOT NULL UNIQUE)";
+                "nombre TEXT NOT NULL UNIQUE," +
+                "telefono TEXT," +
+                "email TEXT," +
+                "activo BOOLEAN DEFAULT 1)";
 
         String sqlProductos = "CREATE TABLE IF NOT EXISTS productos (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -617,9 +620,9 @@ public class DatabaseUtil {
         return productos;
     }
 
-    public static ObservableList<Proveedor> getProveedores() throws SQLException {
+    public static ObservableList<Proveedor> getProveedores(boolean activos) throws SQLException {
         ObservableList<Proveedor> proveedores = FXCollections.observableArrayList();
-        String sql = "SELECT id, nombre FROM proveedores";
+        String sql = "SELECT id, nombre, telefono, email, activo FROM proveedores" + (activos ? " WHERE activo = 1" : "");
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -627,10 +630,39 @@ public class DatabaseUtil {
                 Proveedor p = new Proveedor();
                 p.setId(rs.getInt("id"));
                 p.setNombre(rs.getString("nombre"));
+                p.setTelefono(rs.getString("telefono"));
+                p.setEmail(rs.getString("email"));
+                p.setActivo(rs.getBoolean("activo"));
                 proveedores.add(p);
             }
         }
         return proveedores;
+    }
+
+    public static Integer insertarProveedor(String nombre, String telefono, String email) throws SQLException {
+        String sql = "INSERT INTO proveedores(nombre, telefono, email, activo) VALUES(?,?,?,1)";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, nombre);
+            stmt.setString(2, telefono);
+            stmt.setString(3, email);
+            stmt.executeUpdate();
+            ResultSet rs = stmt.getGeneratedKeys();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return null;
+    }
+
+    public static int actualizarProveedor(int id, String nombre, String telefono, String email) throws SQLException {
+        String sql = "UPDATE proveedores SET nombre = ?, telefono = ?, email = ? WHERE id = ?";
+        return executeUpdate(sql, nombre, telefono, email, id);
+    }
+
+    public static int cambiarEstadoProveedor(int id, boolean activo) throws SQLException {
+        String sql = "UPDATE proveedores SET activo = ? WHERE id = ?";
+        return executeUpdate(sql, activo ? 1 : 0, id);
     }
 
     public static void actualizarStockProducto(int id, int cantidadVendida) throws SQLException {

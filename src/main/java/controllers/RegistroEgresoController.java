@@ -80,7 +80,7 @@ public class RegistroEgresoController implements Initializable {
         mostrarCamposCompra(false);
 
         try {
-            ObservableList<Proveedor> proveedores = DatabaseUtil.getProveedores();
+            ObservableList<Proveedor> proveedores = DatabaseUtil.getProveedores(true);
             cbProveedor.setItems(proveedores);
             cbProveedor.setConverter(new StringConverter<Proveedor>() {
                 @Override
