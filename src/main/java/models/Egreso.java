@@ -21,6 +21,17 @@ public class Egreso {
         this.categoria = categoria;
     }
 
+    public Egreso(String descripcion, double monto, LocalDate fecha, String categoria,
+                  String numeroFactura, int proveedorId, String rutaAdjunto) {
+        this.descripcion = descripcion;
+        this.monto = monto;
+        this.fecha = fecha;
+        this.categoria = categoria;
+        this.numeroFactura = numeroFactura;
+        this.proveedorId = proveedorId;
+        this.rutaAdjunto = rutaAdjunto;
+    }
+
     // Getters y setters
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }

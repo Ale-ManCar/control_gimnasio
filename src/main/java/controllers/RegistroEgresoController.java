@@ -16,6 +16,7 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import models.Egreso;
 import models.Producto;
+import models.Proveedor;
 import util.AuditoriaUtil;
 import util.DatabaseUtil;
 import util.EventBus;
@@ -45,7 +46,7 @@ public class RegistroEgresoController implements Initializable {
     @FXML private Label lblNumeroFactura;
     @FXML private TextField txtNumeroFactura;
     @FXML private Label lblProveedor;
-    @FXML private ComboBox<String> cbProveedor;
+    @FXML private ComboBox<Proveedor> cbProveedor;
     @FXML private TableView<ItemCompra> tablaItems;
     @FXML private TableColumn<ItemCompra, String> colProducto;
     @FXML private TableColumn<ItemCompra, Integer> colCantidad;
@@ -77,6 +78,31 @@ public class RegistroEgresoController implements Initializable {
         cbCategoria.getSelectionModel().selectFirst();
         cbCategoria.valueProperty().addListener((obs, oldVal, newVal) -> mostrarCamposCompra("Compra".equals(newVal)));
         mostrarCamposCompra(false);
+
+        try {
+            ObservableList<Proveedor> proveedores = DatabaseUtil.getProveedores();
+            cbProveedor.setItems(proveedores);
+            cbProveedor.setConverter(new StringConverter<Proveedor>() {
+                @Override
+                public String toString(Proveedor proveedor) {
+                    return proveedor == null ? "" : proveedor.getNombre();
+                }
+
+                @Override
+                public Proveedor fromString(String string) {
+                    return null;
+                }
+            });
+            cbProveedor.setCellFactory(param -> new ListCell<Proveedor>() {
+                @Override
+                protected void updateItem(Proveedor item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : item.getNombre());
+                }
+            });
+        } catch (Exception e) {
+            mostrarError("Error al cargar proveedores");
+        }
 
         // Conversión a mayúsculas
         UnaryOperator<TextFormatter.Change> filter = change -> {
@@ -246,18 +272,7 @@ public class RegistroEgresoController implements Initializable {
         );
         File file = chooser.showOpenDialog(btnAdjuntarFactura.getScene().getWindow());
         if (file != null) {
-            try {
-                LocalDate now = LocalDate.now();
-                Path dir = Paths.get("facturas",
-                        String.format("%04d", now.getYear()),
-                        String.format("%02d", now.getMonthValue()));
-                Files.createDirectories(dir);
-                Path dest = dir.resolve(file.getName());
-                Files.copy(file.toPath(), dest, StandardCopyOption.REPLACE_EXISTING);
-                archivoAdjunto = dest.toFile();
-            } catch (Exception e) {
-                mostrarError("No se pudo adjuntar la factura: " + e.getMessage());
-            }
+            archivoAdjunto = file;
         }
     }
 
@@ -271,6 +286,10 @@ public class RegistroEgresoController implements Initializable {
             if ("Compra".equals(cbCategoria.getValue())) {
                 if (txtNumeroFactura.getText().trim().isEmpty()) {
                     mostrarError("Ingrese el número de factura");
+                    return;
+                }
+                if (cbProveedor.getValue() == null) {
+                    mostrarError("Seleccione un proveedor");
                     return;
                 }
                 if (items.isEmpty()) {
@@ -290,7 +309,20 @@ public class RegistroEgresoController implements Initializable {
             egreso.setFecha(LocalDate.now());
             egreso.setCategoria(cbCategoria.getValue());
             egreso.setNumeroFactura(txtNumeroFactura.getText().trim());
-            egreso.setRutaAdjunto(archivoAdjunto != null ? archivoAdjunto.getPath() : null);
+
+            if (archivoAdjunto != null) {
+                LocalDate now = LocalDate.now();
+                Path dir = Paths.get("facturas",
+                        String.format("%04d", now.getYear()),
+                        String.format("%02d", now.getMonthValue()));
+                Files.createDirectories(dir);
+                Path dest = dir.resolve(archivoAdjunto.getName());
+                Files.copy(archivoAdjunto.toPath(), dest, StandardCopyOption.REPLACE_EXISTING);
+                egreso.setRutaAdjunto(dest.toString());
+            }
+
+            Proveedor proveedor = cbProveedor.getValue();
+            egreso.setProveedorId(proveedor != null ? proveedor.getId() : 0);
 
             int egresoId = DatabaseUtil.insertarEgreso(egreso);
 
@@ -326,7 +358,7 @@ public class RegistroEgresoController implements Initializable {
                             "+" + item.getCantidad() + " unidades");
                 }
                 String numeroFactura = txtNumeroFactura.getText().trim();
-                String proveedorNombre = cbProveedor.getValue();
+                String proveedorNombre = proveedor != null ? proveedor.getNombre() : "";
                 AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(),
                         "COMPRA", "EGRESO", egresoId,
                         "Factura " + numeroFactura + " Proveedor " + proveedorNombre);

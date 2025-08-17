@@ -12,6 +12,7 @@ import models.EgresoDetalle;
 import models.PagoDetalle;
 import models.PagoMensual;
 import models.Producto;
+import models.Proveedor;
 import models.Usuario;
 import models.MovimientoInventario;
 import util.SecurityUtil;
@@ -75,6 +76,10 @@ public class DatabaseUtil {
                 "telefono TEXT," +
                 "area TEXT NOT NULL," +
                 "foto_path TEXT)";
+
+        String sqlProveedores = "CREATE TABLE IF NOT EXISTS proveedores (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "nombre TEXT NOT NULL UNIQUE)";
 
         String sqlProductos = "CREATE TABLE IF NOT EXISTS productos (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -149,6 +154,7 @@ public class DatabaseUtil {
             stmt.execute(sqlPagos);
             stmt.execute(sqlProductos);
             stmt.execute(sqlVentas);
+            stmt.execute(sqlProveedores);
             stmt.execute(sqlEgresos);
             stmt.execute(sqlEgresoDetalles);
             stmt.execute(sqlCoaches);
@@ -398,7 +404,7 @@ public class DatabaseUtil {
 
     public static ObservableList<Egreso> getEgresosParaMes(int mes, int anio) {
         ObservableList<Egreso> egresos = FXCollections.observableArrayList();
-        String sql = "SELECT id, descripcion, monto, fecha, categoria FROM egresos " +
+        String sql = "SELECT id, descripcion, monto, fecha, categoria, numero_factura, proveedor_id, adjunto FROM egresos " +
                 "WHERE strftime('%Y', fecha) = ? " +
                 "AND strftime('%m', fecha) = ?";
 
@@ -415,6 +421,9 @@ public class DatabaseUtil {
                 e.setMonto(rs.getDouble("monto"));
                 e.setFecha(LocalDate.parse(rs.getString("fecha")));
                 e.setCategoria(rs.getString("categoria"));
+                e.setNumeroFactura(rs.getString("numero_factura"));
+                e.setProveedorId(rs.getInt("proveedor_id"));
+                e.setRutaAdjunto(rs.getString("adjunto"));
                 egresos.add(e);
             }
         } catch (SQLException e) {
@@ -606,6 +615,22 @@ public class DatabaseUtil {
             }
         }
         return productos;
+    }
+
+    public static ObservableList<Proveedor> getProveedores() throws SQLException {
+        ObservableList<Proveedor> proveedores = FXCollections.observableArrayList();
+        String sql = "SELECT id, nombre FROM proveedores";
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                Proveedor p = new Proveedor();
+                p.setId(rs.getInt("id"));
+                p.setNombre(rs.getString("nombre"));
+                proveedores.add(p);
+            }
+        }
+        return proveedores;
     }
 
     public static void actualizarStockProducto(int id, int cantidadVendida) throws SQLException {

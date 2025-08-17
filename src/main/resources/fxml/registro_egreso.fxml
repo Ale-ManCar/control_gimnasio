@@ -52,7 +52,7 @@
                GridPane.rowIndex="4" GridPane.columnIndex="0" visible="false" managed="false"/>
         <ComboBox fx:id="cbProveedor" GridPane.rowIndex="4" GridPane.columnIndex="1"
                   style="-fx-font-size: 14px; -fx-pref-height: 35px; -fx-background-color: rgba(255,255,255,0.9);"
-                  visible="false" managed="false"/>
+                  promptText="Seleccione" visible="false" managed="false"/>
 
         <TableView fx:id="tablaItems" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.columnSpan="2"
                    visible="false" managed="false" prefHeight="150">
