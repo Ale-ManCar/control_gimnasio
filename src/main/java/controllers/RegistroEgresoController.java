@@ -296,6 +296,10 @@ public class RegistroEgresoController implements Initializable {
                     mostrarError("Agregue al menos un ítem");
                     return;
                 }
+                if (archivoAdjunto == null) {
+                    mostrarError("Debe adjuntar la factura en formato PDF, JPG o PNG. La compra no se confirmará sin este archivo");
+                    return;
+                }
             } else {
                 if (txtMonto.getText().trim().isEmpty()) {
                     mostrarError("Por favor ingrese el monto");
