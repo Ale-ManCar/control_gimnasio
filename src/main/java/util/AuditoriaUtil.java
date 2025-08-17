@@ -55,8 +55,8 @@ public class AuditoriaUtil {
             params.add('%' + usuario + '%');
         }
         if (accion != null && !accion.isBlank()) {
-            sb.append(" AND accion LIKE ?");
-            params.add('%' + accion + '%');
+            sb.append(" AND UPPER(accion) = ?");
+            params.add(accion.toUpperCase());
         }
         if (entidad != null && !entidad.isBlank()) {
             sb.append(" AND entidad LIKE ?");

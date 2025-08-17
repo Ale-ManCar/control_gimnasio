@@ -316,6 +316,11 @@ public class RegistroEgresoController implements Initializable {
                             "UPDATE", "PRODUCTO", item.getProducto().getId(),
                             "+" + item.getCantidad() + " unidades");
                 }
+                String numeroFactura = txtNumeroFactura.getText().trim();
+                String proveedorNombre = cbProveedor.getValue();
+                AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(),
+                        "COMPRA", "EGRESO", egresoId,
+                        "Factura " + numeroFactura + " Proveedor " + proveedorNombre);
             }
 
             AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "CREATE", "EGRESO", null, egreso.getDescripcion());
