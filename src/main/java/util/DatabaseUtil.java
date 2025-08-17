@@ -618,6 +618,46 @@ public class DatabaseUtil {
         executeUpdate(sql, nuevoPrecio, unidadesExtra, id);
     }
 
+    public static void actualizarCostoPromedio(int productoId, double costoUnitario, int cantidad) throws SQLException {
+        String selectSql = "SELECT stock, precio_compra FROM productos WHERE id = ?";
+        String updateSql = "UPDATE productos SET precio_compra = ? WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement selectStmt = null;
+        PreparedStatement updateStmt = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+            selectStmt = conn.prepareStatement(selectSql);
+            selectStmt.setInt(1, productoId);
+            ResultSet rs = selectStmt.executeQuery();
+            if (rs.next()) {
+                int stockActual = rs.getInt("stock");
+                double costoAnterior = rs.getDouble("precio_compra");
+                int stockAnterior = stockActual - cantidad;
+                int nuevoStock = stockActual;
+                double nuevoCosto = ((stockAnterior * costoAnterior) + (cantidad * costoUnitario)) / nuevoStock;
+                updateStmt = conn.prepareStatement(updateSql);
+                updateStmt.setDouble(1, nuevoCosto);
+                updateStmt.setInt(2, productoId);
+                updateStmt.executeUpdate();
+            }
+            conn.commit();
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    System.err.println("Error al hacer rollback: " + ex.getMessage());
+                }
+            }
+            throw e;
+        } finally {
+            if (selectStmt != null) try { selectStmt.close(); } catch (SQLException ignored) {}
+            if (updateStmt != null) try { updateStmt.close(); } catch (SQLException ignored) {}
+            if (conn != null) try { conn.close(); } catch (SQLException ignored) {}
+        }
+    }
+
     public static void insertMovimientoInventario(int productoId, String tipo, int cantidad,
                                                   String motivo, String usuario, LocalDateTime fecha,
                                                   int saldo) throws SQLException {
