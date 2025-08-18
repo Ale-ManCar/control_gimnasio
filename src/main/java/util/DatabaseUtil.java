@@ -345,6 +345,66 @@ public class DatabaseUtil {
         }
     }
 
+    public static double sumarIngresos(LocalDate inicio, LocalDate fin) throws SQLException {
+        String sqlPagos = "SELECT IFNULL(SUM(monto),0) FROM pagos WHERE date(fecha_pago) BETWEEN ? AND ?";
+        String sqlVentas = "SELECT IFNULL(SUM(total),0) FROM ventas WHERE date(fecha) BETWEEN ? AND ?";
+        try (Connection conn = getConnection();
+             PreparedStatement psPagos = conn.prepareStatement(sqlPagos);
+             PreparedStatement psVentas = conn.prepareStatement(sqlVentas)) {
+            psPagos.setString(1, inicio.toString());
+            psPagos.setString(2, fin.toString());
+            ResultSet rsPagos = psPagos.executeQuery();
+            double pagos = rsPagos.next() ? rsPagos.getDouble(1) : 0.0;
+
+            psVentas.setString(1, inicio.toString());
+            psVentas.setString(2, fin.toString());
+            ResultSet rsVentas = psVentas.executeQuery();
+            double ventas = rsVentas.next() ? rsVentas.getDouble(1) : 0.0;
+            return pagos + ventas;
+        }
+    }
+
+    public static double sumarEgresos(LocalDate inicio, LocalDate fin) throws SQLException {
+        String sql = "SELECT IFNULL(SUM(monto),0) FROM egresos WHERE date(fecha) BETWEEN ? AND ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, inicio.toString());
+            ps.setString(2, fin.toString());
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getDouble(1) : 0.0;
+        }
+    }
+
+    public static java.util.List<String> listarVencimientosProximos() throws SQLException {
+        String sql = "SELECT nombres || ' ' || apellidos || ' - ' || fecha_vencimiento AS info " +
+                "FROM clientes WHERE date(fecha_vencimiento) BETWEEN date('now') AND date('now', '+7 days') " +
+                "ORDER BY fecha_vencimiento";
+        java.util.List<String> lista = new java.util.ArrayList<>();
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                lista.add(rs.getString("info"));
+            }
+        }
+        return lista;
+    }
+
+    public static java.util.List<String> listarReportesUltimaSemana() throws SQLException {
+        String sql = "SELECT fecha, balance FROM cierres_diarios WHERE date(fecha) BETWEEN date('now','-6 days') AND date('now') ORDER BY fecha DESC";
+        java.util.List<String> lista = new java.util.ArrayList<>();
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                String fecha = rs.getString("fecha");
+                double balance = rs.getDouble("balance");
+                lista.add(fecha + " - Balance: " + balance);
+            }
+        }
+        return lista;
+    }
+
     public static Integer insertUsuario(String nombre, String passwordHash, String rol, boolean activo) {
         String sql = "INSERT INTO usuarios(nombre, password, rol, activo) VALUES(?,?,?,?)";
         try (Connection conn = getConnection();

@@ -27,4 +27,8 @@ public class MetricCardController {
             icono.setIconColor(Color.web(color));
         }
     }
+
+    public void setIcon(String iconLiteral) {
+        setIcon(iconLiteral, null);
+    }
 }
