@@ -7,12 +7,27 @@ import models.Egreso;
 import models.Producto;
 import java.io.InputStream;
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 public class ReporteUtil {
     public static void generarReporteFinanciero(int mes, int anio) {
@@ -125,5 +140,132 @@ public class ReporteUtil {
     public static void cierreMensual() {
         LocalDate hoy = LocalDate.now();
         cierreMensual(hoy.getMonthValue(), hoy.getYear());
+    }
+
+    public static void generarReporteDiario(LocalDate fecha) {
+        String base = String.format("reporte_dia_%02d", fecha.getDayOfMonth());
+        generarReporte(fecha, fecha, base, "REPORTE_DIARIO");
+    }
+
+    public static void generarReporteMensual(int anio, int mes) {
+        LocalDate inicio = LocalDate.of(anio, mes, 1);
+        LocalDate fin = inicio.withDayOfMonth(inicio.lengthOfMonth());
+        generarReporte(inicio, fin, "reporte_mes", "REPORTE_MENSUAL");
+    }
+
+    public static void generarReporteAnual(int anio) {
+        LocalDate inicio = LocalDate.of(anio, 1, 1);
+        LocalDate fin = inicio.withMonth(12).withDayOfMonth(31);
+        generarReporte(inicio, fin, "reporte_anual", "REPORTE_ANUAL");
+    }
+
+    private static void generarReporte(LocalDate inicio, LocalDate fin, String baseNombre, String accionAuditoria) {
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            String ini = inicio.toString();
+            String fi = fin.toString();
+
+            double pagos = 0.0;
+            try (PreparedStatement ps = conn.prepareStatement("SELECT IFNULL(SUM(monto),0) FROM pagos WHERE date(fecha_pago) BETWEEN ? AND ?")) {
+                ps.setString(1, ini);
+                ps.setString(2, fi);
+                ResultSet rs = ps.executeQuery();
+                pagos = rs.next() ? rs.getDouble(1) : 0.0;
+            }
+
+            double ventas = 0.0;
+            try (PreparedStatement ps = conn.prepareStatement("SELECT IFNULL(SUM(total),0) FROM ventas WHERE date(fecha) BETWEEN ? AND ?")) {
+                ps.setString(1, ini);
+                ps.setString(2, fi);
+                ResultSet rs = ps.executeQuery();
+                ventas = rs.next() ? rs.getDouble(1) : 0.0;
+            }
+
+            double egresos = 0.0;
+            try (PreparedStatement ps = conn.prepareStatement("SELECT IFNULL(SUM(monto),0) FROM egresos WHERE date(fecha) BETWEEN ? AND ?")) {
+                ps.setString(1, ini);
+                ps.setString(2, fi);
+                ResultSet rs = ps.executeQuery();
+                egresos = rs.next() ? rs.getDouble(1) : 0.0;
+            }
+
+            Map<String, Double> ventasCategoria = new HashMap<>();
+            String sqlCat = "SELECT p.tipo, SUM(mi.cantidad * p.precio) AS total FROM movimientos_inventario mi " +
+                    "JOIN productos p ON mi.producto_id = p.id WHERE mi.motivo = 'Venta' AND date(mi.fecha) BETWEEN ? AND ? GROUP BY p.tipo";
+            try (PreparedStatement ps = conn.prepareStatement(sqlCat)) {
+                ps.setString(1, ini);
+                ps.setString(2, fi);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    ventasCategoria.put(rs.getString("tipo"), rs.getDouble("total"));
+                }
+            }
+
+            List<String[]> ventasProducto = new ArrayList<>();
+            String sqlProd = "SELECT p.nombre, p.tipo, SUM(mi.cantidad) AS unidades, SUM(mi.cantidad * p.precio) AS total " +
+                    "FROM movimientos_inventario mi JOIN productos p ON mi.producto_id = p.id " +
+                    "WHERE mi.motivo = 'Venta' AND date(mi.fecha) BETWEEN ? AND ? GROUP BY p.id";
+            try (PreparedStatement ps = conn.prepareStatement(sqlProd)) {
+                ps.setString(1, ini);
+                ps.setString(2, fi);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    ventasProducto.add(new String[]{
+                            rs.getString("nombre"),
+                            rs.getString("tipo"),
+                            String.valueOf(rs.getInt("unidades")),
+                            String.valueOf(rs.getDouble("total"))
+                    });
+                }
+            }
+
+            double ingresos = pagos + ventas;
+            double balance = ingresos - egresos;
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("Ingresos,").append(ingresos).append('\n');
+            sb.append("Egresos,").append(egresos).append('\n');
+            sb.append("Balance,").append(balance).append('\n');
+            sb.append('\n').append("Ventas por categoria\n");
+            sb.append("Categoria,Total\n");
+            for (Map.Entry<String, Double> e : ventasCategoria.entrySet()) {
+                sb.append(e.getKey()).append(',').append(e.getValue()).append('\n');
+            }
+            sb.append('\n').append("Ventas por producto\n");
+            sb.append("Producto,Categoria,Unidades,Total\n");
+            for (String[] arr : ventasProducto) {
+                sb.append(String.join(",", arr)).append('\n');
+            }
+
+            Path dir = Paths.get("reports", String.format("%04d", fin.getYear()), String.format("%02d", fin.getMonthValue()));
+            Files.createDirectories(dir);
+            Path csvPath = dir.resolve(baseNombre + ".csv");
+            Files.writeString(csvPath, sb.toString(), StandardCharsets.UTF_8);
+            Path pdfPath = dir.resolve(baseNombre + ".pdf");
+            crearPdf(sb.toString(), pdfPath);
+
+            AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), accionAuditoria, "REPORTE", null, pdfPath.toString());
+
+        } catch (IOException | SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void crearPdf(String contenido, Path destino) throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage pagina = new PDPage();
+            doc.addPage(pagina);
+            try (PDPageContentStream cs = new PDPageContentStream(doc, pagina)) {
+                cs.beginText();
+                cs.setFont(PDType1Font.HELVETICA, 12);
+                cs.setLeading(14.5f);
+                cs.newLineAtOffset(50, 700);
+                for (String linea : contenido.split("\\n")) {
+                    cs.showText(linea);
+                    cs.newLine();
+                }
+                cs.endText();
+            }
+            doc.save(destino.toFile());
+        }
     }
 }

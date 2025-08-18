@@ -159,6 +159,14 @@ public class DatabaseUtil {
                 "id_entidad INTEGER," +
                 "detalle TEXT)";
 
+        String sqlCierresDiarios = "CREATE TABLE IF NOT EXISTS cierres_diarios (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "fecha TEXT NOT NULL," +
+                "ingresos REAL NOT NULL," +
+                "egresos REAL NOT NULL," +
+                "balance REAL NOT NULL," +
+                "usuario TEXT NOT NULL)";
+
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
 
@@ -176,6 +184,7 @@ public class DatabaseUtil {
             stmt.execute(sqlCoaches);
             stmt.execute(sqlUsuarios);
             stmt.execute(sqlAuditoria);
+            stmt.execute(sqlCierresDiarios);
             stmt.execute(sqlMovimientosInventario);
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
             // Inicializamos un usuario administrador con contraseña cifrada utilizando BCrypt

@@ -46,6 +46,7 @@ public class AdminDashboardController implements Initializable {
     @FXML private Button btnComparador;
     @FXML private Button btnRespaldos;
     @FXML private Button btnConfiguracion;
+    @FXML private Button btnCerrarDia;
 
     private MetricCardController ctrlClientesActivos;
     private MetricCardController ctrlClientesInactivos;
@@ -304,5 +305,70 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private void abrirConfiguracion(ActionEvent event) {
         abrirVentana("/fxml/configuracion.fxml", "Configuración");
+    }
+
+    @FXML
+    private void handleCerrarDia(ActionEvent event) {
+        if (!SessionManager.isAdmin()) {
+            System.out.println("Acceso denegado: solo un administrador puede cerrar el día");
+            return;
+        }
+
+        LocalDate hoy = LocalDate.now();
+        String usuario = SessionManager.getUsuarioActual().getNombre();
+
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            String sqlPagos = "SELECT IFNULL(SUM(monto),0) FROM pagos WHERE date(fecha_pago)=?";
+            String sqlVentas = "SELECT IFNULL(SUM(total),0) FROM ventas WHERE date(fecha)=?";
+            String sqlEgresos = "SELECT IFNULL(SUM(monto),0) FROM egresos WHERE date(fecha)=?";
+
+            double pagos;
+            double ventas;
+            double egresos;
+
+            try (PreparedStatement ps = conn.prepareStatement(sqlPagos)) {
+                ps.setString(1, hoy.toString());
+                ResultSet rs = ps.executeQuery();
+                pagos = rs.next() ? rs.getDouble(1) : 0.0;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sqlVentas)) {
+                ps.setString(1, hoy.toString());
+                ResultSet rs = ps.executeQuery();
+                ventas = rs.next() ? rs.getDouble(1) : 0.0;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sqlEgresos)) {
+                ps.setString(1, hoy.toString());
+                ResultSet rs = ps.executeQuery();
+                egresos = rs.next() ? rs.getDouble(1) : 0.0;
+            }
+
+            double ingresos = pagos + ventas;
+            double balance = ingresos - egresos;
+
+            String insertSql = "INSERT INTO cierres_diarios (fecha, ingresos, egresos, balance, usuario) VALUES (?,?,?,?,?)";
+            try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
+                ps.setString(1, hoy.toString());
+                ps.setDouble(2, ingresos);
+                ps.setDouble(3, egresos);
+                ps.setDouble(4, balance);
+                ps.setString(5, usuario);
+                ps.executeUpdate();
+            }
+
+            AuditoriaUtil.registrar(usuario, "CIERRE_DIARIO", "CIERRE", null, hoy.toString());
+
+            ReporteUtil.generarReporteDiario(hoy);
+            if (hoy.getDayOfMonth() == hoy.lengthOfMonth()) {
+                ReporteUtil.generarReporteMensual(hoy.getYear(), hoy.getMonthValue());
+            }
+            if (hoy.getDayOfYear() == hoy.lengthOfYear()) {
+                ReporteUtil.generarReporteAnual(hoy.getYear());
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
