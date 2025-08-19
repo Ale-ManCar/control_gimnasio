@@ -1,5 +1,6 @@
 package controllers;
 
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -7,48 +8,62 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Stage;
 import models.Usuario;
+import util.AuditoriaUtil;
 import util.DatabaseUtil;
 import util.SecurityUtil;
 import util.SessionManager;
-import util.AuditoriaUtil;
 
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class UsuariosController implements Initializable {
 
     @FXML private TableView<Usuario> tablaUsuarios;
-    @FXML private TableColumn<Usuario, Integer> colId;
     @FXML private TableColumn<Usuario, String> colNombre;
     @FXML private TableColumn<Usuario, String> colRol;
-    @FXML private TableColumn<Usuario, String> colActivo;
+    @FXML private TableColumn<Usuario, String> colEstado;
+    @FXML private TableColumn<Usuario, String> colUltimoIngreso;
     @FXML private TextField txtNombre;
     @FXML private PasswordField txtPassword;
-    @FXML private ComboBox<String> cbRol;
+    @FXML private ComboBox<String> cmbRol;
     @FXML private CheckBox chkActivo;
+    @FXML private Button btnNuevo;
+    @FXML private Button btnGuardar;
+    @FXML private Button btnEliminar;
+    @FXML private Button btnResetPass;
 
     private Usuario usuarioSeleccionado;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        cbRol.setItems(FXCollections.observableArrayList("ADMIN", "OPERADOR"));
+        if (!SessionManager.isAdmin()) {
+            Platform.runLater(() -> {
+                Stage stage = (Stage) tablaUsuarios.getScene().getWindow();
+                stage.close();
+            });
+            return;
+        }
 
-        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        cmbRol.setItems(FXCollections.observableArrayList("ADMIN", "OPERADOR"));
+
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colRol.setCellValueFactory(new PropertyValueFactory<>("rol"));
-        colActivo.setCellValueFactory(cellData ->
-                new ReadOnlyStringWrapper(cellData.getValue().isActivo() ? "Activo" : "Inactivo"));
+        colEstado.setCellValueFactory(data ->
+                new ReadOnlyStringWrapper(data.getValue().isActivo() ? "Activo" : "Inactivo"));
+        colUltimoIngreso.setCellValueFactory(data -> {
+            LocalDateTime fecha = data.getValue().getUltimoIngreso();
+            return new ReadOnlyStringWrapper(fecha != null ? fecha.toString().replace('T', ' ') : "");
+        });
 
         tablaUsuarios.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
             if (newSel != null) {
                 usuarioSeleccionado = newSel;
                 txtNombre.setText(newSel.getNombre());
-                cbRol.setValue(newSel.getRol());
+                cmbRol.setValue(newSel.getRol());
                 chkActivo.setSelected(newSel.isActivo());
             }
         });
@@ -56,54 +71,27 @@ public class UsuariosController implements Initializable {
         cargarUsuarios();
     }
 
-    private boolean verificarAdmin() {
-        if (!SessionManager.isAdmin()) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Acceso denegado");
-            alert.showAndWait();
-            return false;
-        }
-        return true;
-    }
-
     private void cargarUsuarios() {
-        if (!verificarAdmin()) return;
-        ObservableList<Usuario> lista = FXCollections.observableArrayList();
-        String sql = "SELECT id, nombre, rol, activo FROM usuarios";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                Usuario u = new Usuario();
-                u.setId(rs.getInt("id"));
-                u.setNombre(rs.getString("nombre"));
-                u.setRol(rs.getString("rol"));
-                u.setActivo(rs.getBoolean("activo"));
-                lista.add(u);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        List<Usuario> usuarios = DatabaseUtil.obtenerUsuarios();
+        ObservableList<Usuario> lista = FXCollections.observableArrayList(usuarios);
         tablaUsuarios.setItems(lista);
     }
 
     @FXML
     private void nuevoUsuario() {
-        if (!verificarAdmin()) return;
         usuarioSeleccionado = null;
         txtNombre.clear();
         txtPassword.clear();
-        cbRol.getSelectionModel().clearSelection();
+        cmbRol.getSelectionModel().clearSelection();
         chkActivo.setSelected(true);
         tablaUsuarios.getSelectionModel().clearSelection();
     }
 
     @FXML
     private void guardarUsuario() {
-        if (!verificarAdmin()) return;
-
         String nombre = txtNombre.getText();
         String password = txtPassword.getText();
-        String rol = cbRol.getValue();
+        String rol = cmbRol.getValue();
         boolean activo = chkActivo.isSelected();
 
         if (nombre == null || nombre.isBlank() || rol == null) {
@@ -113,67 +101,68 @@ public class UsuariosController implements Initializable {
 
         try {
             if (usuarioSeleccionado == null) {
-                String hash = SecurityUtil.hashPassword(password != null ? password : "");
-                String sql = "INSERT INTO usuarios(nombre, password, rol, activo) VALUES(?,?,?,?)";
-                Integer id = null;
-                try (Connection conn = DatabaseUtil.getConnection();
-                     PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-                    stmt.setString(1, nombre);
-                    stmt.setString(2, hash);
-                    stmt.setString(3, rol);
-                    stmt.setInt(4, activo ? 1 : 0);
-                    stmt.executeUpdate();
-                    ResultSet rs = stmt.getGeneratedKeys();
-                    if (rs.next()) {
-                        id = rs.getInt(1);
-                    }
-                }
-                AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "CREATE", "USUARIO", id, nombre);
+                Usuario u = new Usuario();
+                u.setNombre(nombre);
+                u.setPasswordHash(SecurityUtil.hashPassword(password != null ? password : ""));
+                u.setRol(rol);
+                u.setActivo(activo);
+                int id = DatabaseUtil.insertarUsuario(u);
+                AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(),
+                        "ALTA_USUARIO", "USUARIO", id, nombre);
             } else {
-                boolean estadoPrevio = usuarioSeleccionado.isActivo();
+                usuarioSeleccionado.setNombre(nombre);
                 if (password != null && !password.isBlank()) {
-                    String hash = SecurityUtil.hashPassword(password);
-                    String sql = "UPDATE usuarios SET nombre=?, password=?, rol=?, activo=? WHERE id=?";
-                    DatabaseUtil.executeUpdate(sql, nombre, hash, rol, activo ? 1 : 0, usuarioSeleccionado.getId());
-                } else {
-                    String sql = "UPDATE usuarios SET nombre=?, rol=?, activo=? WHERE id=?";
-                    DatabaseUtil.executeUpdate(sql, nombre, rol, activo ? 1 : 0, usuarioSeleccionado.getId());
+                    usuarioSeleccionado.setPasswordHash(SecurityUtil.hashPassword(password));
                 }
-                AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "UPDATE", "USUARIO", usuarioSeleccionado.getId(), nombre);
-                if (estadoPrevio != activo) {
-                    AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "STATUS_CHANGE", "USUARIO", usuarioSeleccionado.getId(), activo ? "ACTIVO" : "INACTIVO");
-                }
+                usuarioSeleccionado.setRol(rol);
+                usuarioSeleccionado.setActivo(activo);
+                DatabaseUtil.actualizarUsuario(usuarioSeleccionado);
+                AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(),
+                        "MOD_USUARIO", "USUARIO", usuarioSeleccionado.getId(), nombre);
             }
             cargarUsuarios();
             nuevoUsuario();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "Error al guardar usuario").showAndWait();
         }
     }
 
     @FXML
-    private void eliminarUsuario() {
-        if (!verificarAdmin()) return;
-
+    private void cambiarEstadoUsuario() {
         if (usuarioSeleccionado == null) {
             new Alert(Alert.AlertType.WARNING, "Seleccione un usuario").showAndWait();
             return;
         }
+        boolean nuevoEstado = !usuarioSeleccionado.isActivo();
+        try {
+            DatabaseUtil.cambiarEstadoUsuario(usuarioSeleccionado.getId(), nuevoEstado);
+            AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(),
+                    "BAJA_USUARIO", "USUARIO", usuarioSeleccionado.getId(),
+                    nuevoEstado ? "Activado" : "Desactivado");
+            cargarUsuarios();
+            nuevoUsuario();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Eliminar usuario seleccionado?", ButtonType.OK, ButtonType.CANCEL);
-        confirm.showAndWait().ifPresent(btn -> {
-            if (btn == ButtonType.OK) {
-                try {
-                    DatabaseUtil.executeUpdate("DELETE FROM usuarios WHERE id=?", usuarioSeleccionado.getId());
-                    AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), "DELETE", "USUARIO", usuarioSeleccionado.getId(), usuarioSeleccionado.getNombre());
-                    cargarUsuarios();
-                    nuevoUsuario();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    new Alert(Alert.AlertType.ERROR, "Error al eliminar usuario").showAndWait();
-                }
-            }
-        });
+    @FXML
+    private void resetearPassword() {
+        if (usuarioSeleccionado == null) {
+            new Alert(Alert.AlertType.WARNING, "Seleccione un usuario").showAndWait();
+            return;
+        }
+        try {
+            usuarioSeleccionado.setPasswordHash(SecurityUtil.hashPassword("123456"));
+            DatabaseUtil.actualizarUsuario(usuarioSeleccionado);
+            AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(),
+                    "RESET_PASS", "USUARIO", usuarioSeleccionado.getId(),
+                    "Contraseña restablecida");
+            cargarUsuarios();
+            nuevoUsuario();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

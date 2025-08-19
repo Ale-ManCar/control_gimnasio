@@ -264,14 +264,80 @@ public class DatabaseUtil {
     }
 
     public static void actualizarUltimoIngreso(int userId) {
+        actualizarUltimoIngreso(userId, LocalDateTime.now());
+    }
+
+    public static void actualizarUltimoIngreso(int id, LocalDateTime fecha) {
         String sql = "UPDATE usuarios SET ultimo_ingreso = ? WHERE id = ?";
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, LocalDateTime.now().toString());
-            pstmt.setInt(2, userId);
+            pstmt.setString(1, fecha.toString());
+            pstmt.setInt(2, id);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    public static List<Usuario> obtenerUsuarios() {
+        List<Usuario> usuarios = new ArrayList<>();
+        String sql = "SELECT id, nombre, password, rol, activo, ultimo_ingreso FROM usuarios";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Usuario u = new Usuario();
+                u.setId(rs.getInt("id"));
+                u.setNombre(rs.getString("nombre"));
+                u.setPasswordHash(rs.getString("password"));
+                u.setRol(rs.getString("rol"));
+                u.setActivo(rs.getBoolean("activo"));
+                String ult = rs.getString("ultimo_ingreso");
+                if (ult != null) {
+                    u.setUltimoIngreso(LocalDateTime.parse(ult));
+                }
+                usuarios.add(u);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return usuarios;
+    }
+
+    public static int insertarUsuario(Usuario u) throws SQLException {
+        String sql = "INSERT INTO usuarios(nombre, password, rol, activo) VALUES(?,?,?,?)";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, u.getNombre());
+            stmt.setString(2, u.getPasswordHash());
+            stmt.setString(3, u.getRol());
+            stmt.setBoolean(4, u.isActivo());
+            stmt.executeUpdate();
+            ResultSet rs = stmt.getGeneratedKeys();
+            return rs.next() ? rs.getInt(1) : -1;
+        }
+    }
+
+    public static void actualizarUsuario(Usuario u) throws SQLException {
+        String sql = "UPDATE usuarios SET nombre=?, password=?, rol=?, activo=? WHERE id=?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, u.getNombre());
+            stmt.setString(2, u.getPasswordHash());
+            stmt.setString(3, u.getRol());
+            stmt.setBoolean(4, u.isActivo());
+            stmt.setInt(5, u.getId());
+            stmt.executeUpdate();
+        }
+    }
+
+    public static void cambiarEstadoUsuario(int id, boolean activo) throws SQLException {
+        String sql = "UPDATE usuarios SET activo=? WHERE id=?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setBoolean(1, activo);
+            stmt.setInt(2, id);
+            stmt.executeUpdate();
         }
     }
 
@@ -375,11 +441,11 @@ public class DatabaseUtil {
         }
     }
 
-    public static java.util.List<String> listarVencimientosProximos() throws SQLException {
+    public static List<String> listarVencimientosProximos() throws SQLException {
         String sql = "SELECT nombres || ' ' || apellidos || ' - ' || fecha_vencimiento AS info " +
                 "FROM clientes WHERE date(fecha_vencimiento) BETWEEN date('now') AND date('now', '+7 days') " +
                 "ORDER BY fecha_vencimiento";
-        java.util.List<String> lista = new java.util.ArrayList<>();
+        List<String> lista = new ArrayList<>();
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -390,9 +456,9 @@ public class DatabaseUtil {
         return lista;
     }
 
-    public static java.util.List<String> listarReportesUltimaSemana() throws SQLException {
+    public static List<String> listarReportesUltimaSemana() throws SQLException {
         String sql = "SELECT fecha, balance FROM cierres_diarios WHERE date(fecha) BETWEEN date('now','-6 days') AND date('now') ORDER BY fecha DESC";
-        java.util.List<String> lista = new java.util.ArrayList<>();
+        List<String> lista = new ArrayList<>();
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -857,9 +923,8 @@ public class DatabaseUtil {
         return cotizaciones;
     }
 
-    public static void insertMovimientoInventario(int productoId, String tipo, int cantidad,
-                                                  String motivo, String usuario, LocalDateTime fecha,
-                                                  int saldo) throws SQLException {
+    public static void insertMovimientoInventario(int productoId, String tipo, int cantidad, String motivo, String usuario, LocalDateTime fecha, int saldo) throws SQLException
+    {
         String sql = "INSERT INTO movimientos_inventario " +
                 "(producto_id, tipo, cantidad, motivo, usuario, fecha, saldo) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
