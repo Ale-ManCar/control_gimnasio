@@ -24,6 +24,9 @@ public class ConfiguracionController implements Initializable {
     @FXML private TextArea txtPlantillaBienvenida;
     @FXML private TextField txtRutaReportes;
     @FXML private TextField txtRutaAdjuntos;
+    @FXML private TextArea txtMensajeWhatsapp;
+    @FXML private TextArea txtMensajeRegistro;
+    @FXML private TextArea txtMensajeRenovacion;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -35,6 +38,9 @@ public class ConfiguracionController implements Initializable {
             txtPlantillaBienvenida.setText(cfg.getPlantillaBienvenida());
             txtRutaReportes.setText(cfg.getRutaReportes());
             txtRutaAdjuntos.setText(cfg.getRutaAdjuntos());
+            txtMensajeWhatsapp.setText(cfg.getMensajeWhatsapp());
+            txtMensajeRegistro.setText(cfg.getMensajeRegistro());
+            txtMensajeRenovacion.setText(cfg.getMensajeRenovacion());
         }
     }
 
@@ -68,6 +74,9 @@ public class ConfiguracionController implements Initializable {
             cfg.setPlantillaBienvenida(txtPlantillaBienvenida.getText());
             cfg.setRutaReportes(txtRutaReportes.getText());
             cfg.setRutaAdjuntos(txtRutaAdjuntos.getText());
+            cfg.setMensajeWhatsapp(txtMensajeWhatsapp.getText());
+            cfg.setMensajeRegistro(txtMensajeRegistro.getText());
+            cfg.setMensajeRenovacion(txtMensajeRenovacion.getText());
             DatabaseUtil.actualizarConfiguracion(cfg);
             AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(),
                     "CONF_ACTUALIZADA", "CONFIG", null, "Cambios en configuración");

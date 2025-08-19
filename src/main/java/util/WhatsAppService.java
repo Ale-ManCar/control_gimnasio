@@ -43,7 +43,7 @@ public class WhatsAppService {
                 enviarAlertaPersonalizada(cliente, "Renovación");
         }
 
-        private static void enviarAlertaPersonalizada(Cliente cliente, String tipoAlerta) {
+        public static void enviarAlertaPersonalizada(Cliente cliente, String tipoAlerta) {
                 if (!validarCondicionesEnvio()) {
                         return;
                 }

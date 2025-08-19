@@ -31,6 +31,12 @@
                         <Button text="Seleccionar" onAction="#seleccionarRutaAdjuntos"/>
                     </children>
                 </HBox>
+                <Label text="Mensaje Vencimiento:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                <TextArea fx:id="txtMensajeWhatsapp" GridPane.rowIndex="6" GridPane.columnIndex="1" prefRowCount="3"/>
+                <Label text="Mensaje Registro:" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+                <TextArea fx:id="txtMensajeRegistro" GridPane.rowIndex="7" GridPane.columnIndex="1" prefRowCount="3"/>
+                <Label text="Mensaje Renovación:" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
+                <TextArea fx:id="txtMensajeRenovacion" GridPane.rowIndex="8" GridPane.columnIndex="1" prefRowCount="3"/>
             </children>
         </GridPane>
         <Button text="Guardar" onAction="#guardarConfiguracion"/>

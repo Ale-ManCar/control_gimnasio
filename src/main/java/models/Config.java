@@ -7,6 +7,9 @@ public class Config {
     private String plantillaBienvenida;
     private String rutaReportes;
     private String rutaAdjuntos;
+    private String mensajeWhatsapp;
+    private String mensajeRegistro;
+    private String mensajeRenovacion;
 
     public double getPlanBasico() {
         return planBasico;
@@ -54,5 +57,29 @@ public class Config {
 
     public void setRutaAdjuntos(String rutaAdjuntos) {
         this.rutaAdjuntos = rutaAdjuntos;
+    }
+
+    public String getMensajeWhatsapp() {
+        return mensajeWhatsapp;
+    }
+
+    public void setMensajeWhatsapp(String mensajeWhatsapp) {
+        this.mensajeWhatsapp = mensajeWhatsapp;
+    }
+
+    public String getMensajeRegistro() {
+        return mensajeRegistro;
+    }
+
+    public void setMensajeRegistro(String mensajeRegistro) {
+        this.mensajeRegistro = mensajeRegistro;
+    }
+
+    public String getMensajeRenovacion() {
+        return mensajeRenovacion;
+    }
+
+    public void setMensajeRenovacion(String mensajeRenovacion) {
+        this.mensajeRenovacion = mensajeRenovacion;
     }
 }

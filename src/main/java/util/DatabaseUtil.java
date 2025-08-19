@@ -59,8 +59,8 @@ public class DatabaseUtil {
                 "id INTEGER PRIMARY KEY," +
                 "nombre_gimnasio TEXT DEFAULT 'Mi Gimnasio'," +
                 "mensaje_whatsapp TEXT DEFAULT '¡Hola *[NOMBRE] [APELLIDO]*! Tu membresía en *[GIMNASIO]* vence en *[DIAS]* días'," +
-                "mensaje_registro TEXT DEFAULT '¡Bienvenido *[NOMBRE] [APELLIDO]* a *[GIMNASIO]*! Tu membresía de *[MEMBRESIA]* es válida hasta *[FECHA].* ¡Gracias por unirte!'," +
-                "mensaje_renovacion TEXT DEFAULT '¡Hola *[NOMBRE] [APELLIDO]!* Tu membresía en *[GIMNASIO*] ha sido renovada por *[MEMBRESIA]*. Nueva fecha de vencimiento: *[FECHA].* ¡Disfruta de nuestros servicios!')";
+                "mensaje_registro TEXT DEFAULT '¡Bienvenido *[NOMBRE] [APELLIDO]* a *[GIMNASIO]*! Tu membresía de *[MEMBRESIA]* es válida hasta *[FECHA]*. ¡Gracias por unirte!'," +
+                "mensaje_renovacion TEXT DEFAULT '¡Hola *[NOMBRE] [APELLIDO]*! Tu membresía en *[GIMNASIO]* ha sido renovada por *[MEMBRESIA]*. Nueva fecha de vencimiento: *[FECHA]*. ¡Disfruta de nuestros servicios!')";
 
         String sqlConfiguracion = "CREATE TABLE IF NOT EXISTS configuracion (" +
                 "id INTEGER PRIMARY KEY," +
@@ -198,6 +198,7 @@ public class DatabaseUtil {
             stmt.execute(sqlCierresDiarios);
             stmt.execute(sqlMovimientosInventario);
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
+            ensureConfigColumns(conn);
             stmt.execute("INSERT OR IGNORE INTO configuracion (id) VALUES (1)");
             // Inicializamos un usuario administrador con contraseña cifrada utilizando BCrypt
             final String adminHash = SecurityUtil.hashPassword("admin123");
@@ -209,6 +210,34 @@ public class DatabaseUtil {
             System.err.println("Error al inicializar la base de datos:");
             e.printStackTrace();
         }
+    }
+
+    private static void ensureConfigColumns(Connection conn) throws SQLException {
+        String[][] columns = {
+                {"mensaje_whatsapp", "¡Hola *[NOMBRE] [APELLIDO]*! Tu membresía en *[GIMNASIO]* vence en *[DIAS]* días"},
+                {"mensaje_registro", "¡Bienvenido *[NOMBRE] [APELLIDO]* a *[GIMNASIO]*! Tu membresía de *[MEMBRESIA]* es válida hasta *[FECHA]*. ¡Gracias por unirte!"},
+                {"mensaje_renovacion", "¡Hola *[NOMBRE] [APELLIDO]*! Tu membresía en *[GIMNASIO]* ha sido renovada por *[MEMBRESIA]*. Nueva fecha de vencimiento: *[FECHA]*. ¡Disfruta de nuestros servicios!"}
+        };
+        for (String[] col : columns) {
+            if (!columnExists(conn, "config", col[0])) {
+                try (Statement st = conn.createStatement()) {
+                    st.execute("ALTER TABLE config ADD COLUMN " + col[0] +
+                            " TEXT DEFAULT '" + col[1].replace("'", "''") + "'");
+                }
+            }
+        }
+    }
+
+    private static boolean columnExists(Connection conn, String table, String column) throws SQLException {
+        String sql = "PRAGMA table_info(" + table + ")";
+        try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                if (column.equalsIgnoreCase(rs.getString("name"))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public static int executeUpdate(String sql, Object... params) throws SQLException {
@@ -1081,37 +1110,76 @@ public class DatabaseUtil {
     }
 
     public static Config getConfiguracion() {
-        String sql = "SELECT * FROM configuracion WHERE id = 1";
-        try (Connection conn = getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            if (rs.next()) {
-                Config cfg = new Config();
-                cfg.setPlanBasico(rs.getDouble("plan_basico"));
-                cfg.setPlanPremium(rs.getDouble("plan_premium"));
-                cfg.setUmbralStock(rs.getInt("umbral_stock"));
-                cfg.setPlantillaBienvenida(rs.getString("plantilla_bienvenida"));
-                cfg.setRutaReportes(rs.getString("ruta_reportes"));
-                cfg.setRutaAdjuntos(rs.getString("ruta_adjuntos"));
-                return cfg;
+        try (Connection conn = getConnection()) {
+            Config cfg = new Config();
+
+            String sqlConf = "SELECT * FROM configuracion WHERE id = 1";
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(sqlConf)) {
+                if (rs.next()) {
+                    cfg.setPlanBasico(rs.getDouble("plan_basico"));
+                    cfg.setPlanPremium(rs.getDouble("plan_premium"));
+                    cfg.setUmbralStock(rs.getInt("umbral_stock"));
+                    cfg.setPlantillaBienvenida(rs.getString("plantilla_bienvenida"));
+                    cfg.setRutaReportes(rs.getString("ruta_reportes"));
+                    cfg.setRutaAdjuntos(rs.getString("ruta_adjuntos"));
+                }
             }
+
+            String sqlMsgs = "SELECT mensaje_whatsapp, mensaje_registro, mensaje_renovacion FROM config WHERE id = 1";
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(sqlMsgs)) {
+                if (rs.next()) {
+                    cfg.setMensajeWhatsapp(rs.getString("mensaje_whatsapp"));
+                    cfg.setMensajeRegistro(rs.getString("mensaje_registro"));
+                    cfg.setMensajeRenovacion(rs.getString("mensaje_renovacion"));
+                }
+            }
+
+            return cfg;
         } catch (SQLException e) {
             e.printStackTrace();
+            return null;
         }
-        return null;
     }
 
     public static void actualizarConfiguracion(Config cfg) throws SQLException {
-        String sql = "UPDATE configuracion SET plan_basico=?, plan_premium=?, umbral_stock=?, plantilla_bienvenida=?, ruta_reportes=?, ruta_adjuntos=? WHERE id=1";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setDouble(1, cfg.getPlanBasico());
-            stmt.setDouble(2, cfg.getPlanPremium());
-            stmt.setInt(3, cfg.getUmbralStock());
-            stmt.setString(4, cfg.getPlantillaBienvenida());
-            stmt.setString(5, cfg.getRutaReportes());
-            stmt.setString(6, cfg.getRutaAdjuntos());
-            stmt.executeUpdate();
+        String sqlConf = "UPDATE configuracion SET plan_basico=?, plan_premium=?, umbral_stock=?, plantilla_bienvenida=?, ruta_reportes=?, ruta_adjuntos=? WHERE id=1";
+        String sqlMsgs = "UPDATE config SET mensaje_whatsapp=?, mensaje_registro=?, mensaje_renovacion=? WHERE id=1";
+
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement stmtConf = conn.prepareStatement(sqlConf);
+                 PreparedStatement stmtMsgs = conn.prepareStatement(sqlMsgs)) {
+
+                stmtConf.setDouble(1, cfg.getPlanBasico());
+                stmtConf.setDouble(2, cfg.getPlanPremium());
+                stmtConf.setInt(3, cfg.getUmbralStock());
+                stmtConf.setString(4, cfg.getPlantillaBienvenida());
+                stmtConf.setString(5, cfg.getRutaReportes());
+                stmtConf.setString(6, cfg.getRutaAdjuntos());
+                stmtConf.executeUpdate();
+
+                stmtMsgs.setString(1, cfg.getMensajeWhatsapp());
+                stmtMsgs.setString(2, cfg.getMensajeRegistro());
+                stmtMsgs.setString(3, cfg.getMensajeRenovacion());
+                stmtMsgs.executeUpdate();
+
+                conn.commit();
+            }
+        } catch (SQLException e) {
+            if (conn != null) {
+                conn.rollback();
+            }
+            throw e;
+        } finally {
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
         }
     }
 }
