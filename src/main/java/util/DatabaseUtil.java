@@ -16,6 +16,7 @@ import models.Proveedor;
 import models.Cotizacion;
 import models.Usuario;
 import models.MovimientoInventario;
+import models.Config;
 import util.SecurityUtil;
 
 public class DatabaseUtil {
@@ -60,6 +61,15 @@ public class DatabaseUtil {
                 "mensaje_whatsapp TEXT DEFAULT '¡Hola *[NOMBRE] [APELLIDO]*! Tu membresía en *[GIMNASIO]* vence en *[DIAS]* días'," +
                 "mensaje_registro TEXT DEFAULT '¡Bienvenido *[NOMBRE] [APELLIDO]* a *[GIMNASIO]*! Tu membresía de *[MEMBRESIA]* es válida hasta *[FECHA].* ¡Gracias por unirte!'," +
                 "mensaje_renovacion TEXT DEFAULT '¡Hola *[NOMBRE] [APELLIDO]!* Tu membresía en *[GIMNASIO*] ha sido renovada por *[MEMBRESIA]*. Nueva fecha de vencimiento: *[FECHA].* ¡Disfruta de nuestros servicios!')";
+
+        String sqlConfiguracion = "CREATE TABLE IF NOT EXISTS configuracion (" +
+                "id INTEGER PRIMARY KEY," +
+                "plan_basico REAL," +
+                "plan_premium REAL," +
+                "umbral_stock INTEGER," +
+                "plantilla_bienvenida TEXT," +
+                "ruta_reportes TEXT," +
+                "ruta_adjuntos TEXT)";
 
         String sqlPagos = "CREATE TABLE IF NOT EXISTS pagos (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -174,6 +184,7 @@ public class DatabaseUtil {
             stmt.execute(sqlClientes);
             stmt.execute(sqlAlertas);
             stmt.execute(sqlConfig);
+            stmt.execute(sqlConfiguracion);
             stmt.execute(sqlPagos);
             stmt.execute(sqlProductos);
             stmt.execute(sqlVentas);
@@ -187,6 +198,7 @@ public class DatabaseUtil {
             stmt.execute(sqlCierresDiarios);
             stmt.execute(sqlMovimientosInventario);
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
+            stmt.execute("INSERT OR IGNORE INTO configuracion (id) VALUES (1)");
             // Inicializamos un usuario administrador con contraseña cifrada utilizando BCrypt
             final String adminHash = SecurityUtil.hashPassword("admin123");
             stmt.execute("INSERT OR IGNORE INTO usuarios (id,nombre,password,rol,activo) VALUES (1,'admin','" + adminHash + "','ADMIN',1)");
@@ -1066,5 +1078,40 @@ public class DatabaseUtil {
             }
         }
         return detalles;
+    }
+
+    public static Config getConfiguracion() {
+        String sql = "SELECT * FROM configuracion WHERE id = 1";
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                Config cfg = new Config();
+                cfg.setPlanBasico(rs.getDouble("plan_basico"));
+                cfg.setPlanPremium(rs.getDouble("plan_premium"));
+                cfg.setUmbralStock(rs.getInt("umbral_stock"));
+                cfg.setPlantillaBienvenida(rs.getString("plantilla_bienvenida"));
+                cfg.setRutaReportes(rs.getString("ruta_reportes"));
+                cfg.setRutaAdjuntos(rs.getString("ruta_adjuntos"));
+                return cfg;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void actualizarConfiguracion(Config cfg) throws SQLException {
+        String sql = "UPDATE configuracion SET plan_basico=?, plan_premium=?, umbral_stock=?, plantilla_bienvenida=?, ruta_reportes=?, ruta_adjuntos=? WHERE id=1";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDouble(1, cfg.getPlanBasico());
+            stmt.setDouble(2, cfg.getPlanPremium());
+            stmt.setInt(3, cfg.getUmbralStock());
+            stmt.setString(4, cfg.getPlantillaBienvenida());
+            stmt.setString(5, cfg.getRutaReportes());
+            stmt.setString(6, cfg.getRutaAdjuntos());
+            stmt.executeUpdate();
+        }
     }
 }

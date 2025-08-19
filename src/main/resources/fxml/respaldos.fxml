@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controllers.RespaldosController"
+      spacing="10" alignment="TOP_CENTER" prefWidth="600" prefHeight="400">
+    <children>
+        <Button text="Generar respaldo" onAction="#generarRespaldo"/>
+        <TableView fx:id="tblRespaldos" prefHeight="300">
+            <columns>
+                <TableColumn fx:id="colFecha" text="Fecha/Hora" prefWidth="150"/>
+                <TableColumn fx:id="colTamano" text="Tamaño" prefWidth="100"/>
+                <TableColumn fx:id="colRuta" text="Ruta" prefWidth="300"/>
+            </columns>
+        </TableView>
+    </children>
+</VBox>

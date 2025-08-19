@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controllers.ConfiguracionController"
+      spacing="10" alignment="TOP_CENTER" prefWidth="600" prefHeight="400">
+    <children>
+        <GridPane hgap="10" vgap="10">
+            <children>
+                <Label text="Plan Básico:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <TextField fx:id="txtPlanBasico" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                <Label text="Plan Premium:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <TextField fx:id="txtPlanPremium" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                <Label text="Umbral de Stock:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <TextField fx:id="txtUmbralStock" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                <Label text="Plantilla Bienvenida:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <TextArea fx:id="txtPlantillaBienvenida" GridPane.rowIndex="3" GridPane.columnIndex="1" prefRowCount="4"/>
+                <Label text="Ruta Reportes:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                <HBox spacing="5" GridPane.rowIndex="4" GridPane.columnIndex="1">
+                    <children>
+                        <TextField fx:id="txtRutaReportes" HBox.hgrow="ALWAYS"/>
+                        <Button text="Seleccionar" onAction="#seleccionarRutaReportes"/>
+                    </children>
+                </HBox>
+                <Label text="Ruta Adjuntos:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                <HBox spacing="5" GridPane.rowIndex="5" GridPane.columnIndex="1">
+                    <children>
+                        <TextField fx:id="txtRutaAdjuntos" HBox.hgrow="ALWAYS"/>
+                        <Button text="Seleccionar" onAction="#seleccionarRutaAdjuntos"/>
+                    </children>
+                </HBox>
+            </children>
+        </GridPane>
+        <Button text="Guardar" onAction="#guardarConfiguracion"/>
+    </children>
+</VBox>
