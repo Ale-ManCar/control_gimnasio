@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.time.LocalDate;
 
 public class RegistroClienteController {
@@ -185,14 +184,14 @@ public class RegistroClienteController {
             stmtCliente.setDouble(7, monto);
 
             if (diario) {
-                stmtCliente.setNull(8, Types.VARCHAR);
-                stmtCliente.setNull(9, Types.INTEGER);
+                stmtCliente.setNull(8, java.sql.Types.VARCHAR);
+                stmtCliente.setNull(9, java.sql.Types.INTEGER);
             } else {
                 stmtCliente.setString(8, cbArea.getValue());
                 if (cbCoach.getValue() != null) {
                     stmtCliente.setInt(9, cbCoach.getValue().getId());
                 } else {
-                    stmtCliente.setNull(9, Types.INTEGER);
+                    stmtCliente.setNull(9, java.sql.Types.INTEGER);
                 }
             }
 
@@ -255,7 +254,7 @@ public class RegistroClienteController {
                 );
                 new Thread(() -> {
                     WhatsAppService.enviarAlertaRegistro(nuevoCliente);
-                    WhatsAppService.enviarAlerta("BIENVENIDA", nuevoCliente);
+                    WhatsAppService.enviarPlantilla("BIENVENIDA", nuevoCliente);
                 }).start();
             }
 
