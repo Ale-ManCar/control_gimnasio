@@ -43,6 +43,10 @@ public class WhatsAppService {
                 enviarAlertaPersonalizada(cliente, "Renovación");
         }
 
+        public static void enviarPlantilla(String tipo, Cliente cliente) {
+                enviarAlertaPersonalizada(cliente, tipo);
+        }
+
         public static void enviarAlertaPersonalizada(Cliente cliente, String tipoAlerta) {
                 if (!validarCondicionesEnvio()) {
                         return;
@@ -226,6 +230,8 @@ public class WhatsAppService {
                         case "Vencimiento": campo = "mensaje_whatsapp"; break;
                         case "Registro": campo = "mensaje_registro"; break;
                         case "Renovación": campo = "mensaje_renovacion"; break;
+                        case "BIENVENIDA":
+                        case "Bienvenida": campo = "plantilla_bienvenida"; break;
                         default: campo = "mensaje_whatsapp";
                 }
 

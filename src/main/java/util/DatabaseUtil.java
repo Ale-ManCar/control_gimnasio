@@ -60,14 +60,14 @@ public class DatabaseUtil {
                 "nombre_gimnasio TEXT DEFAULT 'Mi Gimnasio'," +
                 "mensaje_whatsapp TEXT DEFAULT '¡Hola *[NOMBRE] [APELLIDO]*! Tu membresía en *[GIMNASIO]* vence en *[DIAS]* días'," +
                 "mensaje_registro TEXT DEFAULT '¡Bienvenido *[NOMBRE] [APELLIDO]* a *[GIMNASIO]*! Tu membresía de *[MEMBRESIA]* es válida hasta *[FECHA]*. ¡Gracias por unirte!'," +
-                "mensaje_renovacion TEXT DEFAULT '¡Hola *[NOMBRE] [APELLIDO]*! Tu membresía en *[GIMNASIO]* ha sido renovada por *[MEMBRESIA]*. Nueva fecha de vencimiento: *[FECHA]*. ¡Disfruta de nuestros servicios!')";
+                "mensaje_renovacion TEXT DEFAULT '¡Hola *[NOMBRE] [APELLIDO]*! Tu membresía en *[GIMNASIO]* ha sido renovada por *[MEMBRESIA]*. Nueva fecha de vencimiento: *[FECHA]*. ¡Disfruta de nuestros servicios!'," +
+                "plantilla_bienvenida TEXT DEFAULT '¡Hola *[NOMBRE] [APELLIDO]*! Bienvenido/a a *[GIMNASIO]*.')";
 
         String sqlConfiguracion = "CREATE TABLE IF NOT EXISTS configuracion (" +
                 "id INTEGER PRIMARY KEY," +
                 "plan_basico REAL," +
                 "plan_premium REAL," +
                 "umbral_stock INTEGER," +
-                "plantilla_bienvenida TEXT," +
                 "ruta_reportes TEXT," +
                 "ruta_adjuntos TEXT)";
 
@@ -216,7 +216,8 @@ public class DatabaseUtil {
         String[][] columns = {
                 {"mensaje_whatsapp", "¡Hola *[NOMBRE] [APELLIDO]*! Tu membresía en *[GIMNASIO]* vence en *[DIAS]* días"},
                 {"mensaje_registro", "¡Bienvenido *[NOMBRE] [APELLIDO]* a *[GIMNASIO]*! Tu membresía de *[MEMBRESIA]* es válida hasta *[FECHA]*. ¡Gracias por unirte!"},
-                {"mensaje_renovacion", "¡Hola *[NOMBRE] [APELLIDO]*! Tu membresía en *[GIMNASIO]* ha sido renovada por *[MEMBRESIA]*. Nueva fecha de vencimiento: *[FECHA]*. ¡Disfruta de nuestros servicios!"}
+                {"mensaje_renovacion", "¡Hola *[NOMBRE] [APELLIDO]*! Tu membresía en *[GIMNASIO]* ha sido renovada por *[MEMBRESIA]*. Nueva fecha de vencimiento: *[FECHA]*. ¡Disfruta de nuestros servicios!"},
+                {"plantilla_bienvenida", "¡Hola *[NOMBRE] [APELLIDO]*! Bienvenido/a a *[GIMNASIO]*."}
         };
         for (String[] col : columns) {
             if (!columnExists(conn, "config", col[0])) {
@@ -1141,13 +1142,12 @@ public class DatabaseUtil {
                     cfg.setPlanBasico(rs.getDouble("plan_basico"));
                     cfg.setPlanPremium(rs.getDouble("plan_premium"));
                     cfg.setUmbralStock(rs.getInt("umbral_stock"));
-                    cfg.setPlantillaBienvenida(rs.getString("plantilla_bienvenida"));
                     cfg.setRutaReportes(rs.getString("ruta_reportes"));
                     cfg.setRutaAdjuntos(rs.getString("ruta_adjuntos"));
                 }
             }
 
-            String sqlMsgs = "SELECT mensaje_whatsapp, mensaje_registro, mensaje_renovacion FROM config WHERE id = 1";
+            String sqlMsgs = "SELECT mensaje_whatsapp, mensaje_registro, mensaje_renovacion, plantilla_bienvenida FROM config WHERE id = 1";
             try (Statement stmt = conn.createStatement();
                  ResultSet rs = stmt.executeQuery(sqlMsgs)) {
                 if (rs.next()) {
@@ -1165,8 +1165,8 @@ public class DatabaseUtil {
     }
 
     public static void actualizarConfiguracion(Config cfg) throws SQLException {
-        String sqlConf = "UPDATE configuracion SET plan_basico=?, plan_premium=?, umbral_stock=?, plantilla_bienvenida=?, ruta_reportes=?, ruta_adjuntos=? WHERE id=1";
-        String sqlMsgs = "UPDATE config SET mensaje_whatsapp=?, mensaje_registro=?, mensaje_renovacion=? WHERE id=1";
+        String sqlConf = "UPDATE configuracion SET plan_basico=?, plan_premium=?, umbral_stock=?, ruta_reportes=?, ruta_adjuntos=? WHERE id=1";
+        String sqlMsgs = "UPDATE config SET mensaje_whatsapp=?, mensaje_registro=?, mensaje_renovacion=?, plantilla_bienvenida=? WHERE id=1";
 
         Connection conn = null;
         try {
@@ -1179,14 +1179,14 @@ public class DatabaseUtil {
                 stmtConf.setDouble(1, cfg.getPlanBasico());
                 stmtConf.setDouble(2, cfg.getPlanPremium());
                 stmtConf.setInt(3, cfg.getUmbralStock());
-                stmtConf.setString(4, cfg.getPlantillaBienvenida());
-                stmtConf.setString(5, cfg.getRutaReportes());
-                stmtConf.setString(6, cfg.getRutaAdjuntos());
+                stmtConf.setString(4, cfg.getRutaReportes());
+                stmtConf.setString(5, cfg.getRutaAdjuntos());
                 stmtConf.executeUpdate();
 
                 stmtMsgs.setString(1, cfg.getMensajeWhatsapp());
                 stmtMsgs.setString(2, cfg.getMensajeRegistro());
                 stmtMsgs.setString(3, cfg.getMensajeRenovacion());
+                stmtMsgs.setString(4, cfg.getPlantillaBienvenida());
                 stmtMsgs.executeUpdate();
 
                 conn.commit();
