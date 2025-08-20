@@ -161,23 +161,24 @@ public class ReporteUtil {
 
     public static void generarReporteDiario(LocalDate fecha) {
         String base = String.format("reporte_dia_%02d", fecha.getDayOfMonth());
-        generarReporte(fecha, fecha, base, "REPORTE_DIARIO");
+        generarReporte(fecha, fecha, base, false);
         actualizarIngresosEgresosMensuales();
     }
 
     public static void generarReporteMensual(int anio, int mes) {
         LocalDate inicio = LocalDate.of(anio, mes, 1);
         LocalDate fin = inicio.withDayOfMonth(inicio.lengthOfMonth());
-        generarReporte(inicio, fin, "reporte_mes", "REPORTE_MENSUAL");
+        String base = String.format("reporte_mes_%02d", mes);
+        generarReporte(inicio, fin, base, false);
     }
 
     public static void generarReporteAnual(int anio) {
         LocalDate inicio = LocalDate.of(anio, 1, 1);
         LocalDate fin = inicio.withMonth(12).withDayOfMonth(31);
-        generarReporte(inicio, fin, "reporte_anual", "REPORTE_ANUAL");
+        generarReporte(inicio, fin, "reporte_anual", true);
     }
 
-    private static void generarReporte(LocalDate inicio, LocalDate fin, String baseNombre, String accionAuditoria) {
+    private static void generarReporte(LocalDate inicio, LocalDate fin, String baseNombre, boolean esAnual) {
         try (Connection conn = DatabaseUtil.getConnection()) {
             String ini = inicio.toString();
             String fi = fin.toString();
@@ -196,6 +197,14 @@ public class ReporteUtil {
                 ps.setString(2, fi);
                 ResultSet rs = ps.executeQuery();
                 ventas = rs.next() ? rs.getDouble(1) : 0.0;
+            }
+
+            int membresias = 0;
+            try (PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM pagos WHERE date(fecha_pago) BETWEEN ? AND ?")) {
+                ps.setString(1, ini);
+                ps.setString(2, fi);
+                ResultSet rs = ps.executeQuery();
+                membresias = rs.next() ? rs.getInt(1) : 0;
             }
 
             double egresos = 0.0;
@@ -236,22 +245,69 @@ public class ReporteUtil {
                 }
             }
 
+            double stockInicial = obtenerSaldoInicial(conn, inicio.withDayOfMonth(1));
+            double stockFinal = obtenerSaldoInicial(conn, fin.withDayOfMonth(1).plusMonths(1));
+            if (stockFinal == 0) {
+                try (PreparedStatement ps = conn.prepareStatement("SELECT IFNULL(SUM(stock),0) FROM productos")) {
+                    ResultSet rs = ps.executeQuery();
+                    stockFinal = rs.next() ? rs.getDouble(1) : 0.0;
+                }
+            }
+
             double ingresos = pagos + ventas;
             double balance = ingresos - egresos;
+
+            List<Map.Entry<String, Double>> rankingCategorias = ventasCategoria.entrySet().stream()
+                    .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                    .collect(Collectors.toList());
+            ventasProducto.sort((a, b) -> Double.compare(Double.parseDouble(b[3]), Double.parseDouble(a[3])));
 
             StringBuilder sb = new StringBuilder();
             sb.append("Ingresos,").append(ingresos).append('\n');
             sb.append("Egresos,").append(egresos).append('\n');
             sb.append("Balance,").append(balance).append('\n');
+            sb.append("Membresias,").append(membresias).append('\n');
+            sb.append("StockInicial,").append(stockInicial).append('\n');
+            sb.append("StockFinal,").append(stockFinal).append('\n');
             sb.append('\n').append("Ventas por categoria\n");
             sb.append("Categoria,Total\n");
-            for (Map.Entry<String, Double> e : ventasCategoria.entrySet()) {
+            for (Map.Entry<String, Double> e : rankingCategorias) {
                 sb.append(e.getKey()).append(',').append(e.getValue()).append('\n');
             }
             sb.append('\n').append("Ventas por producto\n");
             sb.append("Producto,Categoria,Unidades,Total\n");
             for (String[] arr : ventasProducto) {
                 sb.append(String.join(",", arr)).append('\n');
+            }
+
+            if (esAnual) {
+                sb.append('\n').append("Resumen anual\n");
+                sb.append("Mes");
+                for (int m = 1; m <= 12; m++) {
+                    sb.append(',').append(m);
+                }
+                sb.append('\n');
+                sb.append("Ingresos");
+                double[] ingresosMes = new double[12];
+                double[] egresosMes = new double[12];
+                for (int m = 1; m <= 12; m++) {
+                    LocalDate mi = LocalDate.of(fin.getYear(), m, 1);
+                    LocalDate mf = mi.withDayOfMonth(mi.lengthOfMonth());
+                    ingresosMes[m - 1] = obtenerIngresos(conn, mi, mf);
+                    egresosMes[m - 1] = obtenerEgresos(conn, mi, mf);
+                    sb.append(',').append(ingresosMes[m - 1]);
+                }
+                sb.append('\n');
+                sb.append("Egresos");
+                for (int m = 1; m <= 12; m++) {
+                    sb.append(',').append(egresosMes[m - 1]);
+                }
+                sb.append('\n');
+                sb.append("Balance");
+                for (int m = 1; m <= 12; m++) {
+                    sb.append(',').append(ingresosMes[m - 1] - egresosMes[m - 1]);
+                }
+                sb.append('\n');
             }
 
             Path dir = Paths.get("reports", String.format("%04d", fin.getYear()), String.format("%02d", fin.getMonthValue()));
@@ -261,10 +317,46 @@ public class ReporteUtil {
             Path pdfPath = dir.resolve(baseNombre + ".pdf");
             crearPdf(sb.toString(), pdfPath);
 
-            AuditoriaUtil.registrar(SessionManager.getUsuarioActual().getNombre(), accionAuditoria, "REPORTE", null, pdfPath.toString());
+            String usuario = SessionManager.getUsuarioActual() != null ? SessionManager.getUsuarioActual().getNombre() : "SISTEMA";
+            AuditoriaUtil.registrar(usuario, "REPORTE_FINANCIERO", null, null, pdfPath.toString());
 
         } catch (IOException | SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    private static double obtenerSaldoInicial(Connection conn, LocalDate fecha) throws SQLException {
+        String sql = "SELECT IFNULL(SUM(saldo),0) FROM movimientos_inventario WHERE motivo='SALDO_INICIAL' AND date(fecha)=?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, fecha.toString());
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getDouble(1) : 0.0;
+        }
+    }
+
+    private static double obtenerIngresos(Connection conn, LocalDate inicio, LocalDate fin) throws SQLException {
+        double ingresos = 0.0;
+        try (PreparedStatement ps = conn.prepareStatement("SELECT IFNULL(SUM(monto),0) FROM pagos WHERE date(fecha_pago) BETWEEN ? AND ?")) {
+            ps.setString(1, inicio.toString());
+            ps.setString(2, fin.toString());
+            ResultSet rs = ps.executeQuery();
+            ingresos += rs.next() ? rs.getDouble(1) : 0.0;
+        }
+        try (PreparedStatement ps = conn.prepareStatement("SELECT IFNULL(SUM(total),0) FROM ventas WHERE date(fecha) BETWEEN ? AND ?")) {
+            ps.setString(1, inicio.toString());
+            ps.setString(2, fin.toString());
+            ResultSet rs = ps.executeQuery();
+            ingresos += rs.next() ? rs.getDouble(1) : 0.0;
+        }
+        return ingresos;
+    }
+
+    private static double obtenerEgresos(Connection conn, LocalDate inicio, LocalDate fin) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement("SELECT IFNULL(SUM(monto),0) FROM egresos WHERE date(fecha) BETWEEN ? AND ?")) {
+            ps.setString(1, inicio.toString());
+            ps.setString(2, fin.toString());
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getDouble(1) : 0.0;
         }
     }
 
@@ -284,6 +376,38 @@ public class ReporteUtil {
                 cs.endText();
             }
             doc.save(destino.toFile());
+        }
+    }
+
+    public static void limpiarReportesAntiguos(int meses) {
+        Path root = Paths.get("reports");
+        if (!Files.exists(root)) {
+            return;
+        }
+        LocalDate limite = LocalDate.now().minusMonths(meses).withDayOfMonth(1);
+        try {
+            Files.walk(root, 2)
+                    .filter(Files::isDirectory)
+                    .filter(p -> !p.equals(root))
+                    .forEach(p -> {
+                        Path rel = root.relativize(p);
+                        if (rel.getNameCount() >= 2) {
+                            int anio = Integer.parseInt(rel.getName(0).toString());
+                            int mes = Integer.parseInt(rel.getName(1).toString());
+                            LocalDate fechaDir = LocalDate.of(anio, mes, 1);
+                            if (fechaDir.isBefore(limite)) {
+                                try {
+                                    Files.walk(p)
+                                            .sorted((a, b) -> b.compareTo(a))
+                                            .forEach(f -> {
+                                                try { Files.deleteIfExists(f); } catch (IOException ignored) {}
+                                            });
+                                } catch (IOException ignored) {}
+                            }
+                        }
+                    });
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

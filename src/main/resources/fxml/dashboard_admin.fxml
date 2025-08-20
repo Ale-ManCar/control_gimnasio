@@ -51,6 +51,9 @@
         <Button fx:id="btnAuditoria" text="Auditoría" onAction="#abrirAuditoria" styleClass="nav-button">
             <graphic><FontIcon iconLiteral="fas-file-alt" /></graphic>
         </Button>
+        <Button fx:id="btnReportes" text="Reportes" onAction="#abrirReportes" styleClass="nav-button">
+            <graphic><FontIcon iconLiteral="fas-chart-pie" /></graphic>
+        </Button>
         <Button fx:id="btnProveedores" text="Proveedores" onAction="#abrirProveedores" styleClass="nav-button">
             <graphic><FontIcon iconLiteral="fas-truck" /></graphic>
         </Button>

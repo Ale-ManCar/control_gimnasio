@@ -44,6 +44,7 @@ public class AdminDashboardController implements Initializable {
     @FXML private Label lblUsuarioRol;
     @FXML private Button btnUsuarios;
     @FXML private Button btnAuditoria;
+    @FXML private Button btnReportes;
     @FXML private Button btnProveedores;
     @FXML private Button btnComparador;
     @FXML private Button btnRespaldos;
@@ -320,6 +321,13 @@ public class AdminDashboardController implements Initializable {
     private void abrirAuditoria(ActionEvent event) {
         if (SessionManager.isAdmin()) {
             abrirVentana("/fxml/auditoria.fxml", "Auditoría");
+        }
+    }
+
+    @FXML
+    private void abrirReportes(ActionEvent event) {
+        if (SessionManager.isAdmin()) {
+            abrirVentana("/fxml/reportes.fxml", "Reportes Financieros");
         }
     }
 

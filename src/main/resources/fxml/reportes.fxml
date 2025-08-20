@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controllers.ReportesController"
+      alignment="TOP_CENTER" spacing="10" prefWidth="600" prefHeight="400">
+    <children>
+        <HBox spacing="10" alignment="CENTER">
+            <DatePicker fx:id="dpFecha" />
+            <Spinner fx:id="spMes" prefWidth="80" />
+            <Spinner fx:id="spAnio" prefWidth="100" />
+        </HBox>
+        <HBox spacing="10" alignment="CENTER">
+            <Button text="Generar PDF" onAction="#generarPdf" />
+            <Button text="Generar CSV" onAction="#generarCsv" />
+            <Button text="Abrir carpeta" onAction="#abrirCarpeta" />
+        </HBox>
+        <ListView fx:id="lstArchivos" prefHeight="250" />
+    </children>
+</VBox>
