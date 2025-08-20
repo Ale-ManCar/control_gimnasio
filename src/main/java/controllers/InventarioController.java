@@ -17,6 +17,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.HBox;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.paint.Paint;
 import javafx.util.StringConverter;
@@ -43,7 +44,8 @@ public class InventarioController {
 
     @FXML private TableView<Producto> tablaProductos;
     @FXML private TableColumn<Producto, String> colProducto;
-    @FXML private TableColumn<Producto, Integer> colUnidades;
+    @FXML private TableColumn<Producto, Integer> colStock;
+    @FXML private TableColumn<Producto, Integer> colMinimo;
     @FXML private TableColumn<Producto, Double> colPrecio;
     @FXML private TableColumn<Producto, Void> colAcciones = new TableColumn<>("ACCIONES");
     @FXML private ComboBox<Producto> cbProductos;
@@ -84,27 +86,18 @@ public class InventarioController {
                 }
             }
         }
-
-        tablaProductos.setRowFactory(tv -> {
-            TableRow<Producto> row = new TableRow<>();
-            row.setOnMouseClicked(event -> {
-                if (!row.isEmpty() && event.getClickCount() == 2) {
-                    Producto prod = row.getItem();
-                    mostrarHistorialProducto(prod);
-                }
-            });
-            return row;
-        });
     }
 
     private void configurarTabla() {
         colProducto.setCellValueFactory(new PropertyValueFactory<>("nombre"));
-        colUnidades.setCellValueFactory(new PropertyValueFactory<>("stock"));
+        colStock.setCellValueFactory(new PropertyValueFactory<>("stock"));
+        colMinimo.setCellValueFactory(new PropertyValueFactory<>("minimo"));
         colPrecio.setCellValueFactory(new PropertyValueFactory<>("precio"));
 
-        colProducto.prefWidthProperty().bind(tablaProductos.widthProperty().multiply(0.55));
-        colUnidades.prefWidthProperty().bind(tablaProductos.widthProperty().multiply(0.20));
-        colPrecio.prefWidthProperty().bind(tablaProductos.widthProperty().multiply(0.20));
+        colProducto.prefWidthProperty().bind(tablaProductos.widthProperty().multiply(0.40));
+        colStock.prefWidthProperty().bind(tablaProductos.widthProperty().multiply(0.15));
+        colMinimo.prefWidthProperty().bind(tablaProductos.widthProperty().multiply(0.15));
+        colPrecio.prefWidthProperty().bind(tablaProductos.widthProperty().multiply(0.15));
         colAcciones.prefWidthProperty().bind(tablaProductos.widthProperty().multiply(0.15));
 
         colPrecio.setCellFactory(column -> new TableCell<Producto, Double>() {
@@ -120,30 +113,57 @@ public class InventarioController {
         });
 
         colAcciones.setCellFactory(col -> new TableCell<>() {
+            private final Button btnReponer = new Button("Reponer");
             private final Button btnEliminar = new Button("Eliminar");
+            private final HBox box = new HBox(5, btnReponer, btnEliminar);
 
             {
+                btnReponer.setOnAction(e -> {
+                    Producto p = getTableView().getItems().get(getIndex());
+                    handleReponerProducto(p);
+                });
                 btnEliminar.setOnAction(e -> {
                     tablaProductos.getSelectionModel().select(getIndex());
                     handleEliminarProducto();
                 });
+                box.setAlignment(Pos.CENTER);
             }
 
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty) {
+                if (empty || !SessionManager.isAdmin()) {
                     setGraphic(null);
-                } else if (SessionManager.isAdmin()) {
-                    setGraphic(btnEliminar);
-                    setAlignment(Pos.CENTER);
                 } else {
-                    setGraphic(null);
+                    setGraphic(box);
                 }
             }
         });
 
         tablaProductos.getColumns().add(colAcciones);
+
+        tablaProductos.setRowFactory(tv -> {
+            TableRow<Producto> row = new TableRow<>() {
+                @Override
+                protected void updateItem(Producto item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setStyle("");
+                    } else if (item.getStock() <= item.getMinimo()) {
+                        setStyle("-fx-background-color: #ffb3b3;");
+                    } else {
+                        setStyle("");
+                    }
+                }
+            };
+            row.setOnMouseClicked(event -> {
+                if (!row.isEmpty() && event.getClickCount() == 2) {
+                    Producto prod = row.getItem();
+                    mostrarHistorialProducto(prod);
+                }
+            });
+            return row;
+        });
     }
 
     private void configurarTablaCarrito() {
@@ -988,6 +1008,23 @@ public class InventarioController {
             return val >= 0;
         } catch (NumberFormatException e) {
             return false;
+        }
+    }
+
+    private void handleReponerProducto(Producto producto) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/registro_egreso.fxml"));
+            Parent root = loader.load();
+            RegistroEgresoController controller = loader.getController();
+            controller.prepararCompraRapida(producto);
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setScene(new Scene(root));
+            stage.setTitle("Reponer Producto");
+            stage.showAndWait();
+            cargarProductos();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

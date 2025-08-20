@@ -1,5 +1,6 @@
 package controllers;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -60,9 +61,13 @@ public class RegistroEgresoController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         if (!SessionManager.isAdmin()) {
-            btnRegistrar.setDisable(true);
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Permiso denegado", ButtonType.OK);
-            alert.showAndWait();
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Solo ADMIN puede registrar egresos", ButtonType.OK);
+                alert.showAndWait();
+                Stage stage = (Stage) btnCancelar.getScene().getWindow();
+                stage.close();
+            });
+            return;
         }
 
         cbCategoria.getItems().addAll(
@@ -261,6 +266,14 @@ public class RegistroEgresoController implements Initializable {
             mostrarError("Error al cargar productos");
             return null;
         }
+    }
+
+    public void prepararCompraRapida(Producto producto) {
+        cbCategoria.setValue("Compra");
+        mostrarCamposCompra(true);
+        items.clear();
+        items.add(new ItemCompra(producto, 1, producto.getPrecioCompra()));
+        recalcularTotal();
     }
 
     @FXML

@@ -70,8 +70,11 @@
                         <TableColumn text="PRODUCTO" fx:id="colProducto" prefWidth="142" style="-fx-alignment: CENTER; -fx-text-fill: #2c3e50; -fx-border-width: 0;">
                             <cellValueFactory><PropertyValueFactory property="nombre"/></cellValueFactory>
                         </TableColumn>
-                        <TableColumn text="UNIDADES" fx:id="colUnidades" prefWidth="100" style="-fx-alignment: CENTER; -fx-text-fill: #2c3e50; -fx-border-width: 0;">
+                        <TableColumn text="STOCK" fx:id="colStock" prefWidth="80" style="-fx-alignment: CENTER; -fx-text-fill: #2c3e50; -fx-border-width: 0;">
                             <cellValueFactory><PropertyValueFactory property="stock"/></cellValueFactory>
+                        </TableColumn>
+                        <TableColumn text="MÍNIMO" fx:id="colMinimo" prefWidth="80" style="-fx-alignment: CENTER; -fx-text-fill: #2c3e50; -fx-border-width: 0;">
+                            <cellValueFactory><PropertyValueFactory property="minimo"/></cellValueFactory>
                         </TableColumn>
                         <TableColumn text="PRECIO" fx:id="colPrecio" prefWidth="100" style="-fx-alignment: CENTER; -fx-text-fill: #2c3e50; -fx-border-width: 0;">
                             <cellValueFactory><PropertyValueFactory property="precio"/></cellValueFactory>

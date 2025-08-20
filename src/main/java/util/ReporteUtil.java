@@ -39,10 +39,12 @@ public class ReporteUtil {
             }
 
             // Obtener datos para el mes y año específico
+            double[] acumulados = DatabaseUtil.obtenerIngresosEgresosAcumulados(mes, anio);
+            double totalIngresos = acumulados[0];
+            double totalEgresos = acumulados[1];
             double totalMembresias = DatabaseUtil.obtenerTotalPagosParaMes(mes, anio);
             double totalVentas = DatabaseUtil.obtenerTotalVentasParaMes(mes, anio);
-            double totalEgresos = DatabaseUtil.obtenerTotalEgresosParaMes(mes, anio);
-            double resultadoNeto = (totalMembresias + totalVentas) - totalEgresos;
+            double resultadoNeto = totalIngresos - totalEgresos;
 
             // Obtener egresos del mes específico
             List<Egreso> egresos = DatabaseUtil.getEgresosParaMes(mes, anio).stream()
@@ -60,6 +62,7 @@ public class ReporteUtil {
             Map<String, Object> parametros = new HashMap<>();
             parametros.put("totalMembresias", totalMembresias);
             parametros.put("totalVentas", totalVentas);
+            parametros.put("totalIngresos", totalIngresos);
             parametros.put("totalEgresos", totalEgresos);
             parametros.put("resultadoNeto", resultadoNeto);
             parametros.put("mesReporte", mes);
@@ -95,6 +98,20 @@ public class ReporteUtil {
     public static void generarReporteFinanciero() {
         LocalDate hoy = LocalDate.now();
         generarReporteFinanciero(hoy.getMonthValue(), hoy.getYear());
+    }
+
+    public static void actualizarIngresosEgresosMensuales() {
+        try {
+            LocalDate hoy = LocalDate.now();
+            int mes = hoy.getMonthValue();
+            int anio = hoy.getYear();
+            double ingresos = DatabaseUtil.obtenerTotalPagosParaMes(mes, anio) +
+                    DatabaseUtil.obtenerTotalVentasParaMes(mes, anio);
+            double egresos = DatabaseUtil.obtenerTotalEgresosParaMes(mes, anio);
+            DatabaseUtil.actualizarIngresosEgresosMensuales(mes, anio, ingresos, egresos);
+        } catch (SQLException e) {
+            System.err.println("❌ Error actualizando acumulados: " + e.getMessage());
+        }
     }
 
     /**
@@ -145,6 +162,7 @@ public class ReporteUtil {
     public static void generarReporteDiario(LocalDate fecha) {
         String base = String.format("reporte_dia_%02d", fecha.getDayOfMonth());
         generarReporte(fecha, fecha, base, "REPORTE_DIARIO");
+        actualizarIngresosEgresosMensuales();
     }
 
     public static void generarReporteMensual(int anio, int mes) {

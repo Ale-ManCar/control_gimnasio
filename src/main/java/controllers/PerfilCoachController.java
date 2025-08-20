@@ -36,6 +36,7 @@ public class PerfilCoachController {
     @FXML private TableView<Cliente> tablaClientes;
     @FXML private TableColumn<Cliente, String> colCliente;
     @FXML private TableColumn<Cliente, String> colTelefono;
+    @FXML private TableColumn<Cliente, String> colVencimiento;
     @FXML private TextField txtBuscar;
     @FXML private Button btnLimpiar;
 
@@ -54,6 +55,7 @@ public class PerfilCoachController {
     private void configurarColumnas() {
         colCliente.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
         colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
+        colVencimiento.setCellValueFactory(new PropertyValueFactory<>("fecha_vencimiento"));
 
         colCliente.setCellFactory(column -> new TableCell<Cliente, String>() {
             @Override
@@ -88,12 +90,30 @@ public class PerfilCoachController {
                 }
             }
         });
+
+        colVencimiento.setCellFactory(column -> new TableCell<Cliente, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(item);
+                    setStyle("-fx-alignment: CENTER; " +
+                            "-fx-font-weight: bold; " +
+                            "-fx-text-fill: black; " +
+                            "-fx-background-color: transparent;");
+                }
+            }
+        });
     }
 
     private void ajustarColumnas() {
         tablaClientes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        colCliente.prefWidthProperty().bind(tablaClientes.widthProperty().multiply(0.6));
-        colTelefono.prefWidthProperty().bind(tablaClientes.widthProperty().multiply(0.4));
+        colCliente.prefWidthProperty().bind(tablaClientes.widthProperty().multiply(0.4));
+        colTelefono.prefWidthProperty().bind(tablaClientes.widthProperty().multiply(0.3));
+        colVencimiento.prefWidthProperty().bind(tablaClientes.widthProperty().multiply(0.3));
     }
 
     private void ocultarScrollBars() {

@@ -786,7 +786,7 @@ public class DatabaseUtil {
 
     public static ObservableList<Producto> getProductos() throws SQLException {
         ObservableList<Producto> productos = FXCollections.observableArrayList();
-        String sql = "SELECT id, nombre, stock, precio, tipo, precio_compra, unidades_por_paca, peso_total, peso_por_scoop FROM productos";
+        String sql = "SELECT id, nombre, stock, minimo, precio, tipo, precio_compra, unidades_por_paca, peso_total, peso_por_scoop FROM productos";
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
@@ -797,6 +797,7 @@ public class DatabaseUtil {
                 p.setId(rs.getInt("id"));
                 p.setNombre(rs.getString("nombre").toUpperCase(Locale.ROOT));
                 p.setStock(rs.getInt("stock"));
+                p.setMinimo(rs.getInt("minimo"));
                 p.setPrecio(rs.getDouble("precio"));
                 p.setTipo(rs.getString("tipo"));
                 p.setPrecioCompra(rs.getDouble("precio_compra"));
@@ -1083,6 +1084,26 @@ public class DatabaseUtil {
             }
         }
         return total;
+    }
+
+    public static void actualizarIngresosEgresosMensuales(int mes, int anio, double ingresos, double egresos) throws SQLException {
+        String sql = "INSERT INTO ingresos_egresos_mensuales (mes, anio, ingresos, egresos) VALUES (?,?,?,?) " +
+                "ON CONFLICT(mes, anio) DO UPDATE SET ingresos = excluded.ingresos, egresos = excluded.egresos";
+        executeUpdate(sql, mes, anio, ingresos, egresos);
+    }
+
+    public static double[] obtenerIngresosEgresosAcumulados(int mes, int anio) throws SQLException {
+        String sql = "SELECT ingresos, egresos FROM ingresos_egresos_mensuales WHERE mes = ? AND anio = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, mes);
+            stmt.setInt(2, anio);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new double[]{rs.getDouble("ingresos"), rs.getDouble("egresos")};
+            }
+        }
+        return new double[]{0, 0};
     }
 
     public static ObservableList<EgresoDetalle> getDetallesEgresos(int año) throws SQLException {

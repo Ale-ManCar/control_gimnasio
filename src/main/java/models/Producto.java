@@ -4,6 +4,7 @@ public class Producto {
     private int id;
     private String nombre;
     private int stock; // Para PACA: unidades | Para KG/LB: número de scoops/servicios
+    private int minimo;
     private double precioVenta; // Precio por unidad/scoop
     private String tipo; // PACA, KG, LB
     private double precioCompra; // Precio de compra (PACA: por paca | KG/LB: por envase completo)
@@ -33,6 +34,8 @@ public class Producto {
     public void setNombre(String nombre) { this.nombre = nombre; }
     public int getStock() { return stock; }
     public void setStock(int stock) { this.stock = stock; }
+    public int getMinimo() { return minimo; }
+    public void setMinimo(int minimo) { this.minimo = minimo; }
     public double getPrecio() { return precioVenta; }
     public void setPrecio(double precioVenta) { this.precioVenta = precioVenta; }
     public String getTipo() { return tipo; }

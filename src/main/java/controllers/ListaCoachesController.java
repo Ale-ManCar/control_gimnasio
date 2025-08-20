@@ -125,6 +125,11 @@ public class ListaCoachesController {
                 btnEliminar.setGraphic(iconEliminar);
                 btnEliminar.setOnAction(e -> {
                     Coach coach = getTableView().getItems().get(getIndex());
+                    if (!SessionManager.isAdmin()) {
+                        Alert alert = new Alert(Alert.AlertType.WARNING, "Solo ADMIN puede eliminar coaches", ButtonType.OK);
+                        alert.showAndWait();
+                        return;
+                    }
                     eliminarCoach(coach);
                 });
 
@@ -133,11 +138,7 @@ public class ListaCoachesController {
                 btnEditar.setStyle(estilo);
                 btnEliminar.setStyle(estilo);
 
-                if (SessionManager.isAdmin()) {
-                    contenedor.getChildren().addAll(btnPerfil, btnEditar, btnEliminar);
-                } else {
-                    contenedor.getChildren().addAll(btnPerfil, btnEditar);
-                }
+                contenedor.getChildren().addAll(btnPerfil, btnEditar, btnEliminar);
                 contenedor.setAlignment(Pos.CENTER);
             }
 
@@ -201,6 +202,12 @@ public class ListaCoachesController {
                     }
                 }
             };
+
+            row.setOnMouseClicked(event -> {
+                if (!row.isEmpty() && event.getClickCount() == 2) {
+                    verPerfil(row.getItem());
+                }
+            });
 
             row.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
                 if (isNowSelected) {

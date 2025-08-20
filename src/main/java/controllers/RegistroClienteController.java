@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.time.LocalDate;
 
 public class RegistroClienteController {
@@ -52,7 +53,10 @@ public class RegistroClienteController {
         if (cbArea != null) {
             cbArea.getItems().addAll("Maquinas", "Bailoterapia", "Crossfit");
             cbArea.valueProperty().addListener((obs, old, val) -> {
-                if (val != null) cargarCoachesPorArea(val);
+                if (val != null) {
+                    cargarCoachesPorArea(val);
+                    cbCoach.getSelectionModel().clearSelection();
+                }
             });
         }
 
@@ -181,14 +185,14 @@ public class RegistroClienteController {
             stmtCliente.setDouble(7, monto);
 
             if (diario) {
-                stmtCliente.setNull(8, java.sql.Types.VARCHAR);
-                stmtCliente.setNull(9, java.sql.Types.INTEGER);
+                stmtCliente.setNull(8, Types.VARCHAR);
+                stmtCliente.setNull(9, Types.INTEGER);
             } else {
                 stmtCliente.setString(8, cbArea.getValue());
                 if (cbCoach.getValue() != null) {
                     stmtCliente.setInt(9, cbCoach.getValue().getId());
                 } else {
-                    stmtCliente.setNull(9, java.sql.Types.INTEGER);
+                    stmtCliente.setNull(9, Types.INTEGER);
                 }
             }
 
@@ -228,6 +232,15 @@ public class RegistroClienteController {
                     "Cliente ID: " + (clienteId == -1 ? "N/A" : clienteId) + ", Monto: " + monto
             );
 
+            AuditoriaUtil.registrar(
+                    SessionManager.getUsuarioActual().getNombre(),
+                    "CAMBIO_COACH",
+                    "CLIENTE",
+                    clienteId == -1 ? null : clienteId,
+                    "Área-> " + (cbArea.getValue() == null ? "" : cbArea.getValue()) +
+                            " Coach-> " + (cbCoach.getValue() == null ? "" : cbCoach.getValue().getNombreCompleto())
+            );
+
             // ✅ Mostrar alerta de éxito
             mostrarAlertaExito();
 
@@ -240,7 +253,10 @@ public class RegistroClienteController {
                         cbMembresia.getValue(),
                         fechaVencimiento
                 );
-                new Thread(() -> WhatsAppService.enviarAlertaRegistro(nuevoCliente)).start();
+                new Thread(() -> {
+                    WhatsAppService.enviarAlertaRegistro(nuevoCliente);
+                    WhatsAppService.enviarAlerta("BIENVENIDA", nuevoCliente);
+                }).start();
             }
 
             // Programar retorno al dashboard
@@ -273,6 +289,7 @@ public class RegistroClienteController {
                         rs.getString("foto_path")
                 ));
             }
+            cbCoach.getSelectionModel().clearSelection();
         } catch (SQLException e) {
             e.printStackTrace();
         }
