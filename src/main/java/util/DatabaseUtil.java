@@ -164,11 +164,11 @@ public class DatabaseUtil {
         String sqlAuditoria = "CREATE TABLE IF NOT EXISTS auditoria (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "usuario TEXT NOT NULL," +
-                "fecha_hora TEXT NOT NULL," +
                 "accion TEXT NOT NULL," +
-                "entidad TEXT NOT NULL," +
-                "id_entidad INTEGER," +
-                "detalle TEXT)";
+                "entidad TEXT," +
+                "entidad_id INTEGER," +
+                "detalle TEXT," +
+                "fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP)";
 
         String sqlCierresDiarios = "CREATE TABLE IF NOT EXISTS cierres_diarios (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +

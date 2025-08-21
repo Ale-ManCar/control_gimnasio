@@ -30,9 +30,9 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 public class AuditoriaUtil {
 
     public static void registrar(String usuario, String accion, String entidad, Integer idEntidad, String detalle) {
-        String sql = "INSERT INTO auditoria (usuario, fecha_hora, accion, entidad, id_entidad, detalle) VALUES (?,?,?,?,?,?)";
+        String sql = "INSERT INTO auditoria (usuario, accion, entidad, entidad_id, detalle) VALUES (?,?,?,?,?)";
         try {
-            DatabaseUtil.executeUpdate(sql, usuario, LocalDateTime.now().toString(), accion, entidad, idEntidad, detalle);
+            DatabaseUtil.executeUpdate(sql, usuario, accion, entidad, idEntidad, detalle);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -43,11 +43,11 @@ public class AuditoriaUtil {
         StringBuilder sb = new StringBuilder("SELECT * FROM auditoria WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (desde != null) {
-            sb.append(" AND fecha_hora >= ?");
+            sb.append(" AND fecha >= ?");
             params.add(desde.atStartOfDay().toString());
         }
         if (hasta != null) {
-            sb.append(" AND fecha_hora <= ?");
+            sb.append(" AND fecha <= ?");
             params.add(hasta.plusDays(1).atStartOfDay().toString());
         }
         if (usuario != null && !usuario.isBlank()) {
@@ -62,7 +62,7 @@ public class AuditoriaUtil {
             sb.append(" AND entidad LIKE ?");
             params.add('%' + entidad + '%');
         }
-        sb.append(" ORDER BY fecha_hora DESC");
+        sb.append(" ORDER BY fecha DESC");
 
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sb.toString())) {
@@ -74,10 +74,10 @@ public class AuditoriaUtil {
                 Auditoria a = new Auditoria();
                 a.setId(rs.getInt("id"));
                 a.setUsuario(rs.getString("usuario"));
-                a.setFechaHora(LocalDateTime.parse(rs.getString("fecha_hora")));
+                a.setFechaHora(rs.getTimestamp("fecha").toLocalDateTime());
                 a.setAccion(rs.getString("accion"));
                 a.setEntidad(rs.getString("entidad"));
-                int idEnt = rs.getInt("id_entidad");
+                int idEnt = rs.getInt("entidad_id");
                 if (!rs.wasNull()) {
                     a.setIdEntidad(idEnt);
                 }
