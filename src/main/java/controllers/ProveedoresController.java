@@ -1,5 +1,6 @@
 package controllers;
 
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -59,6 +60,13 @@ public class ProveedoresController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        if (!SessionManager.isAdmin()) {
+            Platform.runLater(() -> {
+                Stage stage = (Stage) tablaProveedores.getScene().getWindow();
+                stage.close();
+            });
+            return;
+        }
         try {
             productos = DatabaseUtil.getProductos();
             cbProducto.setItems(productos);

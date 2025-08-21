@@ -1,5 +1,6 @@
 package controllers;
 
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -8,6 +9,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.TableCell;
+import javafx.stage.Stage;
 import models.Cotizacion;
 import models.Producto;
 import models.Proveedor;
@@ -40,6 +42,13 @@ public class ComparadorPreciosController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        if (!SessionManager.isAdmin()) {
+            Platform.runLater(() -> {
+                Stage stage = (Stage) cbProducto.getScene().getWindow();
+                stage.close();
+            });
+            return;
+        }
         try {
             cbProducto.setItems(DatabaseUtil.getProductos());
             ObservableList<Proveedor> proveedores = DatabaseUtil.getProveedores(false);
