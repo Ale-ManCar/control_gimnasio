@@ -56,7 +56,7 @@ public class ReportesController implements Initializable {
             int anio = spAnio.getValue();
             if (fecha != null) {
                 ReporteUtil.generarReporteDiario(fecha);
-            } else if (mes != null && mes > 0) {
+            } else if (mes > 0) {
                 ReporteUtil.generarReporteMensual(anio, mes);
             } else {
                 ReporteUtil.generarReporteAnual(anio);

@@ -1,0 +1,12 @@
+Ingresos,0.0
+Egresos,0.0
+Balance,0.0
+Membresias,0
+StockInicial,0.0
+StockFinal,0.0
+
+Ventas por categoria
+Categoria,Total
+
+Ventas por producto
+Producto,Categoria,Unidades,Total
