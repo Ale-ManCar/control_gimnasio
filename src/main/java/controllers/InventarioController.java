@@ -584,6 +584,7 @@ public class InventarioController {
         TextField txtPrecioCompra = createStyledTextField("Precio compra (envase)", true);
         TextField txtPrecioVenta = createStyledTextField("Precio venta", true);
         TextField txtUnidadesPorPaca = createStyledTextField("Unidades por paca", false);
+        TextField txtMinimo = createStyledTextField("Stock mínimo", true);
 
         // Formateadores
         txtNombre.setTextFormatter(new TextFormatter<>(change -> {
@@ -595,6 +596,7 @@ public class InventarioController {
         txtPesoTotal.setTextFormatter(createNumericFormatter(true));
         txtPesoScoop.setTextFormatter(createNumericFormatter(true));
         txtUnidadesPorPaca.setTextFormatter(createNumericFormatter(false));
+        txtMinimo.setTextFormatter(createNumericFormatter(false));
 
         // Labels para mostrar resultados
         Label lblStockCalculado = new Label();
@@ -610,6 +612,7 @@ public class InventarioController {
         Label iconTipo = createIconLabel("fas-cube", "#e74c3c");   // Tipo
         Label iconPrecioCompra = createIconLabel("fas-money-bill-wave", "#2ecc71"); // Precio de compra
         Label iconPrecioVenta = createIconLabel("fas-tag", "#f39c12"); // Precio de venta
+        Label iconMinimo = createIconLabel("fas-exclamation-triangle", "#e74c3c"); // Stock mínimo
         Label iconUnidades = createIconLabel("fas-cubes", "#9b59b6"); // Unidades
         Label iconPesoTotal = createIconLabel("fas-weight", "#1abc9c"); // Peso total
         Label iconScoop = createIconLabel("fas-utensil-spoon", "#e67e22"); // Peso por scoop
@@ -627,17 +630,20 @@ public class InventarioController {
         grid.add(iconPrecioVenta, 0, 3);
         grid.add(txtPrecioVenta, 1, 3, 2, 1);
 
-        grid.add(iconUnidades, 0, 4);
-        grid.add(txtUnidadesPorPaca, 1, 4, 2, 1);
+        grid.add(iconMinimo, 0, 4);
+        grid.add(txtMinimo, 1, 4, 2, 1);
 
-        grid.add(iconPesoTotal, 0, 5);
-        grid.add(txtPesoTotal, 1, 5, 2, 1);
+        grid.add(iconUnidades, 0, 5);
+        grid.add(txtUnidadesPorPaca, 1, 5, 2, 1);
 
-        grid.add(iconScoop, 0, 6);
-        grid.add(txtPesoScoop, 1, 6, 2, 1);
+        grid.add(iconPesoTotal, 0, 6);
+        grid.add(txtPesoTotal, 1, 6, 2, 1);
 
-        grid.add(lblStockCalculado, 0, 7, 3, 1);
-        grid.add(lblResultado, 0, 8, 3, 1);
+        grid.add(iconScoop, 0, 7);
+        grid.add(txtPesoScoop, 1, 7, 2, 1);
+
+        grid.add(lblStockCalculado, 0, 8, 3, 1);
+        grid.add(lblResultado, 0, 9, 3, 1);
 
         // Configuración inicial de visibilidad
         txtPesoTotal.setVisible(false);
@@ -758,6 +764,7 @@ public class InventarioController {
                     String tipo = cbTipo.getValue();
                     BigDecimal bdPrecioCompra = new BigDecimal(txtPrecioCompra.getText().trim());
                     BigDecimal bdPrecioVenta = new BigDecimal(txtPrecioVenta.getText().trim());
+                    int minimo = Integer.parseInt(txtMinimo.getText().trim());
                     int stock = 0;
                     int unidadesPorPaca = 0;
                     BigDecimal bdPesoTotal = BigDecimal.ZERO;
@@ -792,6 +799,7 @@ public class InventarioController {
                     nuevo.setTipo(tipo);
                     nuevo.setPrecioCompra(bdPrecioCompra.doubleValue());
                     nuevo.setPrecio(bdPrecioVenta.doubleValue());
+                    nuevo.setMinimo(minimo);
                     nuevo.setStock(stock);
                     nuevo.setUnidadesPorPaca(unidadesPorPaca);
                     nuevo.setPesoTotal(bdPesoTotal.doubleValue());
@@ -915,6 +923,9 @@ public class InventarioController {
         Label lblSumar = new Label("Unidades a sumar:");
         TextField tfStock = new TextField("0");
 
+        Label lblMinimo = new Label("Mínimo:");
+        TextField tfMinimo = new TextField(String.valueOf(seleccionado.getMinimo()));
+
         Label lblError = new Label();
         lblError.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
 
@@ -924,7 +935,9 @@ public class InventarioController {
         grid.add(lblStockValor, 1, 1);
         grid.add(lblSumar, 0, 2);
         grid.add(tfStock, 1, 2);
-        grid.add(lblError, 0, 3, 2, 1);
+        grid.add(lblMinimo, 0, 3);
+        grid.add(tfMinimo, 1, 3);
+        grid.add(lblError, 0, 4, 2, 1);
 
         dialog.getDialogPane().setContent(grid);
 
@@ -934,30 +947,36 @@ public class InventarioController {
         ChangeListener<String> validador = (obs, oldVal, newVal) -> {
             boolean precioOk = esPrecioValido(tfPrecio.getText());
             boolean stockOk = esStockValido(tfStock.getText());
+            boolean minimoOk = esStockValido(tfMinimo.getText());
 
             if (!precioOk) {
                 lblError.setText("Precio inválido (debe ser número >= 0)");
             } else if (!stockOk) {
                 lblError.setText("Stock inválido (debe ser entero >= 0)");
+            } else if (!minimoOk) {
+                lblError.setText("Mínimo inválido (debe ser entero >= 0)");
             } else {
                 lblError.setText("");
             }
 
-            btnActualizar.setDisable(!(precioOk && stockOk));
+            btnActualizar.setDisable(!(precioOk && stockOk && minimoOk));
         };
 
         tfPrecio.textProperty().addListener(validador);
         tfStock.textProperty().addListener(validador);
+        tfMinimo.textProperty().addListener(validador);
 
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == botonActualizar) {
                 double nuevoPrecio = Double.parseDouble(tfPrecio.getText());
                 int unidadesSumar = Integer.parseInt(tfStock.getText());
+                int minimo = Integer.parseInt(tfMinimo.getText());
 
                 Producto editado = new Producto();
                 editado.setId(seleccionado.getId());
                 editado.setPrecio(nuevoPrecio);
                 editado.setStock(unidadesSumar);
+                editado.setMinimo(minimo);
                 return editado;
             }
             return null;
@@ -966,7 +985,7 @@ public class InventarioController {
         Optional<Producto> resultado = dialog.showAndWait();
         resultado.ifPresent(prod -> {
             try {
-                DatabaseUtil.actualizarProducto(prod.getId(), prod.getPrecio(), prod.getStock());
+                DatabaseUtil.actualizarProducto(prod.getId(), prod.getPrecio(), prod.getStock(), prod.getMinimo());
                 int nuevoSaldo = seleccionado.getStock() + prod.getStock();
                 DatabaseUtil.insertMovimientoInventario(
                         prod.getId(),
@@ -982,7 +1001,7 @@ public class InventarioController {
                         "UPDATE",
                         "PRODUCTO",
                         prod.getId(),
-                        "Precio: " + prod.getPrecio() + ", +" + prod.getStock() + " unidades"
+                        "Precio: " + prod.getPrecio() + ", +" + prod.getStock() + " unidades, minimo: " + prod.getMinimo()
                 );
                 mostrarAlerta("Éxito", "Producto actualizado correctamente.");
                 cargarProductos();

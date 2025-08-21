@@ -99,6 +99,7 @@ public class DatabaseUtil {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "nombre TEXT NOT NULL UNIQUE," +
                 "stock INTEGER NOT NULL," +
+                "minimo INTEGER DEFAULT 0," +
                 "precio REAL NOT NULL," +
                 "tipo TEXT NOT NULL," +
                 "precio_compra REAL NOT NULL," +
@@ -431,7 +432,7 @@ public class DatabaseUtil {
     }
 
     public static int contarProductosStockCritico() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM productos WHERE stock <= 5";
+        String sql = "SELECT COUNT(*) FROM productos WHERE stock <= minimo";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -771,11 +772,12 @@ public class DatabaseUtil {
     }
 
     public static void insertarProducto(Producto producto) throws SQLException {
-        String sql = "INSERT INTO productos (nombre, stock, precio, tipo, precio_compra, unidades_por_paca, peso_total, peso_por_scoop) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO productos (nombre, stock, minimo, precio, tipo, precio_compra, unidades_por_paca, peso_total, peso_por_scoop) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         executeUpdate(sql,
                 producto.getNombre(),
                 producto.getStock(),
+                producto.getMinimo(),
                 producto.getPrecio(),
                 producto.getTipo(),
                 producto.getPrecioCompra(),
@@ -861,9 +863,9 @@ public class DatabaseUtil {
         executeUpdate(sql, cantidadVendida, id);
     }
 
-    public static void actualizarProducto(int id, double nuevoPrecio, int unidadesExtra) throws SQLException {
-        String sql = "UPDATE productos SET precio = ?, stock = stock + ? WHERE id = ?";
-        executeUpdate(sql, nuevoPrecio, unidadesExtra, id);
+    public static void actualizarProducto(int id, double nuevoPrecio, int unidadesExtra, int minimo) throws SQLException {
+        String sql = "UPDATE productos SET precio = ?, stock = stock + ?, minimo = ? WHERE id = ?";
+        executeUpdate(sql, nuevoPrecio, unidadesExtra, minimo, id);
     }
 
     public static void actualizarCostoPromedio(int productoId, double costoUnitario, int cantidad) throws SQLException {

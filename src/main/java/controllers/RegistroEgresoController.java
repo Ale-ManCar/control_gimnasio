@@ -348,7 +348,7 @@ public class RegistroEgresoController implements Initializable {
                     DatabaseUtil.insertarEgresoDetalle(egresoId, item.getProducto().getId(),
                             item.getCantidad(), item.getCosto());
                     DatabaseUtil.actualizarProducto(item.getProducto().getId(),
-                            item.getProducto().getPrecio(), item.getCantidad());
+                            item.getProducto().getPrecio(), item.getCantidad(), item.getProducto().getMinimo());
                     DatabaseUtil.actualizarCostoPromedio(item.getProducto().getId(),
                             item.getCosto(), item.getCantidad());
                     int nuevoSaldo = item.getProducto().getStock() + item.getCantidad();
