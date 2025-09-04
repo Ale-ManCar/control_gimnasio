@@ -621,22 +621,30 @@ public class DatabaseUtil {
         String sqlCompra = "INSERT INTO compras (proveedor_id, fecha, total, ruta_pdf) VALUES (?, date('now'), ?, ?)";
         String sqlDetalle = "INSERT INTO compras_detalle (compra_id, equipo_id, cantidad, precio) VALUES (?, ?, ?, ?)";
         String sqlUpdate = "UPDATE equipos SET stock = stock + ? WHERE id = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmtCompra = conn.prepareStatement(sqlCompra, Statement.RETURN_GENERATED_KEYS);
-             PreparedStatement stmtDetalle = conn.prepareStatement(sqlDetalle);
-             PreparedStatement stmtUpdate = conn.prepareStatement(sqlUpdate)) {
+        Connection conn = null;
+        PreparedStatement stmtCompra = null;
+        PreparedStatement stmtDetalle = null;
+        PreparedStatement stmtUpdate = null;
+        try {
+            conn = getConnection();
             conn.setAutoCommit(false);
+            stmtCompra = conn.prepareStatement(sqlCompra, Statement.RETURN_GENERATED_KEYS);
+            stmtDetalle = conn.prepareStatement(sqlDetalle);
+            stmtUpdate = conn.prepareStatement(sqlUpdate);
+
             double total = cantidad * precioUnitario;
             stmtCompra.setInt(1, proveedorId);
             stmtCompra.setDouble(2, total);
             stmtCompra.setString(3, rutaPdf);
             stmtCompra.executeUpdate();
+
             int compraId = -1;
             try (ResultSet rs = stmtCompra.getGeneratedKeys()) {
                 if (rs.next()) {
                     compraId = rs.getInt(1);
                 }
             }
+
             stmtDetalle.setInt(1, compraId);
             stmtDetalle.setInt(2, equipoId);
             stmtDetalle.setInt(3, cantidad);
@@ -648,6 +656,29 @@ public class DatabaseUtil {
             stmtUpdate.executeUpdate();
 
             conn.commit();
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    System.err.println("Error al hacer rollback: " + ex.getMessage());
+                }
+            }
+            throw e;
+        } finally {
+            if (stmtUpdate != null) {
+                try { stmtUpdate.close(); } catch (SQLException ignored) {}
+            }
+            if (stmtDetalle != null) {
+                try { stmtDetalle.close(); } catch (SQLException ignored) {}
+            }
+            if (stmtCompra != null) {
+                try { stmtCompra.close(); } catch (SQLException ignored) {}
+            }
+            if (conn != null) {
+                try { conn.setAutoCommit(true); } catch (SQLException ignored) {}
+                try { conn.close(); } catch (SQLException ignored) {}
+            }
         }
     }
 
