@@ -15,6 +15,10 @@ import models.Producto;
 import models.User;
 import models.Role;
 import models.Turno;
+import models.Equipo;
+import models.Proveedor;
+import models.Compra;
+import models.CompraDetalle;
 
 public class DatabaseUtil {
     private static final String URL = "jdbc:sqlite:database/gimnasio.db";
@@ -122,6 +126,37 @@ public class DatabaseUtil {
                 "timestamp TEXT DEFAULT (datetime('now'))," +
                 "FOREIGN KEY (usuario_id) REFERENCES usuarios(id))";
 
+        String sqlProveedores = "CREATE TABLE IF NOT EXISTS proveedores (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "nombre TEXT NOT NULL UNIQUE," +
+                "contacto TEXT," +
+                "telefono TEXT)";
+
+        String sqlEquipos = "CREATE TABLE IF NOT EXISTS equipos (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "nombre TEXT NOT NULL UNIQUE," +
+                "stock INTEGER NOT NULL," +
+                "precio REAL NOT NULL," +
+                "proveedor_id INTEGER," +
+                "FOREIGN KEY (proveedor_id) REFERENCES proveedores(id))";
+
+        String sqlCompras = "CREATE TABLE IF NOT EXISTS compras (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "proveedor_id INTEGER NOT NULL," +
+                "fecha TEXT NOT NULL," +
+                "total REAL," +
+                "ruta_pdf TEXT," +
+                "FOREIGN KEY (proveedor_id) REFERENCES proveedores(id))";
+
+        String sqlComprasDetalle = "CREATE TABLE IF NOT EXISTS compras_detalle (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "compra_id INTEGER NOT NULL," +
+                "equipo_id INTEGER NOT NULL," +
+                "cantidad INTEGER NOT NULL," +
+                "precio REAL NOT NULL," +
+                "FOREIGN KEY (compra_id) REFERENCES compras(id)," +
+                "FOREIGN KEY (equipo_id) REFERENCES equipos(id))";
+
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
 
@@ -137,6 +172,10 @@ public class DatabaseUtil {
             stmt.execute(sqlUsuarios);
             stmt.execute(sqlTurnos);
             stmt.execute(sqlAuditoria);
+            stmt.execute(sqlProveedores);
+            stmt.execute(sqlEquipos);
+            stmt.execute(sqlCompras);
+            stmt.execute(sqlComprasDetalle);
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN area TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN coach_id INTEGER REFERENCES coaches(id)"); } catch (SQLException ignored) {}
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
@@ -497,6 +536,137 @@ public class DatabaseUtil {
         String sql = "INSERT INTO ventas (fecha, total) VALUES (date('now'), ?)";
         executeUpdate(sql, totalVenta);
         EventBus.fireVentaRealizadaEvent();
+    }
+
+    // ===================== EQUIPOS Y PROVEEDORES =====================
+
+    public static ObservableList<Proveedor> getProveedores() throws SQLException {
+        ObservableList<Proveedor> proveedores = FXCollections.observableArrayList();
+        String sql = "SELECT id, nombre, contacto, telefono FROM proveedores";
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                Proveedor p = new Proveedor();
+                p.setId(rs.getInt("id"));
+                p.setNombre(rs.getString("nombre"));
+                p.setContacto(rs.getString("contacto"));
+                p.setTelefono(rs.getString("telefono"));
+                proveedores.add(p);
+            }
+        }
+        return proveedores;
+    }
+
+    public static int insertarProveedor(Proveedor proveedor) throws SQLException {
+        String sql = "INSERT INTO proveedores (nombre, contacto, telefono) VALUES (?, ?, ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, proveedor.getNombre());
+            stmt.setString(2, proveedor.getContacto());
+            stmt.setString(3, proveedor.getTelefono());
+            stmt.executeUpdate();
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return -1;
+    }
+
+    public static ObservableList<Equipo> getEquipos() throws SQLException {
+        ObservableList<Equipo> equipos = FXCollections.observableArrayList();
+        String sql = "SELECT id, nombre, stock, precio, proveedor_id FROM equipos";
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                Equipo e = new Equipo();
+                e.setId(rs.getInt("id"));
+                e.setNombre(rs.getString("nombre"));
+                e.setStock(rs.getInt("stock"));
+                e.setPrecio(rs.getDouble("precio"));
+                e.setProveedorId(rs.getInt("proveedor_id"));
+                equipos.add(e);
+            }
+        }
+        return equipos;
+    }
+
+    public static int insertarEquipo(Equipo equipo) throws SQLException {
+        String sql = "INSERT INTO equipos (nombre, stock, precio, proveedor_id) VALUES (?, ?, ?, ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, equipo.getNombre());
+            stmt.setInt(2, equipo.getStock());
+            stmt.setDouble(3, equipo.getPrecio());
+            stmt.setObject(4, equipo.getProveedorId());
+            stmt.executeUpdate();
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return -1;
+    }
+
+    public static void actualizarStockEquipo(int id, int nuevoStock) throws SQLException {
+        String sql = "UPDATE equipos SET stock = ? WHERE id = ?";
+        executeUpdate(sql, nuevoStock, id);
+    }
+
+    public static void registrarCompra(int proveedorId, int equipoId, int cantidad, double precioUnitario, String rutaPdf) throws SQLException {
+        String sqlCompra = "INSERT INTO compras (proveedor_id, fecha, total, ruta_pdf) VALUES (?, date('now'), ?, ?)";
+        String sqlDetalle = "INSERT INTO compras_detalle (compra_id, equipo_id, cantidad, precio) VALUES (?, ?, ?, ?)";
+        String sqlUpdate = "UPDATE equipos SET stock = stock + ? WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmtCompra = conn.prepareStatement(sqlCompra, Statement.RETURN_GENERATED_KEYS);
+             PreparedStatement stmtDetalle = conn.prepareStatement(sqlDetalle);
+             PreparedStatement stmtUpdate = conn.prepareStatement(sqlUpdate)) {
+            conn.setAutoCommit(false);
+            double total = cantidad * precioUnitario;
+            stmtCompra.setInt(1, proveedorId);
+            stmtCompra.setDouble(2, total);
+            stmtCompra.setString(3, rutaPdf);
+            stmtCompra.executeUpdate();
+            int compraId = -1;
+            try (ResultSet rs = stmtCompra.getGeneratedKeys()) {
+                if (rs.next()) {
+                    compraId = rs.getInt(1);
+                }
+            }
+            stmtDetalle.setInt(1, compraId);
+            stmtDetalle.setInt(2, equipoId);
+            stmtDetalle.setInt(3, cantidad);
+            stmtDetalle.setDouble(4, precioUnitario);
+            stmtDetalle.executeUpdate();
+
+            stmtUpdate.setInt(1, cantidad);
+            stmtUpdate.setInt(2, equipoId);
+            stmtUpdate.executeUpdate();
+
+            conn.commit();
+        }
+    }
+
+    public static Map<String, Double> getPreciosPorProveedor(int equipoId) throws SQLException {
+        Map<String, Double> data = new LinkedHashMap<>();
+        String sql = "SELECT p.nombre, AVG(cd.precio) AS promedio FROM compras_detalle cd " +
+                "JOIN compras c ON cd.compra_id = c.id " +
+                "JOIN proveedores p ON c.proveedor_id = p.id " +
+                "WHERE cd.equipo_id = ? GROUP BY p.nombre";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, equipoId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    data.put(rs.getString("nombre"), rs.getDouble("promedio"));
+                }
+            }
+        }
+        return data;
     }
 
     public static void insertarEgreso(Egreso egreso) throws SQLException {
