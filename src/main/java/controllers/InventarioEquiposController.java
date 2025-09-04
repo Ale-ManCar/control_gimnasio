@@ -130,10 +130,35 @@ public class InventarioEquiposController {
             int cantidad = Integer.parseInt(cantidadRes.get());
             double precio = Double.parseDouble(precioRes.get());
             Integer provId = seleccionado.getProveedorId();
-            if (provId != null) {
-                DatabaseUtil.registrarCompra(provId, seleccionado.getId(), cantidad, precio, file.getAbsolutePath());
-                cargarEquipos();
+            ObservableList<Proveedor> proveedores = DatabaseUtil.getProveedores();
+            final Integer provIdBusqueda = provId;
+            boolean proveedorValido = provIdBusqueda != null && provIdBusqueda > 0 &&
+                    proveedores.stream().anyMatch(p -> p.getId() == provIdBusqueda);
+
+            if (!proveedorValido) {
+                Dialog<Proveedor> dialog = new Dialog<>();
+                dialog.setTitle("Seleccionar Proveedor");
+                ButtonType guardarBtn = new ButtonType("Guardar", ButtonBar.ButtonData.OK_DONE);
+                dialog.getDialogPane().getButtonTypes().addAll(guardarBtn, ButtonType.CANCEL);
+
+                ComboBox<Proveedor> cbProveedor = new ComboBox<>(proveedores);
+
+                GridPane grid = new GridPane();
+                grid.setHgap(10);
+                grid.setVgap(10);
+                grid.add(new Label("Proveedor:"), 0, 0);
+                grid.add(cbProveedor, 1, 0);
+                dialog.getDialogPane().setContent(grid);
+
+                dialog.setResultConverter(btn -> btn == guardarBtn ? cbProveedor.getValue() : null);
+
+                Optional<Proveedor> result = dialog.showAndWait();
+                if (!result.isPresent()) return;
+                provId = result.get().getId();
             }
+
+            DatabaseUtil.registrarCompra(provId, seleccionado.getId(), cantidad, precio, file.getAbsolutePath());
+            cargarEquipos();
         } catch (Exception e) {
             e.printStackTrace();
         }
