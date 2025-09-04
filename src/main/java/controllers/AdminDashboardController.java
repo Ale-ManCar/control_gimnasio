@@ -83,4 +83,17 @@ public class AdminDashboardController implements Initializable {
             lblMensaje.setText("Error al abrir auditoría");
         }
     }
+
+    @FXML
+    private void abrirInventarioEquipos() {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/inventario_equipos.fxml"));
+            Stage stage = new Stage();
+            stage.setTitle("Inventario de Equipos");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            lblMensaje.setText("Error al abrir inventario de equipos");
+        }
+    }
 }
