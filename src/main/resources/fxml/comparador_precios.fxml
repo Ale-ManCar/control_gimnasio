@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.ComparadorPreciosController"
+            prefWidth="600" prefHeight="400"
+            style="-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e); -fx-padding: 15;">
+    <top>
+        <Label text="Comparador de Precios"
+               style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;"
+               BorderPane.alignment="CENTER"/>
+    </top>
+    <center>
+        <VBox spacing="10">
+            <ComboBox fx:id="cbEquipos" promptText="Seleccionar equipo"/>
+            <TableView fx:id="tablaPrecios" VBox.vgrow="ALWAYS"
+                       style="-fx-background-color: rgba(255,255,255,0.9); -fx-border-radius: 10; -fx-background-radius: 10;">
+                <columns>
+                    <TableColumn fx:id="colProveedor" text="Proveedor" prefWidth="250"/>
+                    <TableColumn fx:id="colPrecio" text="Precio" prefWidth="150"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>

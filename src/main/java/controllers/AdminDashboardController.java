@@ -96,4 +96,17 @@ public class AdminDashboardController implements Initializable {
             lblMensaje.setText("Error al abrir inventario de equipos");
         }
     }
+
+    @FXML
+    private void abrirComparadorPrecios() {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/comparador_precios.fxml"));
+            Stage stage = new Stage();
+            stage.setTitle("Comparador de Precios");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            lblMensaje.setText("Error al abrir comparador de precios");
+        }
+    }
 }
