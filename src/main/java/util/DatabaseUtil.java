@@ -6,6 +6,7 @@ import java.util.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.PieChart;
+import models.Auditoria;
 import models.Egreso;
 import models.EgresoDetalle;
 import models.PagoDetalle;
@@ -113,6 +114,14 @@ public class DatabaseUtil {
                 "ingresos_clientes REAL DEFAULT 0," +
                 "FOREIGN KEY (usuario_id) REFERENCES usuarios(id))";
 
+        String sqlAuditoria = "CREATE TABLE IF NOT EXISTS auditoria (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "usuario_id INTEGER," +
+                "accion TEXT NOT NULL," +
+                "detalle TEXT," +
+                "timestamp TEXT DEFAULT (datetime('now'))," +
+                "FOREIGN KEY (usuario_id) REFERENCES usuarios(id))";
+
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
 
@@ -127,6 +136,7 @@ public class DatabaseUtil {
             stmt.execute(sqlCoaches);
             stmt.execute(sqlUsuarios);
             stmt.execute(sqlTurnos);
+            stmt.execute(sqlAuditoria);
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN area TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN coach_id INTEGER REFERENCES coaches(id)"); } catch (SQLException ignored) {}
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
@@ -670,5 +680,26 @@ public class DatabaseUtil {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public static ObservableList<Auditoria> getAuditoria() throws SQLException {
+        ObservableList<Auditoria> registros = FXCollections.observableArrayList();
+        String sql = "SELECT a.id, COALESCE(u.username, '') AS usuario, a.accion, a.detalle, a.timestamp " +
+                "FROM auditoria a LEFT JOIN usuarios u ON a.usuario_id = u.id ORDER BY a.timestamp DESC";
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                registros.add(new Auditoria(
+                        rs.getInt("id"),
+                        rs.getString("usuario"),
+                        rs.getString("accion"),
+                        rs.getString("detalle"),
+                        rs.getString("timestamp")
+                ));
+            }
+        }
+        return registros;
     }
 }

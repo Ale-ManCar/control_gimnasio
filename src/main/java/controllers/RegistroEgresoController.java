@@ -12,6 +12,8 @@ import javafx.stage.Stage;
 import models.Egreso;
 import util.DatabaseUtil;
 import util.EventBus;
+import util.AuditoriaUtil;
+import util.SessionManager;
 
 import java.net.URL;
 import java.time.LocalDate;
@@ -83,6 +85,11 @@ public class RegistroEgresoController implements Initializable {
             egreso.setCategoria(cbCategoria.getValue());
 
             DatabaseUtil.insertarEgreso(egreso);
+            AuditoriaUtil.registrarAccion(
+                    SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 0,
+                    "Registro egreso",
+                    egreso.getDescripcion()
+            );
             EventBus.fireEvent(EventBus.EventType.EGRESO_REGISTRADO);
             cerrarVentana();
 

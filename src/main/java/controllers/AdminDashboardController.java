@@ -6,6 +6,9 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 import util.DatabaseUtil;
 
 import java.io.IOException;
@@ -64,6 +67,20 @@ public class AdminDashboardController implements Initializable {
             ctrlPorVencer.setValor(String.valueOf(stats.getOrDefault("por_vencer", 0)));
         } catch (SQLException e) {
             lblMensaje.setText("No se pudieron cargar las estadísticas");
+        }
+    }
+
+    @FXML
+    private void abrirAuditoria() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/auditoria.fxml"));
+            Parent root = loader.load();
+            Stage stage = new Stage();
+            stage.setTitle("Auditoría");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            lblMensaje.setText("Error al abrir auditoría");
         }
     }
 }

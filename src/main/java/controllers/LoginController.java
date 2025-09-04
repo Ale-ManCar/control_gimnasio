@@ -16,6 +16,7 @@ import models.Role;
 import models.User;
 import util.DatabaseUtil;
 import util.SessionManager;
+import util.AuditoriaUtil;
 
 public class LoginController {
     @FXML private TextField txtUsuario;
@@ -37,6 +38,7 @@ public class LoginController {
         User user = DatabaseUtil.obtenerUsuario(usuario, password);
         if (user != null && user.getRole() == rol) {
             SessionManager.setCurrentUser(user);
+            AuditoriaUtil.registrarAccion(user.getId(), "Login", "Rol: " + rol.name());
             abrirDashboard(rol, (Stage)((Node)event.getSource()).getScene().getWindow());
         } else {
             lblMensaje.setText("Credenciales inválidas");

@@ -5,6 +5,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Button?>
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.AdminDashboardController" prefWidth="900" prefHeight="600" style="-fx-background-color: linear-gradient(to bottom, #1e3c72, #2a5298);">
     <top>
         <Label text="ADMIN DASHBOARD" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white; -fx-padding:20;"/>
@@ -17,6 +18,8 @@
                 <AnchorPane fx:id="cardMembresias" prefWidth="200" prefHeight="120" style="-fx-background-color: rgba(33,150,243,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
                 <AnchorPane fx:id="cardPorVencer" prefWidth="200" prefHeight="120" style="-fx-background-color: rgba(255,152,0,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
             </HBox>
+            <Button text="Ver Auditoría" onAction="#abrirAuditoria"
+                    style="-fx-background-color: linear-gradient(to right, #4A6CF7, #2E8BFF); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8,0,0,2);"/>
         </VBox>
     </center>
     <bottom>
