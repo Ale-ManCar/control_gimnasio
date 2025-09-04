@@ -74,6 +74,10 @@
                         style="-fx-background-color: linear-gradient(to right, #e67e22, #e74c3c); -fx-text-fill: white; -fx-font-weight: bold;
                                -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;
                                -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
+                <Button text="Finalizar turno" onAction="#handleFinalizarTurno"
+                        style="-fx-background-color: linear-gradient(to right, #c0392b, #8e0e00); -fx-text-fill: white; -fx-font-weight: bold;
+                               -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;
+                               -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
                 <!--Button text="Ver Todos" fx:id="btnVerTodos" onAction="#handleVerTodos"
                         style="-fx-background-color: linear-gradient(to right, #9b59b6, #8e44ad); -fx-text-fill: white; -fx-font-weight: bold;
                                -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;

@@ -25,6 +25,8 @@ import models.Cliente;
 import util.DatabaseUtil;
 import util.EventBus;
 import util.ReporteUtil;
+import models.Turno;
+import util.SessionManager;
 
 import java.io.IOException;
 import java.net.URL;
@@ -57,6 +59,7 @@ public class DashboardController implements Initializable {
     private MetricCardController ctrlVencimientos;
 
     private Consumer<EventBus.EventType> dashboardListener;
+    private Turno turnoActual;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -191,6 +194,7 @@ public class DashboardController implements Initializable {
         }
 
         EventBus.registerListener(this::cargarDatosTarjetas);
+        iniciarTurno();
     }
 
     private void configurarTablaSinScroll() {
@@ -211,6 +215,40 @@ public class DashboardController implements Initializable {
         });
 
         tablaClientesProximosAVencer.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    }
+
+    private void iniciarTurno() {
+        try {
+            if (SessionManager.getCurrentUser() != null) {
+                turnoActual = DatabaseUtil.obtenerTurnoActivo(SessionManager.getCurrentUser().getId());
+                if (turnoActual == null) {
+                    int id = DatabaseUtil.iniciarTurno(SessionManager.getCurrentUser().getId());
+                    SessionManager.setTurnoId(id);
+                    turnoActual = DatabaseUtil.obtenerTurnoActivo(SessionManager.getCurrentUser().getId());
+                } else {
+                    SessionManager.setTurnoId(turnoActual.getId());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void handleFinalizarTurno(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/finalizar_turno.fxml"));
+            Parent root = loader.load();
+            FinalizarTurnoController controller = loader.getController();
+            controller.setDashboardStage((Stage) ((Node) event.getSource()).getScene().getWindow());
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Finalizar turno");
+            stage.setResizable(false);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void inicializarTarjetasMetricas() throws IOException {

@@ -15,6 +15,7 @@ import javafx.scene.Node;
 import models.Role;
 import models.User;
 import util.DatabaseUtil;
+import util.SessionManager;
 
 public class LoginController {
     @FXML private TextField txtUsuario;
@@ -35,6 +36,7 @@ public class LoginController {
         Role rol = cbRol.getValue();
         User user = DatabaseUtil.obtenerUsuario(usuario, password);
         if (user != null && user.getRole() == rol) {
+            SessionManager.setCurrentUser(user);
             abrirDashboard(rol, (Stage)((Node)event.getSource()).getScene().getWindow());
         } else {
             lblMensaje.setText("Credenciales inválidas");

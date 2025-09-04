@@ -13,6 +13,7 @@ import models.PagoMensual;
 import models.Producto;
 import models.User;
 import models.Role;
+import models.Turno;
 
 public class DatabaseUtil {
     private static final String URL = "jdbc:sqlite:database/gimnasio.db";
@@ -101,6 +102,17 @@ public class DatabaseUtil {
                 "fecha TEXT NOT NULL," +
                 "categoria TEXT NOT NULL)";
 
+        String sqlTurnos = "CREATE TABLE IF NOT EXISTS turnos (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "usuario_id INTEGER NOT NULL," +
+                "fecha_inicio TEXT NOT NULL," +
+                "fecha_fin TEXT," +
+                "stock_inicial TEXT," +
+                "stock_final TEXT," +
+                "ingresos_ventas REAL DEFAULT 0," +
+                "ingresos_clientes REAL DEFAULT 0," +
+                "FOREIGN KEY (usuario_id) REFERENCES usuarios(id))";
+
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
 
@@ -114,6 +126,7 @@ public class DatabaseUtil {
             stmt.execute(sqlEgresos);
             stmt.execute(sqlCoaches);
             stmt.execute(sqlUsuarios);
+            stmt.execute(sqlTurnos);
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN area TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN coach_id INTEGER REFERENCES coaches(id)"); } catch (SQLException ignored) {}
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
@@ -550,7 +563,7 @@ public class DatabaseUtil {
     }
 
     public static User obtenerUsuario(String username, String password) {
-        String sql = "SELECT username, password, rol FROM usuarios WHERE username = ? AND password = ?";
+        String sql = "SELECT id, username, password, rol FROM usuarios WHERE username = ? AND password = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
@@ -558,11 +571,104 @@ public class DatabaseUtil {
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 Role role = Role.valueOf(rs.getString("rol"));
-                return new User(rs.getString("username"), rs.getString("password"), role);
+                return new User(rs.getInt("id"), rs.getString("username"), rs.getString("password"), role);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static String obtenerStockJson() {
+        StringBuilder sb = new StringBuilder();
+        String sql = "SELECT nombre, stock FROM productos";
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                if (sb.length() > 0) sb.append(";");
+                sb.append(rs.getString("nombre")).append(":").append(rs.getInt("stock"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return sb.toString();
+    }
+
+    public static int iniciarTurno(int usuarioId) throws SQLException {
+        String stock = obtenerStockJson();
+        String sql = "INSERT INTO turnos (usuario_id, fecha_inicio, stock_inicial) VALUES (?, datetime('now'), ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, usuarioId);
+            stmt.setString(2, stock);
+            stmt.executeUpdate();
+            ResultSet rs = stmt.getGeneratedKeys();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return -1;
+    }
+
+    public static Turno obtenerTurnoActivo(int usuarioId) {
+        String sql = "SELECT * FROM turnos WHERE usuario_id = ? AND fecha_fin IS NULL";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, usuarioId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                Turno t = new Turno();
+                t.setId(rs.getInt("id"));
+                t.setUsuario_id(rs.getInt("usuario_id"));
+                t.setFecha_inicio(rs.getString("fecha_inicio"));
+                t.setStock_inicial(rs.getString("stock_inicial"));
+                return t;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static double obtenerTotalVentasDesde(String fechaInicio) {
+        double total = 0.0;
+        String sql = "SELECT SUM(total) AS total FROM ventas WHERE date(fecha) >= date(?)";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, fechaInicio);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                total = rs.getDouble("total");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return total;
+    }
+
+    public static double obtenerTotalPagosDesde(String fechaInicio) {
+        double total = 0.0;
+        String sql = "SELECT SUM(monto) AS total FROM pagos WHERE date(fecha_pago) >= date(?)";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, fechaInicio);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                total = rs.getDouble("total");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return total;
+    }
+
+    public static void finalizarTurno(int id, String stockFinal, double ingresosVentas, double ingresosClientes) {
+        String sql = "UPDATE turnos SET fecha_fin = datetime('now'), stock_final = ?, ingresos_ventas = ?, ingresos_clientes = ? WHERE id = ?";
+        try {
+            executeUpdate(sql, stockFinal, ingresosVentas, ingresosClientes, id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controllers.FinalizarTurnoController" spacing="10" alignment="CENTER" padding="20">
+    <Label text="Resumen del Turno" style="-fx-font-size:18px;-fx-font-weight:bold;"/>
+    <GridPane hgap="10" vgap="10">
+        <Label text="Stock inicial:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+        <Label fx:id="lblStockInicial" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+        <Label text="Stock final:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <Label fx:id="lblStockFinal" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+        <Label text="Ingresos ventas:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+        <Label fx:id="lblIngresosVentas" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+        <Label text="Ingresos clientes:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+        <Label fx:id="lblIngresosClientes" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+    </GridPane>
+    <HBox spacing="10" alignment="CENTER">
+        <Button text="Confirmar" onAction="#confirmar"/>
+        <Button text="Cancelar" onAction="#cancelar"/>
+    </HBox>
+</VBox>
