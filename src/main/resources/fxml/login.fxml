@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+<AnchorPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.LoginController" prefWidth="400" prefHeight="300" style="-fx-background-color: linear-gradient(to bottom, #1e3c72, #2a5298);">
+    <children>
+        <VBox alignment="CENTER" spacing="10" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+            <Label text="Iniciar Sesión" style="-fx-text-fill: white; -fx-font-size: 20;"/>
+            <TextField fx:id="txtUsuario" promptText="Usuario" maxWidth="200"/>
+            <PasswordField fx:id="txtPassword" promptText="Contraseña" maxWidth="200"/>
+            <ChoiceBox fx:id="cbRol" maxWidth="200"/>
+            <Button text="Ingresar" onAction="#handleLogin" maxWidth="200"/>
+            <Label fx:id="lblMensaje" style="-fx-text-fill: red;"/>
+        </VBox>
+    </children>
+</AnchorPane>

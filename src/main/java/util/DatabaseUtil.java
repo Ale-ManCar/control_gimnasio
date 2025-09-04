@@ -11,6 +11,8 @@ import models.EgresoDetalle;
 import models.PagoDetalle;
 import models.PagoMensual;
 import models.Producto;
+import models.User;
+import models.Role;
 
 public class DatabaseUtil {
     private static final String URL = "jdbc:sqlite:database/gimnasio.db";
@@ -70,6 +72,12 @@ public class DatabaseUtil {
                 "area TEXT NOT NULL," +
                 "foto_path TEXT)";
 
+        String sqlUsuarios = "CREATE TABLE IF NOT EXISTS usuarios (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "username TEXT NOT NULL UNIQUE," +
+                "password TEXT NOT NULL," +
+                "rol TEXT NOT NULL)";
+
         String sqlProductos = "CREATE TABLE IF NOT EXISTS productos (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "nombre TEXT NOT NULL UNIQUE," +
@@ -105,9 +113,11 @@ public class DatabaseUtil {
             stmt.execute(sqlVentas);
             stmt.execute(sqlEgresos);
             stmt.execute(sqlCoaches);
+            stmt.execute(sqlUsuarios);
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN area TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN coach_id INTEGER REFERENCES coaches(id)"); } catch (SQLException ignored) {}
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
+            stmt.execute("INSERT OR IGNORE INTO usuarios (id, username, password, rol) VALUES (1, 'admin', 'admin', 'ADMIN'), (2, 'recep', 'recep', 'RECEPCIONISTA')");
             conn.commit();
 
             System.out.println("Base de datos inicializada correctamente");
@@ -286,6 +296,30 @@ public class DatabaseUtil {
                 stats.put("clientes_activos", rs.getInt(1));
                 stats.put("pagos_hoy", rs.getInt(2));
                 stats.put("por_vencer", rs.getInt(3));
+            }
+        }
+        return stats;
+    }
+
+    public static Map<String, Integer> getAdminStats() throws SQLException {
+        Map<String, Integer> stats = new HashMap<>();
+        String sql = """
+        SELECT
+            (SELECT COUNT(*) FROM clientes WHERE activo = 1) AS clientes_activos,
+            (SELECT COUNT(*) FROM clientes WHERE activo = 0) AS clientes_inactivos,
+            (SELECT COUNT(*) FROM pagos WHERE strftime('%Y-%m', fecha_pago) = strftime('%Y-%m','now')) AS membresias_mes,
+            (SELECT COUNT(*) FROM clientes WHERE fecha_vencimiento BETWEEN CURRENT_DATE AND date('now', '+7 days')) AS por_vencer
+        """;
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                stats.put("clientes_activos", rs.getInt("clientes_activos"));
+                stats.put("clientes_inactivos", rs.getInt("clientes_inactivos"));
+                stats.put("membresias_mes", rs.getInt("membresias_mes"));
+                stats.put("por_vencer", rs.getInt("por_vencer"));
             }
         }
         return stats;
@@ -513,5 +547,22 @@ public class DatabaseUtil {
             }
         }
         return detalles;
+    }
+
+    public static User obtenerUsuario(String username, String password) {
+        String sql = "SELECT username, password, rol FROM usuarios WHERE username = ? AND password = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                Role role = Role.valueOf(rs.getString("rol"));
+                return new User(rs.getString("username"), rs.getString("password"), role);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

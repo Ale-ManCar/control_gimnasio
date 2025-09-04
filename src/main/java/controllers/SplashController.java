@@ -75,33 +75,33 @@ public class SplashController {
         progressBar.progressProperty().bind(task.progressProperty());
 
         // Manejar eventos de la tarea
-        task.setOnSucceeded(e -> abrirDashboard());
+        task.setOnSucceeded(e -> abrirLogin());
         task.setOnFailed(e -> {
             System.err.println("Error en splash screen: " + task.getException().getMessage());
-            abrirDashboard(); // Intentar abrir dashboard de todas formas
+            abrirLogin(); // Intentar abrir login de todas formas
         });
 
         // Iniciar tarea en segundo plano
         new Thread(task).start();
     }
 
-    private void abrirDashboard() {
+    private void abrirLogin() {
         Platform.runLater(() -> {
             try {
                 // Cerrar splash
                 Stage splashStage = (Stage) rootPane.getScene().getWindow();
                 splashStage.close();
 
-                // Abrir dashboard
+                // Abrir login
                 Stage stage = new Stage();
-                Parent root = FXMLLoader.load(getClass().getResource("/fxml/dashboard.fxml"));
-                Scene scene = new Scene(root, 900, 650);
+                Parent root = FXMLLoader.load(getClass().getResource("/fxml/login.fxml"));
+                Scene scene = new Scene(root, 400, 300);
                 stage.setScene(scene);
-                stage.setTitle("Panel de Control - Gimnasio");
+                stage.setTitle("Inicio de Sesión");
                 stage.setResizable(false);
                 stage.show();
             } catch (Exception e) {
-                System.err.println("Error abriendo dashboard: " + e.getMessage());
+                System.err.println("Error abriendo login: " + e.getMessage());
             }
         });
     }
