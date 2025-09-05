@@ -8,6 +8,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.PieChart;
 import models.Auditoria;
+import models.AuditoriaUsuario;
 import models.Egreso;
 import models.EgresoDetalle;
 import models.PagoDetalle;
@@ -134,7 +135,7 @@ public class DatabaseUtil {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "usuario_id INTEGER," +
                 "accion TEXT NOT NULL," +
-                "timestamp TEXT DEFAULT (datetime('now'))," +
+                "fecha TEXT DEFAULT (datetime('now'))," +
                 "FOREIGN KEY (usuario_id) REFERENCES usuarios(id))";
 
         String sqlProveedores = "CREATE TABLE IF NOT EXISTS proveedores (" +
@@ -951,7 +952,7 @@ public class DatabaseUtil {
         }
     }
 
-    public static void registrarActividadUsuario(int userId, String accion) throws SQLException {
+    public static void registrarAccion(int userId, String accion) throws SQLException {
         String insert = "INSERT INTO auditoria_usuarios(usuario_id, accion) VALUES(?, ?)";
         String update = "UPDATE usuarios SET acciones_realizadas = acciones_realizadas + 1 WHERE id = ?";
         try (Connection conn = getConnection();
@@ -965,6 +966,30 @@ public class DatabaseUtil {
             psUpdate.executeUpdate();
             conn.commit();
         }
+    }
+
+    public static ObservableList<AuditoriaUsuario> listarAccionesPorUsuario(int usuarioId) throws SQLException {
+        ObservableList<AuditoriaUsuario> acciones = FXCollections.observableArrayList();
+        String sql = "SELECT au.id, u.username AS usuario, au.accion, au.fecha " +
+                "FROM auditoria_usuarios au LEFT JOIN usuarios u ON au.usuario_id = u.id" +
+                (usuarioId > 0 ? " WHERE au.usuario_id = ?" : "") +
+                " ORDER BY au.fecha DESC";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            if (usuarioId > 0) {
+                stmt.setInt(1, usuarioId);
+            }
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                acciones.add(new AuditoriaUsuario(
+                        rs.getInt("id"),
+                        rs.getString("usuario"),
+                        rs.getString("accion"),
+                        rs.getString("fecha")
+                ));
+            }
+        }
+        return acciones;
     }
 
     public static String obtenerStockJson() {

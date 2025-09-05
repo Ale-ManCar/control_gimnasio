@@ -25,6 +25,10 @@ public class UserService {
 
     public static void registrarActividad(User user, String accion) throws SQLException {
         user.incrementarAcciones();
-        DatabaseUtil.registrarActividadUsuario(user.getId(), accion);
+        DatabaseUtil.registrarAccion(user.getId(), accion);
+    }
+
+    public static void actualizarLastLogin(int userId) throws SQLException {
+        DatabaseUtil.actualizarLastLogin(userId);
     }
 }
