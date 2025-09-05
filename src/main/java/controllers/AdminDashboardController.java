@@ -81,6 +81,45 @@ public class AdminDashboardController implements Initializable {
     }
 
     @FXML
+    private void abrirUsuarios() {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/lista_clientes.fxml"));
+            Stage stage = new Stage();
+            stage.setTitle("Usuarios");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            lblMensaje.setText("Error al abrir usuarios");
+        }
+    }
+
+    @FXML
+    private void abrirInventario() {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/inventario_equipos.fxml"));
+            Stage stage = new Stage();
+            stage.setTitle("Inventario");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            lblMensaje.setText("Error al abrir inventario");
+        }
+    }
+
+    @FXML
+    private void abrirProveedores() {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/comparador_precios.fxml"));
+            Stage stage = new Stage();
+            stage.setTitle("Proveedores");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            lblMensaje.setText("Error al abrir proveedores");
+        }
+    }
+
+    @FXML
     private void abrirAuditoria() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/auditoria.fxml"));
@@ -95,29 +134,13 @@ public class AdminDashboardController implements Initializable {
     }
 
     @FXML
-    private void abrirInventarioEquipos() {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/inventario_equipos.fxml"));
-            Stage stage = new Stage();
-            stage.setTitle("Inventario de Equipos");
-            stage.setScene(new Scene(root));
-            stage.show();
-        } catch (IOException e) {
-            lblMensaje.setText("Error al abrir inventario de equipos");
-        }
+    private void abrirRespaldos() {
+        lblMensaje.setText("Módulo de respaldos no disponible");
     }
 
     @FXML
-    private void abrirComparadorPrecios() {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/comparador_precios.fxml"));
-            Stage stage = new Stage();
-            stage.setTitle("Comparador de Precios");
-            stage.setScene(new Scene(root));
-            stage.show();
-        } catch (IOException e) {
-            lblMensaje.setText("Error al abrir comparador de precios");
-        }
+    private void abrirConfiguracion() {
+        lblMensaje.setText("Módulo de configuración no disponible");
     }
 
     @FXML

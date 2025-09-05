@@ -1,0 +1,19 @@
+.sidebar {
+    -fx-background-color: rgba(0,0,0,0.2);
+    -fx-padding: 10;
+}
+
+.primary-button {
+    -fx-background-color: linear-gradient(to right, #4A6CF7, #2E8BFF);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-font-size: 14px;
+    -fx-background-radius: 25;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);
+}
+
+.primary-button:hover {
+    -fx-background-color: linear-gradient(to right, #2E8BFF, #4A6CF7);
+}
