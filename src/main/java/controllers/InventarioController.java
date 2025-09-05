@@ -24,6 +24,7 @@ import util.DatabaseUtil;
 import util.EventBus;
 import util.AuditoriaUtil;
 import util.SessionManager;
+import models.Role;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -55,6 +56,9 @@ public class InventarioController {
 
     @FXML
     public void initialize() {
+        if (!SessionManager.tienePermiso(Role.RECEPCIONISTA) && !SessionManager.tienePermiso(Role.ADMIN)) {
+            return;
+        }
         configurarTabla();
         configurarTablaCarrito();
         cargarProductos();

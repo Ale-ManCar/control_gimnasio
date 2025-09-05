@@ -39,7 +39,7 @@ public class AdminDashboardController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        if (!tieneAcceso(Role.ADMIN)) {
+        if (!SessionManager.tienePermiso(Role.ADMIN)) {
             lblMensaje.setText("Acceso denegado");
             return;
         }
@@ -163,9 +163,5 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private void generarMembresiasPorVencer() {
         ReporteUtil.generarReporteMembresiasPorVencer();
-    }
-
-    private boolean tieneAcceso(Role rol) {
-        return SessionManager.getCurrentUser() != null && SessionManager.getCurrentUser().getRole() == rol;
     }
 }

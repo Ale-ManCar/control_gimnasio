@@ -64,7 +64,7 @@ public class RecepcionistaDashboardController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        if (!tieneAcceso(Role.RECEPCIONISTA)) {
+        if (!SessionManager.tienePermiso(Role.RECEPCIONISTA)) {
             lblMensaje.setText("Acceso denegado");
             return;
         }
@@ -200,10 +200,6 @@ public class RecepcionistaDashboardController implements Initializable {
 
         EventBus.registerListener(this::cargarDatosTarjetas);
         iniciarTurno();
-    }
-
-    private boolean tieneAcceso(Role rol) {
-        return SessionManager.getCurrentUser() != null && SessionManager.getCurrentUser().getRole() == rol;
     }
 
     private void configurarTablaSinScroll() {

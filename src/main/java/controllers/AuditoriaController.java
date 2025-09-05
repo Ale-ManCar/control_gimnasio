@@ -8,6 +8,8 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import models.Auditoria;
 import util.DatabaseUtil;
+import util.SessionManager;
+import models.Role;
 
 import java.net.URL;
 import java.sql.SQLException;
@@ -24,6 +26,9 @@ public class AuditoriaController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        if (!SessionManager.tienePermiso(Role.ADMIN)) {
+            return;
+        }
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colUsuario.setCellValueFactory(new PropertyValueFactory<>("usuario"));
         colAccion.setCellValueFactory(new PropertyValueFactory<>("accion"));
