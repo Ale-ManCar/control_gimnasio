@@ -3,6 +3,10 @@ package util;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.view.JasperViewer;
+import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
+import net.sf.jasperreports.export.SimpleExporterInput;
+import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
+import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
 import models.Egreso;
 import models.CoachClientes;
 import java.io.InputStream;
@@ -78,6 +82,54 @@ public class ReporteUtil {
     public static void generarReporteFinanciero() {
         LocalDate hoy = LocalDate.now();
         generarReporteFinanciero(hoy.getMonthValue(), hoy.getYear());
+    }
+
+    public static void generarReporteFinanciero(LocalDate fechaInicio, LocalDate fechaFin, Integer clienteId, String tipoMembresia) {
+        try {
+            InputStream reporteStream = ReporteUtil.class.getResourceAsStream("/reports/reporte_financiero.jrxml");
+            if (reporteStream == null) {
+                System.err.println("❌ No se encontró el archivo reporte_financiero.jrxml");
+                return;
+            }
+
+            Map<String, Double> totales = DatabaseUtil.obtenerIngresosVsEgresos(fechaInicio, fechaFin, clienteId, tipoMembresia);
+            double totalMembresias = totales.getOrDefault("membresias", 0.0);
+            double totalVentas = totales.getOrDefault("ventas", 0.0);
+            double totalEgresos = totales.getOrDefault("egresos", 0.0);
+            double resultadoNeto = (totalMembresias + totalVentas) - totalEgresos;
+
+            List<Egreso> egresos = DatabaseUtil.filtrarEgresos(fechaInicio, fechaFin, null);
+
+            Map<String, Object> parametros = new HashMap<>();
+            parametros.put("totalMembresias", totalMembresias);
+            parametros.put("totalVentas", totalVentas);
+            parametros.put("totalEgresos", totalEgresos);
+            parametros.put("resultadoNeto", resultadoNeto);
+            parametros.put("fechaInicio", fechaInicio.toString());
+            parametros.put("fechaFin", fechaFin.toString());
+
+            JRDataSource dataSourceEgresos = new JRBeanCollectionDataSource(egresos);
+            JasperReport jasperReport = JasperCompileManager.compileReport(reporteStream);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, dataSourceEgresos);
+
+            JasperViewer.viewReport(jasperPrint, false);
+            String baseName = String.format("reporte_financiero_%s_%s", fechaInicio, fechaFin);
+            String pdfPath = System.getProperty("user.dir") + File.separator + baseName + ".pdf";
+            JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
+
+            JRXlsxExporter exporter = new JRXlsxExporter();
+            exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
+            String xlsPath = System.getProperty("user.dir") + File.separator + baseName + ".xlsx";
+            exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(xlsPath));
+            SimpleXlsxReportConfiguration configuration = new SimpleXlsxReportConfiguration();
+            configuration.setDetectCellType(true);
+            exporter.setConfiguration(configuration);
+            exporter.exportReport();
+
+            System.out.println("✅ Reporte financiero generado en: " + pdfPath + " y " + xlsPath);
+        } catch (Exception e) {
+            System.err.println("❌ Error generando reporte financiero: " + e.getMessage());
+        }
     }
 
     public static void generarReporteActividadRecepcionista() {

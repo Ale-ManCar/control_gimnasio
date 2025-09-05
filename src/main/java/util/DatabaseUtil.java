@@ -364,6 +364,152 @@ public class DatabaseUtil {
         return getEgresosParaMes(hoy.getMonthValue(), hoy.getYear());
     }
 
+    public static void registrarEgreso(Egreso egreso) throws SQLException {
+        String sql = "INSERT INTO egresos (descripcion, monto, fecha, categoria) VALUES (?, ?, ?, ?)";
+        executeUpdate(sql,
+                egreso.getDescripcion(),
+                egreso.getMonto(),
+                egreso.getFecha(),
+                egreso.getCategoria());
+
+        EventBus.fireEvent(EventBus.EventType.EGRESO_REGISTRADO);
+    }
+
+    /**
+     * @deprecated Use {@link #registrarEgreso(Egreso)} instead
+     */
+    @Deprecated
+    public static void insertarEgreso(Egreso egreso) throws SQLException {
+        registrarEgreso(egreso);
+    }
+
+    public static ObservableList<Egreso> listarEgresos() throws SQLException {
+        ObservableList<Egreso> egresos = FXCollections.observableArrayList();
+        String sql = "SELECT id, descripcion, monto, fecha, categoria FROM egresos ORDER BY fecha DESC";
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                Egreso e = new Egreso();
+                e.setId(rs.getInt("id"));
+                e.setDescripcion(rs.getString("descripcion"));
+                e.setMonto(rs.getDouble("monto"));
+                e.setFecha(LocalDate.parse(rs.getString("fecha")));
+                e.setCategoria(rs.getString("categoria"));
+                egresos.add(e);
+            }
+        }
+        return egresos;
+    }
+
+    public static ObservableList<Egreso> filtrarEgresos(LocalDate fechaInicio, LocalDate fechaFin, String categoria) throws SQLException {
+        ObservableList<Egreso> egresos = FXCollections.observableArrayList();
+        StringBuilder sql = new StringBuilder("SELECT id, descripcion, monto, fecha, categoria FROM egresos WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+
+        if (fechaInicio != null && fechaFin != null) {
+            sql.append(" AND date(fecha) BETWEEN ? AND ?");
+            params.add(fechaInicio.toString());
+            params.add(fechaFin.toString());
+        } else if (fechaInicio != null) {
+            sql.append(" AND date(fecha) >= ?");
+            params.add(fechaInicio.toString());
+        } else if (fechaFin != null) {
+            sql.append(" AND date(fecha) <= ?");
+            params.add(fechaFin.toString());
+        }
+
+        if (categoria != null && !categoria.isEmpty() && !"TODOS".equalsIgnoreCase(categoria)) {
+            sql.append(" AND categoria = ?");
+            params.add(categoria);
+        }
+
+        sql.append(" ORDER BY fecha DESC");
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Egreso e = new Egreso();
+                    e.setId(rs.getInt("id"));
+                    e.setDescripcion(rs.getString("descripcion"));
+                    e.setMonto(rs.getDouble("monto"));
+                    e.setFecha(LocalDate.parse(rs.getString("fecha")));
+                    e.setCategoria(rs.getString("categoria"));
+                    egresos.add(e);
+                }
+            }
+        }
+        return egresos;
+    }
+
+    public static Map<String, Double> obtenerIngresosVsEgresos(LocalDate fechaInicio, LocalDate fechaFin, Integer clienteId, String tipoMembresia) throws SQLException {
+        Map<String, Double> resultado = new HashMap<>();
+
+        // Ingresos por membresías
+        StringBuilder sqlPagos = new StringBuilder("SELECT COALESCE(SUM(monto),0) FROM pagos WHERE date(fecha_pago) BETWEEN ? AND ?");
+        List<Object> paramsPagos = new ArrayList<>();
+        paramsPagos.add(fechaInicio.toString());
+        paramsPagos.add(fechaFin.toString());
+        if (clienteId != null) {
+            sqlPagos.append(" AND cliente_id = ?");
+            paramsPagos.add(clienteId);
+        }
+        if (tipoMembresia != null && !tipoMembresia.isEmpty()) {
+            sqlPagos.append(" AND tipo_membresia = ?");
+            paramsPagos.add(tipoMembresia);
+        }
+
+        double totalPagos = 0.0;
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sqlPagos.toString())) {
+            for (int i = 0; i < paramsPagos.size(); i++) {
+                stmt.setObject(i + 1, paramsPagos.get(i));
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    totalPagos = rs.getDouble(1);
+                }
+            }
+        }
+
+        // Ingresos por ventas
+        double totalVentas = 0.0;
+        String sqlVentas = "SELECT COALESCE(SUM(total),0) FROM ventas WHERE date(fecha) BETWEEN ? AND ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sqlVentas)) {
+            stmt.setString(1, fechaInicio.toString());
+            stmt.setString(2, fechaFin.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    totalVentas = rs.getDouble(1);
+                }
+            }
+        }
+
+        // Egresos
+        double totalEgresos = 0.0;
+        String sqlEgresos = "SELECT COALESCE(SUM(monto),0) FROM egresos WHERE date(fecha) BETWEEN ? AND ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sqlEgresos)) {
+            stmt.setString(1, fechaInicio.toString());
+            stmt.setString(2, fechaFin.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    totalEgresos = rs.getDouble(1);
+                }
+            }
+        }
+
+        resultado.put("membresias", totalPagos);
+        resultado.put("ventas", totalVentas);
+        resultado.put("egresos", totalEgresos);
+        return resultado;
+    }
+
     public static void testConnection() {
         try (Connection conn = getConnection()) {
             System.out.println("✅ Conexión exitosa a: " + URL);

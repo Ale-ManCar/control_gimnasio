@@ -72,29 +72,44 @@ public class RegistroEgresoController implements Initializable {
                 return;
             }
 
+            double monto;
+            try {
+                monto = Double.parseDouble(txtMonto.getText().trim());
+            } catch (NumberFormatException ex) {
+                mostrarError("El monto debe ser un número válido");
+                return;
+            }
+            if (monto <= 0) {
+                mostrarError("El monto debe ser mayor a cero");
+                return;
+            }
+
             if (txtDescripcion.getText().trim().isEmpty()) {
                 mostrarError("Por favor ingrese una descripción");
+                return;
+            }
+
+            if (cbCategoria.getValue() == null) {
+                mostrarError("Seleccione una categoría");
                 return;
             }
 
             // Crear y registrar egreso
             Egreso egreso = new Egreso();
             egreso.setDescripcion(txtDescripcion.getText().trim());
-            egreso.setMonto(Double.parseDouble(txtMonto.getText().trim()));
+            egreso.setMonto(monto);
             egreso.setFecha(LocalDate.now());
             egreso.setCategoria(cbCategoria.getValue());
 
-            DatabaseUtil.insertarEgreso(egreso);
+            DatabaseUtil.registrarEgreso(egreso);
             AuditoriaUtil.registrarAccion(
                     SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 0,
                     "Registro egreso",
                     egreso.getDescripcion()
             );
             EventBus.fireEvent(EventBus.EventType.EGRESO_REGISTRADO);
-            cerrarVentana();
+            limpiarFormulario();
 
-        } catch (NumberFormatException e) {
-            mostrarError("El monto debe ser un número válido");
         } catch (Exception e) {
             mostrarError("Error al registrar el egreso: " + e.getMessage());
         }
@@ -108,6 +123,12 @@ public class RegistroEgresoController implements Initializable {
     private void cerrarVentana() {
         Stage stage = (Stage) btnCancelar.getScene().getWindow();
         stage.close();
+    }
+
+    private void limpiarFormulario() {
+        txtMonto.clear();
+        txtDescripcion.clear();
+        cbCategoria.getSelectionModel().selectFirst();
     }
 
     private void mostrarError(String mensaje) {
