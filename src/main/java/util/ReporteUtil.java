@@ -6,6 +6,8 @@ import net.sf.jasperreports.view.JasperViewer;
 import models.Egreso;
 import java.io.InputStream;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -205,6 +207,34 @@ public class ReporteUtil {
             System.out.println("✅ Reporte de membresías por vencer generado en: " + pdfPath);
         } catch (Exception e) {
             System.err.println("❌ Error generando reporte de membresías: " + e.getMessage());
+        }
+    }
+
+    public static void generarReporteDashboardPDF() {
+        try {
+            Map<String, Integer> stats = DatabaseUtil.getAdminStats();
+            StringBuilder contenido = new StringBuilder();
+            contenido.append("Reporte Dashboard\n\n");
+            stats.forEach((k, v) -> contenido.append(k).append(": ").append(v).append("\n"));
+            Path path = Path.of("reporte_dashboard.pdf");
+            Files.writeString(path, contenido.toString());
+            System.out.println("✅ Reporte de dashboard PDF generado en: " + path.toAbsolutePath());
+        } catch (Exception e) {
+            System.err.println("❌ Error generando reporte de dashboard PDF: " + e.getMessage());
+        }
+    }
+
+    public static void generarReporteDashboardExcel() {
+        try {
+            Map<String, Integer> stats = DatabaseUtil.getAdminStats();
+            StringBuilder contenido = new StringBuilder();
+            contenido.append("Metrica,Valor\n");
+            stats.forEach((k, v) -> contenido.append(k).append(",").append(v).append("\n"));
+            Path path = Path.of("reporte_dashboard.csv");
+            Files.writeString(path, contenido.toString());
+            System.out.println("✅ Reporte de dashboard Excel generado en: " + path.toAbsolutePath());
+        } catch (Exception e) {
+            System.err.println("❌ Error generando reporte de dashboard Excel: " + e.getMessage());
         }
     }
 

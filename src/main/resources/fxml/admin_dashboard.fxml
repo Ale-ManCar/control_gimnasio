@@ -39,11 +39,15 @@
                             style="-fx-background-color: rgba(33,150,243,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
                 <AnchorPane fx:id="cardPorVencer" prefWidth="200" prefHeight="120"
                             style="-fx-background-color: rgba(255,152,0,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
+                <AnchorPane fx:id="cardActivosHoy" prefWidth="200" prefHeight="120"
+                            style="-fx-background-color: rgba(0,188,212,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
             </HBox>
             <ListView fx:id="lstAlertas" prefHeight="150" />
             <Button text="Actividad por Recepcionista" onAction="#generarActividadRecepcionista" styleClass="primary-button"/>
             <Button text="Inventario Mensual" onAction="#generarInventarioMensual" styleClass="primary-button"/>
             <Button text="Membresías por Vencer" onAction="#generarMembresiasPorVencer" styleClass="primary-button"/>
+            <Button text="Exportar Dashboard PDF" onAction="#generarReporteDashboardPDF" styleClass="primary-button"/>
+            <Button text="Exportar Dashboard Excel" onAction="#generarReporteDashboardExcel" styleClass="primary-button"/>
         </VBox>
     </center>
     <bottom>

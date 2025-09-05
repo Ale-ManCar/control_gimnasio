@@ -29,6 +29,7 @@ public class AdminDashboardController implements Initializable {
     @FXML private AnchorPane cardInactivos;
     @FXML private AnchorPane cardMembresias;
     @FXML private AnchorPane cardPorVencer;
+    @FXML private AnchorPane cardActivosHoy;
     @FXML private Label lblMensaje;
     @FXML private ListView<String> lstAlertas;
 
@@ -36,6 +37,7 @@ public class AdminDashboardController implements Initializable {
     private MetricCardController ctrlInactivos;
     private MetricCardController ctrlMembresias;
     private MetricCardController ctrlPorVencer;
+    private MetricCardController ctrlActivosHoy;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -56,7 +58,8 @@ public class AdminDashboardController implements Initializable {
         ctrlActivos = cargarTarjeta(cardActivos, "Clientes Activos");
         ctrlInactivos = cargarTarjeta(cardInactivos, "Clientes Inactivos");
         ctrlMembresias = cargarTarjeta(cardMembresias, "Membresías del Mes");
-        ctrlPorVencer = cargarTarjeta(cardPorVencer, "Próximos a Vencer");
+        ctrlPorVencer = cargarTarjeta(cardPorVencer, "Membresías a Vencer Semana");
+        ctrlActivosHoy = cargarTarjeta(cardActivosHoy, "Clientes Activos Hoy");
     }
 
     private MetricCardController cargarTarjeta(AnchorPane contenedor, String titulo) throws IOException {
@@ -77,6 +80,7 @@ public class AdminDashboardController implements Initializable {
             ctrlInactivos.setValor(String.valueOf(stats.getOrDefault("clientes_inactivos", 0)));
             ctrlMembresias.setValor(String.valueOf(stats.getOrDefault("membresias_mes", 0)));
             ctrlPorVencer.setValor(String.valueOf(stats.getOrDefault("por_vencer", 0)));
+            ctrlActivosHoy.setValor(String.valueOf(stats.getOrDefault("activos_hoy", 0)));
         } catch (SQLException e) {
             lblMensaje.setText("No se pudieron cargar las estadísticas");
         }
@@ -163,5 +167,15 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private void generarMembresiasPorVencer() {
         ReporteUtil.generarReporteMembresiasPorVencer();
+    }
+
+    @FXML
+    private void generarReporteDashboardPDF() {
+        ReporteUtil.generarReporteDashboardPDF();
+    }
+
+    @FXML
+    private void generarReporteDashboardExcel() {
+        ReporteUtil.generarReporteDashboardExcel();
     }
 }

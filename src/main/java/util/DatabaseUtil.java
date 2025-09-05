@@ -400,7 +400,10 @@ public class DatabaseUtil {
             (SELECT COUNT(*) FROM clientes WHERE activo = 1) AS clientes_activos,
             (SELECT COUNT(*) FROM clientes WHERE activo = 0) AS clientes_inactivos,
             (SELECT COUNT(*) FROM pagos WHERE strftime('%Y-%m', fecha_pago) = strftime('%Y-%m','now')) AS membresias_mes,
-            (SELECT COUNT(*) FROM clientes WHERE fecha_vencimiento BETWEEN CURRENT_DATE AND date('now', '+7 days')) AS por_vencer
+            (SELECT COUNT(*) FROM clientes WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 day')) AS por_vencer,
+            (SELECT COUNT(*) FROM clientes WHERE fecha_vencimiento < date('now') AND activo = 1) AS clientes_morosos,
+            (SELECT COALESCE(MAX(cantidad),0) FROM (SELECT COUNT(*) AS cantidad FROM clientes WHERE coach_id IS NOT NULL GROUP BY coach_id)) AS coaches_top,
+            (SELECT COUNT(*) FROM clientes WHERE activo = 1 AND date(fecha_inicio) <= date('now') AND date(fecha_vencimiento) >= date('now')) AS activos_hoy
         """;
 
         try (Connection conn = getConnection();
@@ -412,6 +415,9 @@ public class DatabaseUtil {
                 stats.put("clientes_inactivos", rs.getInt("clientes_inactivos"));
                 stats.put("membresias_mes", rs.getInt("membresias_mes"));
                 stats.put("por_vencer", rs.getInt("por_vencer"));
+                stats.put("clientes_morosos", rs.getInt("clientes_morosos"));
+                stats.put("coaches_top", rs.getInt("coaches_top"));
+                stats.put("activos_hoy", rs.getInt("activos_hoy"));
             }
         }
         return stats;

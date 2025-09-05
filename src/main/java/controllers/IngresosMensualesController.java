@@ -30,6 +30,7 @@ import java.time.LocalDate;
 import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
@@ -310,34 +311,28 @@ public class IngresosMensualesController implements Initializable {
     }
 
     private void cargarGraficoBarras(int año) {
-        XYChart.Series<String, Number> datosIngresos = new XYChart.Series<>();
-        datosIngresos.setName("Ingresos");
+        XYChart.Series<String, Number> datosActual = new XYChart.Series<>();
+        datosActual.setName("Ingresos " + año);
 
-        XYChart.Series<String, Number> datosEgresos = new XYChart.Series<>();
-        datosEgresos.setName("Egresos");
+        XYChart.Series<String, Number> datosAnterior = new XYChart.Series<>();
+        datosAnterior.setName("Ingresos " + (año - 1));
 
         try {
-            List<PagoMensual> ingresos = DatabaseUtil.getIngresosMensuales(año);
-            List<PagoMensual> egresos = DatabaseUtil.getEgresosMensuales(año);
+            List<PagoMensual> ingresosActual = DatabaseUtil.getIngresosMensuales(año);
+            List<PagoMensual> ingresosAnterior = DatabaseUtil.getIngresosMensuales(año - 1);
 
-            for (int i = 0; i < ingresos.size(); i++) {
-                PagoMensual ingreso = ingresos.get(i);
+            Map<String, Double> mapaAnterior = ingresosAnterior.stream()
+                    .collect(Collectors.toMap(PagoMensual::getMes, PagoMensual::getTotal));
+
+            for (PagoMensual ingreso : ingresosActual) {
                 String mes = obtenerNombreMes(ingreso.getMes());
-
-                double totalEgresos = 0;
-                for (PagoMensual egreso : egresos) {
-                    if (egreso.getMes().equals(ingreso.getMes())) {
-                        totalEgresos = egreso.getTotal();
-                        break;
-                    }
-                }
-
-                datosIngresos.getData().add(new XYChart.Data<>(mes, ingreso.getTotal()));
-                datosEgresos.getData().add(new XYChart.Data<>(mes, totalEgresos));
+                datosActual.getData().add(new XYChart.Data<>(mes, ingreso.getTotal()));
+                double valorAnterior = mapaAnterior.getOrDefault(ingreso.getMes(), 0.0);
+                datosAnterior.getData().add(new XYChart.Data<>(mes, valorAnterior));
             }
 
             barChart.getData().clear();
-            barChart.getData().addAll(datosIngresos, datosEgresos);
+            barChart.getData().addAll(datosActual, datosAnterior);
 
             barChart.setStyle(
                     "-fx-background-color: white;" +
@@ -349,7 +344,7 @@ public class IngresosMensualesController implements Initializable {
             barChart.getXAxis().setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
             barChart.getYAxis().setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
 
-            barChart.setLegendVisible(false);
+            barChart.setLegendVisible(true);
 
         } catch (Exception e) {
             mostrarAlerta("Error", "No se pudieron cargar los datos del gráfico");
