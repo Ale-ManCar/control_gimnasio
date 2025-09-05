@@ -21,6 +21,7 @@ import models.Equipo;
 import models.Proveedor;
 import models.Compra;
 import models.CompraDetalle;
+import models.CoachClientes;
 
 public class DatabaseUtil {
     private static final String URL = "jdbc:sqlite:database/gimnasio.db";
@@ -1080,6 +1081,30 @@ public class DatabaseUtil {
             e.printStackTrace();
         }
         return total;
+    }
+
+    public static int contarClientesMorosos() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM clientes WHERE fecha_vencimiento < date('now') AND activo = 1";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : 0;
+        }
+    }
+
+    public static ObservableList<CoachClientes> listarCoachesConMasClientes() throws SQLException {
+        ObservableList<CoachClientes> lista = FXCollections.observableArrayList();
+        String sql = "SELECT c.nombres || ' ' || c.apellidos AS coach, COUNT(cl.id) AS clientes " +
+                "FROM coaches c LEFT JOIN clientes cl ON c.id = cl.coach_id " +
+                "GROUP BY c.id ORDER BY clientes DESC";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                lista.add(new CoachClientes(rs.getString("coach"), rs.getInt("clientes")));
+            }
+        }
+        return lista;
     }
 
     public static void finalizarTurno(int id, String stockFinal, double ingresosVentas, double ingresosClientes) {

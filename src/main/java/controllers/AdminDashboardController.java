@@ -5,15 +5,22 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import util.AlertScheduler;
 import util.DatabaseUtil;
 import util.ReporteUtil;
 import util.SessionManager;
+import models.CoachClientes;
+import models.MetricItem;
 import models.Role;
 
 import java.io.IOException;
@@ -32,6 +39,12 @@ public class AdminDashboardController implements Initializable {
     @FXML private AnchorPane cardActivosHoy;
     @FXML private Label lblMensaje;
     @FXML private ListView<String> lstAlertas;
+    @FXML private TableView<MetricItem> tblMorosos;
+    @FXML private TableColumn<MetricItem, String> colMorososDesc;
+    @FXML private TableColumn<MetricItem, Integer> colMorososValor;
+    @FXML private TableView<CoachClientes> tblCoaches;
+    @FXML private TableColumn<CoachClientes, String> colCoach;
+    @FXML private TableColumn<CoachClientes, Integer> colClientes;
 
     private MetricCardController ctrlActivos;
     private MetricCardController ctrlInactivos;
@@ -47,8 +60,11 @@ public class AdminDashboardController implements Initializable {
         }
         try {
             inicializarTarjetas();
+            configurarTablas();
             cargarDatos();
             cargarAlertasPendientes();
+            cargarMorosos();
+            cargarCoaches();
         } catch (IOException e) {
             lblMensaje.setText("Error al cargar tarjetas");
         }
@@ -83,6 +99,32 @@ public class AdminDashboardController implements Initializable {
             ctrlActivosHoy.setValor(String.valueOf(stats.getOrDefault("activos_hoy", 0)));
         } catch (SQLException e) {
             lblMensaje.setText("No se pudieron cargar las estadísticas");
+        }
+    }
+
+    private void configurarTablas() {
+        colMorososDesc.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
+        colMorososValor.setCellValueFactory(new PropertyValueFactory<>("valor"));
+        colCoach.setCellValueFactory(new PropertyValueFactory<>("coach"));
+        colClientes.setCellValueFactory(new PropertyValueFactory<>("clientes"));
+    }
+
+    private void cargarMorosos() {
+        try {
+            int count = DatabaseUtil.contarClientesMorosos();
+            ObservableList<MetricItem> data = FXCollections.observableArrayList(new MetricItem("Clientes Morosos", count));
+            tblMorosos.setItems(data);
+        } catch (SQLException e) {
+            lblMensaje.setText("No se pudieron cargar clientes morosos");
+        }
+    }
+
+    private void cargarCoaches() {
+        try {
+            ObservableList<CoachClientes> data = DatabaseUtil.listarCoachesConMasClientes();
+            tblCoaches.setItems(data);
+        } catch (SQLException e) {
+            lblMensaje.setText("No se pudieron cargar los coaches");
         }
     }
 
@@ -167,6 +209,26 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private void generarMembresiasPorVencer() {
         ReporteUtil.generarReporteMembresiasPorVencer();
+    }
+
+    @FXML
+    private void generarMorososPDF() {
+        ReporteUtil.generarReporteClientesMorososPDF();
+    }
+
+    @FXML
+    private void generarMorososExcel() {
+        ReporteUtil.generarReporteClientesMorososExcel();
+    }
+
+    @FXML
+    private void generarCoachesTopPDF() {
+        ReporteUtil.generarReporteCoachesConMasClientesPDF();
+    }
+
+    @FXML
+    private void generarCoachesTopExcel() {
+        ReporteUtil.generarReporteCoachesConMasClientesExcel();
     }
 
     @FXML

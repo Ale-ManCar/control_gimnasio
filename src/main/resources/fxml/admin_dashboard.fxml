@@ -2,6 +2,8 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
@@ -43,6 +45,24 @@
                             style="-fx-background-color: rgba(0,188,212,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
             </HBox>
             <ListView fx:id="lstAlertas" prefHeight="150" />
+            <TableView fx:id="tblMorosos" prefHeight="80">
+                <columns>
+                    <TableColumn fx:id="colMorososDesc" text="Dato" />
+                    <TableColumn fx:id="colMorososValor" text="Valor" />
+                </columns>
+            </TableView>
+            <TableView fx:id="tblCoaches" prefHeight="120">
+                <columns>
+                    <TableColumn fx:id="colCoach" text="Coach" />
+                    <TableColumn fx:id="colClientes" text="Clientes" />
+                </columns>
+            </TableView>
+            <HBox spacing="10" alignment="CENTER">
+                <Button text="Morosos PDF" onAction="#generarMorososPDF" styleClass="primary-button"/>
+                <Button text="Morosos Excel" onAction="#generarMorososExcel" styleClass="primary-button"/>
+                <Button text="Coaches PDF" onAction="#generarCoachesTopPDF" styleClass="primary-button"/>
+                <Button text="Coaches Excel" onAction="#generarCoachesTopExcel" styleClass="primary-button"/>
+            </HBox>
             <Button text="Actividad por Recepcionista" onAction="#generarActividadRecepcionista" styleClass="primary-button"/>
             <Button text="Inventario Mensual" onAction="#generarInventarioMensual" styleClass="primary-button"/>
             <Button text="Membresías por Vencer" onAction="#generarMembresiasPorVencer" styleClass="primary-button"/>
