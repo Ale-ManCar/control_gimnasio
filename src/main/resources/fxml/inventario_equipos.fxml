@@ -20,6 +20,7 @@
                 <TableColumn text="PESO" fx:id="colPeso" prefWidth="80"/>
                 <TableColumn text="STOCK" fx:id="colStock" prefWidth="100"/>
                 <TableColumn text="PRECIO" fx:id="colPrecio" prefWidth="100"/>
+                <TableColumn text="PROVEEDOR" fx:id="colProveedor" prefWidth="150"/>
             </columns>
         </TableView>
     </center>

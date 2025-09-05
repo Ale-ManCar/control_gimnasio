@@ -1,5 +1,6 @@
 package controllers;
 
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -13,6 +14,8 @@ import util.DatabaseUtil;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public class InventarioEquiposController {
@@ -23,8 +26,10 @@ public class InventarioEquiposController {
     @FXML private TableColumn<Equipo, Double> colPeso;
     @FXML private TableColumn<Equipo, Integer> colStock;
     @FXML private TableColumn<Equipo, Double> colPrecio;
+    @FXML private TableColumn<Equipo, String> colProveedor;
 
     private ObservableList<Equipo> equipos = FXCollections.observableArrayList();
+    private Map<Integer, String> proveedoresMap = new HashMap<>();
 
     @FXML
     public void initialize() {
@@ -33,6 +38,18 @@ public class InventarioEquiposController {
         colPeso.setCellValueFactory(new PropertyValueFactory<>("peso"));
         colStock.setCellValueFactory(new PropertyValueFactory<>("stock"));
         colPrecio.setCellValueFactory(new PropertyValueFactory<>("precio"));
+        try {
+            for (Proveedor p : DatabaseUtil.getProveedores()) {
+                proveedoresMap.put(p.getId(), p.getNombre());
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        colProveedor.setCellValueFactory(data -> {
+            Integer id = data.getValue().getProveedorId();
+            String nombre = id != null ? proveedoresMap.getOrDefault(id, "") : "";
+            return new ReadOnlyStringWrapper(nombre);
+        });
         cargarEquipos();
     }
 

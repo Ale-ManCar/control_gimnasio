@@ -86,7 +86,7 @@ public class DatabaseUtil {
 
         String sqlProductos = "CREATE TABLE IF NOT EXISTS productos (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "nombre TEXT NOT NULL UNIQUE," +
+                "nombre TEXT NOT NULL," +
                 "stock INTEGER NOT NULL," +
                 "precio REAL NOT NULL," +
                 "tipo TEXT NOT NULL," +
@@ -691,7 +691,7 @@ public class DatabaseUtil {
     public static void registrarCompra(int proveedorId, Equipo equipo, int cantidad, double precioUnitario, String rutaPdf) throws SQLException {
         String sqlCompra = "INSERT INTO compras (proveedor_id, fecha, total, ruta_pdf) VALUES (?, date('now'), ?, ?)";
         String sqlDetalle = "INSERT INTO compras_detalle (compra_id, equipo_id, cantidad, precio) VALUES (?, ?, ?, ?)";
-        String sqlUpdate = "UPDATE equipos SET stock = stock + ?, marca = ?, peso = ? WHERE id = ?";
+        String sqlUpdate = "UPDATE equipos SET stock = stock + ?, precio = ?, marca = ?, peso = ? WHERE id = ?";
         Connection conn = null;
         PreparedStatement stmtCompra = null;
         PreparedStatement stmtDetalle = null;
@@ -723,9 +723,10 @@ public class DatabaseUtil {
             stmtDetalle.executeUpdate();
 
             stmtUpdate.setInt(1, cantidad);
-            stmtUpdate.setString(2, equipo.getMarca());
-            stmtUpdate.setDouble(3, equipo.getPeso());
-            stmtUpdate.setInt(4, equipo.getId());
+            stmtUpdate.setDouble(2, precioUnitario);
+            stmtUpdate.setString(3, equipo.getMarca());
+            stmtUpdate.setDouble(4, equipo.getPeso());
+            stmtUpdate.setInt(5, equipo.getId());
             stmtUpdate.executeUpdate();
 
             conn.commit();
