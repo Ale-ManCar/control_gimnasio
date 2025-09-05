@@ -3,62 +3,59 @@ package controllers;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import models.Equipo;
+import models.ProveedorPrecio;
 import util.DatabaseUtil;
 
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Map;
 
 public class ComparadorPreciosController {
 
-    public static class PrecioProveedor {
-        private final String proveedor;
-        private final double precio;
+    @FXML private ComboBox<String> cboEquipos;
+    @FXML private TableView<ProveedorPrecio> tblPrecios;
+    @FXML private TableColumn<ProveedorPrecio, String> colProveedor;
+    @FXML private TableColumn<ProveedorPrecio, Double> colPrecio;
 
-        public PrecioProveedor(String proveedor, double precio) {
-            this.proveedor = proveedor;
-            this.precio = precio;
-        }
-
-        public String getProveedor() {
-            return proveedor;
-        }
-
-        public double getPrecio() {
-            return precio;
-        }
-    }
-
-    @FXML private ComboBox<Equipo> cbEquipos;
-    @FXML private TableView<PrecioProveedor> tablaPrecios;
-    @FXML private TableColumn<PrecioProveedor, String> colProveedor;
-    @FXML private TableColumn<PrecioProveedor, Double> colPrecio;
-
-    private ObservableList<PrecioProveedor> datos = FXCollections.observableArrayList();
+    private final ObservableList<ProveedorPrecio> datos = FXCollections.observableArrayList();
+    private final Map<String, Integer> equiposMap = new HashMap<>();
 
     @FXML
     public void initialize() {
         colProveedor.setCellValueFactory(new PropertyValueFactory<>("proveedor"));
         colPrecio.setCellValueFactory(new PropertyValueFactory<>("precio"));
-        tablaPrecios.setItems(datos);
+        tblPrecios.setItems(datos);
         try {
-            cbEquipos.setItems(DatabaseUtil.getEquipos());
+            ObservableList<Equipo> equipos = DatabaseUtil.getEquipos();
+            for (Equipo equipo : equipos) {
+                cboEquipos.getItems().add(equipo.getNombre());
+                equiposMap.put(equipo.getNombre(), equipo.getId());
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        cbEquipos.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> cargarDatos());
+        cboEquipos.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> cargarDatos());
     }
 
     private void cargarDatos() {
-        Equipo equipo = cbEquipos.getValue();
+        String nombre = cboEquipos.getValue();
         datos.clear();
-        if (equipo == null) return;
+        if (nombre == null) {
+            return;
+        }
+        Integer equipoId = equiposMap.get(nombre);
+        if (equipoId == null) {
+            return;
+        }
         try {
-            Map<String, Double> mapa = DatabaseUtil.getPreciosPorProveedor(equipo.getId());
+            Map<String, Double> mapa = DatabaseUtil.getPreciosPorProveedor(equipoId);
             for (Map.Entry<String, Double> e : mapa.entrySet()) {
-                datos.add(new PrecioProveedor(e.getKey(), e.getValue()));
+                datos.add(new ProveedorPrecio(e.getKey(), e.getValue()));
             }
         } catch (SQLException e) {
             e.printStackTrace();
