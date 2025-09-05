@@ -134,11 +134,16 @@ public class DatabaseUtil {
 
         String sqlEquipos = "CREATE TABLE IF NOT EXISTS equipos (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "nombre TEXT NOT NULL UNIQUE," +
+                "nombre TEXT NOT NULL," +
+                "marca TEXT," +
+                "peso REAL," +
                 "stock INTEGER NOT NULL," +
                 "precio REAL NOT NULL," +
                 "proveedor_id INTEGER," +
                 "FOREIGN KEY (proveedor_id) REFERENCES proveedores(id))";
+
+        String sqlEquiposIndex = "CREATE UNIQUE INDEX IF NOT EXISTS idx_equipos_nombre_marca_peso " +
+                "ON equipos(nombre, marca, peso)";
 
         String sqlCompras = "CREATE TABLE IF NOT EXISTS compras (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -178,10 +183,15 @@ public class DatabaseUtil {
             stmt.execute(sqlComprasDetalle);
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN area TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN coach_id INTEGER REFERENCES coaches(id)"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE equipos ADD COLUMN marca TEXT"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE equipos ADD COLUMN peso REAL"); } catch (SQLException ignored) {}
+            stmt.execute(sqlEquiposIndex);
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
             stmt.execute("INSERT OR IGNORE INTO usuarios (id, username, password, rol) VALUES (1, 'admin', 'admin', 'ADMIN'), (2, 'recep', 'recep', 'RECEPCIONISTA')");
             stmt.execute("INSERT OR IGNORE INTO proveedores (id, nombre, contacto, telefono) VALUES (1, 'Proveedor 1', '', ''), (2, 'Proveedor 2', '', '')");
-            stmt.execute("INSERT OR IGNORE INTO equipos (nombre, stock, precio, proveedor_id) VALUES ('Banco de Pesas', 4, 150.0, 1), ('Prensa de Piernas', 2, 700.0, 2)");
+            stmt.execute("INSERT OR IGNORE INTO equipos (nombre, marca, peso, stock, precio, proveedor_id) VALUES " +
+                    "('Banco de Pesas', 'Generica', 0, 4, 150.0, 1)," +
+                    "('Prensa de Piernas', 'Generica', 0, 2, 700.0, 2)");
             conn.commit();
 
             System.out.println("Base de datos inicializada correctamente");
@@ -579,7 +589,7 @@ public class DatabaseUtil {
 
     public static ObservableList<Equipo> getEquipos() throws SQLException {
         ObservableList<Equipo> equipos = FXCollections.observableArrayList();
-        String sql = "SELECT id, nombre, stock, precio, proveedor_id FROM equipos";
+        String sql = "SELECT id, nombre, marca, peso, stock, precio, proveedor_id FROM equipos";
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -587,6 +597,8 @@ public class DatabaseUtil {
                 Equipo e = new Equipo();
                 e.setId(rs.getInt("id"));
                 e.setNombre(rs.getString("nombre"));
+                e.setMarca(rs.getString("marca"));
+                e.setPeso(rs.getDouble("peso"));
                 e.setStock(rs.getInt("stock"));
                 e.setPrecio(rs.getDouble("precio"));
                 e.setProveedorId(rs.getInt("proveedor_id"));
@@ -597,13 +609,15 @@ public class DatabaseUtil {
     }
 
     public static int insertarEquipo(Equipo equipo) throws SQLException {
-        String sql = "INSERT INTO equipos (nombre, stock, precio, proveedor_id) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO equipos (nombre, marca, peso, stock, precio, proveedor_id) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, equipo.getNombre());
-            stmt.setInt(2, equipo.getStock());
-            stmt.setDouble(3, equipo.getPrecio());
-            stmt.setObject(4, equipo.getProveedorId());
+            stmt.setString(2, equipo.getMarca());
+            stmt.setDouble(3, equipo.getPeso());
+            stmt.setInt(4, equipo.getStock());
+            stmt.setDouble(5, equipo.getPrecio());
+            stmt.setObject(6, equipo.getProveedorId());
             stmt.executeUpdate();
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 if (rs.next()) {
@@ -619,10 +633,10 @@ public class DatabaseUtil {
         executeUpdate(sql, nuevoStock, id);
     }
 
-    public static void registrarCompra(int proveedorId, int equipoId, int cantidad, double precioUnitario, String rutaPdf) throws SQLException {
+    public static void registrarCompra(int proveedorId, Equipo equipo, int cantidad, double precioUnitario, String rutaPdf) throws SQLException {
         String sqlCompra = "INSERT INTO compras (proveedor_id, fecha, total, ruta_pdf) VALUES (?, date('now'), ?, ?)";
         String sqlDetalle = "INSERT INTO compras_detalle (compra_id, equipo_id, cantidad, precio) VALUES (?, ?, ?, ?)";
-        String sqlUpdate = "UPDATE equipos SET stock = stock + ? WHERE id = ?";
+        String sqlUpdate = "UPDATE equipos SET stock = stock + ?, marca = ?, peso = ? WHERE id = ?";
         Connection conn = null;
         PreparedStatement stmtCompra = null;
         PreparedStatement stmtDetalle = null;
@@ -648,13 +662,15 @@ public class DatabaseUtil {
             }
 
             stmtDetalle.setInt(1, compraId);
-            stmtDetalle.setInt(2, equipoId);
+            stmtDetalle.setInt(2, equipo.getId());
             stmtDetalle.setInt(3, cantidad);
             stmtDetalle.setDouble(4, precioUnitario);
             stmtDetalle.executeUpdate();
 
             stmtUpdate.setInt(1, cantidad);
-            stmtUpdate.setInt(2, equipoId);
+            stmtUpdate.setString(2, equipo.getMarca());
+            stmtUpdate.setDouble(3, equipo.getPeso());
+            stmtUpdate.setInt(4, equipo.getId());
             stmtUpdate.executeUpdate();
 
             conn.commit();

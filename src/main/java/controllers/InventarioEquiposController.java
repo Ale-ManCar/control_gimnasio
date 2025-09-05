@@ -157,7 +157,7 @@ public class InventarioEquiposController {
                 provId = result.get().getId();
             }
 
-            DatabaseUtil.registrarCompra(provId, seleccionado.getId(), cantidad, precio, file.getAbsolutePath());
+            DatabaseUtil.registrarCompra(provId, seleccionado, cantidad, precio, file.getAbsolutePath());
             cargarEquipos();
         } catch (Exception e) {
             e.printStackTrace();
