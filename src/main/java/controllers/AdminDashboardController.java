@@ -10,10 +10,12 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import util.DatabaseUtil;
+import util.ReporteUtil;
 
 import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.Map;
 import java.util.ResourceBundle;
 
@@ -108,5 +110,21 @@ public class AdminDashboardController implements Initializable {
         } catch (IOException e) {
             lblMensaje.setText("Error al abrir comparador de precios");
         }
+    }
+
+    @FXML
+    private void generarActividadRecepcionista() {
+        ReporteUtil.generarReporteActividadRecepcionista();
+    }
+
+    @FXML
+    private void generarInventarioMensual() {
+        LocalDate hoy = LocalDate.now();
+        ReporteUtil.generarReporteInventario(hoy.getMonthValue(), hoy.getYear());
+    }
+
+    @FXML
+    private void generarMembresiasPorVencer() {
+        ReporteUtil.generarReporteMembresiasPorVencer();
     }
 }
