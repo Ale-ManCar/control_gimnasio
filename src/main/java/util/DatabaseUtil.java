@@ -180,6 +180,8 @@ public class DatabaseUtil {
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN coach_id INTEGER REFERENCES coaches(id)"); } catch (SQLException ignored) {}
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
             stmt.execute("INSERT OR IGNORE INTO usuarios (id, username, password, rol) VALUES (1, 'admin', 'admin', 'ADMIN'), (2, 'recep', 'recep', 'RECEPCIONISTA')");
+            stmt.execute("INSERT OR IGNORE INTO proveedores (id, nombre, contacto, telefono) VALUES (1, 'Proveedor 1', '', ''), (2, 'Proveedor 2', '', '')");
+            stmt.execute("INSERT OR IGNORE INTO equipos (nombre, stock, precio, proveedor_id) VALUES ('Banco de Pesas', 4, 150.0, 1), ('Prensa de Piernas', 2, 700.0, 2)");
             conn.commit();
 
             System.out.println("Base de datos inicializada correctamente");
