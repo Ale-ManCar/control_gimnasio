@@ -25,6 +25,10 @@ WHERE id = 1;
 4.- NOMBRE DEL ARCHIVO EXE
 1. gymsystem.exe
 
+5. RESPALDOS AUTOMÁTICOS
+   - Carpeta de respaldos: backups/
+   - Frecuencia de respaldo: diaria
+
 
 GANANCIAS KG
 
