@@ -88,6 +88,7 @@ public class DatabaseUtil {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "nombre TEXT NOT NULL," +
                 "stock INTEGER NOT NULL," +
+                "umbral INTEGER DEFAULT 0," +
                 "precio REAL NOT NULL," +
                 "tipo TEXT NOT NULL," +
                 "precio_compra REAL NOT NULL," +
@@ -138,6 +139,7 @@ public class DatabaseUtil {
                 "marca TEXT," +
                 "peso REAL," +
                 "stock INTEGER NOT NULL," +
+                "umbral INTEGER DEFAULT 0," +
                 "precio REAL NOT NULL," +
                 "proveedor_id INTEGER," +
                 "FOREIGN KEY (proveedor_id) REFERENCES proveedores(id))";
@@ -185,6 +187,8 @@ public class DatabaseUtil {
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN coach_id INTEGER REFERENCES coaches(id)"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE equipos ADD COLUMN marca TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE equipos ADD COLUMN peso REAL"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE equipos ADD COLUMN umbral INTEGER DEFAULT 0"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE productos ADD COLUMN umbral INTEGER DEFAULT 0"); } catch (SQLException ignored) {}
             stmt.execute(sqlEquiposIndex);
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
             stmt.execute("INSERT OR IGNORE INTO usuarios (id, username, password, rol) VALUES (1, 'admin', 'admin', 'ADMIN'), (2, 'recep', 'recep', 'RECEPCIONISTA')");

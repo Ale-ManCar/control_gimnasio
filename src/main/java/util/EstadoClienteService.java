@@ -1,9 +1,10 @@
 package util;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import models.Cliente;
+import java.sql.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -26,5 +27,32 @@ public class EstadoClienteService {
         } catch (SQLException e) {
             System.err.println("Error actualizando estados: " + e.getMessage());
         }
+    }
+
+    public static List<Cliente> obtenerClientesPorVencerEn(int dias) {
+        List<Cliente> clientes = new ArrayList<>();
+        String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
+                "FROM clientes WHERE fecha_vencimiento = ? AND activo = 1 " +
+                "AND telefono NOT IN (SELECT telefono_cliente FROM alertas_enviadas WHERE fecha_envio = CURRENT_DATE)";
+        LocalDate objetivo = LocalDate.now().plusDays(dias);
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, objetivo.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Cliente c = new Cliente(
+                            rs.getString("nombres"),
+                            rs.getString("apellidos"),
+                            rs.getString("telefono"),
+                            LocalDate.parse(rs.getString("fecha_vencimiento"))
+                    );
+                    c.setTipoMembresia(rs.getString("tipoMembresia"));
+                    clientes.add(c);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error obteniendo clientes por vencer en " + dias + " días: " + e.getMessage());
+        }
+        return clientes;
     }
 }

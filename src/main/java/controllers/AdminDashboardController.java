@@ -4,11 +4,13 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import util.AlertScheduler;
 import util.DatabaseUtil;
 import util.ReporteUtil;
 
@@ -26,6 +28,7 @@ public class AdminDashboardController implements Initializable {
     @FXML private AnchorPane cardMembresias;
     @FXML private AnchorPane cardPorVencer;
     @FXML private Label lblMensaje;
+    @FXML private ListView<String> lstAlertas;
 
     private MetricCardController ctrlActivos;
     private MetricCardController ctrlInactivos;
@@ -37,6 +40,7 @@ public class AdminDashboardController implements Initializable {
         try {
             inicializarTarjetas();
             cargarDatos();
+            cargarAlertasPendientes();
         } catch (IOException e) {
             lblMensaje.setText("Error al cargar tarjetas");
         }
@@ -70,6 +74,10 @@ public class AdminDashboardController implements Initializable {
         } catch (SQLException e) {
             lblMensaje.setText("No se pudieron cargar las estadísticas");
         }
+    }
+
+    private void cargarAlertasPendientes() {
+        lstAlertas.getItems().setAll(AlertScheduler.obtenerAlertasPendientes());
     }
 
     @FXML

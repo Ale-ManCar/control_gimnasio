@@ -5,6 +5,7 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AlertScheduler implements Runnable {
 
@@ -13,41 +14,37 @@ public class AlertScheduler implements Runnable {
         System.out.println("Ejecutando búsqueda de clientes para alertas...");
         List<Cliente> clientes = obtenerClientesParaAlertar();
 
-        if (clientes.isEmpty()) {
-            System.out.println("No hay clientes para notificar hoy.");
-            return;
-        }
+        if (!clientes.isEmpty()) {
+            System.out.println("Clientes a notificar: " + clientes.size());
 
-        System.out.println("Clientes a notificar: " + clientes.size());
+            List<Cliente> clientesValidos = clientes.stream()
+                    .filter(c -> clienteExisteYActivo(c.getTelefono()))
+                    .collect(Collectors.toList());
 
-        List<Cliente> clientesValidos = new ArrayList<>();
-        for (Cliente cliente : clientes) {
-            if (clienteExisteYActivo(cliente.getTelefono())) {
-                clientesValidos.add(cliente);
+            if (!clientesValidos.isEmpty()) {
+                boolean driverUsado = false;
+                for (Cliente cliente : clientesValidos) {
+                    try {
+                        WhatsAppService.enviarAlerta(cliente);
+                        driverUsado = true;
+                        Thread.sleep(3000 + (int) (Math.random() * 3000)); // entre 3 y 6 segundos
+                    } catch (Exception e) {
+                        System.err.println("Error al procesar cliente " + cliente.getTelefono() + ": " + e.getMessage());
+                    }
+                }
+                if (driverUsado) {
+                    WhatsAppService.cerrarDriver();
+                }
             } else {
-                System.out.println("Cliente no existe o está inactivo: " + cliente.getTelefono());
+                System.out.println("Todos los clientes están inactivos o ya fueron notificados.");
             }
+        } else {
+            System.out.println("No hay clientes para notificar hoy.");
         }
 
-        if (clientesValidos.isEmpty()) {
-            System.out.println("Todos los clientes están inactivos o ya fueron notificados.");
-            return;
-        }
-
-        boolean driverUsado = false;
-
-        for (Cliente cliente : clientesValidos) {
-            try {
-                WhatsAppService.enviarAlerta(cliente);
-                driverUsado = true;
-                Thread.sleep(3000 + (int) (Math.random() * 3000)); // entre 3 y 6 segundos
-            } catch (Exception e) {
-                System.err.println("Error al procesar cliente " + cliente.getTelefono() + ": " + e.getMessage());
-            }
-        }
-
-        if (driverUsado) {
-            WhatsAppService.cerrarDriver();
+        // Revisar inventario y notificar al administrador
+        for (String alerta : obtenerAlertasInventario()) {
+            notificarAdmin(alerta);
         }
     }
 
@@ -67,49 +64,49 @@ public class AlertScheduler implements Runnable {
 
     private List<Cliente> obtenerClientesParaAlertar() {
         List<Cliente> clientes = new ArrayList<>();
-        LocalDate hoy = LocalDate.now();
+        int[] dias = {7, 3, 1, 0};
+        for (int d : dias) {
+            clientes.addAll(EstadoClienteService.obtenerClientesPorVencerEn(d));
+        }
+        return clientes;
+    }
 
-        LocalDate fecha7Dias = hoy.plusDays(7);
-        LocalDate fecha3Dias = hoy.plusDays(3);
-        LocalDate fecha1Dia = hoy.plusDays(1);
-        LocalDate fechaHoy = hoy;
-
-        String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
-                "FROM clientes " +
-                "WHERE fecha_vencimiento IN (?, ?, ?, ?) " +
-                "AND activo = true " +
-                "AND telefono NOT IN (" +
-                "    SELECT telefono_cliente FROM alertas_enviadas " +
-                "    WHERE fecha_envio = CURRENT_DATE" +
-                ")";
-
+    private static List<String> obtenerAlertasInventario() {
+        List<String> alertas = new ArrayList<>();
+        String sqlEquipos = "SELECT nombre, stock, umbral FROM equipos WHERE stock <= umbral";
+        String sqlProductos = "SELECT nombre, stock, umbral FROM productos WHERE stock <= umbral";
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, fecha7Dias.toString());
-            stmt.setString(2, fecha3Dias.toString());
-            stmt.setString(3, fecha1Dia.toString());
-            stmt.setString(4, fechaHoy.toString());
-
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                Cliente cliente = new Cliente(
-                        rs.getString("nombres"),
-                        rs.getString("apellidos"),
-                        rs.getString("telefono"),
-                        LocalDate.parse(rs.getString("fecha_vencimiento"))
-                );
-                cliente.setTipoMembresia(rs.getString("tipoMembresia"));
-                clientes.add(cliente);
+             Statement stmt = conn.createStatement()) {
+            try (ResultSet rs = stmt.executeQuery(sqlEquipos)) {
+                while (rs.next()) {
+                    alertas.add("Equipo '" + rs.getString("nombre") + "' con stock " +
+                            rs.getInt("stock") + " (umbral " + rs.getInt("umbral") + ")");
+                }
+            }
+            try (ResultSet rs = stmt.executeQuery(sqlProductos)) {
+                while (rs.next()) {
+                    alertas.add("Producto '" + rs.getString("nombre") + "' con stock " +
+                            rs.getInt("stock") + " (umbral " + rs.getInt("umbral") + ")");
+                }
             }
 
         } catch (SQLException e) {
-            System.err.println("Error al consultar clientes para alertas: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Error al consultar inventario: " + e.getMessage());
         }
+        return alertas;
+    }
+    private static void notificarAdmin(String mensaje) {
+        // En un futuro esto podría integrarse con un servicio de mensajería
+        System.out.println("Notificación al administrador: " + mensaje);
+    }
 
-        return clientes;
+    public static List<String> obtenerAlertasPendientes() {
+        List<String> alertas = new ArrayList<>();
+        for (Cliente c : EstadoClienteService.obtenerClientesPorVencerEn(7)) {
+            alertas.add("Membresía de " + c.getNombreCompleto() + " vence en 7 días");
+        }
+        alertas.addAll(obtenerAlertasInventario());
+        return alertas;
     }
 
     public static void main(String[] args) {
