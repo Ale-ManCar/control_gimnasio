@@ -12,9 +12,10 @@
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="controllers.DashboardController"
+            fx:controller="controllers.RecepcionistaDashboardController"
             prefWidth="900" prefHeight="600"
-            style="-fx-background-color: linear-gradient(to bottom, #1e3c72, #2a5298);">
+            stylesheets="@../css/dashboard.css"
+            styleClass="dashboard-root">
 
     <top>
         <VBox alignment="CENTER" style="-fx-background-color: rgba(0,0,0,0.3); -fx-background-radius: 0 0 15 15; -fx-padding: 15;">

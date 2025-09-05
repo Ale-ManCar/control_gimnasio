@@ -17,3 +17,7 @@
 .primary-button:hover {
     -fx-background-color: linear-gradient(to right, #2E8BFF, #4A6CF7);
 }
+
+.dashboard-root {
+    -fx-background-color: linear-gradient(to bottom, #1e3c72, #2a5298);
+}

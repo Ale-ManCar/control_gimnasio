@@ -276,7 +276,7 @@ public class RegistroClienteController {
                 Thread.sleep(5000);
                 Platform.runLater(() -> {
                     try {
-                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/recepcionista_dashboard.fxml"));
                         Parent root = loader.load();
                         Stage stage = (Stage) btnSiguiente.getScene().getWindow();
                         Scene scene = new Scene(root);
@@ -297,7 +297,7 @@ public class RegistroClienteController {
     @FXML
     private void handleVolverAlDashboard() {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/dashboard.fxml"));
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/recepcionista_dashboard.fxml"));
             Stage stage = (Stage) btnVolverAlDashboard.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Panel de Control");

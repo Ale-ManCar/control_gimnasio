@@ -138,7 +138,7 @@ public class RegistroCoachController {
     @FXML
     private void volverDashboard(ActionEvent event) {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/dashboard.fxml"));
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/recepcionista_dashboard.fxml"));
             Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Panel de Control");

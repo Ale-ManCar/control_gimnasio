@@ -13,6 +13,8 @@ import javafx.stage.Stage;
 import util.AlertScheduler;
 import util.DatabaseUtil;
 import util.ReporteUtil;
+import util.SessionManager;
+import models.Role;
 
 import java.io.IOException;
 import java.net.URL;
@@ -37,6 +39,10 @@ public class AdminDashboardController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        if (!tieneAcceso(Role.ADMIN)) {
+            lblMensaje.setText("Acceso denegado");
+            return;
+        }
         try {
             inicializarTarjetas();
             cargarDatos();
@@ -157,5 +163,9 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private void generarMembresiasPorVencer() {
         ReporteUtil.generarReporteMembresiasPorVencer();
+    }
+
+    private boolean tieneAcceso(Role rol) {
+        return SessionManager.getCurrentUser() != null && SessionManager.getCurrentUser().getRole() == rol;
     }
 }

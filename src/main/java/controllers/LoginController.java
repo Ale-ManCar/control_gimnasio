@@ -47,7 +47,7 @@ public class LoginController {
 
     private void abrirDashboard(Role rol, Stage currentStage) {
         try {
-            String fxml = rol == Role.ADMIN ? "/fxml/admin_dashboard.fxml" : "/fxml/dashboard.fxml";
+            String fxml = rol == Role.ADMIN ? "/fxml/admin_dashboard.fxml" : "/fxml/recepcionista_dashboard.fxml";
             Parent root = FXMLLoader.load(getClass().getResource(fxml));
             Stage stage = new Stage();
             stage.setScene(new Scene(root, 900, 650));

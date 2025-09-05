@@ -27,6 +27,7 @@ import util.EventBus;
 import util.ReporteUtil;
 import models.Turno;
 import util.SessionManager;
+import models.Role;
 
 import java.io.IOException;
 import java.net.URL;
@@ -38,7 +39,7 @@ import java.time.LocalDate;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
-public class DashboardController implements Initializable {
+public class RecepcionistaDashboardController implements Initializable {
 
     @FXML private AnchorPane cardClientes;
     @FXML private AnchorPane cardPagos;
@@ -63,6 +64,10 @@ public class DashboardController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        if (!tieneAcceso(Role.RECEPCIONISTA)) {
+            lblMensaje.setText("Acceso denegado");
+            return;
+        }
         try {
 
             Platform.runLater(() -> {
@@ -195,6 +200,10 @@ public class DashboardController implements Initializable {
 
         EventBus.registerListener(this::cargarDatosTarjetas);
         iniciarTurno();
+    }
+
+    private boolean tieneAcceso(Role rol) {
+        return SessionManager.getCurrentUser() != null && SessionManager.getCurrentUser().getRole() == rol;
     }
 
     private void configurarTablaSinScroll() {
