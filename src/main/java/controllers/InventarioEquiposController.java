@@ -19,6 +19,8 @@ public class InventarioEquiposController {
 
     @FXML private TableView<Equipo> tablaEquipos;
     @FXML private TableColumn<Equipo, String> colNombre;
+    @FXML private TableColumn<Equipo, String> colMarca;
+    @FXML private TableColumn<Equipo, Double> colPeso;
     @FXML private TableColumn<Equipo, Integer> colStock;
     @FXML private TableColumn<Equipo, Double> colPrecio;
 
@@ -27,6 +29,8 @@ public class InventarioEquiposController {
     @FXML
     public void initialize() {
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
+        colMarca.setCellValueFactory(new PropertyValueFactory<>("marca"));
+        colPeso.setCellValueFactory(new PropertyValueFactory<>("peso"));
         colStock.setCellValueFactory(new PropertyValueFactory<>("stock"));
         colPrecio.setCellValueFactory(new PropertyValueFactory<>("precio"));
         cargarEquipos();
@@ -50,6 +54,8 @@ public class InventarioEquiposController {
             dialog.getDialogPane().getButtonTypes().addAll(guardarBtn, ButtonType.CANCEL);
 
             TextField txtNombre = new TextField();
+            TextField txtMarca = new TextField();
+            TextField txtPeso = new TextField();
             TextField txtStock = new TextField();
             TextField txtPrecio = new TextField();
             ComboBox<Proveedor> cbProveedor = new ComboBox<>(DatabaseUtil.getProveedores());
@@ -57,17 +63,25 @@ public class InventarioEquiposController {
             GridPane grid = new GridPane();
             grid.setHgap(10); grid.setVgap(10);
             grid.add(new Label("Nombre:"),0,0); grid.add(txtNombre,1,0);
-            grid.add(new Label("Stock:"),0,1); grid.add(txtStock,1,1);
-            grid.add(new Label("Precio:"),0,2); grid.add(txtPrecio,1,2);
-            grid.add(new Label("Proveedor:"),0,3); grid.add(cbProveedor,1,3);
+            grid.add(new Label("Marca:"),0,1); grid.add(txtMarca,1,1);
+            grid.add(new Label("Peso:"),0,2); grid.add(txtPeso,1,2);
+            grid.add(new Label("Stock:"),0,3); grid.add(txtStock,1,3);
+            grid.add(new Label("Precio:"),0,4); grid.add(txtPrecio,1,4);
+            grid.add(new Label("Proveedor:"),0,5); grid.add(cbProveedor,1,5);
             dialog.getDialogPane().setContent(grid);
 
             dialog.setResultConverter(btn -> {
                 if (btn == guardarBtn) {
                     try {
                         Integer provId = cbProveedor.getValue() != null ? cbProveedor.getValue().getId() : null;
-                        return new Equipo(txtNombre.getText(), Integer.parseInt(txtStock.getText()),
-                                Double.parseDouble(txtPrecio.getText()), provId);
+                        return new Equipo(
+                                txtNombre.getText(),
+                                txtMarca.getText(),
+                                Double.parseDouble(txtPeso.getText()),
+                                Integer.parseInt(txtStock.getText()),
+                                Double.parseDouble(txtPrecio.getText()),
+                                provId
+                        );
                     } catch (NumberFormatException ex) {
                         return null;
                     }

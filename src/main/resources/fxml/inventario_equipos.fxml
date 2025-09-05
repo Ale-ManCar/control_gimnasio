@@ -16,6 +16,8 @@
                    style="-fx-background-color: rgba(255,255,255,0.9); -fx-border-radius: 10; -fx-background-radius: 10;">
             <columns>
                 <TableColumn text="EQUIPO" fx:id="colNombre" prefWidth="200"/>
+                <TableColumn text="MARCA" fx:id="colMarca" prefWidth="120"/>
+                <TableColumn text="PESO" fx:id="colPeso" prefWidth="80"/>
                 <TableColumn text="STOCK" fx:id="colStock" prefWidth="100"/>
                 <TableColumn text="PRECIO" fx:id="colPrecio" prefWidth="100"/>
             </columns>
