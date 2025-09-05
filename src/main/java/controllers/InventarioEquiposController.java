@@ -54,17 +54,40 @@ public class InventarioEquiposController {
             dialog.getDialogPane().getButtonTypes().addAll(guardarBtn, ButtonType.CANCEL);
 
             TextField txtNombre = new TextField();
-            TextField txtMarca = new TextField();
-            TextField txtPeso = new TextField();
+            ComboBox<String> cbMarca = new ComboBox<>();
+            cbMarca.setEditable(true);
+            ComboBox<Double> cbPeso = new ComboBox<>();
+            cbPeso.setEditable(true);
             TextField txtStock = new TextField();
             TextField txtPrecio = new TextField();
             ComboBox<Proveedor> cbProveedor = new ComboBox<>(DatabaseUtil.getProveedores());
 
+            txtNombre.textProperty().addListener((obs, oldVal, newVal) -> {
+                try {
+                    cbMarca.getItems().setAll(DatabaseUtil.getMarcasPorNombre(newVal));
+                    cbPeso.getItems().clear();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            cbMarca.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal == null) {
+                    cbPeso.getItems().clear();
+                    return;
+                }
+                try {
+                    cbPeso.getItems().setAll(DatabaseUtil.getPesosPorNombreMarca(txtNombre.getText(), newVal));
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
+
             GridPane grid = new GridPane();
             grid.setHgap(10); grid.setVgap(10);
             grid.add(new Label("Nombre:"),0,0); grid.add(txtNombre,1,0);
-            grid.add(new Label("Marca:"),0,1); grid.add(txtMarca,1,1);
-            grid.add(new Label("Peso:"),0,2); grid.add(txtPeso,1,2);
+            grid.add(new Label("Marca:"),0,1); grid.add(cbMarca,1,1);
+            grid.add(new Label("Peso:"),0,2); grid.add(cbPeso,1,2);
             grid.add(new Label("Stock:"),0,3); grid.add(txtStock,1,3);
             grid.add(new Label("Precio:"),0,4); grid.add(txtPrecio,1,4);
             grid.add(new Label("Proveedor:"),0,5); grid.add(cbProveedor,1,5);
@@ -74,10 +97,13 @@ public class InventarioEquiposController {
                 if (btn == guardarBtn) {
                     try {
                         Integer provId = cbProveedor.getValue() != null ? cbProveedor.getValue().getId() : null;
+                        String marca = cbMarca.getEditor().getText();
+                        String pesoText = cbPeso.getEditor().getText();
+                        double peso = pesoText.isEmpty() ? 0 : Double.parseDouble(pesoText);
                         return new Equipo(
                                 txtNombre.getText(),
-                                txtMarca.getText(),
-                                Double.parseDouble(txtPeso.getText()),
+                                marca,
+                                peso,
                                 Integer.parseInt(txtStock.getText()),
                                 Double.parseDouble(txtPrecio.getText()),
                                 provId

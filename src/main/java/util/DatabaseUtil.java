@@ -608,6 +608,37 @@ public class DatabaseUtil {
         return equipos;
     }
 
+    public static ObservableList<String> getMarcasPorNombre(String nombre) throws SQLException {
+        ObservableList<String> marcas = FXCollections.observableArrayList();
+        String sql = "SELECT DISTINCT marca FROM equipos WHERE nombre = ? AND marca IS NOT NULL ORDER BY marca";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, nombre);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    marcas.add(rs.getString("marca"));
+                }
+            }
+        }
+        return marcas;
+    }
+
+    public static ObservableList<Double> getPesosPorNombreMarca(String nombre, String marca) throws SQLException {
+        ObservableList<Double> pesos = FXCollections.observableArrayList();
+        String sql = "SELECT DISTINCT peso FROM equipos WHERE nombre = ? AND marca = ? ORDER BY peso";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, nombre);
+            stmt.setString(2, marca);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    pesos.add(rs.getDouble("peso"));
+                }
+            }
+        }
+        return pesos;
+    }
+
     public static int insertarEquipo(Equipo equipo) throws SQLException {
         String selectSql = "SELECT id, stock FROM equipos WHERE nombre=? AND marca=? AND peso=?";
         String insertSql = "INSERT INTO equipos (nombre, marca, peso, stock, precio, proveedor_id) VALUES (?, ?, ?, ?, ?, ?)";
