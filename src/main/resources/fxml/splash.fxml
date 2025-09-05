@@ -11,16 +11,14 @@
 <StackPane fx:id="rootPane" xmlns="http://javafx.com/javafx/17"
            xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="controllers.SplashController"
-           style="-fx-background-color: linear-gradient(to bottom, #1a2a6c, #b21f1f, #fdbb2d);"
-           prefWidth="900" prefHeight="650">
+           prefWidth="900" prefHeight="650" stylesheets="@../css/dashboard.css">
 
     <!-- Logo centrado -->
     <VBox alignment="CENTER" spacing="10">
         <ImageView fx:id="imgLogo" fitWidth="500" fitHeight="400"
                    preserveRatio="true" pickOnBounds="true"/>
 
-        <Text text="SOFTWARE DE GESTIÓN"
-              style="-fx-fill: white; -fx-font-weight: bold;">
+        <Text text="SOFTWARE DE GESTIÓN">
             <font>
                 <Font name="Arial" size="24"/>
             </font>
@@ -29,7 +27,6 @@
 
     <!-- Barra de progreso - SIN ESTILOS DINÁMICOS -->
     <ProgressBar fx:id="progressBar"
-                 style="-fx-accent: #4A6CF7; -fx-pref-width: 400; -fx-background-radius: 5px;"
                  StackPane.alignment="BOTTOM_CENTER">
         <StackPane.margin>
             <Insets bottom="50"/>

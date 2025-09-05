@@ -1,19 +1,78 @@
+/* Global palette and typography */
+.root {
+    -primary-color: #4A6CF7;
+    -secondary-color: #2E8BFF;
+    -success-color: #4CAF50;
+    -danger-color: #E74C3C;
+    -warning-color: #FFC107;
+    -text-color: #333333;
+    -background-color: #F5F7FA;
+    -fx-font-family: "Segoe UI", Roboto, sans-serif;
+    -fx-text-fill: -text-color;
+}
+
+/* Layout helpers */
 .sidebar {
     -fx-background-color: rgba(0,0,0,0.2);
     -fx-padding: 10;
 }
 
+.card {
+    -fx-background-color: white;
+    -fx-background-radius: 15;
+    -fx-padding: 15;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);
+}
+
+/* Typography */
+.title-label {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.subtitle-label {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+.error-label {
+    -fx-text-fill: -danger-color;
+    -fx-font-size: 12px;
+}
+
+/* Buttons */
 .primary-button {
-    -fx-background-color: linear-gradient(to right, #4A6CF7, #2E8BFF);
+    -fx-background-color: linear-gradient(to right, -primary-color, -secondary-color);
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-padding: 10 20;
-    -fx-font-size: 14px;
     -fx-background-radius: 25;
     -fx-cursor: hand;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);
 }
 
 .primary-button:hover {
-    -fx-background-color: linear-gradient(to right, #2E8BFF, #4A6CF7);
+    -fx-background-color: linear-gradient(to right, -secondary-color, -primary-color);
+}
+
+.danger-button {
+    -fx-background-color: -danger-color;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8 15;
+    -fx-background-radius: 20;
+}
+
+.success-button {
+    -fx-background-color: -success-color;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8 15;
+    -fx-background-radius: 20;
+}
+
+.input-field {
+    -fx-background-color: rgba(255,255,255,0.9);
+    -fx-background-radius: 5;
+    -fx-padding: 8 10;
 }

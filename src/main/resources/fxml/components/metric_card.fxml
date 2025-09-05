@@ -7,22 +7,10 @@
 
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="controllers.MetricCardController"
-      style="-fx-background-color: #ffffff;
-             -fx-border-radius: 10px;
-             -fx-background-radius: 10px;
-             -fx-padding: 15px;
-             -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 6, 0.3, 0, 2);
-             -fx-cursor: hand;"
       spacing="5" alignment="CENTER"
-      prefWidth="200" prefHeight="120">
+      prefWidth="200" prefHeight="120" stylesheets="@../../css/dashboard.css">
 
-    <Label fx:id="lblTitulo"
-           style="-fx-font-size: 14px;
-                  -fx-text-fill: #666666;
-                  -fx-font-weight: bold;"/>
+    <Label fx:id="lblTitulo"/>
 
-    <Label fx:id="lblValor"
-           style="-fx-font-size: 22px;
-                  -fx-font-weight: bold;
-                  -fx-text-fill: #1e88e5;"/>
+    <Label fx:id="lblValor"/>
 </VBox>

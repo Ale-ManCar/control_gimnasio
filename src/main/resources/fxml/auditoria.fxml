@@ -2,7 +2,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.BorderPane?>
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="controllers.AuditoriaController" prefWidth="800" prefHeight="600">
+            fx:controller="controllers.AuditoriaController" prefWidth="800" prefHeight="600" stylesheets="@../css/dashboard.css">
     <center>
         <TableView fx:id="tablaAuditoria" prefWidth="800" prefHeight="600">
             <columns>

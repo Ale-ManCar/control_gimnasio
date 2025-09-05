@@ -11,12 +11,9 @@
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controllers.AdminDashboardController"
-            prefWidth="900" prefHeight="600"
-            style="-fx-background-color: linear-gradient(to bottom, #1e3c72, #2a5298);"
-            stylesheets="@../css/dashboard.css">
+            prefWidth="900" prefHeight="600" stylesheets="@../css/dashboard.css">
     <top>
-        <Label text="ADMIN DASHBOARD"
-               style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white; -fx-padding:20;"/>
+        <Label text="ADMIN DASHBOARD"/>
     </top>
     <left>
         <VBox spacing="10" alignment="TOP_LEFT" styleClass="sidebar">
@@ -29,16 +26,12 @@
         </VBox>
     </left>
     <center>
-        <VBox spacing="20" alignment="TOP_CENTER" style="-fx-padding: 20;">
+        <VBox spacing="20" alignment="TOP_CENTER">
             <HBox spacing="20" alignment="CENTER">
-                <AnchorPane fx:id="cardActivos" prefWidth="200" prefHeight="120"
-                            style="-fx-background-color: rgba(76,175,80,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
-                <AnchorPane fx:id="cardInactivos" prefWidth="200" prefHeight="120"
-                            style="-fx-background-color: rgba(244,67,54,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
-                <AnchorPane fx:id="cardMembresias" prefWidth="200" prefHeight="120"
-                            style="-fx-background-color: rgba(33,150,243,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
-                <AnchorPane fx:id="cardPorVencer" prefWidth="200" prefHeight="120"
-                            style="-fx-background-color: rgba(255,152,0,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
+                <AnchorPane fx:id="cardActivos" prefWidth="200" prefHeight="120"/>
+                <AnchorPane fx:id="cardInactivos" prefWidth="200" prefHeight="120"/>
+                <AnchorPane fx:id="cardMembresias" prefWidth="200" prefHeight="120"/>
+                <AnchorPane fx:id="cardPorVencer" prefWidth="200" prefHeight="120"/>
             </HBox>
             <ListView fx:id="lstAlertas" prefHeight="150" />
             <Button text="Actividad por Recepcionista" onAction="#generarActividadRecepcionista" styleClass="primary-button"/>
@@ -47,7 +40,6 @@
         </VBox>
     </center>
     <bottom>
-        <Label fx:id="lblMensaje"
-               style="-fx-font-size: 14px; -fx-padding: 10; -fx-text-fill: white; -fx-alignment: CENTER; -fx-background-color: rgba(0,0,0,0.3); -fx-background-radius: 15 15 0 0;"/>
+        <Label fx:id="lblMensaje"/>
     </bottom>
 </BorderPane>

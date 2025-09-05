@@ -11,44 +11,22 @@
       fx:controller="controllers.ListaClientesInactivosController"
       spacing="20"
       alignment="CENTER"
-      style="-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e); -fx-padding: 25;"
-      prefWidth="850" prefHeight="650">
+      prefWidth="850" prefHeight="650" stylesheets="@../css/dashboard.css">
     <Label fx:id="lblTitulo" text="Clientes Inactivos"
-           style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #4A6CF7; -fx-padding: 0 0 15px 0;"
            alignment="CENTER"/>
-    <HBox spacing="10" alignment="CENTER" style="-fx-padding: 0 0 20 0;">
-        <TextField fx:id="txtBuscar" promptText="Buscar cliente..."
-                   style="-fx-pref-width: 450px; -fx-font-size: 14px; -fx-padding: 10px 15px;
-                          -fx-background-radius: 20px; -fx-border-radius: 20px; -fx-border-color: rgba(255,255,255,0.3);
-                          -fx-background-color: rgba(255,255,255,0.1); -fx-text-fill: white;"/>
-        <Button fx:id="btnLimpiar" text="Limpiar" onAction="#limpiarFiltro"
-                style="-fx-background-color: #6C757D; -fx-text-fill: white; -fx-font-weight: bold;
-                       -fx-padding: 8px 15px; -fx-background-radius: 20px; -fx-border-radius: 20px;
-                       -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 5, 0, 0, 2);"/>
+    <HBox spacing="10" alignment="CENTER">
+        <TextField fx:id="txtBuscar" promptText="Buscar cliente..."/>
+        <Button fx:id="btnLimpiar" text="Limpiar" onAction="#limpiarFiltro"/>
     </HBox>
-    <TableView fx:id="tablaClientes"
-               style="-fx-background-radius: 15px; -fx-border-color: rgba(255,255,255,0.2);
-                      -fx-border-width: 1px; -fx-background-color: rgba(255,255,255,0.1);
-                      -fx-table-cell-border-color: rgba(255,255,255,0.2);">
+    <TableView fx:id="tablaClientes">
         <columns>
-            <TableColumn fx:id="colNombreCompleto" text="Cliente" prefWidth="340"
-                         style="-fx-alignment: CENTER; -fx-text-fill: white;
-                                -fx-border-color: rgba(255,255,255,0.2); -fx-border-width: 0 1px 0 0;"/>
-            <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="210"
-                         style="-fx-alignment: CENTER; -fx-text-fill: white;
-                                -fx-border-color: rgba(255,255,255,0.2); -fx-border-width: 0 1px 0 0;"/>
-            <TableColumn fx:id="colEstado" text="Estado" prefWidth="170"
-                         style="-fx-alignment: CENTER; -fx-text-fill: white;
-                                -fx-border-color: rgba(255,255,255,0.2); -fx-border-width: 0 1px 0 0;"/>
-            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="130"
-                         style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
+            <TableColumn fx:id="colNombreCompleto" text="Cliente" prefWidth="340"/>
+            <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="210"/>
+            <TableColumn fx:id="colEstado" text="Estado" prefWidth="170"/>
+            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="130"/>
         </columns>
     </TableView>
-    <HBox spacing="10" alignment="CENTER" style="-fx-padding: 20 0 0 0;">
-        <Button text="Volver a Activos" onAction="#handleVolver"
-                style="-fx-background-color: linear-gradient(to right, #4A6CF7, #2E8BFF); -fx-text-fill: white;
-                       -fx-font-weight: bold; -fx-min-width: 220; -fx-font-size: 16px; -fx-padding: 10px 25px;
-                       -fx-background-radius: 25px; -fx-border-radius: 25px;
-                       -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
+    <HBox spacing="10" alignment="CENTER">
+        <Button text="Volver a Activos" onAction="#handleVolver"/>
     </HBox>
 </VBox>

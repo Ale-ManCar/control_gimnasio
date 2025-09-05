@@ -3,7 +3,7 @@
 <?import javafx.scene.layout.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="controllers.ComparadorPreciosController">
+            fx:controller="controllers.ComparadorPreciosController" stylesheets="@../css/dashboard.css">
     <center>
         <VBox spacing="10" alignment="TOP_CENTER">
             <ComboBox fx:id="cboEquipos" promptText="Seleccionar equipo"/>

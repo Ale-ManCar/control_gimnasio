@@ -4,16 +4,13 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controllers.InventarioEquiposController"
-            prefWidth="800" prefHeight="600"
-            style="-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e); -fx-padding: 15;">
+            prefWidth="800" prefHeight="600" stylesheets="@../css/dashboard.css">
     <top>
         <Label text="Inventario de Equipos"
-               style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;"
                BorderPane.alignment="CENTER"/>
     </top>
     <center>
-        <TableView fx:id="tablaEquipos" VBox.vgrow="ALWAYS"
-                   style="-fx-background-color: rgba(255,255,255,0.9); -fx-border-radius: 10; -fx-background-radius: 10;">
+        <TableView fx:id="tablaEquipos" VBox.vgrow="ALWAYS">
             <columns>
                 <TableColumn text="EQUIPO" fx:id="colNombre" prefWidth="200"/>
                 <TableColumn text="MARCA" fx:id="colMarca" prefWidth="120"/>
@@ -25,7 +22,7 @@
         </TableView>
     </center>
     <bottom>
-        <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding:10;">
+        <HBox spacing="10" alignment="CENTER_RIGHT">
             <Button text="Registrar Equipo" onAction="#handleRegistrarEquipo"/>
             <Button text="Actualizar Stock" onAction="#handleActualizarStock"/>
             <Button text="Subir PDF" onAction="#handleSubirPdf"/>
