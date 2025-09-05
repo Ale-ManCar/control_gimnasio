@@ -2,6 +2,7 @@ package util;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -82,7 +83,9 @@ public class DatabaseUtil {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "username TEXT NOT NULL UNIQUE," +
                 "password TEXT NOT NULL," +
-                "rol TEXT NOT NULL)";
+                "rol TEXT NOT NULL," +
+                "last_login TEXT," +
+                "acciones_realizadas INTEGER DEFAULT 0)";
 
         String sqlProductos = "CREATE TABLE IF NOT EXISTS productos (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -124,6 +127,13 @@ public class DatabaseUtil {
                 "usuario_id INTEGER," +
                 "accion TEXT NOT NULL," +
                 "detalle TEXT," +
+                "timestamp TEXT DEFAULT (datetime('now'))," +
+                "FOREIGN KEY (usuario_id) REFERENCES usuarios(id))";
+
+        String sqlAuditoriaUsuarios = "CREATE TABLE IF NOT EXISTS auditoria_usuarios (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "usuario_id INTEGER," +
+                "accion TEXT NOT NULL," +
                 "timestamp TEXT DEFAULT (datetime('now'))," +
                 "FOREIGN KEY (usuario_id) REFERENCES usuarios(id))";
 
@@ -179,6 +189,7 @@ public class DatabaseUtil {
             stmt.execute(sqlUsuarios);
             stmt.execute(sqlTurnos);
             stmt.execute(sqlAuditoria);
+            stmt.execute(sqlAuditoriaUsuarios);
             stmt.execute(sqlProveedores);
             stmt.execute(sqlEquipos);
             stmt.execute(sqlCompras);
@@ -192,6 +203,8 @@ public class DatabaseUtil {
             stmt.execute(sqlEquiposIndex);
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
             stmt.execute("INSERT OR IGNORE INTO usuarios (id, username, password, rol) VALUES (1, 'admin', 'admin', 'ADMIN'), (2, 'recep', 'recep', 'RECEPCIONISTA')");
+            try { stmt.execute("ALTER TABLE usuarios ADD COLUMN last_login TEXT"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE usuarios ADD COLUMN acciones_realizadas INTEGER DEFAULT 0"); } catch (SQLException ignored) {}
             stmt.execute("INSERT OR IGNORE INTO proveedores (id, nombre, contacto, telefono) VALUES (1, 'Proveedor 1', '', ''), (2, 'Proveedor 2', '', '')");
             stmt.execute("INSERT OR IGNORE INTO equipos (nombre, marca, peso, stock, precio, proveedor_id) VALUES " +
                     "('Banco de Pesas', 'Generica', 0, 4, 150.0, 1)," +
@@ -852,20 +865,106 @@ public class DatabaseUtil {
     }
 
     public static User obtenerUsuario(String username, String password) {
-        String sql = "SELECT id, username, password, rol FROM usuarios WHERE username = ? AND password = ?";
+        String sql = "SELECT id, username, password, rol, last_login, acciones_realizadas FROM usuarios WHERE username = ? AND password = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
             stmt.setString(2, password);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                Role role = Role.valueOf(rs.getString("rol"));
-                return new User(rs.getInt("id"), rs.getString("username"), rs.getString("password"), role);
+                Role role = Role.fromString(rs.getString("rol"));
+                LocalDateTime lastLogin = null;
+                String last = rs.getString("last_login");
+                if (last != null) {
+                    lastLogin = LocalDateTime.parse(last);
+                }
+                int acciones = rs.getInt("acciones_realizadas");
+                return new User(rs.getInt("id"), rs.getString("username"), rs.getString("password"), role, lastLogin, acciones);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static void crearUsuario(User user) throws SQLException {
+        String sql = "INSERT INTO usuarios(username, password, rol, last_login, acciones_realizadas) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, user.getUsername());
+            stmt.setString(2, user.getPassword());
+            stmt.setString(3, user.getRole().name());
+            stmt.setString(4, user.getLastLogin() != null ? user.getLastLogin().toString() : null);
+            stmt.setInt(5, user.getAccionesRealizadas());
+            stmt.executeUpdate();
+        }
+    }
+
+    public static void actualizarUsuario(User user) throws SQLException {
+        String sql = "UPDATE usuarios SET username = ?, password = ?, rol = ? WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, user.getUsername());
+            stmt.setString(2, user.getPassword());
+            stmt.setString(3, user.getRole().name());
+            stmt.setInt(4, user.getId());
+            stmt.executeUpdate();
+        }
+    }
+
+    public static void eliminarUsuario(int id) throws SQLException {
+        String sql = "DELETE FROM usuarios WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
+    }
+
+    public static ObservableList<User> listarUsuarios() throws SQLException {
+        ObservableList<User> usuarios = FXCollections.observableArrayList();
+        String sql = "SELECT id, username, password, rol, last_login, acciones_realizadas FROM usuarios";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Role role = Role.fromString(rs.getString("rol"));
+                LocalDateTime lastLogin = null;
+                String last = rs.getString("last_login");
+                if (last != null) {
+                    lastLogin = LocalDateTime.parse(last);
+                }
+                int acciones = rs.getInt("acciones_realizadas");
+                usuarios.add(new User(rs.getInt("id"), rs.getString("username"), rs.getString("password"), role, lastLogin, acciones));
+            }
+        }
+        return usuarios;
+    }
+
+    public static void actualizarLastLogin(int userId) throws SQLException {
+        String sql = "UPDATE usuarios SET last_login = ? WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, LocalDateTime.now().toString());
+            stmt.setInt(2, userId);
+            stmt.executeUpdate();
+        }
+    }
+
+    public static void registrarActividadUsuario(int userId, String accion) throws SQLException {
+        String insert = "INSERT INTO auditoria_usuarios(usuario_id, accion) VALUES(?, ?)";
+        String update = "UPDATE usuarios SET acciones_realizadas = acciones_realizadas + 1 WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement psInsert = conn.prepareStatement(insert);
+             PreparedStatement psUpdate = conn.prepareStatement(update)) {
+            conn.setAutoCommit(false);
+            psInsert.setInt(1, userId);
+            psInsert.setString(2, accion);
+            psInsert.executeUpdate();
+            psUpdate.setInt(1, userId);
+            psUpdate.executeUpdate();
+            conn.commit();
+        }
     }
 
     public static String obtenerStockJson() {
