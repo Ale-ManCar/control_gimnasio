@@ -609,19 +609,43 @@ public class DatabaseUtil {
     }
 
     public static int insertarEquipo(Equipo equipo) throws SQLException {
-        String sql = "INSERT INTO equipos (nombre, marca, peso, stock, precio, proveedor_id) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setString(1, equipo.getNombre());
-            stmt.setString(2, equipo.getMarca());
-            stmt.setDouble(3, equipo.getPeso());
-            stmt.setInt(4, equipo.getStock());
-            stmt.setDouble(5, equipo.getPrecio());
-            stmt.setObject(6, equipo.getProveedorId());
-            stmt.executeUpdate();
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
+        String selectSql = "SELECT id, stock FROM equipos WHERE nombre=? AND marca=? AND peso=?";
+        String insertSql = "INSERT INTO equipos (nombre, marca, peso, stock, precio, proveedor_id) VALUES (?, ?, ?, ?, ?, ?)";
+        String updateSql = "UPDATE equipos SET stock = stock + ?, precio = ? WHERE id = ?";
+
+        try (Connection conn = getConnection()) {
+            // Buscar si ya existe un equipo con las mismas características
+            try (PreparedStatement selectStmt = conn.prepareStatement(selectSql)) {
+                selectStmt.setString(1, equipo.getNombre());
+                selectStmt.setString(2, equipo.getMarca());
+                selectStmt.setDouble(3, equipo.getPeso());
+                try (ResultSet rs = selectStmt.executeQuery()) {
+                    if (rs.next()) {
+                        int id = rs.getInt("id");
+                        try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                            updateStmt.setInt(1, equipo.getStock());
+                            updateStmt.setDouble(2, equipo.getPrecio());
+                            updateStmt.setInt(3, id);
+                            updateStmt.executeUpdate();
+                        }
+                        return id;
+                    }
+                }
+            }
+
+            // Si no existe, insertar un nuevo equipo
+            try (PreparedStatement insertStmt = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
+                insertStmt.setString(1, equipo.getNombre());
+                insertStmt.setString(2, equipo.getMarca());
+                insertStmt.setDouble(3, equipo.getPeso());
+                insertStmt.setInt(4, equipo.getStock());
+                insertStmt.setDouble(5, equipo.getPrecio());
+                insertStmt.setObject(6, equipo.getProveedorId());
+                insertStmt.executeUpdate();
+                try (ResultSet rs = insertStmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
                 }
             }
         }
