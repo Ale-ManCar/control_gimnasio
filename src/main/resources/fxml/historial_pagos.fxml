@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controllers.HistorialPagosController"
+      spacing="20"
+      prefWidth="1000" prefHeight="700"
+      style="-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e); -fx-padding: 25;">
+    <!-- Título -->
+    <Label text="Historial de Pagos"
+           style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+
+    <!-- Filtros -->
+    <HBox spacing="10" alignment="CENTER">
+        <TextField fx:id="txtClienteId" promptText="ID Cliente"
+                   style="-fx-pref-width: 120; -fx-background-radius: 20; -fx-text-fill: white;"/>
+        <DatePicker fx:id="dpFechaInicio" promptText="Fecha Inicio"/>
+        <DatePicker fx:id="dpFechaFin" promptText="Fecha Fin"/>
+        <ComboBox fx:id="cbTipoMembresia" promptText="Tipo de Membresía" prefWidth="160"/>
+        <Button fx:id="btnBuscar" text="Buscar" onAction="#handleBuscar"
+                style="-fx-background-color: #4A6CF7; -fx-text-fill: white; -fx-font-weight: bold;"/>
+        <Button fx:id="btnExportar" text="Exportar PDF" onAction="#handleExportar"
+                style="-fx-background-color: #2E8BFF; -fx-text-fill: white; -fx-font-weight: bold;"/>
+    </HBox>
+
+    <!-- Tabla de resultados -->
+    <TableView fx:id="tablaPagos"
+               style="-fx-background-color: rgba(255,255,255,0.1); -fx-border-color: rgba(255,255,255,0.2);">
+        <columns>
+            <TableColumn fx:id="colFecha" text="Fecha" prefWidth="120"/>
+            <TableColumn fx:id="colCliente" text="Cliente" prefWidth="220"/>
+            <TableColumn fx:id="colMembresia" text="Membresía" prefWidth="180"/>
+            <TableColumn fx:id="colMonto" text="Monto" prefWidth="100"/>
+        </columns>
+    </TableView>
+</VBox>
