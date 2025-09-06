@@ -945,17 +945,6 @@ public class DatabaseUtil {
         return data;
     }
 
-    public static void insertarEgreso(Egreso egreso) throws SQLException {
-        String sql = "INSERT INTO egresos (descripcion, monto, fecha, categoria) VALUES (?, ?, ?, ?)";
-        executeUpdate(sql,
-                egreso.getDescripcion(),
-                egreso.getMonto(),
-                egreso.getFecha().toString(),
-                egreso.getCategoria());
-
-        EventBus.fireEvent(EventBus.EventType.EGRESO_REGISTRADO);
-    }
-
     public static ObservableList<PagoMensual> getEgresosMensuales(int año) throws SQLException {
         ObservableList<PagoMensual> data = FXCollections.observableArrayList();
         String sql = "SELECT strftime('%Y-%m', fecha) AS mes, SUM(monto) AS total " +
