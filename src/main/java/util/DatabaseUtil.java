@@ -619,6 +619,59 @@ public class DatabaseUtil {
         return datos;
     }
 
+    public static ObservableList<PagoDetalle> buscarPagos(Integer clienteId, LocalDate fechaInicio, LocalDate fechaFin, String tipoMembresia) throws SQLException {
+        ObservableList<PagoDetalle> pagos = FXCollections.observableArrayList();
+        StringBuilder sql = new StringBuilder("SELECT pagos.fecha_pago AS fecha, "
+                + "clientes.nombres || ' ' || clientes.apellidos AS cliente, "
+                + "clientes.id AS cliente_id, "
+                + "pagos.tipo_membresia AS membresia, pagos.monto "
+                + "FROM pagos JOIN clientes ON pagos.cliente_id = clientes.id WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+
+        if (clienteId != null) {
+            sql.append(" AND clientes.id = ?");
+            params.add(clienteId);
+        }
+
+        if (fechaInicio != null && fechaFin != null) {
+            sql.append(" AND date(pagos.fecha_pago) BETWEEN ? AND ?");
+            params.add(fechaInicio.toString());
+            params.add(fechaFin.toString());
+        } else if (fechaInicio != null) {
+            sql.append(" AND date(pagos.fecha_pago) >= ?");
+            params.add(fechaInicio.toString());
+        } else if (fechaFin != null) {
+            sql.append(" AND date(pagos.fecha_pago) <= ?");
+            params.add(fechaFin.toString());
+        }
+
+        if (tipoMembresia != null && !tipoMembresia.isEmpty()) {
+            sql.append(" AND pagos.tipo_membresia = ?");
+            params.add(tipoMembresia);
+        }
+
+        sql.append(" ORDER BY pagos.fecha_pago DESC");
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    pagos.add(new PagoDetalle(
+                            LocalDate.parse(rs.getString("fecha")),
+                            rs.getString("cliente"),
+                            rs.getInt("cliente_id"),
+                            rs.getString("membresia"),
+                            rs.getDouble("monto")
+                    ));
+                }
+            }
+        }
+        return pagos;
+    }
+
     public static List<PagoDetalle> getDetallesPagos(int año) throws SQLException {
         List<PagoDetalle> detalles = new ArrayList<>();
         String sql = "SELECT pagos.fecha_pago AS fecha, "

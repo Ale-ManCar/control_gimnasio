@@ -9,6 +9,7 @@ import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
 import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
 import models.Egreso;
 import models.CoachClientes;
+import models.PagoDetalle;
 import java.io.InputStream;
 import java.io.File;
 import java.nio.file.Files;
@@ -129,6 +130,35 @@ public class ReporteUtil {
             System.out.println("✅ Reporte financiero generado en: " + pdfPath + " y " + xlsPath);
         } catch (Exception e) {
             System.err.println("❌ Error generando reporte financiero: " + e.getMessage());
+        }
+    }
+
+    public static void generarReportePagosFiltrado(Integer clienteId, LocalDate fechaInicio, LocalDate fechaFin, String tipoMembresia) {
+        try {
+            List<PagoDetalle> pagos = DatabaseUtil.buscarPagos(clienteId, fechaInicio, fechaFin, tipoMembresia);
+
+            InputStream reporteStream = ReporteUtil.class.getResourceAsStream("/reports/reporte_financiero.jrxml");
+            if (reporteStream == null) {
+                System.err.println("❌ No se encontró el archivo reporte_financiero.jrxml");
+                return;
+            }
+
+            Map<String, Object> parametros = new HashMap<>();
+            parametros.put("fechaInicio", fechaInicio != null ? fechaInicio.toString() : "");
+            parametros.put("fechaFin", fechaFin != null ? fechaFin.toString() : "");
+
+            JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(pagos);
+            JasperReport jasperReport = JasperCompileManager.compileReport(reporteStream);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, ds);
+
+            JasperViewer.viewReport(jasperPrint, false);
+            String baseName = String.format("reporte_pagos_filtrado_%s_%s",
+                    fechaInicio != null ? fechaInicio : "", fechaFin != null ? fechaFin : "");
+            String pdfPath = System.getProperty("user.dir") + File.separator + baseName + ".pdf";
+            JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
+            System.out.println("✅ Reporte de pagos generado en: " + pdfPath);
+        } catch (Exception e) {
+            System.err.println("❌ Error generando reporte de pagos: " + e.getMessage());
         }
     }
 
