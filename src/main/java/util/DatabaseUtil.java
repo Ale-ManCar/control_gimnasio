@@ -14,6 +14,7 @@ import models.EgresoDetalle;
 import models.PagoDetalle;
 import models.PagoMensual;
 import models.Producto;
+import models.InventarioMovimiento;
 import models.User;
 import models.Role;
 import models.Turno;
@@ -101,6 +102,14 @@ public class DatabaseUtil {
                 "peso_total REAL," +
                 "peso_por_scoop REAL)";
 
+        String sqlInventarioHistorial = "CREATE TABLE IF NOT EXISTS inventario_historial (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "producto_id INTEGER NOT NULL," +
+                "tipo TEXT NOT NULL," +
+                "cantidad INTEGER NOT NULL," +
+                "fecha TEXT NOT NULL DEFAULT (datetime('now'))," +
+                "FOREIGN KEY (producto_id) REFERENCES productos(id))";
+
         String sqlVentas = "CREATE TABLE IF NOT EXISTS ventas (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "fecha TEXT NOT NULL DEFAULT (date('now'))," +
@@ -185,6 +194,7 @@ public class DatabaseUtil {
             stmt.execute(sqlConfig);
             stmt.execute(sqlPagos);
             stmt.execute(sqlProductos);
+            stmt.execute(sqlInventarioHistorial);
             stmt.execute(sqlVentas);
             stmt.execute(sqlEgresos);
             stmt.execute(sqlCoaches);
@@ -766,6 +776,75 @@ public class DatabaseUtil {
     public static void actualizarProducto(int id, double nuevoPrecio, int unidadesExtra) throws SQLException {
         String sql = "UPDATE productos SET precio = ?, stock = stock + ? WHERE id = ?";
         executeUpdate(sql, nuevoPrecio, unidadesExtra, id);
+    }
+
+    public static void registrarEntradaProducto(int productoId, int cantidad) throws SQLException {
+        String updateSql = "UPDATE productos SET stock = stock + ? WHERE id = ?";
+        String insertSql = "INSERT INTO inventario_historial (producto_id, tipo, cantidad, fecha) VALUES (?, 'ENTRADA', ?, datetime('now'))";
+
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement psUpdate = conn.prepareStatement(updateSql);
+                 PreparedStatement psInsert = conn.prepareStatement(insertSql)) {
+                psUpdate.setInt(1, cantidad);
+                psUpdate.setInt(2, productoId);
+                psUpdate.executeUpdate();
+
+                psInsert.setInt(1, productoId);
+                psInsert.setInt(2, cantidad);
+                psInsert.executeUpdate();
+
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
+
+    public static void registrarSalidaProducto(int productoId, int cantidad) throws SQLException {
+        String updateSql = "UPDATE productos SET stock = stock - ? WHERE id = ?";
+        String insertSql = "INSERT INTO inventario_historial (producto_id, tipo, cantidad, fecha) VALUES (?, 'SALIDA', ?, datetime('now'))";
+
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement psUpdate = conn.prepareStatement(updateSql);
+                 PreparedStatement psInsert = conn.prepareStatement(insertSql)) {
+                psUpdate.setInt(1, cantidad);
+                psUpdate.setInt(2, productoId);
+                psUpdate.executeUpdate();
+
+                psInsert.setInt(1, productoId);
+                psInsert.setInt(2, cantidad);
+                psInsert.executeUpdate();
+
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
+
+    public static ObservableList<InventarioMovimiento> obtenerHistorialInventario() throws SQLException {
+        ObservableList<InventarioMovimiento> historial = FXCollections.observableArrayList();
+        String sql = "SELECT h.id, p.nombre AS producto, h.tipo, h.cantidad, h.fecha FROM inventario_historial h " +
+                "JOIN productos p ON h.producto_id = p.id ORDER BY h.fecha DESC";
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                InventarioMovimiento mov = new InventarioMovimiento();
+                mov.setId(rs.getInt("id"));
+                mov.setProducto(rs.getString("producto"));
+                mov.setTipo(rs.getString("tipo"));
+                mov.setCantidad(rs.getInt("cantidad"));
+                mov.setFecha(LocalDateTime.parse(rs.getString("fecha").replace(" ", "T")));
+                historial.add(mov);
+            }
+        }
+        return historial;
     }
 
     public static void registrarVenta(double totalVenta) throws SQLException {

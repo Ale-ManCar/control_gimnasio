@@ -19,6 +19,7 @@ import util.AlertScheduler;
 import util.DatabaseUtil;
 import util.ReporteUtil;
 import util.SessionManager;
+import util.StockAlertService;
 import models.CoachClientes;
 import models.MetricItem;
 import models.Role;
@@ -29,6 +30,8 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.LinkedHashSet;
 
 public class AdminDashboardController implements Initializable {
 
@@ -129,7 +132,9 @@ public class AdminDashboardController implements Initializable {
     }
 
     private void cargarAlertasPendientes() {
-        lstAlertas.getItems().setAll(AlertScheduler.obtenerAlertasPendientes());
+        Set<String> alertas = new LinkedHashSet<>(AlertScheduler.obtenerAlertasPendientes());
+        alertas.addAll(StockAlertService.obtenerAlertasStock());
+        lstAlertas.getItems().setAll(alertas);
     }
 
     @FXML

@@ -299,7 +299,7 @@ public class InventarioController {
             DatabaseUtil.registrarVenta(totalVenta);
 
             for (VentaItem item : carrito) {
-                DatabaseUtil.actualizarStockProducto(item.getProducto().getId(), item.getUnidades());
+                DatabaseUtil.registrarSalidaProducto(item.getProducto().getId(), item.getUnidades());
             }
 
             AuditoriaUtil.registrarAccion(
@@ -843,7 +843,10 @@ public class InventarioController {
         Optional<Producto> resultado = dialog.showAndWait();
         resultado.ifPresent(prod -> {
             try {
-                DatabaseUtil.actualizarProducto(prod.getId(), prod.getPrecio(), prod.getStock());
+                DatabaseUtil.actualizarProducto(prod.getId(), prod.getPrecio(), 0);
+                if (prod.getStock() > 0) {
+                    DatabaseUtil.registrarEntradaProducto(prod.getId(), prod.getStock());
+                }
                 mostrarAlerta("Éxito", "Producto actualizado correctamente.");
                 cargarProductos();
             } catch (Exception e) {
