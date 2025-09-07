@@ -33,7 +33,7 @@ public class EstadoClienteService {
         List<Cliente> clientes = new ArrayList<>();
         String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
                 "FROM clientes WHERE fecha_vencimiento = ? AND activo = 1 " +
-                "AND telefono NOT IN (SELECT telefono_cliente FROM alertas_enviadas WHERE fecha_envio = CURRENT_DATE)";
+                "AND telefono NOT IN (SELECT telefono_cliente FROM alertas_enviadas WHERE fecha_envio = CURRENT_DATE AND tipo_alerta = 'Vencimiento')";
         LocalDate objetivo = LocalDate.now().plusDays(dias);
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

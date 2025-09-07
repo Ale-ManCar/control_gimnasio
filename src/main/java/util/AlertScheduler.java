@@ -2,7 +2,6 @@ package util;
 
 import models.Cliente;
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,14 +11,13 @@ import java.util.concurrent.TimeUnit;
 
 public class AlertScheduler implements Runnable {
 
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     /**
-     * Inicia las tareas programadas para enviar avisos de vencimiento y recordatorios de pago.
+     * Inicia la tarea programada para enviar avisos de vencimiento.
      */
     public static void iniciar() {
         scheduler.scheduleAtFixedRate(() -> new AlertScheduler().run(), 0, 1, TimeUnit.DAYS);
-        scheduler.scheduleAtFixedRate(AlertScheduler::procesarPagosPendientes, 0, 1, TimeUnit.DAYS);
     }
 
     @Override
@@ -61,40 +59,6 @@ public class AlertScheduler implements Runnable {
         }
     }
 
-    /**
-     * Procesa y envía recordatorios de pago a los clientes con membresías vencidas.
-     */
-    private static void procesarPagosPendientes() {
-        System.out.println("Ejecutando búsqueda de clientes con pagos pendientes...");
-        List<Cliente> clientes = obtenerClientesConPagosPendientes();
-
-        if (!clientes.isEmpty()) {
-            List<Cliente> clientesValidos = clientes.stream()
-                    .filter(c -> clienteExisteYActivo(c.getTelefono()))
-                    .collect(Collectors.toList());
-
-            if (!clientesValidos.isEmpty()) {
-                boolean driverUsado = false;
-                for (Cliente cliente : clientesValidos) {
-                    try {
-                        WhatsAppService.enviarRecordatorioPago(cliente);
-                        driverUsado = true;
-                        Thread.sleep(3000 + (int) (Math.random() * 3000));
-                    } catch (Exception e) {
-                        System.err.println("Error al procesar cliente " + cliente.getTelefono() + ": " + e.getMessage());
-                    }
-                }
-                if (driverUsado) {
-                    WhatsAppService.cerrarDriver();
-                }
-            } else {
-                System.out.println("Todos los clientes con pagos pendientes están inactivos o ya fueron notificados.");
-            }
-        } else {
-            System.out.println("No hay clientes con pagos pendientes hoy.");
-        }
-    }
-
     private static boolean clienteExisteYActivo(String telefono) {
         String sql = "SELECT activo FROM clientes WHERE telefono = ?";
         try (Connection conn = DatabaseUtil.getConnection();
@@ -114,34 +78,6 @@ public class AlertScheduler implements Runnable {
         int[] dias = {7, 3, 1, 0};
         for (int d : dias) {
             clientes.addAll(EstadoClienteService.obtenerClientesPorVencerEn(d));
-        }
-        return clientes;
-    }
-
-    /**
-     * Obtiene clientes cuya membresía ya venció pero aún tienen la cuenta activa,
-     * lo que indica que tienen un pago pendiente.
-     */
-    private static List<Cliente> obtenerClientesConPagosPendientes() {
-        List<Cliente> clientes = new ArrayList<>();
-        String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
-                "FROM clientes WHERE fecha_vencimiento < date('now') AND activo = 1 " +
-                "AND telefono NOT IN (SELECT telefono_cliente FROM alertas_enviadas WHERE fecha_envio = CURRENT_DATE)";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                Cliente c = new Cliente(
-                        rs.getString("nombres"),
-                        rs.getString("apellidos"),
-                        rs.getString("telefono"),
-                        LocalDate.parse(rs.getString("fecha_vencimiento"))
-                );
-                c.setTipoMembresia(rs.getString("tipoMembresia"));
-                clientes.add(c);
-            }
-        } catch (SQLException e) {
-            System.err.println("Error obteniendo clientes con pagos pendientes: " + e.getMessage());
         }
         return clientes;
     }
