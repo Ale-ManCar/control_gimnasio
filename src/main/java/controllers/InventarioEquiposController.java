@@ -78,6 +78,24 @@ public class InventarioEquiposController {
             TextField txtStock = new TextField();
             TextField txtPrecio = new TextField();
             ComboBox<Proveedor> cbProveedor = new ComboBox<>(DatabaseUtil.getProveedores());
+            Button btnNuevoProveedor = new Button("Nuevo proveedor");
+
+            btnNuevoProveedor.setOnAction(ev -> {
+                Proveedor nuevo = mostrarFormularioProveedor();
+                if (nuevo != null) {
+                    try {
+                        int nuevoId = DatabaseUtil.insertarProveedor(nuevo);
+                        if (nuevoId > 0) {
+                            nuevo.setId(nuevoId);
+                            proveedoresMap.put(nuevoId, nuevo.getNombre());
+                            cbProveedor.getItems().add(nuevo);
+                            cbProveedor.getSelectionModel().select(nuevo);
+                        }
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            });
 
             txtNombre.textProperty().addListener((obs, oldVal, newVal) -> {
                 try {
@@ -107,7 +125,7 @@ public class InventarioEquiposController {
             grid.add(new Label("Peso:"),0,2); grid.add(cbPeso,1,2);
             grid.add(new Label("Stock:"),0,3); grid.add(txtStock,1,3);
             grid.add(new Label("Precio:"),0,4); grid.add(txtPrecio,1,4);
-            grid.add(new Label("Proveedor:"),0,5); grid.add(cbProveedor,1,5);
+            grid.add(new Label("Proveedor:"),0,5); grid.add(cbProveedor,1,5); grid.add(btnNuevoProveedor,2,5);
             dialog.getDialogPane().setContent(grid);
 
             dialog.setResultConverter(btn -> {
@@ -199,12 +217,31 @@ public class InventarioEquiposController {
                 dialog.getDialogPane().getButtonTypes().addAll(guardarBtn, ButtonType.CANCEL);
 
                 ComboBox<Proveedor> cbProveedor = new ComboBox<>(proveedores);
+                Button btnNuevoProveedor = new Button("Nuevo proveedor");
+
+                btnNuevoProveedor.setOnAction(ev -> {
+                    Proveedor nuevo = mostrarFormularioProveedor();
+                    if (nuevo != null) {
+                        try {
+                            int nuevoId = DatabaseUtil.insertarProveedor(nuevo);
+                            if (nuevoId > 0) {
+                                nuevo.setId(nuevoId);
+                                proveedoresMap.put(nuevoId, nuevo.getNombre());
+                                cbProveedor.getItems().add(nuevo);
+                                cbProveedor.getSelectionModel().select(nuevo);
+                            }
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
 
                 GridPane grid = new GridPane();
                 grid.setHgap(10);
                 grid.setVgap(10);
                 grid.add(new Label("Proveedor:"), 0, 0);
                 grid.add(cbProveedor, 1, 0);
+                grid.add(btnNuevoProveedor, 2, 0);
                 dialog.getDialogPane().setContent(grid);
 
                 dialog.setResultConverter(btn -> btn == guardarBtn ? cbProveedor.getValue() : null);
@@ -219,5 +256,41 @@ public class InventarioEquiposController {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private Proveedor mostrarFormularioProveedor() {
+        Dialog<Proveedor> dialog = new Dialog<>();
+        dialog.setTitle("Nuevo Proveedor");
+        ButtonType guardarBtn = new ButtonType("Guardar", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(guardarBtn, ButtonType.CANCEL);
+
+        TextField txtNombre = new TextField();
+        TextField txtContacto = new TextField();
+        TextField txtTelefono = new TextField();
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.add(new Label("Nombre:"), 0, 0);
+        grid.add(txtNombre, 1, 0);
+        grid.add(new Label("Contacto:"), 0, 1);
+        grid.add(txtContacto, 1, 1);
+        grid.add(new Label("Teléfono:"), 0, 2);
+        grid.add(txtTelefono, 1, 2);
+        dialog.getDialogPane().setContent(grid);
+
+        dialog.setResultConverter(btn -> {
+            if (btn == guardarBtn) {
+                Proveedor p = new Proveedor();
+                p.setNombre(txtNombre.getText());
+                p.setContacto(txtContacto.getText());
+                p.setTelefono(txtTelefono.getText());
+                return p;
+            }
+            return null;
+        });
+
+        Optional<Proveedor> result = dialog.showAndWait();
+        return result.orElse(null);
     }
 }
