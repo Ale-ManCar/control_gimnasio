@@ -3,11 +3,14 @@ package util;
 import models.Cliente;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.text.ParseException;
+import org.quartz.CronExpression;
 
 public class AlertScheduler implements Runnable {
 
@@ -17,7 +20,43 @@ public class AlertScheduler implements Runnable {
      * Inicia la tarea programada para enviar avisos de vencimiento.
      */
     public static void iniciar() {
-        scheduler.scheduleAtFixedRate(() -> new AlertScheduler().run(), 0, 1, TimeUnit.DAYS);
+        programarAvisosVencimiento("0 0 9 * * ?");
+    }
+
+    private static void scheduleCron(String cronExpression, Runnable task) {
+        try {
+            CronExpression cron = new CronExpression(cronExpression);
+            scheduleNext(cron, task);
+        } catch (ParseException e) {
+            System.err.println("Expresión cron inválida: " + cronExpression);
+        }
+    }
+
+    private static void scheduleNext(CronExpression cron, Runnable task) {
+        Date next = cron.getNextValidTimeAfter(new Date());
+        if (next == null) {
+            return;
+        }
+        long delay = next.getTime() - System.currentTimeMillis();
+        scheduler.schedule(() -> {
+            try {
+                task.run();
+            } finally {
+                scheduleNext(cron, task);
+            }
+        }, delay, TimeUnit.MILLISECONDS);
+    }
+
+    public static void programarBackup(String cronExpression) {
+        scheduleCron(cronExpression, BackupUtil::crearBackup);
+    }
+
+    public static void programarAvisosVencimiento(String cronExpression) {
+        scheduleCron(cronExpression, () -> new AlertScheduler().run());
+    }
+
+    public static void programarOrdenesCompra(String cronExpression) {
+        scheduleCron(cronExpression, () -> StockAlertService.obtenerAlertasStock());
     }
 
     @Override
