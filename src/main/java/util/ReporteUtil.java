@@ -11,6 +11,7 @@ import models.Egreso;
 import models.CoachClientes;
 import models.PagoDetalle;
 import models.ProveedorPrecio;
+import models.Auditoria;
 import java.io.InputStream;
 import java.io.File;
 import java.nio.file.Files;
@@ -390,6 +391,38 @@ public class ReporteUtil {
             System.out.println("✅ Reporte de dashboard Excel generado en: " + path.toAbsolutePath());
         } catch (Exception e) {
             System.err.println("❌ Error generando reporte de dashboard Excel: " + e.getMessage());
+        }
+    }
+
+    public static void generarReporteAuditoria(List<Auditoria> registros) {
+        try {
+            InputStream reporteStream = ReporteUtil.class.getResourceAsStream("/reports/auditoria.jrxml");
+            if (reporteStream == null) {
+                System.err.println("❌ No se encontró el archivo auditoria.jrxml");
+                return;
+            }
+
+            JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(registros);
+            JasperReport jasperReport = JasperCompileManager.compileReport(reporteStream);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, new HashMap<>(), ds);
+
+            JasperViewer.viewReport(jasperPrint, false);
+            String baseName = "reporte_auditoria";
+            String pdfPath = System.getProperty("user.dir") + File.separator + baseName + ".pdf";
+            JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
+
+            JRXlsxExporter exporter = new JRXlsxExporter();
+            exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
+            String xlsPath = System.getProperty("user.dir") + File.separator + baseName + ".xlsx";
+            exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(xlsPath));
+            SimpleXlsxReportConfiguration configuration = new SimpleXlsxReportConfiguration();
+            configuration.setDetectCellType(true);
+            exporter.setConfiguration(configuration);
+            exporter.exportReport();
+
+            System.out.println("✅ Reporte de auditoría generado en: " + pdfPath + " y " + xlsPath);
+        } catch (Exception e) {
+            System.err.println("❌ Error generando reporte de auditoría: " + e.getMessage());
         }
     }
 

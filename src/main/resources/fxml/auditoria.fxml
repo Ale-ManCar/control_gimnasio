@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.*?>
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controllers.AuditoriaController" prefWidth="800" prefHeight="600">
     <top>
-        <ChoiceBox fx:id="cbUsuarios" prefWidth="200" />
+        <HBox spacing="10" alignment="CENTER_LEFT" padding="10">
+            <children>
+                <ChoiceBox fx:id="cbUsuarios" prefWidth="150" />
+                <DatePicker fx:id="dpFechaInicio" promptText="Inicio" />
+                <DatePicker fx:id="dpFechaFin" promptText="Fin" />
+                <TextField fx:id="txtTipo" promptText="Tipo de acción" />
+                <Button text="Filtrar" onAction="#aplicarFiltros" />
+                <Button text="Exportar" onAction="#exportarReporte" />
+            </children>
+        </HBox>
     </top>
     <center>
         <TableView fx:id="tablaAuditoria" prefWidth="800" prefHeight="600">

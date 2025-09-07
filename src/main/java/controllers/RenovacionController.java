@@ -13,6 +13,8 @@ import models.PagoHistorial;
 import util.DatabaseUtil;
 import util.EventBus;
 import util.WhatsAppService;
+import util.AuditoriaUtil;
+import util.SessionManager;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -378,6 +380,12 @@ public class RenovacionController {
                 }
 
                 conn.commit();
+
+                AuditoriaUtil.registrarAccion(
+                        SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 0,
+                        "Renovación membresía",
+                        seleccionado.getNombres() + " " + seleccionado.getApellidos()
+                );
 
                 Cliente clienteRenovado = new Cliente(
                         seleccionado.getNombres(),
