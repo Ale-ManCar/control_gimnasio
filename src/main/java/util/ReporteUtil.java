@@ -10,6 +10,7 @@ import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
 import models.Egreso;
 import models.CoachClientes;
 import models.PagoDetalle;
+import models.ProveedorPrecio;
 import java.io.InputStream;
 import java.io.File;
 import java.nio.file.Files;
@@ -344,6 +345,23 @@ public class ReporteUtil {
             System.out.println("✅ Reporte de coaches con más clientes Excel generado en: " + path.toAbsolutePath());
         } catch (Exception e) {
             System.err.println("❌ Error generando reporte de coaches Excel: " + e.getMessage());
+        }
+    }
+
+    public static void generarReporteComparadorPrecios(String producto, List<ProveedorPrecio> datos) {
+        try {
+            String base = "comparador_precios_" + producto.replaceAll("[^a-zA-Z0-9]", "_");
+            Path pdf = Path.of(base + ".pdf");
+            Path xls = Path.of(base + ".xlsx");
+            StringBuilder contenido = new StringBuilder("Proveedor\tPrecio\n");
+            for (ProveedorPrecio p : datos) {
+                contenido.append(p.getProveedor()).append('\t').append(p.getPrecio()).append('\n');
+            }
+            Files.writeString(pdf, contenido.toString());
+            Files.writeString(xls, contenido.toString());
+            System.out.println("✅ Reporte comparador de precios generado en: " + pdf.toAbsolutePath() + " y " + xls.toAbsolutePath());
+        } catch (Exception e) {
+            System.err.println("❌ Error generando reporte comparador de precios: " + e.getMessage());
         }
     }
 

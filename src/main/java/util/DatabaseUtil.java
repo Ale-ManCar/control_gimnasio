@@ -23,6 +23,7 @@ import models.Proveedor;
 import models.Compra;
 import models.CompraDetalle;
 import models.CoachClientes;
+import models.ProveedorPrecio;
 
 public class DatabaseUtil {
     private static final String URL = "jdbc:sqlite:database/gimnasio.db";
@@ -1059,6 +1060,45 @@ public class DatabaseUtil {
                 try { conn.close(); } catch (SQLException ignored) {}
             }
         }
+    }
+
+    public static ObservableList<Double> listarPreciosProveedor(int proveedorId, int productoId) throws SQLException {
+        ObservableList<Double> precios = FXCollections.observableArrayList();
+        String sql = "SELECT cd.precio FROM compras_detalle cd " +
+                "JOIN compras c ON cd.compra_id = c.id " +
+                "WHERE c.proveedor_id = ? AND cd.equipo_id = ? ORDER BY c.fecha DESC";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, proveedorId);
+            stmt.setInt(2, productoId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    precios.add(rs.getDouble("precio"));
+                }
+            }
+        }
+        return precios;
+    }
+
+    public static ObservableList<ProveedorPrecio> obtenerProveedoresConPrecioMasBajo(int productoId) throws SQLException {
+        ObservableList<ProveedorPrecio> data = FXCollections.observableArrayList();
+        String sql = "SELECT p.nombre, cd.precio FROM compras_detalle cd " +
+                "JOIN compras c ON cd.compra_id = c.id " +
+                "JOIN proveedores p ON c.proveedor_id = p.id " +
+                "WHERE cd.equipo_id = ? AND cd.precio = (" +
+                "SELECT MIN(cd2.precio) FROM compras_detalle cd2 " +
+                "JOIN compras c2 ON cd2.compra_id = c2.id WHERE cd2.equipo_id = ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, productoId);
+            stmt.setInt(2, productoId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    data.add(new ProveedorPrecio(rs.getString("nombre"), rs.getDouble("precio")));
+                }
+            }
+        }
+        return data;
     }
 
     public static Map<String, Double> getPreciosPorProveedor(int equipoId) throws SQLException {

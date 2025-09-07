@@ -6,12 +6,15 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.cell.PropertyValueFactory;
 import models.Equipo;
 import models.ProveedorPrecio;
 import util.DatabaseUtil;
+import util.ReporteUtil;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -57,8 +60,37 @@ public class ComparadorPreciosController {
             for (Map.Entry<String, Double> e : mapa.entrySet()) {
                 datos.add(new ProveedorPrecio(e.getKey(), e.getValue()));
             }
+
+            double mejorPrecio = DatabaseUtil.obtenerProveedoresConPrecioMasBajo(equipoId)
+                    .stream()
+                    .mapToDouble(ProveedorPrecio::getPrecio)
+                    .findFirst()
+                    .orElse(Double.MAX_VALUE);
+
+            tblPrecios.setRowFactory(tv -> new TableRow<>() {
+                @Override
+                protected void updateItem(ProveedorPrecio item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (item == null || empty) {
+                        setStyle("");
+                    } else if (item.getPrecio() == mejorPrecio) {
+                        setStyle("-fx-background-color: #b9f6ca;");
+                    } else {
+                        setStyle("");
+                    }
+                }
+            });
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    @FXML
+    private void exportarReporte() {
+        String nombre = cboEquipos.getValue();
+        if (nombre == null || datos.isEmpty()) {
+            return;
+        }
+        ReporteUtil.generarReporteComparadorPrecios(nombre, new ArrayList<>(datos));
     }
 }
