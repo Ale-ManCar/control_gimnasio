@@ -12,6 +12,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -197,7 +198,18 @@ public class AdminDashboardController implements Initializable {
 
     @FXML
     private void abrirConfiguracion() {
-        lblMensaje.setText("Módulo de configuración no disponible");
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/config_scheduler.fxml"));
+            Parent root = loader.load();
+            Stage stage = new Stage();
+            stage.setTitle("Configuración de Tareas");
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.show();
+        } catch (IOException e) {
+            lblMensaje.setText("No se pudo abrir configuración: " + e.getMessage());
+        }
     }
 
     @FXML
