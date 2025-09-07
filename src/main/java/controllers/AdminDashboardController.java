@@ -166,7 +166,7 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private void abrirProveedores() {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/comparador_precios.fxml"));
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/lista_proveedores.fxml"));
             Stage stage = new Stage();
             stage.setTitle("Proveedores");
             stage.setScene(new Scene(root));

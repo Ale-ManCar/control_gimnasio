@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controllers.ListaProveedoresController" spacing="10"
+      style="-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e); -fx-padding: 25;"
+      prefWidth="600" prefHeight="400">
+    <TableView fx:id="tablaProveedores" VBox.vgrow="ALWAYS"
+               style="-fx-background-radius: 15px; -fx-background-insets: 0; -fx-padding: 0; -fx-alignment: CENTER;
+                      -fx-border-color: rgba(255,255,255,0.2); -fx-border-width: 1px;
+                      -fx-background-color: rgba(255,255,255,0.1); -fx-table-cell-border-color: rgba(255,255,255,0.2);">
+        <columns>
+            <TableColumn fx:id="colNombre" text="Nombre" prefWidth="200"
+                         style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
+            <TableColumn fx:id="colContacto" text="Contacto" prefWidth="200"
+                         style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
+            <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="200"
+                         style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
+        </columns>
+    </TableView>
+    <Button text="Refrescar" onAction="#refrescarTabla"
+            style="-fx-background-color: linear-gradient(to right, #4A6CF7, #2E8BFF); -fx-text-fill: white;
+                   -fx-font-weight: bold; -fx-padding: 10px 25px; -fx-background-radius: 25px; -fx-border-radius: 25px;"/>
+</VBox>a
