@@ -174,6 +174,7 @@ public class DatabaseUtil {
                 "fecha TEXT NOT NULL," +
                 "total REAL," +
                 "ruta_pdf TEXT," +
+                "estado TEXT DEFAULT 'APROBADA'," +
                 "FOREIGN KEY (proveedor_id) REFERENCES proveedores(id))";
 
         String sqlComprasDetalle = "CREATE TABLE IF NOT EXISTS compras_detalle (" +
@@ -206,6 +207,7 @@ public class DatabaseUtil {
             stmt.execute(sqlEquipos);
             stmt.execute(sqlCompras);
             stmt.execute(sqlComprasDetalle);
+            try { stmt.execute("ALTER TABLE compras ADD COLUMN estado TEXT DEFAULT 'APROBADA'"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN area TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN coach_id INTEGER REFERENCES coaches(id)"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE equipos ADD COLUMN marca TEXT"); } catch (SQLException ignored) {}

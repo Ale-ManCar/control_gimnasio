@@ -10,16 +10,22 @@ public class Compra {
     private LocalDate fecha;
     private double total;
     private String rutaPdf;
+    private String estado;
     private List<CompraDetalle> detalles = new ArrayList<>();
 
     public Compra() {
     }
 
     public Compra(int proveedorId, LocalDate fecha, double total, String rutaPdf) {
+        this(proveedorId, fecha, total, rutaPdf, "APROBADA");
+    }
+
+    public Compra(int proveedorId, LocalDate fecha, double total, String rutaPdf, String estado) {
         this.proveedorId = proveedorId;
         this.fecha = fecha;
         this.total = total;
         this.rutaPdf = rutaPdf;
+        this.estado = estado;
     }
 
     public int getId() {
@@ -60,6 +66,14 @@ public class Compra {
 
     public void setRutaPdf(String rutaPdf) {
         this.rutaPdf = rutaPdf;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
     }
 
     public List<CompraDetalle> getDetalles() {

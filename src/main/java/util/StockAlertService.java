@@ -1,5 +1,7 @@
 package util;
 
+import models.Producto;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,13 +17,22 @@ public class StockAlertService {
      */
     public static List<String> obtenerAlertasStock() {
         List<String> alertas = new ArrayList<>();
-        String sql = "SELECT nombre, stock, umbral FROM productos WHERE stock <= umbral";
+        String sql = "SELECT * FROM productos WHERE stock <= umbral";
         try (Connection conn = DatabaseUtil.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 alertas.add(String.format("Producto '%s' con stock %d (umbral %d)",
                         rs.getString("nombre"), rs.getInt("stock"), rs.getInt("umbral")));
+
+                Producto p = new Producto();
+                p.setId(rs.getInt("id"));
+                p.setNombre(rs.getString("nombre"));
+                p.setStock(rs.getInt("stock"));
+                p.setPrecioCompra(rs.getDouble("precio_compra"));
+                p.setUnidadesPorPaca(rs.getInt("unidades_por_paca"));
+
+                OrdenCompraService.generarOrdenCompraAutomatica(p);
             }
         } catch (SQLException e) {
             System.err.println("Error al consultar inventario: " + e.getMessage());
