@@ -43,6 +43,22 @@ public class WhatsAppService {
                 enviarAlertaPersonalizada(cliente, "Renovación");
         }
 
+        /**
+         * Envía un aviso de que la membresía del cliente está próxima a vencer.
+         * @param cliente Cliente a notificar
+         */
+        public static void enviarAvisoVencimiento(Cliente cliente) {
+                enviarAlertaPersonalizada(cliente, "Vencimiento");
+        }
+
+        /**
+         * Envía un recordatorio de pago al cliente cuya membresía ya venció.
+         * @param cliente Cliente a notificar
+         */
+        public static void enviarRecordatorioPago(Cliente cliente) {
+                enviarAlertaPersonalizada(cliente, "Pago");
+        }
+
         private static void enviarAlertaPersonalizada(Cliente cliente, String tipoAlerta) {
                 if (!validarCondicionesEnvio()) {
                         return;

@@ -57,9 +57,9 @@ public class SplashController {
                 EstadoClienteService.iniciarActualizacionDiaria();
                 updateProgress(70, 100);
 
-                // Paso 4: Programar alertas
-                ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
-                scheduler.scheduleAtFixedRate(() -> new AlertScheduler().run(), 0, 1, TimeUnit.DAYS);
+                // Paso 4: Programar tareas en segundo plano
+                AlertScheduler.iniciar();
+                ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
                 scheduler.scheduleAtFixedRate(new BackupUtil(), 0, 1, TimeUnit.DAYS);
                 updateProgress(90, 100);
 
