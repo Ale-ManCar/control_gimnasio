@@ -16,7 +16,9 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.ChoiceDialog;
 import util.AlertScheduler;
+import util.BackupUtil;
 import util.DatabaseUtil;
 import util.ReporteUtil;
 import util.SessionManager;
@@ -33,6 +35,8 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.LinkedHashSet;
+import java.nio.file.*;
+import java.util.Optional;
 
 public class AdminDashboardController implements Initializable {
 
@@ -193,7 +197,39 @@ public class AdminDashboardController implements Initializable {
 
     @FXML
     private void abrirRespaldos() {
-        lblMensaje.setText("Módulo de respaldos no disponible");
+        try {
+            Path dir = Paths.get("backups");
+            if (!Files.exists(dir)) {
+                lblMensaje.setText("No hay respaldos disponibles");
+                return;
+            }
+            // Buscar archivos .db en todos los subdirectorios
+            java.util.List<Path> archivos = Files.walk(dir)
+                    .filter(p -> p.getFileName().toString().endsWith(".db"))
+                    .sorted()
+                    .toList();
+
+            if (archivos.isEmpty()) {
+                lblMensaje.setText("No hay respaldos disponibles");
+                return;
+            }
+
+            java.util.List<String> nombres = archivos.stream()
+                    .map(p -> dir.relativize(p).toString())
+                    .collect(java.util.stream.Collectors.toList());
+
+            ChoiceDialog<String> dialog = new ChoiceDialog<>(nombres.get(0), nombres);
+            dialog.setTitle("Respaldos disponibles");
+            dialog.setHeaderText("Seleccione un respaldo para restaurar");
+            java.util.Optional<String> resultado = dialog.showAndWait();
+            if (resultado.isPresent()) {
+                Path seleccionado = dir.resolve(resultado.get());
+                BackupUtil.restaurarBackup(seleccionado);
+                lblMensaje.setText("Respaldo restaurado: " + resultado.get());
+            }
+        } catch (IOException e) {
+            lblMensaje.setText("Error al listar respaldos");
+        }
     }
 
     @FXML

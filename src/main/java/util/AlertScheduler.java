@@ -11,16 +11,46 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.text.ParseException;
 import org.quartz.CronExpression;
+import java.nio.file.*;
+import java.io.IOException;
 
 public class AlertScheduler implements Runnable {
 
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     /**
-     * Inicia la tarea programada para enviar avisos de vencimiento.
+     * Inicia la tareas programadas del sistema.
      */
     public static void iniciar() {
+        // Avisos de vencimiento por defecto a las 9 AM
         programarAvisosVencimiento("0 0 9 * * ?");
+
+        // Programar respaldo según configuración
+        String frecuencia = obtenerFrecuenciaRespaldo();
+        String cron = "0 0 2 * * ?"; // diario a las 2 AM
+        if ("semanal".equalsIgnoreCase(frecuencia)) {
+            cron = "0 0 2 ? * MON"; // lunes a las 2 AM
+        }
+        programarBackup(cron, frecuencia);
+    }
+
+    /**
+     * Lee la configuración de frecuencia de respaldo desde CONFIGURACION.txt.
+     */
+    private static String obtenerFrecuenciaRespaldo() {
+        Path config = Paths.get("CONFIGURACION.txt");
+        if (Files.exists(config)) {
+            try {
+                return Files.lines(config)
+                        .filter(l -> l.toLowerCase().contains("frecuencia de respaldo"))
+                        .map(l -> l.substring(l.indexOf(':') + 1).trim())
+                        .findFirst()
+                        .orElse("diaria");
+            } catch (IOException e) {
+                System.err.println("No se pudo leer configuración de respaldo: " + e.getMessage());
+            }
+        }
+        return "diaria";
     }
 
     private static void scheduleCron(String cronExpression, Runnable task) {
@@ -49,6 +79,10 @@ public class AlertScheduler implements Runnable {
 
     public static void programarBackup(String cronExpression) {
         scheduleCron(cronExpression, BackupUtil::crearBackup);
+    }
+
+    public static void programarBackup(String cronExpression, String tipo) {
+        scheduleCron(cronExpression, () -> BackupUtil.crearBackup(tipo));
     }
 
     public static void programarAvisosVencimiento(String cronExpression) {
