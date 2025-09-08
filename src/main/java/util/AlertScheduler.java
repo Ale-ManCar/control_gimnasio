@@ -32,6 +32,8 @@ public class AlertScheduler implements Runnable {
             cron = "0 0 2 ? * MON"; // lunes a las 2 AM
         }
         programarBackup(cron, frecuencia);
+
+        scheduler.scheduleAtFixedRate(new SessionTimeoutService(), 1, 1, TimeUnit.MINUTES);
     }
 
     /**

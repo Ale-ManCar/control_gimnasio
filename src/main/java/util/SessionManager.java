@@ -6,10 +6,12 @@ import util.DatabaseUtil;
 import util.UserService;
 
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 
 public class SessionManager {
     private static User currentUser;
     private static int turnoId = -1;
+    private static LocalDateTime lastActivity;
 
     public static User getCurrentUser() {
         return currentUser;
@@ -22,6 +24,7 @@ public class SessionManager {
     public static void clear() {
         currentUser = null;
         turnoId = -1;
+        lastActivity = null;
     }
 
     public static int getTurnoId() {
@@ -36,6 +39,7 @@ public class SessionManager {
         User user = DatabaseUtil.obtenerUsuario(username, password);
         if (user != null && user.getRole() == role) {
             setCurrentUser(user);
+            actualizarActividad();
             try {
                 UserService.actualizarLastLogin(user.getId());
                 user.setLastLogin(java.time.LocalDateTime.now());
@@ -54,5 +58,13 @@ public class SessionManager {
             PermisoUtil.registrarAccesoDenegado(requerido);
         }
         return permitido;
+    }
+
+    public static void actualizarActividad() {
+        lastActivity = LocalDateTime.now();
+    }
+
+    public static LocalDateTime getLastActivity() {
+        return lastActivity;
     }
 }
