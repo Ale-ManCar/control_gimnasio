@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.control.Button?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -26,6 +25,7 @@
             <Button text="Inventario" onAction="#abrirInventario" styleClass="primary-button"/>
             <Button text="Proveedores" onAction="#abrirProveedores" styleClass="primary-button"/>
             <Button text="Auditoría" onAction="#abrirAuditoria" styleClass="primary-button"/>
+            <Button text="Coaches" onAction="#abrirCoaches" styleClass="primary-button"/>
             <Button text="Respaldos" onAction="#abrirRespaldos" styleClass="primary-button"/>
             <Button text="Configuración" onAction="#abrirConfiguracion" styleClass="primary-button"/>
         </VBox>
@@ -33,41 +33,21 @@
     <center>
         <VBox spacing="20" alignment="TOP_CENTER" style="-fx-padding: 20;">
             <HBox spacing="20" alignment="CENTER">
-                <AnchorPane fx:id="cardActivos" prefWidth="200" prefHeight="120"
+                <AnchorPane fx:id="cardClientesActivos" prefWidth="200" prefHeight="120"
                             style="-fx-background-color: rgba(76,175,80,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
-                <AnchorPane fx:id="cardInactivos" prefWidth="200" prefHeight="120"
+                <AnchorPane fx:id="cardMorosos" prefWidth="200" prefHeight="120"
                             style="-fx-background-color: rgba(244,67,54,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
-                <AnchorPane fx:id="cardMembresias" prefWidth="200" prefHeight="120"
+                <AnchorPane fx:id="cardIngresos" prefWidth="200" prefHeight="120"
                             style="-fx-background-color: rgba(33,150,243,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
                 <AnchorPane fx:id="cardPorVencer" prefWidth="200" prefHeight="120"
                             style="-fx-background-color: rgba(255,152,0,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
-                <AnchorPane fx:id="cardActivosHoy" prefWidth="200" prefHeight="120"
-                            style="-fx-background-color: rgba(0,188,212,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
             </HBox>
-            <ListView fx:id="lstAlertas" prefHeight="150" />
-            <TableView fx:id="tblMorosos" prefHeight="80">
+            <TableView fx:id="tblTopCoaches" prefHeight="120">
                 <columns>
-                    <TableColumn fx:id="colMorososDesc" text="Dato" />
-                    <TableColumn fx:id="colMorososValor" text="Valor" />
+                    <TableColumn fx:id="colCoach" text="Coach"/>
+                    <TableColumn fx:id="colClientes" text="Clientes"/>
                 </columns>
             </TableView>
-            <TableView fx:id="tblCoaches" prefHeight="120">
-                <columns>
-                    <TableColumn fx:id="colCoach" text="Coach" />
-                    <TableColumn fx:id="colClientes" text="Clientes" />
-                </columns>
-            </TableView>
-            <HBox spacing="10" alignment="CENTER">
-                <Button text="Morosos PDF" onAction="#generarMorososPDF" styleClass="primary-button"/>
-                <Button text="Morosos Excel" onAction="#generarMorososExcel" styleClass="primary-button"/>
-                <Button text="Coaches PDF" onAction="#generarCoachesTopPDF" styleClass="primary-button"/>
-                <Button text="Coaches Excel" onAction="#generarCoachesTopExcel" styleClass="primary-button"/>
-            </HBox>
-            <Button text="Actividad por Recepcionista" onAction="#generarActividadRecepcionista" styleClass="primary-button"/>
-            <Button text="Inventario Mensual" onAction="#generarInventarioMensual" styleClass="primary-button"/>
-            <Button text="Membresías por Vencer" onAction="#generarMembresiasPorVencer" styleClass="primary-button"/>
-            <Button text="Exportar Dashboard PDF" onAction="#generarReporteDashboardPDF" styleClass="primary-button"/>
-            <Button text="Exportar Dashboard Excel" onAction="#generarReporteDashboardExcel" styleClass="primary-button"/>
         </VBox>
     </center>
     <bottom>

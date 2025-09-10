@@ -1,64 +1,54 @@
 package controllers;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.scene.control.ChoiceDialog;
-import util.AlertScheduler;
+
+import models.CoachClientes;
+import models.Role;
 import util.BackupUtil;
 import util.DatabaseUtil;
-import util.ReporteUtil;
+import util.DashboardService;
 import util.SessionManager;
-import util.StockAlertService;
-import models.CoachClientes;
-import models.MetricItem;
-import models.Role;
+import util.UserService;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.SQLException;
-import java.time.LocalDate;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.Set;
-import java.util.LinkedHashSet;
-import java.nio.file.*;
+import java.util.List;
 import java.util.Optional;
+import java.util.ResourceBundle;
 
 public class AdminDashboardController implements Initializable {
 
-    @FXML private AnchorPane cardActivos;
-    @FXML private AnchorPane cardInactivos;
-    @FXML private AnchorPane cardMembresias;
+    @FXML private AnchorPane cardClientesActivos;
+    @FXML private AnchorPane cardMorosos;
+    @FXML private AnchorPane cardIngresos;
     @FXML private AnchorPane cardPorVencer;
-    @FXML private AnchorPane cardActivosHoy;
-    @FXML private Label lblMensaje;
-    @FXML private ListView<String> lstAlertas;
-    @FXML private TableView<MetricItem> tblMorosos;
-    @FXML private TableColumn<MetricItem, String> colMorososDesc;
-    @FXML private TableColumn<MetricItem, Integer> colMorososValor;
-    @FXML private TableView<CoachClientes> tblCoaches;
+    @FXML private TableView<CoachClientes> tblTopCoaches;
     @FXML private TableColumn<CoachClientes, String> colCoach;
     @FXML private TableColumn<CoachClientes, Integer> colClientes;
+    @FXML private Label lblMensaje;
 
-    private MetricCardController ctrlActivos;
-    private MetricCardController ctrlInactivos;
-    private MetricCardController ctrlMembresias;
+    private MetricCardController ctrlClientesActivos;
+    private MetricCardController ctrlMorosos;
+    private MetricCardController ctrlIngresos;
     private MetricCardController ctrlPorVencer;
-    private MetricCardController ctrlActivosHoy;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -68,78 +58,45 @@ public class AdminDashboardController implements Initializable {
         }
         try {
             inicializarTarjetas();
-            configurarTablas();
             cargarDatos();
-            cargarAlertasPendientes();
-            cargarMorosos();
-            cargarCoaches();
+            cargarTopCoaches();
         } catch (IOException e) {
             lblMensaje.setText("Error al cargar tarjetas");
         }
     }
 
     private void inicializarTarjetas() throws IOException {
-        ctrlActivos = cargarTarjeta(cardActivos, "Clientes Activos");
-        ctrlInactivos = cargarTarjeta(cardInactivos, "Clientes Inactivos");
-        ctrlMembresias = cargarTarjeta(cardMembresias, "Membresías del Mes");
-        ctrlPorVencer = cargarTarjeta(cardPorVencer, "Membresías a Vencer Semana");
-        ctrlActivosHoy = cargarTarjeta(cardActivosHoy, "Clientes Activos Hoy");
-    }
-
-    private MetricCardController cargarTarjeta(AnchorPane contenedor, String titulo) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
-        Pane pane = loader.load();
-        MetricCardController controller = loader.getController();
-        controller.setTitulo(titulo);
-        pane.prefWidthProperty().bind(contenedor.widthProperty());
-        pane.prefHeightProperty().bind(contenedor.heightProperty());
-        contenedor.getChildren().add(pane);
-        return controller;
+        ctrlClientesActivos = DashboardService.cargarTarjeta(cardClientesActivos, "Clientes Activos");
+        ctrlMorosos = DashboardService.cargarTarjeta(cardMorosos, "Morosos");
+        ctrlIngresos = DashboardService.cargarTarjeta(cardIngresos, "Ingresos");
+        ctrlPorVencer = DashboardService.cargarTarjeta(cardPorVencer, "Membresías por Vencer");
     }
 
     private void cargarDatos() {
         try {
-            Map<String, Integer> stats = DatabaseUtil.getAdminStats();
-            ctrlActivos.setValor(String.valueOf(stats.getOrDefault("clientes_activos", 0)));
-            ctrlInactivos.setValor(String.valueOf(stats.getOrDefault("clientes_inactivos", 0)));
-            ctrlMembresias.setValor(String.valueOf(stats.getOrDefault("membresias_mes", 0)));
-            ctrlPorVencer.setValor(String.valueOf(stats.getOrDefault("por_vencer", 0)));
-            ctrlActivosHoy.setValor(String.valueOf(stats.getOrDefault("activos_hoy", 0)));
+            DashboardService.AdminMetrics metrics = DashboardService.obtenerMetricasAdmin();
+            ctrlClientesActivos.setValor(String.valueOf(metrics.getClientesActivos()));
+            ctrlMorosos.setValor(String.valueOf(metrics.getMorosos()));
+            ctrlIngresos.setValor(String.format("$ %.2f", metrics.getIngresos()));
+            ctrlPorVencer.setValor(String.valueOf(metrics.getPorVencer()));
         } catch (SQLException e) {
             lblMensaje.setText("No se pudieron cargar las estadísticas");
         }
     }
 
-    private void configurarTablas() {
-        colMorososDesc.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
-        colMorososValor.setCellValueFactory(new PropertyValueFactory<>("valor"));
-        colCoach.setCellValueFactory(new PropertyValueFactory<>("coach"));
-        colClientes.setCellValueFactory(new PropertyValueFactory<>("clientes"));
-    }
-
-    private void cargarMorosos() {
-        try {
-            int count = DatabaseUtil.contarClientesMorosos();
-            ObservableList<MetricItem> data = FXCollections.observableArrayList(new MetricItem("Clientes Morosos", count));
-            tblMorosos.setItems(data);
-        } catch (SQLException e) {
-            lblMensaje.setText("No se pudieron cargar clientes morosos");
-        }
-    }
-
-    private void cargarCoaches() {
+    private void cargarTopCoaches() {
         try {
             ObservableList<CoachClientes> data = DatabaseUtil.listarCoachesConMasClientes();
-            tblCoaches.setItems(data);
+            ObservableList<CoachClientes> top3 = FXCollections.observableArrayList();
+            for (int i = 0; i < Math.min(3, data.size()); i++) {
+                top3.add(data.get(i));
+            }
+            tblTopCoaches.setItems(top3);
+            colCoach.setCellValueFactory(new PropertyValueFactory<>("coach"));
+            colClientes.setCellValueFactory(new PropertyValueFactory<>("clientes"));
         } catch (SQLException e) {
             lblMensaje.setText("No se pudieron cargar los coaches");
         }
-    }
-
-    private void cargarAlertasPendientes() {
-        Set<String> alertas = new LinkedHashSet<>(AlertScheduler.obtenerAlertasPendientes());
-        alertas.addAll(StockAlertService.obtenerAlertasStock());
-        lstAlertas.getItems().setAll(alertas);
     }
 
     @FXML
@@ -150,7 +107,8 @@ public class AdminDashboardController implements Initializable {
             stage.setTitle("Usuarios");
             stage.setScene(new Scene(root));
             stage.show();
-        } catch (IOException e) {
+            UserService.registrarActividad(SessionManager.getCurrentUser(), "Abrir usuarios");
+        } catch (IOException | SQLException e) {
             lblMensaje.setText("Error al abrir usuarios");
         }
     }
@@ -163,7 +121,8 @@ public class AdminDashboardController implements Initializable {
             stage.setTitle("Inventario");
             stage.setScene(new Scene(root));
             stage.show();
-        } catch (IOException e) {
+            UserService.registrarActividad(SessionManager.getCurrentUser(), "Abrir inventario");
+        } catch (IOException | SQLException e) {
             lblMensaje.setText("Error al abrir inventario");
         }
     }
@@ -176,7 +135,8 @@ public class AdminDashboardController implements Initializable {
             stage.setTitle("Proveedores");
             stage.setScene(new Scene(root));
             stage.show();
-        } catch (IOException e) {
+            UserService.registrarActividad(SessionManager.getCurrentUser(), "Abrir proveedores");
+        } catch (IOException | SQLException e) {
             lblMensaje.setText("Error al abrir proveedores");
         }
     }
@@ -190,38 +150,49 @@ public class AdminDashboardController implements Initializable {
             stage.setTitle("Auditoría");
             stage.setScene(new Scene(root));
             stage.show();
-        } catch (IOException e) {
+            UserService.registrarActividad(SessionManager.getCurrentUser(), "Abrir auditoría");
+        } catch (IOException | SQLException e) {
             lblMensaje.setText("Error al abrir auditoría");
+        }
+    }
+
+    @FXML
+    private void abrirCoaches() {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/lista_coaches.fxml"));
+            Stage stage = new Stage();
+            stage.setTitle("Coaches");
+            stage.setScene(new Scene(root));
+            stage.show();
+            UserService.registrarActividad(SessionManager.getCurrentUser(), "Abrir coaches");
+        } catch (IOException | SQLException e) {
+            lblMensaje.setText("Error al abrir coaches");
         }
     }
 
     @FXML
     private void abrirRespaldos() {
         try {
-            Path dir = Paths.get("backups");
+            Path dir = Path.of("backups");
             if (!Files.exists(dir)) {
                 lblMensaje.setText("No hay respaldos disponibles");
                 return;
             }
-            // Buscar archivos .db en todos los subdirectorios
-            java.util.List<Path> archivos = Files.walk(dir)
+            List<Path> archivos = Files.walk(dir)
                     .filter(p -> p.getFileName().toString().endsWith(".db"))
                     .sorted()
                     .toList();
-
             if (archivos.isEmpty()) {
                 lblMensaje.setText("No hay respaldos disponibles");
                 return;
             }
-
-            java.util.List<String> nombres = archivos.stream()
+            List<String> nombres = archivos.stream()
                     .map(p -> dir.relativize(p).toString())
-                    .collect(java.util.stream.Collectors.toList());
-
+                    .toList();
             ChoiceDialog<String> dialog = new ChoiceDialog<>(nombres.get(0), nombres);
             dialog.setTitle("Respaldos disponibles");
             dialog.setHeaderText("Seleccione un respaldo para restaurar");
-            java.util.Optional<String> resultado = dialog.showAndWait();
+            Optional<String> resultado = dialog.showAndWait();
             if (resultado.isPresent()) {
                 Path seleccionado = dir.resolve(resultado.get());
                 BackupUtil.restaurarBackup(seleccionado);
@@ -235,8 +206,7 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private void abrirConfiguracion() {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/config_scheduler.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/config_scheduler.fxml"));
             Parent root = loader.load();
             Stage stage = new Stage();
             stage.setTitle("Configuración de Tareas");
@@ -246,51 +216,5 @@ public class AdminDashboardController implements Initializable {
         } catch (IOException e) {
             lblMensaje.setText("No se pudo abrir configuración: " + e.getMessage());
         }
-    }
-
-    @FXML
-    private void generarActividadRecepcionista() {
-        ReporteUtil.generarReporteActividadRecepcionista();
-    }
-
-    @FXML
-    private void generarInventarioMensual() {
-        LocalDate hoy = LocalDate.now();
-        ReporteUtil.generarReporteInventario(hoy.getMonthValue(), hoy.getYear());
-    }
-
-    @FXML
-    private void generarMembresiasPorVencer() {
-        ReporteUtil.generarReporteMembresiasPorVencer();
-    }
-
-    @FXML
-    private void generarMorososPDF() {
-        ReporteUtil.generarReporteClientesMorososPDF();
-    }
-
-    @FXML
-    private void generarMorososExcel() {
-        ReporteUtil.generarReporteClientesMorososExcel();
-    }
-
-    @FXML
-    private void generarCoachesTopPDF() {
-        ReporteUtil.generarReporteCoachesConMasClientesPDF();
-    }
-
-    @FXML
-    private void generarCoachesTopExcel() {
-        ReporteUtil.generarReporteCoachesConMasClientesExcel();
-    }
-
-    @FXML
-    private void generarReporteDashboardPDF() {
-        ReporteUtil.generarReporteDashboardPDF();
-    }
-
-    @FXML
-    private void generarReporteDashboardExcel() {
-        ReporteUtil.generarReporteDashboardExcel();
     }
 }
