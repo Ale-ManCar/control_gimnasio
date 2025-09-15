@@ -416,14 +416,8 @@ public class ListaCoachesController {
     }
 
     @FXML
-    private void volverRegistro(ActionEvent event) {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/registro_coach.fxml"));
-            Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Registro de Coach");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void volverDashboard(ActionEvent event) {
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        stage.close();
     }
 }
