@@ -1,7 +1,5 @@
 package controllers;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -9,15 +7,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
-import models.CoachClientes;
 import models.Role;
 import util.BackupUtil;
 import util.DatabaseUtil;
@@ -40,15 +32,14 @@ public class AdminDashboardController implements Initializable {
     @FXML private AnchorPane cardMorosos;
     @FXML private AnchorPane cardIngresos;
     @FXML private AnchorPane cardPorVencer;
-    @FXML private TableView<CoachClientes> tblTopCoaches;
-    @FXML private TableColumn<CoachClientes, String> colCoach;
-    @FXML private TableColumn<CoachClientes, Integer> colClientes;
+    @FXML private AnchorPane cardCoaches;
     @FXML private Label lblMensaje;
 
     private MetricCardController ctrlClientesActivos;
     private MetricCardController ctrlMorosos;
     private MetricCardController ctrlIngresos;
     private MetricCardController ctrlPorVencer;
+    private MetricCardController ctrlCoaches;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -59,7 +50,6 @@ public class AdminDashboardController implements Initializable {
         try {
             inicializarTarjetas();
             cargarDatos();
-            cargarTopCoaches();
         } catch (IOException e) {
             lblMensaje.setText("Error al cargar tarjetas");
         }
@@ -70,6 +60,8 @@ public class AdminDashboardController implements Initializable {
         ctrlMorosos = DashboardService.cargarTarjeta(cardMorosos, "Morosos");
         ctrlIngresos = DashboardService.cargarTarjeta(cardIngresos, "Ingresos");
         ctrlPorVencer = DashboardService.cargarTarjeta(cardPorVencer, "Membresías por Vencer");
+        ctrlCoaches = DashboardService.cargarTarjeta(cardCoaches, "Coaches");
+        cardCoaches.setOnMouseClicked(e -> abrirCoaches());
     }
 
     private void cargarDatos() {
@@ -79,23 +71,9 @@ public class AdminDashboardController implements Initializable {
             ctrlMorosos.setValor(String.valueOf(metrics.getMorosos()));
             ctrlIngresos.setValor(String.format("$ %.2f", metrics.getIngresos()));
             ctrlPorVencer.setValor(String.valueOf(metrics.getPorVencer()));
+            ctrlCoaches.setValor(String.valueOf(DatabaseUtil.contarCoaches()));
         } catch (SQLException e) {
             lblMensaje.setText("No se pudieron cargar las estadísticas");
-        }
-    }
-
-    private void cargarTopCoaches() {
-        try {
-            ObservableList<CoachClientes> data = DatabaseUtil.listarCoachesConMasClientes();
-            ObservableList<CoachClientes> top3 = FXCollections.observableArrayList();
-            for (int i = 0; i < Math.min(3, data.size()); i++) {
-                top3.add(data.get(i));
-            }
-            tblTopCoaches.setItems(top3);
-            colCoach.setCellValueFactory(new PropertyValueFactory<>("coach"));
-            colClientes.setCellValueFactory(new PropertyValueFactory<>("clientes"));
-        } catch (SQLException e) {
-            lblMensaje.setText("No se pudieron cargar los coaches");
         }
     }
 

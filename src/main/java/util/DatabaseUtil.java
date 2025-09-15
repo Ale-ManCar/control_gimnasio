@@ -1401,6 +1401,15 @@ public class DatabaseUtil {
         }
     }
 
+    public static int contarCoaches() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM coaches";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : 0;
+        }
+    }
+
     public static ObservableList<CoachClientes> listarCoachesConMasClientes() throws SQLException {
         ObservableList<CoachClientes> lista = FXCollections.observableArrayList();
         String sql = "SELECT c.nombres || ' ' || c.apellidos AS coach, COUNT(cl.id) AS clientes " +

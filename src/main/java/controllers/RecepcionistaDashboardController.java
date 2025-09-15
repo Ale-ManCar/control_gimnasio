@@ -475,17 +475,19 @@ public class RecepcionistaDashboardController implements Initializable {
     }
 
     @FXML
-    private void handleRegistroCoach(ActionEvent event) {
+    private void abrirCoaches(ActionEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/registro_coach.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/lista_coaches.fxml"));
             Parent root = loader.load();
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            ListaCoachesController controller = loader.getController();
+            controller.setModoRecepcionista(true);
+            Stage stage = new Stage();
             stage.setScene(new Scene(root));
-            stage.setTitle("Registro de Coach");
+            stage.setTitle("Coaches");
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
-            lblMensaje.setText("No se pudo abrir el formulario de coaches.");
+            lblMensaje.setText("Error al abrir coaches");
         }
     }
 

@@ -44,6 +44,7 @@ public class ListaCoachesController {
 
     private final ObservableList<Coach> coaches = FXCollections.observableArrayList();
     private final ObservableList<Coach> coachesOriginales = FXCollections.observableArrayList();
+    private boolean modoRecepcionista = false;
 
     @FXML
     public void initialize() {
@@ -96,42 +97,57 @@ public class ListaCoachesController {
             }
         });
 
+        configurarColAcciones();
+    }
+
+    public void setModoRecepcionista(boolean modo) {
+        this.modoRecepcionista = modo;
+        configurarColAcciones();
+        if (tablaCoaches != null) {
+            tablaCoaches.refresh();
+        }
+    }
+
+    private void configurarColAcciones() {
         colAcciones.setCellFactory(col -> new TableCell<>() {
             private final Button btnPerfil = new Button();
             private final Button btnEditar = new Button();
             private final Button btnEliminar = new Button();
             private final HBox contenedor = new HBox(10);
             {
+                String estilo = "-fx-background-color: transparent; -fx-cursor: hand;";
                 FontIcon iconPerfil = new FontIcon(FontAwesomeSolid.USER);
                 iconPerfil.setIconColor(Color.web("#007bff"));
                 btnPerfil.setGraphic(iconPerfil);
+                btnPerfil.setStyle(estilo);
                 btnPerfil.setOnAction(e -> {
                     Coach coach = getTableView().getItems().get(getIndex());
                     verPerfil(coach);
                 });
 
-                FontIcon iconEditar = new FontIcon(FontAwesomeSolid.EDIT);
-                iconEditar.setIconColor(Color.web("#28a745"));
-                btnEditar.setGraphic(iconEditar);
-                btnEditar.setOnAction(e -> {
-                    Coach coach = getTableView().getItems().get(getIndex());
-                    editarCoach(coach);
-                });
+                if (!modoRecepcionista) {
+                    FontIcon iconEditar = new FontIcon(FontAwesomeSolid.EDIT);
+                    iconEditar.setIconColor(Color.web("#28a745"));
+                    btnEditar.setGraphic(iconEditar);
+                    btnEditar.setStyle(estilo);
+                    btnEditar.setOnAction(e -> {
+                        Coach coach = getTableView().getItems().get(getIndex());
+                        editarCoach(coach);
+                    });
 
-                FontIcon iconEliminar = new FontIcon(FontAwesomeSolid.TRASH);
-                iconEliminar.setIconColor(Color.web("#dc3545"));
-                btnEliminar.setGraphic(iconEliminar);
-                btnEliminar.setOnAction(e -> {
-                    Coach coach = getTableView().getItems().get(getIndex());
-                    eliminarCoach(coach);
-                });
+                    FontIcon iconEliminar = new FontIcon(FontAwesomeSolid.TRASH);
+                    iconEliminar.setIconColor(Color.web("#dc3545"));
+                    btnEliminar.setGraphic(iconEliminar);
+                    btnEliminar.setStyle(estilo);
+                    btnEliminar.setOnAction(e -> {
+                        Coach coach = getTableView().getItems().get(getIndex());
+                        eliminarCoach(coach);
+                    });
 
-                String estilo = "-fx-background-color: transparent; -fx-cursor: hand;";
-                btnPerfil.setStyle(estilo);
-                btnEditar.setStyle(estilo);
-                btnEliminar.setStyle(estilo);
-
-                contenedor.getChildren().addAll(btnPerfil, btnEditar, btnEliminar);
+                    contenedor.getChildren().addAll(btnPerfil, btnEditar, btnEliminar);
+                } else {
+                    contenedor.getChildren().add(btnPerfil);
+                }
                 contenedor.setAlignment(Pos.CENTER);
             }
 
