@@ -361,30 +361,48 @@ public class RenovacionController {
             int filasActualizadas = stmt.executeUpdate();
 
             if (filasActualizadas > 0) {
+                int clienteId = -1;
+                int pagoId = -1;
+
                 String sqlId = "SELECT id FROM clientes WHERE telefono = ?";
-                PreparedStatement stmtId = conn.prepareStatement(sqlId);
-                stmtId.setString(1, seleccionado.getTelefono());
-                ResultSet rs = stmtId.executeQuery();
+                try (PreparedStatement stmtId = conn.prepareStatement(sqlId)) {
+                    stmtId.setString(1, seleccionado.getTelefono());
+                    try (ResultSet rs = stmtId.executeQuery()) {
+                        if (rs.next()) {
+                            clienteId = rs.getInt("id");
+                        }
+                    }
+                }
 
-                if (rs.next()) {
-                    int clienteId = rs.getInt("id");
-
-                    String sqlPago = "INSERT INTO pagos (cliente_id, fecha_pago, fecha_vencimiento, tipo_membresia, monto) VALUES (?, ?, ?, ?, ?)";
-                    PreparedStatement stmtPago = conn.prepareStatement(sqlPago);
-                    stmtPago.setInt(1, clienteId);
-                    stmtPago.setString(2, dpFechaRenovacion.getValue().toString());
-                    stmtPago.setString(3, nuevaFecha.toString());
-                    stmtPago.setString(4, cbNuevaMembresia.getValue());
-                    stmtPago.setDouble(5, monto);
-                    stmtPago.executeUpdate();
+                if (clienteId != -1) {
+                    String sqlPago = "INSERT INTO pagos (cliente_id, fecha_pago, fecha_vencimiento, tipo_membresia, monto, estado) VALUES (?, ?, ?, ?, ?, ?)";
+                    try (PreparedStatement stmtPago = conn.prepareStatement(sqlPago, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                        stmtPago.setInt(1, clienteId);
+                        stmtPago.setString(2, dpFechaRenovacion.getValue().toString());
+                        stmtPago.setString(3, nuevaFecha.toString());
+                        stmtPago.setString(4, cbNuevaMembresia.getValue());
+                        stmtPago.setDouble(5, monto);
+                        stmtPago.setString(6, "ACTIVO");
+                        stmtPago.executeUpdate();
+                        try (ResultSet pagoKeys = stmtPago.getGeneratedKeys()) {
+                            if (pagoKeys.next()) {
+                                pagoId = pagoKeys.getInt(1);
+                            }
+                        }
+                    }
                 }
 
                 conn.commit();
 
+                int usuarioId = SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 0;
+                if (pagoId != -1) {
+                    AuditoriaUtil.registrarAccion(usuarioId, "CREAR_PAGO", "Pago " + pagoId + " por " + monto);
+                }
+
                 AuditoriaUtil.registrarAccion(
-                        SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 0,
+                        usuarioId,
                         "Renovación membresía",
-                        seleccionado.getNombres() + " " + seleccionado.getApellidos()
+                        seleccionado.getNombres() + " " + seleccionado.getApellidos() + " - " + cbNuevaMembresia.getValue()
                 );
 
                 Cliente clienteRenovado = new Cliente(
@@ -435,7 +453,7 @@ public class RenovacionController {
 
     private void cargarHistorialPagos(String telefono) {
         ObservableList<PagoHistorial> historial = FXCollections.observableArrayList();
-        String sql = "SELECT pagos.fecha_pago, clientes.tipoMembresia, pagos.monto FROM pagos JOIN clientes ON pagos.cliente_id = clientes.id WHERE clientes.telefono = ? ORDER BY pagos.fecha_pago DESC";
+        String sql = "SELECT pagos.fecha_pago, clientes.tipoMembresia, pagos.monto FROM pagos JOIN clientes ON pagos.cliente_id = clientes.id WHERE clientes.telefono = ? AND pagos.estado = 'ACTIVO' ORDER BY pagos.fecha_pago DESC";
 
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

@@ -23,6 +23,7 @@ import javafx.collections.ObservableList;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 
@@ -200,22 +201,35 @@ public class RegistroClienteController {
                 clienteId = rs.getInt(1);
             }
 
+            int pagoId = -1;
             if (clienteId != -1) {
-                String sqlPago = "INSERT INTO pagos (cliente_id, fecha_pago, fecha_vencimiento, tipo_membresia, monto) VALUES (?, ?, ?, ?, ?)";
-                PreparedStatement stmtPago = conn.prepareStatement(sqlPago);
-                stmtPago.setInt(1, clienteId);
-                stmtPago.setString(2, fechaInicio.toString());
-                stmtPago.setString(3, fechaVencimiento.toString());
-                stmtPago.setString(4, cbMembresia.getValue());
-                stmtPago.setDouble(5, monto);
-                stmtPago.executeUpdate();
+                String sqlPago = "INSERT INTO pagos (cliente_id, fecha_pago, fecha_vencimiento, tipo_membresia, monto, estado) VALUES (?, ?, ?, ?, ?, ?)";
+                try (PreparedStatement stmtPago = conn.prepareStatement(sqlPago, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                    stmtPago.setInt(1, clienteId);
+                    stmtPago.setString(2, fechaInicio.toString());
+                    stmtPago.setString(3, fechaVencimiento.toString());
+                    stmtPago.setString(4, cbMembresia.getValue());
+                    stmtPago.setDouble(5, monto);
+                    stmtPago.setString(6, "ACTIVO");
+                    stmtPago.executeUpdate();
+                    try (ResultSet pagoKeys = stmtPago.getGeneratedKeys()) {
+                        if (pagoKeys.next()) {
+                            pagoId = pagoKeys.getInt(1);
+                        }
+                    }
+                }
             }
 
             conn.commit();
 
+            int usuarioId = SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 0;
+            if (pagoId != -1) {
+                AuditoriaUtil.registrarAccion(usuarioId, "CREAR_PAGO", "Pago " + pagoId + " por " + monto);
+            }
+
             String detalleAuditoria = diario ? "Cliente diario" : (txtNombres.getText().trim() + " " + txtApellidos.getText().trim());
             AuditoriaUtil.registrarAccion(
-                    SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 0,
+                    usuarioId,
                     "Registro cliente",
                     detalleAuditoria
             );

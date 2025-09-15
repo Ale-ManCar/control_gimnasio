@@ -2,31 +2,44 @@ package util;
 
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.engine.JREmptyDataSource;
 import net.sf.jasperreports.view.JasperViewer;
 import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
 import net.sf.jasperreports.export.SimpleExporterInput;
 import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
 import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
+import javafx.collections.ObservableList;
 import models.Egreso;
 import models.CoachClientes;
 import models.PagoDetalle;
 import models.ProveedorPrecio;
 import models.Auditoria;
+import models.Pago;
+import util.AuditoriaUtil;
 import java.io.InputStream;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ReporteUtil {
+    private static final DateTimeFormatter RESUMEN_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final DateTimeFormatter SQLITE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter FILE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm");
+    private static final Pattern PAGO_ID_PATTERN = Pattern.compile("Pago\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
     public static void generarReporteFinanciero(int mes, int anio) {
         try {
             InputStream reporteStream = ReporteUtil.class.getResourceAsStream("/reports/reporte_financiero.jrxml");
@@ -202,6 +215,61 @@ public class ReporteUtil {
             System.out.println("✅ Reporte de actividad generado en: " + pdfPath);
         } catch (Exception e) {
             System.err.println("❌ Error generando reporte de actividad: " + e.getMessage());
+        }
+    }
+
+    public static void generarResumenTurno(int usuarioId, LocalDateTime inicio, LocalDateTime fin) {
+        if (inicio == null || fin == null) {
+            throw new IllegalArgumentException("Las fechas de inicio y fin son obligatorias");
+        }
+
+        LocalDateTime start = inicio;
+        LocalDateTime end = fin;
+        if (end.isBefore(start)) {
+            LocalDateTime temp = start;
+            start = end;
+            end = temp;
+        }
+
+        try {
+            InputStream reporteStream = ReporteUtil.class.getResourceAsStream("/reports/resumen_turno.jrxml");
+            if (reporteStream == null) {
+                System.err.println("❌ No se encontró el archivo resumen_turno.jrxml");
+                return;
+            }
+
+            List<Pago> clientesRegistrados = DatabaseUtil.listarClientesRegistrados(usuarioId, start, end);
+            List<Pago> renovaciones = DatabaseUtil.listarMembresiasRenovadas(usuarioId, start, end);
+            Map<String, Number> ingresosPagos = DatabaseUtil.obtenerIngresosPagos(usuarioId, start, end);
+            List<Pago> pagosAnulados = DatabaseUtil.listarPagosAnulados(usuarioId, start, end);
+            double totalVentas = DatabaseUtil.obtenerTotalVentasEntre(start, end);
+
+            int cantidadPagos = ingresosPagos.getOrDefault("cantidad", 0).intValue();
+            double totalMembresias = ingresosPagos.getOrDefault("total", 0).doubleValue();
+
+            Map<Integer, LocalDateTime> tiemposAnulacion = obtenerTiemposAccion(usuarioId, start, end, "ANULAR_PAGO");
+
+            Map<String, Object> parametros = new HashMap<>();
+            parametros.put("REPORT_TITLE", "Resumen de turno");
+            parametros.put("RANGO_TURNO", construirRangoTurno(start, end));
+            parametros.put("CLIENTES_REGISTRADOS", construirListadoPagos(clientesRegistrados));
+            parametros.put("MEMBRESIAS_RENOVADAS", construirListadoPagos(renovaciones));
+            parametros.put("INGRESOS_PAGOS", construirIngresosTexto(cantidadPagos, totalMembresias));
+            parametros.put("TOTAL_MEMBRESIAS", totalMembresias);
+            parametros.put("TOTAL_VENTAS", totalVentas);
+            parametros.put("PAGOS_ANULADOS", construirPagosAnulados(pagosAnulados, tiemposAnulacion));
+
+            JasperReport jasperReport = JasperCompileManager.compileReport(reporteStream);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, new JREmptyDataSource());
+
+            JasperViewer.viewReport(jasperPrint, false);
+            String nombreArchivo = String.format("resumen_turno_%s.pdf", start.format(FILE_FORMATTER));
+            String pdfPath = System.getProperty("user.dir") + File.separator + nombreArchivo;
+            JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
+            System.out.println("✅ Resumen de turno generado en: " + pdfPath);
+        } catch (Exception e) {
+            System.err.println("❌ Error generando resumen de turno: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -424,6 +492,111 @@ public class ReporteUtil {
         } catch (Exception e) {
             System.err.println("❌ Error generando reporte de auditoría: " + e.getMessage());
         }
+    }
+
+    private static Map<Integer, LocalDateTime> obtenerTiemposAccion(int usuarioId, LocalDateTime inicio, LocalDateTime fin, String accion) {
+        Map<Integer, LocalDateTime> tiempos = new HashMap<>();
+        ObservableList<Auditoria> registros = AuditoriaUtil.filtrarAcciones(usuarioId, inicio.toLocalDate(), fin.toLocalDate(), accion);
+        for (Auditoria registro : registros) {
+            if (accion != null && !accion.equalsIgnoreCase(registro.getAccion())) {
+                continue;
+            }
+            LocalDateTime timestamp = parseTimestamp(registro.getTimestamp());
+            if (timestamp == null || timestamp.isBefore(inicio) || timestamp.isAfter(fin)) {
+                continue;
+            }
+            Integer pagoId = extraerPagoId(registro.getDetalle());
+            if (pagoId != null) {
+                tiempos.put(pagoId, timestamp);
+            }
+        }
+        return tiempos;
+    }
+
+    private static String construirRangoTurno(LocalDateTime inicio, LocalDateTime fin) {
+        return String.format("Desde %s hasta %s", RESUMEN_FORMATTER.format(inicio), RESUMEN_FORMATTER.format(fin));
+    }
+
+    private static String construirListadoPagos(List<Pago> pagos) {
+        if (pagos == null || pagos.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        int indice = 1;
+        DateTimeFormatter fechaFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        for (Pago pago : pagos) {
+            String nombre = obtenerNombreClienteSeguro(pago.getClienteId());
+            sb.append(indice++).append('.').append(' ').append(nombre);
+            if (pago.getTipoMembresia() != null && !pago.getTipoMembresia().isBlank()) {
+                sb.append(" - ").append(pago.getTipoMembresia());
+            }
+            if (pago.getFechaPago() != null) {
+                sb.append(" (" + pago.getFechaPago().format(fechaFormatter) + ")");
+            }
+            sb.append(" - $").append(String.format("%.2f", pago.getMonto()));
+            sb.append('\n');
+        }
+        return sb.toString().trim();
+    }
+
+    private static String construirIngresosTexto(int cantidad, double total) {
+        return String.format("Pagos activos: %d%nTotal recibido: $%.2f", cantidad, total);
+    }
+
+    private static String construirPagosAnulados(List<Pago> pagos, Map<Integer, LocalDateTime> tiempos) {
+        if (pagos == null || pagos.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (Pago pago : pagos) {
+            String nombre = obtenerNombreClienteSeguro(pago.getClienteId());
+            sb.append("- ").append(nombre).append(" (#").append(pago.getId()).append(") ");
+            sb.append(String.format("$%.2f", pago.getMonto()));
+            LocalDateTime timestamp = tiempos.get(pago.getId());
+            if (timestamp != null) {
+                sb.append(" - ").append(RESUMEN_FORMATTER.format(timestamp));
+            }
+            sb.append('\n');
+        }
+        return sb.toString().trim();
+    }
+
+    private static Integer extraerPagoId(String detalle) {
+        if (detalle == null) {
+            return null;
+        }
+        Matcher matcher = PAGO_ID_PATTERN.matcher(detalle);
+        if (matcher.find()) {
+            try {
+                return Integer.parseInt(matcher.group(1));
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private static LocalDateTime parseTimestamp(String timestamp) {
+        if (timestamp == null) {
+            return null;
+        }
+        try {
+            return LocalDateTime.parse(timestamp, SQLITE_FORMATTER);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static String obtenerNombreClienteSeguro(int clienteId) {
+        try {
+            String nombre = DatabaseUtil.obtenerNombreCompletoCliente(clienteId);
+            if (nombre != null && !nombre.isBlank()) {
+                return nombre;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return "Cliente #" + clienteId;
     }
 
     public record ActividadRecepcionista(String recepcionista, int turnos, double ventas, double membresias) {}

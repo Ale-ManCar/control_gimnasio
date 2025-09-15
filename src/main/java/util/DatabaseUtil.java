@@ -3,7 +3,11 @@ package util;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.PieChart;
@@ -13,6 +17,7 @@ import models.Egreso;
 import models.EgresoDetalle;
 import models.PagoDetalle;
 import models.PagoMensual;
+import models.Pago;
 import models.Producto;
 import models.InventarioMovimiento;
 import models.User;
@@ -28,6 +33,8 @@ import models.ProveedorPrecio;
 public class DatabaseUtil {
     private static final String URL = "jdbc:sqlite:database/gimnasio.db";
     private static final int BUSY_TIMEOUT_MS = 60000;
+    private static final DateTimeFormatter SQLITE_DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final Pattern PAGO_ID_PATTERN = Pattern.compile("Pago\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
 
     public static Connection getConnection() throws SQLException {
         Connection conn = DriverManager.getConnection(URL);
@@ -73,6 +80,7 @@ public class DatabaseUtil {
                 "fecha_vencimiento TEXT," +
                 "tipo_membresia TEXT," +
                 "monto REAL NOT NULL," +
+                "estado TEXT NOT NULL DEFAULT 'ACTIVO'," +
                 "FOREIGN KEY (cliente_id) REFERENCES clientes(id))";
 
         String sqlCoaches = "CREATE TABLE IF NOT EXISTS coaches (" +
@@ -195,6 +203,8 @@ public class DatabaseUtil {
             stmt.execute(sqlAlertas);
             stmt.execute(sqlConfig);
             stmt.execute(sqlPagos);
+            try { stmt.execute("ALTER TABLE pagos ADD COLUMN estado TEXT NOT NULL DEFAULT 'ACTIVO'"); } catch (SQLException ignored) {}
+            try { stmt.execute("UPDATE pagos SET estado = 'ACTIVO' WHERE estado IS NULL"); } catch (SQLException ignored) {}
             stmt.execute(sqlProductos);
             stmt.execute(sqlInventarioHistorial);
             stmt.execute(sqlVentas);
@@ -271,7 +281,8 @@ public class DatabaseUtil {
         double total = 0.0;
         String sql = "SELECT SUM(monto) AS total FROM pagos " +
                 "WHERE strftime('%Y', fecha_pago) = ? " +
-                "AND strftime('%m', fecha_pago) = ?";
+                "AND strftime('%m', fecha_pago) = ? " +
+                "AND estado = 'ACTIVO'";
 
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -463,7 +474,7 @@ public class DatabaseUtil {
         Map<String, Double> resultado = new HashMap<>();
 
         // Ingresos por membresías
-        StringBuilder sqlPagos = new StringBuilder("SELECT COALESCE(SUM(monto),0) FROM pagos WHERE date(fecha_pago) BETWEEN ? AND ?");
+        StringBuilder sqlPagos = new StringBuilder("SELECT COALESCE(SUM(monto),0) FROM pagos WHERE date(fecha_pago) BETWEEN ? AND ? AND estado = 'ACTIVO'");
         List<Object> paramsPagos = new ArrayList<>();
         paramsPagos.add(fechaInicio.toString());
         paramsPagos.add(fechaFin.toString());
@@ -536,7 +547,7 @@ public class DatabaseUtil {
         String sql = """
         SELECT 
             (SELECT COUNT(*) FROM clientes WHERE activo = 1) AS clientes_activos,
-            (SELECT COUNT(*) FROM pagos WHERE date(fecha_pago) = CURRENT_DATE) AS pagos_hoy,
+            (SELECT COUNT(*) FROM pagos WHERE date(fecha_pago) = CURRENT_DATE AND estado = 'ACTIVO') AS pagos_hoy,
             (SELECT COUNT(*) FROM clientes WHERE fecha_vencimiento BETWEEN CURRENT_DATE AND date('now', '+7 days')) AS por_vencer
         """;
 
@@ -559,7 +570,7 @@ public class DatabaseUtil {
         SELECT
             (SELECT COUNT(*) FROM clientes WHERE activo = 1) AS clientes_activos,
             (SELECT COUNT(*) FROM clientes WHERE activo = 0) AS clientes_inactivos,
-            (SELECT COUNT(*) FROM pagos WHERE strftime('%Y-%m', fecha_pago) = strftime('%Y-%m','now')) AS membresias_mes,
+            (SELECT COUNT(*) FROM pagos WHERE strftime('%Y-%m', fecha_pago) = strftime('%Y-%m','now') AND estado = 'ACTIVO') AS membresias_mes,
             (SELECT COUNT(*) FROM clientes WHERE fecha_vencimiento BETWEEN date('now') AND date('now', '+7 day')) AS por_vencer,
             (SELECT COUNT(*) FROM clientes WHERE fecha_vencimiento < date('now') AND activo = 1) AS clientes_morosos,
             (SELECT COALESCE(MAX(cantidad),0) FROM (SELECT COUNT(*) AS cantidad FROM clientes WHERE coach_id IS NOT NULL GROUP BY coach_id)) AS coaches_top,
@@ -587,7 +598,7 @@ public class DatabaseUtil {
         ObservableList<PagoMensual> data = FXCollections.observableArrayList();
 
         String sql = "SELECT mes, SUM(total) AS total FROM ("
-                + "SELECT strftime('%Y-%m', fecha_pago) AS mes, monto AS total FROM pagos "
+                + "SELECT strftime('%Y-%m', fecha_pago) AS mes, monto AS total FROM pagos WHERE estado = 'ACTIVO' "
                 + "UNION ALL "
                 + "SELECT strftime('%Y-%m', fecha) AS mes, total FROM ventas"
                 + ") "
@@ -615,6 +626,7 @@ public class DatabaseUtil {
                 + "FROM pagos "
                 + "WHERE strftime('%Y', fecha_pago) = ? "
                 + "AND tipo_membresia IS NOT NULL "
+                + "AND estado = 'ACTIVO' "
                 + "GROUP BY tipo_membresia";
 
         try (Connection conn = getConnection();
@@ -663,6 +675,7 @@ public class DatabaseUtil {
             params.add(tipoMembresia);
         }
 
+        sql.append(" AND pagos.estado = 'ACTIVO'");
         sql.append(" ORDER BY pagos.fecha_pago DESC");
 
         try (Connection conn = getConnection();
@@ -693,7 +706,8 @@ public class DatabaseUtil {
                 + "pagos.tipo_membresia AS membresia, pagos.monto "
                 + "FROM pagos pagos "
                 + "JOIN clientes clientes ON pagos.cliente_id = clientes.id "
-                + "WHERE strftime('%Y', pagos.fecha_pago) = ?";
+                + "WHERE strftime('%Y', pagos.fecha_pago) = ? "
+                + "AND pagos.estado = 'ACTIVO'";
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -1378,7 +1392,7 @@ public class DatabaseUtil {
 
     public static double obtenerTotalPagosDesde(String fechaInicio) {
         double total = 0.0;
-        String sql = "SELECT SUM(monto) AS total FROM pagos WHERE date(fecha_pago) >= date(?)";
+        String sql = "SELECT SUM(monto) AS total FROM pagos WHERE date(fecha_pago) >= date(?) AND estado = 'ACTIVO'";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, fechaInicio);
@@ -1390,6 +1404,99 @@ public class DatabaseUtil {
             e.printStackTrace();
         }
         return total;
+    }
+
+    public static void anularPago(int pagoId) throws SQLException {
+        executeUpdate("UPDATE pagos SET estado = 'ANULADO' WHERE id = ?", pagoId);
+    }
+
+    public static List<Pago> listarClientesRegistrados(int usuarioId, LocalDateTime inicio, LocalDateTime fin) throws SQLException {
+        try (Connection conn = getConnection()) {
+            List<Pago> pagos = obtenerPagosPorAccion(conn, usuarioId, inicio, fin, "CREAR_PAGO", true);
+            List<Pago> registros = new ArrayList<>();
+            for (Pago pago : pagos) {
+                if (pago != null && esPrimerPago(conn, pago.getClienteId(), pago.getId())) {
+                    registros.add(pago);
+                }
+            }
+            return registros;
+        }
+    }
+
+    public static List<Pago> listarMembresiasRenovadas(int usuarioId, LocalDateTime inicio, LocalDateTime fin) throws SQLException {
+        try (Connection conn = getConnection()) {
+            List<Pago> pagos = obtenerPagosPorAccion(conn, usuarioId, inicio, fin, "CREAR_PAGO", true);
+            List<Pago> renovaciones = new ArrayList<>();
+            for (Pago pago : pagos) {
+                if (pago != null && !esPrimerPago(conn, pago.getClienteId(), pago.getId())) {
+                    renovaciones.add(pago);
+                }
+            }
+            return renovaciones;
+        }
+    }
+
+    public static Map<String, Number> obtenerIngresosPagos(int usuarioId, LocalDateTime inicio, LocalDateTime fin) throws SQLException {
+        Map<String, Number> resumen = new HashMap<>();
+        int cantidad = 0;
+        double total = 0.0;
+        try (Connection conn = getConnection()) {
+            List<Pago> pagos = obtenerPagosPorAccion(conn, usuarioId, inicio, fin, "CREAR_PAGO", true);
+            for (Pago pago : pagos) {
+                if (pago != null) {
+                    cantidad++;
+                    total += pago.getMonto();
+                }
+            }
+        }
+        resumen.put("cantidad", cantidad);
+        resumen.put("total", total);
+        return resumen;
+    }
+
+    public static List<Pago> listarPagosAnulados(int usuarioId, LocalDateTime inicio, LocalDateTime fin) throws SQLException {
+        try (Connection conn = getConnection()) {
+            List<Pago> pagos = obtenerPagosPorAccion(conn, usuarioId, inicio, fin, "ANULAR_PAGO", false);
+            List<Pago> anulados = new ArrayList<>();
+            for (Pago pago : pagos) {
+                if (pago != null && "ANULADO".equalsIgnoreCase(pago.getEstado())) {
+                    anulados.add(pago);
+                }
+            }
+            return anulados;
+        }
+    }
+
+    public static double obtenerTotalVentasEntre(LocalDateTime inicio, LocalDateTime fin) throws SQLException {
+        String sql = "SELECT SUM(total) AS total FROM ventas WHERE date(fecha) BETWEEN date(?) AND date(?)";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, inicio.toLocalDate().toString());
+            stmt.setString(2, fin.toLocalDate().toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("total");
+                }
+            }
+        }
+        return 0.0;
+    }
+
+    public static String obtenerNombreCompletoCliente(int clienteId) throws SQLException {
+        String sql = "SELECT nombres, apellidos FROM clientes WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, clienteId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String nombres = Optional.ofNullable(rs.getString("nombres")).orElse("").trim();
+                    String apellidos = Optional.ofNullable(rs.getString("apellidos")).orElse("").trim();
+                    String completo = (nombres + " " + apellidos).trim();
+                    return completo.isEmpty() ? null : completo;
+                }
+            }
+        }
+        return null;
     }
 
     public static int contarClientesMorosos() throws SQLException {
@@ -1453,5 +1560,117 @@ public class DatabaseUtil {
             }
         }
         return registros;
+    }
+
+    private static List<Pago> obtenerPagosPorAccion(Connection conn, int usuarioId, LocalDateTime inicio,
+                                                    LocalDateTime fin, String accion, boolean soloActivos) throws SQLException {
+        List<Pago> pagos = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT detalle FROM auditoria WHERE usuario_id = ? AND accion = ?");
+        if (inicio != null) {
+            sql.append(" AND datetime(timestamp) >= datetime(?)");
+        }
+        if (fin != null) {
+            sql.append(" AND datetime(timestamp) <= datetime(?)");
+        }
+        sql.append(" ORDER BY timestamp");
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            int index = 1;
+            stmt.setInt(index++, usuarioId);
+            stmt.setString(index++, accion);
+            if (inicio != null) {
+                stmt.setString(index++, formatDateTime(inicio));
+            }
+            if (fin != null) {
+                stmt.setString(index++, formatDateTime(fin));
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                Set<Integer> procesados = new HashSet<>();
+                while (rs.next()) {
+                    Integer pagoId = extraerPagoId(rs.getString("detalle"));
+                    if (pagoId == null || !procesados.add(pagoId)) {
+                        continue;
+                    }
+                    Pago pago = obtenerPagoPorId(conn, pagoId);
+                    if (pago == null) {
+                        continue;
+                    }
+                    if (soloActivos && !"ACTIVO".equalsIgnoreCase(pago.getEstado())) {
+                        continue;
+                    }
+                    pagos.add(pago);
+                }
+            }
+        }
+        return pagos;
+    }
+
+    private static String formatDateTime(LocalDateTime value) {
+        return value != null ? value.format(SQLITE_DATETIME_FORMATTER) : null;
+    }
+
+    private static Integer extraerPagoId(String detalle) {
+        if (detalle == null) {
+            return null;
+        }
+        Matcher matcher = PAGO_ID_PATTERN.matcher(detalle);
+        if (matcher.find()) {
+            try {
+                return Integer.parseInt(matcher.group(1));
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private static Pago obtenerPagoPorId(Connection conn, int pagoId) throws SQLException {
+        String sql = "SELECT id, cliente_id, fecha_pago, fecha_vencimiento, tipo_membresia, monto, estado FROM pagos WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, pagoId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Pago pago = new Pago();
+                    pago.setId(rs.getInt("id"));
+                    pago.setClienteId(rs.getInt("cliente_id"));
+                    pago.setFechaPago(parseFecha(rs.getString("fecha_pago")));
+                    pago.setFechaVencimiento(parseFecha(rs.getString("fecha_vencimiento")));
+                    pago.setTipoMembresia(rs.getString("tipo_membresia"));
+                    pago.setMonto(rs.getDouble("monto"));
+                    pago.setEstado(rs.getString("estado"));
+                    return pago;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static boolean esPrimerPago(Connection conn, int clienteId, int pagoId) throws SQLException {
+        String sql = "SELECT MIN(id) AS minimo FROM pagos WHERE cliente_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, clienteId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("minimo") == pagoId;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static LocalDate parseFecha(String valor) {
+        if (valor == null || valor.isBlank()) {
+            return null;
+        }
+        String normalizado = valor.trim();
+        if (normalizado.length() > 10) {
+            normalizado = normalizado.substring(0, 10);
+        }
+        try {
+            return LocalDate.parse(normalizado);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
     }
 }

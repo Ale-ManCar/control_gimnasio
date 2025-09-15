@@ -11,6 +11,10 @@ import javafx.stage.Stage;
 import models.Turno;
 import util.DatabaseUtil;
 import util.SessionManager;
+import util.ReporteUtil;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import java.io.IOException;
 import java.net.URL;
@@ -27,6 +31,7 @@ public class FinalizarTurnoController implements Initializable {
     private double ingresosVentas;
     private double ingresosClientes;
     private Stage dashboardStage;
+    private static final DateTimeFormatter TURNO_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -54,6 +59,8 @@ public class FinalizarTurnoController implements Initializable {
     private void confirmar(ActionEvent event) {
         try {
             DatabaseUtil.finalizarTurno(turno.getId(), stockFinal, ingresosVentas, ingresosClientes);
+            LocalDateTime inicioTurno = obtenerInicioTurno();
+            ReporteUtil.generarResumenTurno(SessionManager.getCurrentUser().getId(), inicioTurno, LocalDateTime.now());
             enviarResumen();
             SessionManager.clear();
             Stage current = (Stage) lblStockInicial.getScene().getWindow();
@@ -70,6 +77,21 @@ public class FinalizarTurnoController implements Initializable {
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private LocalDateTime obtenerInicioTurno() {
+        if (turno == null || turno.getFecha_inicio() == null) {
+            return LocalDateTime.now();
+        }
+        String fechaInicio = turno.getFecha_inicio();
+        try {
+            if (fechaInicio.contains("T")) {
+                return LocalDateTime.parse(fechaInicio);
+            }
+            return LocalDateTime.parse(fechaInicio, TURNO_FORMATTER);
+        } catch (Exception e) {
+            return LocalDateTime.now();
         }
     }
 
