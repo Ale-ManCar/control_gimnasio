@@ -37,6 +37,7 @@
                 <AnchorPane fx:id="cardMorosos" prefWidth="200" prefHeight="120"
                             style="-fx-background-color: rgba(244,67,54,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
                 <AnchorPane fx:id="cardIngresos" prefWidth="200" prefHeight="120"
+                            onMouseClicked="#handleVerIngresosMensuales"
                             style="-fx-background-color: rgba(33,150,243,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
                 <AnchorPane fx:id="cardPorVencer" prefWidth="200" prefHeight="120"
                             style="-fx-background-color: rgba(255,152,0,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>

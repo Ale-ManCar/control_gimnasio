@@ -440,21 +440,6 @@ public class RecepcionistaDashboardController implements Initializable {
         Platform.runLater(() -> tablaClientesProximosAVencer.requestLayout());
     }
 
-    @FXML
-    private void handleVerIngresosMensuales(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/ingresos_mensuales.fxml"));
-            Parent root = loader.load();
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Ingresos Mensuales Detallados");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            lblMensaje.setText("Error al abrir ingresos mensuales");
-        }
-    }
-
     private void abrirPagos() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/pagos.fxml"));

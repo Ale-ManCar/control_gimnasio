@@ -7,6 +7,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -74,6 +75,26 @@ public class AdminDashboardController implements Initializable {
             ctrlCoaches.setValor(String.valueOf(DatabaseUtil.contarCoaches()));
         } catch (SQLException e) {
             lblMensaje.setText("No se pudieron cargar las estadísticas");
+        }
+    }
+
+    @FXML
+    private void handleVerIngresosMensuales(MouseEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/ingresos_mensuales.fxml"));
+            Parent root = loader.load();
+            IngresosMensualesController controller = loader.getController();
+            if (controller == null) {
+                lblMensaje.setText("No se pudo cargar ingresos mensuales");
+                return;
+            }
+            Stage stage = new Stage();
+            stage.setTitle("Ingresos Mensuales");
+            stage.setScene(new Scene(root));
+            stage.show();
+            UserService.registrarActividad(SessionManager.getCurrentUser(), "Ver ingresos mensuales");
+        } catch (IOException | SQLException e) {
+            lblMensaje.setText("Error al abrir ingresos mensuales");
         }
     }
 
