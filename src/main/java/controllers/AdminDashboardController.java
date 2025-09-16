@@ -80,9 +80,9 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private void abrirUsuarios() {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/lista_clientes.fxml"));
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/gestion_usuarios.fxml"));
             Stage stage = new Stage();
-            stage.setTitle("Usuarios");
+            stage.setTitle("Gestión de usuarios");
             stage.setScene(new Scene(root));
             stage.show();
             UserService.registrarActividad(SessionManager.getCurrentUser(), "Abrir usuarios");

@@ -10,6 +10,7 @@ public class Pago {
     private String tipoMembresia;
     private double monto;
     private String estado;
+    private String clienteNombre;
 
     public Pago() {
     }
@@ -79,5 +80,13 @@ public class Pago {
 
     public void setEstado(String estado) {
         this.estado = estado;
+    }
+
+    public String getClienteNombre() {
+        return clienteNombre;
+    }
+
+    public void setClienteNombre(String clienteNombre) {
+        this.clienteNombre = clienteNombre;
     }
 }

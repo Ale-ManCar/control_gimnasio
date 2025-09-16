@@ -273,7 +273,7 @@ public class RecepcionistaDashboardController implements Initializable {
         panePagos.prefWidthProperty().bind(cardPagos.widthProperty());
         panePagos.prefHeightProperty().bind(cardPagos.heightProperty());
         cardPagos.getChildren().add(panePagos);
-        panePagos.setOnMouseClicked(e -> handleVerIngresosMensuales(null));
+        panePagos.setOnMouseClicked(e -> abrirPagos());
 
         FXMLLoader loaderVencimientos = new FXMLLoader(getClass().getResource("/fxml/components/metric_card.fxml"));
         Pane paneVencimientos = loaderVencimientos.load();
@@ -452,6 +452,20 @@ public class RecepcionistaDashboardController implements Initializable {
         } catch (IOException e) {
             e.printStackTrace();
             lblMensaje.setText("Error al abrir ingresos mensuales");
+        }
+    }
+
+    private void abrirPagos() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/pagos.fxml"));
+            Parent root = loader.load();
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Pagos activos");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            lblMensaje.setText("Error al abrir pagos activos");
         }
     }
 

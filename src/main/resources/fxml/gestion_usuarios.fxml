@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.UsuariosController"
+            prefWidth="600" prefHeight="420"
+            style="-fx-background-color: linear-gradient(to bottom, #283048, #859398); -fx-padding: 20;">
+    <top>
+        <Label text="Gestión de recepcionistas"
+               style="-fx-text-fill: white; -fx-font-size: 22; -fx-font-weight: bold;"/>
+    </top>
+    <center>
+        <TableView fx:id="tablaUsuarios" prefHeight="300"
+                   style="-fx-background-color: rgba(255,255,255,0.85); -fx-background-radius: 10;">
+            <columns>
+                <TableColumn fx:id="colUsuario" text="Usuario" prefWidth="200"/>
+                <TableColumn fx:id="colUltimoAcceso" text="Último acceso" prefWidth="200"/>
+                <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="120"/>
+            </columns>
+        </TableView>
+    </center>
+    <bottom>
+        <VBox spacing="10">
+            <Label fx:id="lblMensaje" style="-fx-text-fill: #ff6b6b;"/>
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button fx:id="btnNuevo" text="Nuevo" onAction="#handleNuevo"
+                        style="-fx-background-color: #06d6a0; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button fx:id="btnEditar" text="Editar" onAction="#handleEditar"
+                        style="-fx-background-color: #ffd166; -fx-text-fill: #1f1f1f; -fx-font-weight: bold;"/>
+                <Button fx:id="btnEliminar" text="Eliminar" onAction="#handleEliminar"
+                        style="-fx-background-color: #ef476f; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button text="Cerrar" onAction="#handleCerrar"
+                        style="-fx-background-color: #073b4c; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            </HBox>
+        </VBox>
+    </bottom>
+</BorderPane>

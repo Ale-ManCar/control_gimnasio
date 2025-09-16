@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.CrearAdminController"
+            prefWidth="420" prefHeight="320"
+            style="-fx-background-color: linear-gradient(to bottom, #1e3c72, #2a5298);">
+    <children>
+        <VBox alignment="CENTER" spacing="12" fillWidth="false"
+              AnchorPane.topAnchor="20" AnchorPane.bottomAnchor="20"
+              AnchorPane.leftAnchor="20" AnchorPane.rightAnchor="20">
+            <Label text="Crear administrador"
+                   style="-fx-text-fill: white; -fx-font-size: 20; -fx-font-weight: bold;"/>
+            <TextField fx:id="txtUsuario" promptText="Usuario" maxWidth="240"/>
+            <PasswordField fx:id="txtPassword" promptText="Contraseña" maxWidth="240"/>
+            <PasswordField fx:id="txtConfirmar" promptText="Confirmar contraseña" maxWidth="240"/>
+            <Button text="Guardar" onAction="#handleGuardar" maxWidth="200"
+                    style="-fx-background-color: #ffb703; -fx-text-fill: #1f1f1f; -fx-font-weight: bold;"/>
+            <Label fx:id="lblMensaje" style="-fx-text-fill: white;" wrapText="true"/>
+        </VBox>
+    </children>
+</AnchorPane>

@@ -266,6 +266,9 @@ public class ReporteUtil {
             String nombreArchivo = String.format("resumen_turno_%s.pdf", start.format(FILE_FORMATTER));
             String pdfPath = System.getProperty("user.dir") + File.separator + nombreArchivo;
             JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
+            if (usuarioId > 0) {
+                AuditoriaUtil.registrarAccion(usuarioId, "RESUMEN_TURNO", pdfPath);
+            }
             System.out.println("✅ Resumen de turno generado en: " + pdfPath);
         } catch (Exception e) {
             System.err.println("❌ Error generando resumen de turno: " + e.getMessage());

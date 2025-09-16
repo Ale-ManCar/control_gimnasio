@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.RegistroRecepcionistaController"
+            prefWidth="380" prefHeight="280"
+            style="-fx-background-color: linear-gradient(to bottom, #1c1c1c, #2b5876);">
+    <children>
+        <VBox spacing="10" alignment="CENTER"
+              AnchorPane.topAnchor="20" AnchorPane.bottomAnchor="20"
+              AnchorPane.leftAnchor="20" AnchorPane.rightAnchor="20"
+              style="-fx-background-color: rgba(255,255,255,0.1); -fx-padding: 20; -fx-background-radius: 15;">
+            <Label fx:id="lblTitulo" text="Nuevo recepcionista"
+                   style="-fx-text-fill: white; -fx-font-size: 18; -fx-font-weight: bold;"/>
+            <TextField fx:id="txtUsuario" promptText="Usuario"/>
+            <PasswordField fx:id="txtPassword" promptText="Contraseña"/>
+            <PasswordField fx:id="txtConfirmar" promptText="Confirmar contraseña"/>
+            <Label fx:id="lblMensaje" style="-fx-text-fill: #ff6b6b;" wrapText="true"/>
+            <HBox spacing="10" alignment="CENTER">
+                <Button text="Guardar" onAction="#handleGuardar"
+                        style="-fx-background-color: #06d6a0; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button text="Cancelar" onAction="#handleCancelar"
+                        style="-fx-background-color: #ef476f; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            </HBox>
+        </VBox>
+    </children>
+</AnchorPane>

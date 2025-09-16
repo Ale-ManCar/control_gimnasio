@@ -227,7 +227,6 @@ public class DatabaseUtil {
             try { stmt.execute("ALTER TABLE productos ADD COLUMN umbral INTEGER DEFAULT 0"); } catch (SQLException ignored) {}
             stmt.execute(sqlEquiposIndex);
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
-            stmt.execute("INSERT OR IGNORE INTO usuarios (id, username, password, rol) VALUES (1, 'admin', 'admin', 'ADMIN'), (2, 'recep', 'recep', 'RECEPCIONISTA')");
             try { stmt.execute("ALTER TABLE usuarios ADD COLUMN last_login TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE usuarios ADD COLUMN acciones_realizadas INTEGER DEFAULT 0"); } catch (SQLException ignored) {}
             stmt.execute("INSERT OR IGNORE INTO proveedores (id, nombre, contacto, telefono) VALUES (1, 'Proveedor 1', '', ''), (2, 'Proveedor 2', '', '')");
@@ -693,6 +692,36 @@ public class DatabaseUtil {
                             rs.getDouble("monto")
                     ));
                 }
+            }
+        }
+        return pagos;
+    }
+
+    public static ObservableList<Pago> listarPagosActivos() throws SQLException {
+        ObservableList<Pago> pagos = FXCollections.observableArrayList();
+        String sql = "SELECT p.id, p.cliente_id, p.fecha_pago, p.fecha_vencimiento, p.tipo_membresia, p.monto, p.estado, "
+                + "COALESCE(c.nombres, '') AS nombres, COALESCE(c.apellidos, '') AS apellidos "
+                + "FROM pagos p LEFT JOIN clientes c ON p.cliente_id = c.id "
+                + "WHERE p.estado = 'ACTIVO' "
+                + "ORDER BY datetime(p.fecha_pago) DESC";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Pago pago = new Pago();
+                pago.setId(rs.getInt("id"));
+                pago.setClienteId(rs.getInt("cliente_id"));
+                pago.setFechaPago(parseFecha(rs.getString("fecha_pago")));
+                pago.setFechaVencimiento(parseFecha(rs.getString("fecha_vencimiento")));
+                pago.setTipoMembresia(rs.getString("tipo_membresia"));
+                pago.setMonto(rs.getDouble("monto"));
+                pago.setEstado(rs.getString("estado"));
+                String nombres = rs.getString("nombres");
+                String apellidos = rs.getString("apellidos");
+                String nombreCompleto = (nombres + " " + apellidos).trim();
+                pago.setClienteNombre(nombreCompleto.isEmpty() ? "" : nombreCompleto);
+                pagos.add(pago);
             }
         }
         return pagos;
@@ -1272,6 +1301,32 @@ public class DatabaseUtil {
         return usuarios;
     }
 
+    public static ObservableList<User> listarUsuariosPorRol(Role role) throws SQLException {
+        ObservableList<User> usuarios = FXCollections.observableArrayList();
+        String sql = "SELECT id, username, password, rol, last_login, acciones_realizadas FROM usuarios WHERE rol = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, role.name());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    LocalDateTime lastLogin = null;
+                    String last = rs.getString("last_login");
+                    if (last != null) {
+                        lastLogin = LocalDateTime.parse(last);
+                    }
+                    usuarios.add(new User(
+                            rs.getInt("id"),
+                            rs.getString("username"),
+                            rs.getString("password"),
+                            Role.fromString(rs.getString("rol")),
+                            lastLogin,
+                            rs.getInt("acciones_realizadas")));
+                }
+            }
+        }
+        return usuarios;
+    }
+
     public static void actualizarLastLogin(int userId) throws SQLException {
         String sql = "UPDATE usuarios SET last_login = ? WHERE id = ?";
         try (Connection conn = getConnection();
@@ -1452,6 +1507,18 @@ public class DatabaseUtil {
         resumen.put("cantidad", cantidad);
         resumen.put("total", total);
         return resumen;
+    }
+
+    public static int getTotalUsuarios() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM usuarios";
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
     }
 
     public static List<Pago> listarPagosAnulados(int usuarioId, LocalDateTime inicio, LocalDateTime fin) throws SQLException {

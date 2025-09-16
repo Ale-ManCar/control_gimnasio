@@ -12,7 +12,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import util.AlertScheduler;
 import util.BackupUtil;
@@ -77,17 +76,17 @@ public class SplashController {
         progressBar.progressProperty().bind(task.progressProperty());
 
         // Manejar eventos de la tarea
-        task.setOnSucceeded(e -> abrirLogin());
+        task.setOnSucceeded(e -> abrirEntrada());
         task.setOnFailed(e -> {
             System.err.println("Error en splash screen: " + task.getException().getMessage());
-            abrirLogin(); // Intentar abrir login de todas formas
+            abrirEntrada(); // Intentar abrir flujo de autenticación de todas formas
         });
 
         // Iniciar tarea en segundo plano
         new Thread(task).start();
     }
 
-    private void abrirLogin() {
+    private void abrirEntrada() {
         Platform.runLater(() -> {
             try {
                 // Cerrar splash
@@ -95,11 +94,23 @@ public class SplashController {
                 splashStage.close();
 
                 // Abrir login
+                int totalUsuarios = DatabaseUtil.getTotalUsuarios();
+                String vista = totalUsuarios == 0 ? "/fxml/crear_admin.fxml" : "/fxml/selector_perfiles.fxml";
+
+                FXMLLoader loader = new FXMLLoader(getClass().getResource(vista));
+                Parent root = loader.load();
                 Stage stage = new Stage();
-                Parent root = FXMLLoader.load(getClass().getResource("/fxml/login.fxml"));
-                Scene scene = new Scene(root, 400, 300);
-                stage.setScene(scene);
-                stage.setTitle("Inicio de Sesión");
+                if (totalUsuarios == 0) {
+                    CrearAdminController controller = loader.getController();
+                    controller.setStage(stage);
+                    stage.setScene(new Scene(root, 420, 320));
+                    stage.setTitle("Crear administrador");
+                } else {
+                    SelectorPerfilesController controller = loader.getController();
+                    controller.setStage(stage);
+                    stage.setScene(new Scene(root, 700, 420));
+                    stage.setTitle("Seleccionar perfil");
+                }
                 stage.setResizable(false);
                 stage.show();
             } catch (Exception e) {

@@ -1,6 +1,7 @@
 package util;
 
 import javafx.collections.ObservableList;
+import models.Role;
 import models.User;
 
 import java.sql.SQLException;
@@ -21,6 +22,14 @@ public class UserService {
 
     public static ObservableList<User> listarUsuarios() throws SQLException {
         return DatabaseUtil.listarUsuarios();
+    }
+
+    public static ObservableList<User> listarUsuariosPorRol(Role role) throws SQLException {
+        return DatabaseUtil.listarUsuariosPorRol(role);
+    }
+
+    public static int contarUsuarios() throws SQLException {
+        return DatabaseUtil.getTotalUsuarios();
     }
 
     public static void registrarActividad(User user, String accion) throws SQLException {

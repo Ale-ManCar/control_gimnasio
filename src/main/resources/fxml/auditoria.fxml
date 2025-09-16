@@ -21,7 +21,9 @@
                 <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
                 <TableColumn fx:id="colUsuario" text="Usuario" prefWidth="150"/>
                 <TableColumn fx:id="colAccion" text="Acción" prefWidth="150"/>
+                <TableColumn fx:id="colDetalle" text="Detalle" prefWidth="220"/>
                 <TableColumn fx:id="colFecha" text="Fecha" prefWidth="200"/>
+                <TableColumn fx:id="colAbrir" text="Archivo" prefWidth="120"/>
             </columns>
         </TableView>
     </center>

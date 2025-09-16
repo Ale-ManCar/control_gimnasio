@@ -11,6 +11,8 @@
             <PasswordField fx:id="txtPassword" promptText="Contraseña" maxWidth="200"/>
             <ChoiceBox fx:id="cbRol" maxWidth="200"/>
             <Button text="Ingresar" onAction="#handleLogin" maxWidth="200"/>
+            <Button text="Cambiar perfil" onAction="#handleCambiarPerfil" maxWidth="200"
+                    style="-fx-background-color: transparent; -fx-border-color: white; -fx-text-fill: white;"/>
             <Label fx:id="lblMensaje" style="-fx-text-fill: red;"/>
         </VBox>
     </children>

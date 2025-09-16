@@ -68,11 +68,13 @@ public class FinalizarTurnoController implements Initializable {
             if (dashboardStage != null) {
                 dashboardStage.close();
             }
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/selector_perfiles.fxml"));
             Parent root = loader.load();
+            SelectorPerfilesController controller = loader.getController();
             Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Login");
+            stage.setScene(new Scene(root, 700, 420));
+            controller.setStage(stage);
+            stage.setTitle("Seleccionar perfil");
             stage.setResizable(false);
             stage.show();
         } catch (IOException e) {
