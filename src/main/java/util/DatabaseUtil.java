@@ -1327,6 +1327,20 @@ public class DatabaseUtil {
         return usuarios;
     }
 
+    public static String obtenerNombreUsuarioPorId(int userId) throws SQLException {
+        String sql = "SELECT username FROM usuarios WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("username");
+                }
+            }
+        }
+        return null;
+    }
+
     public static void actualizarLastLogin(int userId) throws SQLException {
         String sql = "UPDATE usuarios SET last_login = ? WHERE id = ?";
         try (Connection conn = getConnection();

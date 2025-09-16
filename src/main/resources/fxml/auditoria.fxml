@@ -1,30 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.control.SplitPane?>
+
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="controllers.AuditoriaController" prefWidth="800" prefHeight="600">
+            fx:controller="controllers.AuditoriaController" prefWidth="1100" prefHeight="650">
     <top>
-        <HBox spacing="10" alignment="CENTER_LEFT" padding="10">
+        <VBox spacing="10">
+            <padding>
+                <Insets top="12" right="12" bottom="8" left="12"/>
+            </padding>
             <children>
-                <ChoiceBox fx:id="cbUsuarios" prefWidth="150" />
-                <DatePicker fx:id="dpFechaInicio" promptText="Inicio" />
-                <DatePicker fx:id="dpFechaFin" promptText="Fin" />
-                <TextField fx:id="txtTipo" promptText="Tipo de acción" />
-                <Button text="Filtrar" onAction="#aplicarFiltros" />
-                <Button text="Exportar" onAction="#exportarReporte" />
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <children>
+                        <ComboBox fx:id="cbUsuarios" promptText="Recepcionista" prefWidth="200" />
+                        <ComboBox fx:id="cbAnio" promptText="Año" prefWidth="120" />
+                        <ComboBox fx:id="cbMes" promptText="Mes" prefWidth="140" />
+                        <ComboBox fx:id="cbTipo" promptText="Tipo de resumen" prefWidth="200" />
+                        <Button text="Filtrar" onAction="#aplicarFiltros" />
+                        <Button text="Limpiar" onAction="#limpiarFiltros" />
+                    </children>
+                </HBox>
+                <HBox spacing="10" alignment="CENTER_RIGHT">
+                    <children>
+                        <Button fx:id="btnVer" text="Ver PDF" onAction="#verSeleccion" />
+                        <Button fx:id="btnDescargar" text="Descargar PDF" onAction="#descargarSeleccion" />
+                        <Button text="Exportar historial" onAction="#exportarReporte" />
+                    </children>
+                </HBox>
             </children>
-        </HBox>
+        </VBox>
     </top>
     <center>
-        <TableView fx:id="tablaAuditoria" prefWidth="800" prefHeight="600">
-            <columns>
-                <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
-                <TableColumn fx:id="colUsuario" text="Usuario" prefWidth="150"/>
-                <TableColumn fx:id="colAccion" text="Acción" prefWidth="150"/>
-                <TableColumn fx:id="colDetalle" text="Detalle" prefWidth="220"/>
-                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="200"/>
-                <TableColumn fx:id="colAbrir" text="Archivo" prefWidth="120"/>
-            </columns>
-        </TableView>
+        <SplitPane dividerPositions="0.28">
+            <items>
+                <TreeView fx:id="treeResumenes" prefWidth="260" />
+                <TableView fx:id="tablaAuditoria">
+                    <columns>
+                        <TableColumn fx:id="colId" text="ID" prefWidth="60" />
+                        <TableColumn fx:id="colUsuario" text="Recepcionista" prefWidth="160" />
+                        <TableColumn fx:id="colAccion" text="Tipo" prefWidth="140" />
+                        <TableColumn fx:id="colDetalle" text="Archivo" prefWidth="220" />
+                        <TableColumn fx:id="colFecha" text="Fecha" prefWidth="180" />
+                        <TableColumn fx:id="colVer" text="Ver" prefWidth="80" />
+                        <TableColumn fx:id="colDescargar" text="Descargar" prefWidth="110" />
+                    </columns>
+                </TableView>
+            </items>
+        </SplitPane>
     </center>
 </BorderPane>

@@ -14,6 +14,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import util.AlertScheduler;
+import util.AuditoriaScheduler;
 import util.BackupUtil;
 import util.DatabaseUtil;
 import util.EstadoClienteService;
@@ -58,6 +59,7 @@ public class SplashController {
 
                 // Paso 4: Programar tareas en segundo plano
                 AlertScheduler.iniciar();
+                AuditoriaScheduler.iniciar();
                 ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
                 scheduler.scheduleAtFixedRate(new BackupUtil(), 0, 1, TimeUnit.DAYS);
                 updateProgress(90, 100);

@@ -15,6 +15,8 @@ import models.PagoDetalle;
 import models.ProveedorPrecio;
 import models.Auditoria;
 import models.Pago;
+import models.ResumenTipo;
+import util.AuditoriaFileUtil;
 import util.AuditoriaUtil;
 import java.io.InputStream;
 import java.io.File;
@@ -38,7 +40,6 @@ import java.util.regex.Pattern;
 public class ReporteUtil {
     private static final DateTimeFormatter RESUMEN_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final DateTimeFormatter SQLITE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final DateTimeFormatter FILE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm");
     private static final Pattern PAGO_ID_PATTERN = Pattern.compile("Pago\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
     public static void generarReporteFinanciero(int mes, int anio) {
         try {
@@ -218,7 +219,40 @@ public class ReporteUtil {
         }
     }
 
-    public static void generarResumenTurno(int usuarioId, LocalDateTime inicio, LocalDateTime fin) {
+    public static Path generarResumenTurno(int usuarioId, LocalDateTime inicio, LocalDateTime fin) {
+        return generarResumenTurno(usuarioId, inicio, fin, true);
+    }
+
+    public static Path generarResumenTurno(int usuarioId, LocalDateTime inicio, LocalDateTime fin, boolean mostrar) {
+        return generarResumenPeriodo(usuarioId, inicio, fin, "Resumen diario de turno", ResumenTipo.DIARIO, mostrar);
+    }
+
+    public static Path generarResumenSemanal(int usuarioId, LocalDateTime inicio, LocalDateTime fin) {
+        return generarResumenSemanal(usuarioId, inicio, fin, false);
+    }
+
+    public static Path generarResumenSemanal(int usuarioId, LocalDateTime inicio, LocalDateTime fin, boolean mostrar) {
+        return generarResumenPeriodo(usuarioId, inicio, fin, "Resumen semanal", ResumenTipo.SEMANAL, mostrar);
+    }
+
+    public static Path generarResumenMensual(int usuarioId, LocalDateTime inicio, LocalDateTime fin) {
+        return generarResumenMensual(usuarioId, inicio, fin, false);
+    }
+
+    public static Path generarResumenMensual(int usuarioId, LocalDateTime inicio, LocalDateTime fin, boolean mostrar) {
+        return generarResumenPeriodo(usuarioId, inicio, fin, "Resumen mensual", ResumenTipo.MENSUAL, mostrar);
+    }
+
+    public static Path generarResumenAnual(int usuarioId, LocalDateTime inicio, LocalDateTime fin) {
+        return generarResumenAnual(usuarioId, inicio, fin, false);
+    }
+
+    public static Path generarResumenAnual(int usuarioId, LocalDateTime inicio, LocalDateTime fin, boolean mostrar) {
+        return generarResumenPeriodo(usuarioId, inicio, fin, "Resumen anual", ResumenTipo.ANUAL, mostrar);
+    }
+
+    private static Path generarResumenPeriodo(int usuarioId, LocalDateTime inicio, LocalDateTime fin,
+                                              String titulo, ResumenTipo tipo, boolean mostrar) {
         if (inicio == null || fin == null) {
             throw new IllegalArgumentException("Las fechas de inicio y fin son obligatorias");
         }
@@ -235,7 +269,12 @@ public class ReporteUtil {
             InputStream reporteStream = ReporteUtil.class.getResourceAsStream("/reports/resumen_turno.jrxml");
             if (reporteStream == null) {
                 System.err.println("❌ No se encontró el archivo resumen_turno.jrxml");
-                return;
+                return null;
+            }
+
+            String username = usuarioId > 0 ? DatabaseUtil.obtenerNombreUsuarioPorId(usuarioId) : null;
+            if (username == null || username.isBlank()) {
+                username = "Recepcionista " + usuarioId;
             }
 
             List<Pago> clientesRegistrados = DatabaseUtil.listarClientesRegistrados(usuarioId, start, end);
@@ -250,8 +289,8 @@ public class ReporteUtil {
             Map<Integer, LocalDateTime> tiemposAnulacion = obtenerTiemposAccion(usuarioId, start, end, "ANULAR_PAGO");
 
             Map<String, Object> parametros = new HashMap<>();
-            parametros.put("REPORT_TITLE", "Resumen de turno");
-            parametros.put("RANGO_TURNO", construirRangoTurno(start, end));
+            parametros.put("REPORT_TITLE", construirTitulo(titulo, username));
+            parametros.put("RANGO_TURNO", construirRangoPeriodo(start, end));
             parametros.put("CLIENTES_REGISTRADOS", construirListadoPagos(clientesRegistrados));
             parametros.put("MEMBRESIAS_RENOVADAS", construirListadoPagos(renovaciones));
             parametros.put("INGRESOS_PAGOS", construirIngresosTexto(cantidadPagos, totalMembresias));
@@ -262,17 +301,23 @@ public class ReporteUtil {
             JasperReport jasperReport = JasperCompileManager.compileReport(reporteStream);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, new JREmptyDataSource());
 
-            JasperViewer.viewReport(jasperPrint, false);
-            String nombreArchivo = String.format("resumen_turno_%s.pdf", start.format(FILE_FORMATTER));
-            String pdfPath = System.getProperty("user.dir") + File.separator + nombreArchivo;
-            JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
-            if (usuarioId > 0) {
-                AuditoriaUtil.registrarAccion(usuarioId, "RESUMEN_TURNO", pdfPath);
+            if (mostrar) {
+                JasperViewer.viewReport(jasperPrint, false);
             }
-            System.out.println("✅ Resumen de turno generado en: " + pdfPath);
+
+            Path destino = AuditoriaFileUtil.ensureResumenPath(username, usuarioId, tipo, start, end);
+            JasperExportManager.exportReportToPdfFile(jasperPrint, destino.toString());
+
+            if (usuarioId > 0 && tipo.getAccion() != null) {
+                AuditoriaUtil.registrarAccion(usuarioId, tipo.getAccion(), destino.toString());
+            }
+
+            System.out.println("✅ " + titulo + " generado en: " + destino.toAbsolutePath());
+            return destino;
         } catch (Exception e) {
-            System.err.println("❌ Error generando resumen de turno: " + e.getMessage());
+            System.err.println("❌ Error generando " + titulo.toLowerCase() + ": " + e.getMessage());
             e.printStackTrace();
+            return null;
         }
     }
 
@@ -516,8 +561,15 @@ public class ReporteUtil {
         return tiempos;
     }
 
-    private static String construirRangoTurno(LocalDateTime inicio, LocalDateTime fin) {
+    private static String construirRangoPeriodo(LocalDateTime inicio, LocalDateTime fin) {
         return String.format("Desde %s hasta %s", RESUMEN_FORMATTER.format(inicio), RESUMEN_FORMATTER.format(fin));
+    }
+
+    private static String construirTitulo(String titulo, String username) {
+        if (username == null || username.isBlank()) {
+            return titulo;
+        }
+        return titulo + " - " + username;
     }
 
     private static String construirListadoPagos(List<Pago> pagos) {

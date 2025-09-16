@@ -9,9 +9,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
 import models.Turno;
+import util.AuditoriaScheduler;
 import util.DatabaseUtil;
 import util.SessionManager;
-import util.ReporteUtil;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -60,7 +60,7 @@ public class FinalizarTurnoController implements Initializable {
         try {
             DatabaseUtil.finalizarTurno(turno.getId(), stockFinal, ingresosVentas, ingresosClientes);
             LocalDateTime inicioTurno = obtenerInicioTurno();
-            ReporteUtil.generarResumenTurno(SessionManager.getCurrentUser().getId(), inicioTurno, LocalDateTime.now());
+            AuditoriaScheduler.generarResumenDiario(SessionManager.getCurrentUser().getId(), inicioTurno, LocalDateTime.now(), true);
             enviarResumen();
             SessionManager.clear();
             Stage current = (Stage) lblStockInicial.getScene().getWindow();
