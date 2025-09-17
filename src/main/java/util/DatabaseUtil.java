@@ -1473,7 +1473,7 @@ public class DatabaseUtil {
 
     public static void reabrirTurno(int turnoId) throws SQLException {
         String sql = "UPDATE turnos SET fecha_fin = NULL, stock_final = NULL, ingresos_ventas = 0, " +
-                "ingresos_clientes = 0, resumen_generado = NULL WHERE id = ?";
+                "ingresos_clientes = 0 WHERE id = ?";
         executeUpdate(sql, turnoId);
     }
 
