@@ -209,3 +209,40 @@
     -fx-padding: 0 1 0 1;
     -fx-background-color: rgba(46, 139, 255, 0.35);
 }
+
+.icon-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-padding: 6;
+    -fx-cursor: hand;
+    -fx-alignment: center;
+}
+
+.icon-button .ikonli-font-icon {
+    -fx-icon-color: #1e3c72;
+    -fx-icon-size: 16;
+}
+
+.icon-button:hover {
+    -fx-background-color: rgba(74, 108, 247, 0.18);
+}
+
+.icon-button:hover .ikonli-font-icon {
+    -fx-icon-color: #2E8BFF;
+}
+
+.icon-button:disabled {
+    -fx-opacity: 0.35;
+    -fx-cursor: default;
+}
+
+.acciones-cell {
+    -fx-alignment: center;
+}
+
+.primary-button .ikonli-font-icon {
+    -fx-icon-color: white;
+    -fx-icon-size: 14;
+}

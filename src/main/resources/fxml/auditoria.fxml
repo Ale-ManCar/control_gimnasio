@@ -78,8 +78,7 @@
                                         <TableColumn fx:id="colAccion" text="Tipo" prefWidth="140"/>
                                         <TableColumn fx:id="colDetalle" text="Archivo" prefWidth="220"/>
                                         <TableColumn fx:id="colFecha" text="Fecha" prefWidth="180"/>
-                                        <TableColumn fx:id="colVer" text="Ver" prefWidth="80"/>
-                                        <TableColumn fx:id="colDescargar" text="Descargar" prefWidth="110"/>
+                                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="150"/>
                                     </columns>
                                 </TableView>
                             </children>

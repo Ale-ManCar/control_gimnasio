@@ -6,8 +6,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
@@ -19,6 +21,9 @@ import util.AuditoriaUtil;
 import util.ReporteUtil;
 import util.SessionManager;
 import util.UserService;
+
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.awt.Desktop;
 import java.io.File;
@@ -54,8 +59,7 @@ public class AuditoriaController implements Initializable {
     @FXML private TableColumn<Auditoria, String> colAccion;
     @FXML private TableColumn<Auditoria, String> colDetalle;
     @FXML private TableColumn<Auditoria, LocalDateTime> colFecha;
-    @FXML private TableColumn<Auditoria, Void> colVer;
-    @FXML private TableColumn<Auditoria, Void> colDescargar;
+    @FXML private TableColumn<Auditoria, Void> colAcciones;
     @FXML private ComboBox<User> cbUsuarios;
     @FXML private ComboBox<Integer> cbAnio;
     @FXML private ComboBox<Month> cbMes;
@@ -75,6 +79,7 @@ public class AuditoriaController implements Initializable {
         configurarTabla();
         configurarArbol();
         configurarCombos();
+        configurarBotonesPrincipales();
         cargarUsuarios();
         aplicarFiltros();
     }
@@ -136,8 +141,7 @@ public class AuditoriaController implements Initializable {
         });
         colFecha.setSortType(TableColumn.SortType.DESCENDING);
 
-        configurarColumnaVer();
-        configurarColumnaDescargar();
+        configurarColumnaAcciones();
 
         tablaAuditoria.getSelectionModel().selectedItemProperty().addListener((obs, old, registro) -> {
             archivoSeleccionado = registro != null ? registro.getArchivo() : null;
@@ -208,6 +212,23 @@ public class AuditoriaController implements Initializable {
         }
         if (btnDescargar != null) {
             btnDescargar.setDisable(true);
+        }
+    }
+
+    private void configurarBotonesPrincipales() {
+        if (btnVer != null) {
+            FontIcon iconoVer = new FontIcon(FontAwesomeSolid.EYE);
+            iconoVer.setIconSize(14);
+            btnVer.setGraphic(iconoVer);
+            btnVer.setContentDisplay(ContentDisplay.LEFT);
+            btnVer.setGraphicTextGap(8);
+        }
+        if (btnDescargar != null) {
+            FontIcon iconoDescargar = new FontIcon(FontAwesomeSolid.DOWNLOAD);
+            iconoDescargar.setIconSize(14);
+            btnDescargar.setGraphic(iconoDescargar);
+            btnDescargar.setContentDisplay(ContentDisplay.LEFT);
+            btnDescargar.setGraphicTextGap(8);
         }
     }
 
@@ -379,17 +400,35 @@ public class AuditoriaController implements Initializable {
         ReporteUtil.generarReporteAuditoria(auditorias);
     }
 
-    private void configurarColumnaVer() {
-        if (colVer == null) {
+    private void configurarColumnaAcciones() {
+        if (colAcciones == null) {
             return;
         }
-        colVer.setCellFactory(col -> new TableCell<>() {
-            private final Button boton = new Button("Ver");
+        colAcciones.setCellFactory(col -> new TableCell<>() {
+            private final Button botonVer = crearBotonAccion(FontAwesomeSolid.EYE, "Ver PDF");
+            private final Button botonDescargar = crearBotonAccion(FontAwesomeSolid.DOWNLOAD, "Descargar PDF");
+            private final HBox contenedor = new HBox(8, botonVer, botonDescargar);;
 
             {
-                boton.setOnAction(e -> {
-                    Auditoria registro = getTableView().getItems().get(getIndex());
-                    abrirArchivo(registro);
+                contenedor.setAlignment(Pos.CENTER);
+                contenedor.getStyleClass().add("acciones-cell");
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+                setAlignment(Pos.CENTER);
+
+                botonVer.setOnAction(e -> {
+                    Auditoria registro = obtenerRegistroActual();
+                    if (registro != null) {
+                        sincronizarSeleccion(registro);
+                        abrirArchivo(registro);
+                    }
+                });
+
+                botonDescargar.setOnAction(e -> {
+                    Auditoria registro = obtenerRegistroActual();
+                    if (registro != null) {
+                        sincronizarSeleccion(registro);
+                        descargarArchivo(registro);
+                    }
                 });
             }
 
@@ -400,41 +439,39 @@ public class AuditoriaController implements Initializable {
                     setGraphic(null);
                     return;
                 }
-                Path archivo = obtenerArchivoDesdeRegistro(getTableRow().getItem());
+                Auditoria registro = getTableRow().getItem();
+                Path archivo = obtenerArchivoDesdeRegistro(registro);
                 boolean habilitado = archivo != null && Files.exists(archivo);
-                boton.setDisable(!habilitado);
-                setGraphic(habilitado ? boton : null);
+                botonVer.setDisable(!habilitado);
+                botonDescargar.setDisable(!habilitado);
+                setGraphic(contenedor);
+            }
+
+            private Auditoria obtenerRegistroActual() {
+                return getTableView() != null && getIndex() >= 0 && getIndex() < getTableView().getItems().size()
+                        ? getTableView().getItems().get(getIndex())
+                        : null;
+            }
+
+            private void sincronizarSeleccion(Auditoria registro) {
+                TableView<Auditoria> tabla = getTableView();
+                if (tabla != null) {
+                    tabla.getSelectionModel().select(registro);
+                    tabla.scrollTo(registro);
+                }
             }
         });
     }
 
-    private void configurarColumnaDescargar() {
-        if (colDescargar == null) {
-            return;
-        }
-        colDescargar.setCellFactory(col -> new TableCell<>() {
-            private final Button boton = new Button("Descargar");
-
-            {
-                boton.setOnAction(e -> {
-                    Auditoria registro = getTableView().getItems().get(getIndex());
-                    descargarArchivo(registro);
-                });
-            }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setGraphic(null);
-                    return;
-                }
-                Path archivo = obtenerArchivoDesdeRegistro(getTableRow().getItem());
-                boolean habilitado = archivo != null && Files.exists(archivo);
-                boton.setDisable(!habilitado);
-                setGraphic(habilitado ? boton : null);
-            }
-        });
+    private Button crearBotonAccion(FontAwesomeSolid icono, String tooltipTexto) {
+        FontIcon iconoGrafico = new FontIcon(icono);
+        iconoGrafico.setIconSize(16);
+        Button boton = new Button();
+        boton.setGraphic(iconoGrafico);
+        boton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+        boton.getStyleClass().add("icon-button");
+        boton.setTooltip(new Tooltip(tooltipTexto));
+        return boton;
     }
 
     private void abrirArchivo(Auditoria registro) {
