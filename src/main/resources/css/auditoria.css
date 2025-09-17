@@ -117,6 +117,11 @@
     -fx-text-alignment: center;
 }
 
+.auditoria-table .column-header .label {
+    -fx-alignment: CENTER;
+    -fx-text-alignment: center;
+}
+
 .table-view .column-header-background {
     -fx-background-color: linear-gradient(to right, rgba(30, 60, 114, 0.95), rgba(46, 139, 255, 0.85));
     -fx-padding: 8 4;

@@ -561,13 +561,13 @@ public class AuditoriaController implements Initializable {
 
         for (Map.Entry<String, Map<Integer, Map<Month, EnumMap<ResumenTipo, List<Auditoria>>>>> usuarioEntry : estructura.entrySet()) {
             TreeItem<ResumenTreeData> usuarioItem = new TreeItem<>(ResumenTreeData.usuario(usuarioEntry.getKey()));
-            usuarioItem.setExpanded(true);
+            usuarioItem.setExpanded(false);
             for (Map.Entry<Integer, Map<Month, EnumMap<ResumenTipo, List<Auditoria>>>> anioEntry : usuarioEntry.getValue().entrySet()) {
                 TreeItem<ResumenTreeData> anioItem = new TreeItem<>(ResumenTreeData.anio(anioEntry.getKey()));
                 anioItem.setExpanded(true);
                 for (Map.Entry<Month, EnumMap<ResumenTipo, List<Auditoria>>> mesEntry : anioEntry.getValue().entrySet()) {
                     TreeItem<ResumenTreeData> mesItem = new TreeItem<>(ResumenTreeData.mes(mesEntry.getKey()));
-                    mesItem.setExpanded(true);
+                    mesItem.setExpanded(false);
                     for (ResumenTipo tipo : TIPOS_HIERARCHY) {
                         List<Auditoria> lista = mesEntry.getValue().get(tipo);
                         if (lista == null || lista.isEmpty()) {
@@ -575,7 +575,7 @@ public class AuditoriaController implements Initializable {
                         }
                         lista.sort(Comparator.comparing(Auditoria::getFecha, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
                         TreeItem<ResumenTreeData> tipoItem = new TreeItem<>(ResumenTreeData.tipo(tipo));
-                        tipoItem.setExpanded(true);
+                        tipoItem.setExpanded(false);
                         for (Auditoria registro : lista) {
                             Path archivo = registro.getArchivo();
                             String nombre = registro.getNombreArchivo();
