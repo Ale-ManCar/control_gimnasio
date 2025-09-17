@@ -50,8 +50,8 @@
                     <children>
                         <Label text="Eventos registrados" styleClass="card-title"/>
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Button fx:id="btnVer" text="Ver PDF" onAction="#verSeleccion" styleClass="secondary-button"/>
-                        <Button fx:id="btnDescargar" text="Descargar PDF" onAction="#descargarSeleccion" styleClass="secondary-button"/>
+                        <Button fx:id="btnVer" text="Ver PDF" onAction="#verSeleccion" styleClass="primary-button"/>
+                        <Button fx:id="btnDescargar" text="Descargar PDF" onAction="#descargarSeleccion" styleClass="primary-button"/>
                         <Button text="Exportar historial" onAction="#exportarReporte" styleClass="primary-button"/>
                     </children>
                 </HBox>
