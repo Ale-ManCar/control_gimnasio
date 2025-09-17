@@ -33,6 +33,11 @@ public final class AuditoriaFileUtil {
 
     public static Path ensureResumenPath(String username, int usuarioId, ResumenTipo tipo,
                                          LocalDateTime inicio, LocalDateTime fin) throws IOException {
+        return ensureResumenPath(username, usuarioId, tipo, inicio, fin, null);
+    }
+
+    public static Path ensureResumenPath(String username, int usuarioId, ResumenTipo tipo,
+                                         LocalDateTime inicio, LocalDateTime fin, Integer turnoId) throws IOException {
         if (tipo == null || tipo == ResumenTipo.TODOS) {
             throw new IllegalArgumentException("Tipo de resumen no válido para la ruta");
         }
@@ -61,8 +66,19 @@ public final class AuditoriaFileUtil {
         Path tipoDir = mesDir.resolve(tipo.getFolderName());
         Files.createDirectories(tipoDir);
 
-        String nombreArchivo = construirNombreArchivo(tipo, inicio, fin);
+        String nombreArchivo = construirNombreArchivo(tipo, inicio, fin, turnoId);
         return tipoDir.resolve(nombreArchivo);
+    }
+
+    public static Path ensureCustomDestination(Path destino) throws IOException {
+        if (destino == null) {
+            throw new IllegalArgumentException("La ruta de destino no puede ser nula");
+        }
+        Path parent = destino.toAbsolutePath().getParent();
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
+        return destino;
     }
 
     private static String construirNombreUsuario(String username, int usuarioId) {
@@ -79,10 +95,15 @@ public final class AuditoriaFileUtil {
         return limpio.toLowerCase(Locale.getDefault()) + "_" + usuarioId;
     }
 
-    private static String construirNombreArchivo(ResumenTipo tipo, LocalDateTime inicio, LocalDateTime fin) {
+    private static String construirNombreArchivo(ResumenTipo tipo, LocalDateTime inicio, LocalDateTime fin, Integer turnoId) {
         LocalDate fechaFin = fin != null ? fin.toLocalDate() : inicio.toLocalDate();
         return switch (tipo) {
-            case DIARIO -> "resumen_turno_" + fechaFin.format(DIA_FORMATTER) + ".pdf";
+            case DIARIO -> {
+                if (turnoId != null && turnoId > 0) {
+                    yield "resumen_turno_" + turnoId + ".pdf";
+                }
+                yield "resumen_turno_" + fechaFin.format(DIA_FORMATTER) + ".pdf";
+            }
             case SEMANAL -> {
                 LocalDate fechaInicio = inicio.toLocalDate();
                 yield "resumen_semanal_" + fechaInicio.format(DIA_FORMATTER)

@@ -140,6 +140,7 @@ public class DatabaseUtil {
                 "stock_final TEXT," +
                 "ingresos_ventas REAL DEFAULT 0," +
                 "ingresos_clientes REAL DEFAULT 0," +
+                "resumen_generado TEXT," +
                 "FOREIGN KEY (usuario_id) REFERENCES usuarios(id))";
 
         String sqlAuditoria = "CREATE TABLE IF NOT EXISTS auditoria (" +
@@ -212,6 +213,7 @@ public class DatabaseUtil {
             stmt.execute(sqlCoaches);
             stmt.execute(sqlUsuarios);
             stmt.execute(sqlTurnos);
+            try { stmt.execute("ALTER TABLE turnos ADD COLUMN resumen_generado TEXT"); } catch (SQLException ignored) {}
             stmt.execute(sqlAuditoria);
             stmt.execute(sqlAuditoriaUsuarios);
             stmt.execute(sqlProveedores);
@@ -1430,17 +1432,68 @@ public class DatabaseUtil {
             stmt.setInt(1, usuarioId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                Turno t = new Turno();
-                t.setId(rs.getInt("id"));
-                t.setUsuario_id(rs.getInt("usuario_id"));
-                t.setFecha_inicio(rs.getString("fecha_inicio"));
-                t.setStock_inicial(rs.getString("stock_inicial"));
-                return t;
+                return mapTurno(rs);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static Turno obtenerTurnoPorId(int turnoId) {
+        String sql = "SELECT * FROM turnos WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, turnoId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return mapTurno(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Turno obtenerUltimoTurnoFinalizado(int usuarioId) {
+        String sql = "SELECT * FROM turnos WHERE usuario_id = ? AND fecha_fin IS NOT NULL " +
+                "ORDER BY datetime(fecha_fin) DESC LIMIT 1";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, usuarioId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return mapTurno(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void reabrirTurno(int turnoId) throws SQLException {
+        String sql = "UPDATE turnos SET fecha_fin = NULL, stock_final = NULL, ingresos_ventas = 0, " +
+                "ingresos_clientes = 0, resumen_generado = NULL WHERE id = ?";
+        executeUpdate(sql, turnoId);
+    }
+
+    public static void marcarResumenGenerado(int turnoId, String ruta) throws SQLException {
+        String sql = "UPDATE turnos SET resumen_generado = ? WHERE id = ?";
+        executeUpdate(sql, ruta, turnoId);
+    }
+
+    private static Turno mapTurno(ResultSet rs) throws SQLException {
+        Turno turno = new Turno();
+        turno.setId(rs.getInt("id"));
+        turno.setUsuario_id(rs.getInt("usuario_id"));
+        turno.setFecha_inicio(rs.getString("fecha_inicio"));
+        turno.setFecha_fin(rs.getString("fecha_fin"));
+        turno.setStock_inicial(rs.getString("stock_inicial"));
+        turno.setStock_final(rs.getString("stock_final"));
+        turno.setIngresos_ventas(rs.getDouble("ingresos_ventas"));
+        turno.setIngresos_clientes(rs.getDouble("ingresos_clientes"));
+        turno.setResumenGenerado(rs.getString("resumen_generado"));
+        return turno;
     }
 
     public static double obtenerTotalVentasDesde(String fechaInicio) {

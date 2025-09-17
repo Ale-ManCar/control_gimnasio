@@ -225,12 +225,19 @@ public class RecepcionistaDashboardController implements Initializable {
     private void iniciarTurno() {
         try {
             if (SessionManager.getCurrentUser() != null) {
-                turnoActual = DatabaseUtil.obtenerTurnoActivo(SessionManager.getCurrentUser().getId());
+                int usuarioId = SessionManager.getCurrentUser().getId();
+                turnoActual = DatabaseUtil.obtenerTurnoActivo(usuarioId);
                 if (turnoActual == null) {
-                    int id = DatabaseUtil.iniciarTurno(SessionManager.getCurrentUser().getId());
-                    SessionManager.setTurnoId(id);
-                    turnoActual = DatabaseUtil.obtenerTurnoActivo(SessionManager.getCurrentUser().getId());
-                } else {
+                    Turno ultimoTurno = DatabaseUtil.obtenerUltimoTurnoFinalizado(usuarioId);
+                    if (ultimoTurno != null) {
+                        DatabaseUtil.reabrirTurno(ultimoTurno.getId());
+                        turnoActual = DatabaseUtil.obtenerTurnoPorId(ultimoTurno.getId());
+                    } else {
+                        int id = DatabaseUtil.iniciarTurno(usuarioId);
+                        turnoActual = DatabaseUtil.obtenerTurnoPorId(id);
+                    }
+                }
+                if (turnoActual != null) {
                     SessionManager.setTurnoId(turnoActual.getId());
                 }
             }

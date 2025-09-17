@@ -9,6 +9,7 @@ public class Turno {
     private String stock_final;
     private double ingresos_ventas;
     private double ingresos_clientes;
+    private String resumen_generado;
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -33,4 +34,7 @@ public class Turno {
 
     public double getIngresos_clientes() { return ingresos_clientes; }
     public void setIngresos_clientes(double ingresos_clientes) { this.ingresos_clientes = ingresos_clientes; }
+
+    public String getResumenGenerado() { return resumen_generado; }
+    public void setResumenGenerado(String resumen_generado) { this.resumen_generado = resumen_generado; }
 }

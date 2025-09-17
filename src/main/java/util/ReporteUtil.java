@@ -220,11 +220,17 @@ public class ReporteUtil {
     }
 
     public static Path generarResumenTurno(int usuarioId, LocalDateTime inicio, LocalDateTime fin) {
-        return generarResumenTurno(usuarioId, inicio, fin, true);
+        return generarResumenTurno(usuarioId, null, inicio, fin, true, null);
     }
 
     public static Path generarResumenTurno(int usuarioId, LocalDateTime inicio, LocalDateTime fin, boolean mostrar) {
-        return generarResumenPeriodo(usuarioId, inicio, fin, "Resumen diario de turno", ResumenTipo.DIARIO, mostrar);
+        return generarResumenTurno(usuarioId, null, inicio, fin, mostrar, null);
+    }
+
+    public static Path generarResumenTurno(int usuarioId, Integer turnoId, LocalDateTime inicio, LocalDateTime fin,
+                                           boolean mostrar, Path destinoPersonalizado) {
+        return generarResumenPeriodo(usuarioId, inicio, fin, "Resumen diario de turno", ResumenTipo.DIARIO,
+                mostrar, destinoPersonalizado, turnoId);
     }
 
     public static Path generarResumenSemanal(int usuarioId, LocalDateTime inicio, LocalDateTime fin) {
@@ -232,7 +238,7 @@ public class ReporteUtil {
     }
 
     public static Path generarResumenSemanal(int usuarioId, LocalDateTime inicio, LocalDateTime fin, boolean mostrar) {
-        return generarResumenPeriodo(usuarioId, inicio, fin, "Resumen semanal", ResumenTipo.SEMANAL, mostrar);
+        return generarResumenPeriodo(usuarioId, inicio, fin, "Resumen semanal", ResumenTipo.SEMANAL, mostrar, null, null);
     }
 
     public static Path generarResumenMensual(int usuarioId, LocalDateTime inicio, LocalDateTime fin) {
@@ -240,7 +246,7 @@ public class ReporteUtil {
     }
 
     public static Path generarResumenMensual(int usuarioId, LocalDateTime inicio, LocalDateTime fin, boolean mostrar) {
-        return generarResumenPeriodo(usuarioId, inicio, fin, "Resumen mensual", ResumenTipo.MENSUAL, mostrar);
+        return generarResumenPeriodo(usuarioId, inicio, fin, "Resumen mensual", ResumenTipo.MENSUAL, mostrar, null, null);
     }
 
     public static Path generarResumenAnual(int usuarioId, LocalDateTime inicio, LocalDateTime fin) {
@@ -248,11 +254,12 @@ public class ReporteUtil {
     }
 
     public static Path generarResumenAnual(int usuarioId, LocalDateTime inicio, LocalDateTime fin, boolean mostrar) {
-        return generarResumenPeriodo(usuarioId, inicio, fin, "Resumen anual", ResumenTipo.ANUAL, mostrar);
+        return generarResumenPeriodo(usuarioId, inicio, fin, "Resumen anual", ResumenTipo.ANUAL, mostrar, null, null);
     }
 
     private static Path generarResumenPeriodo(int usuarioId, LocalDateTime inicio, LocalDateTime fin,
-                                              String titulo, ResumenTipo tipo, boolean mostrar) {
+                                              String titulo, ResumenTipo tipo, boolean mostrar,
+                                              Path destinoPersonalizado, Integer turnoId) {
         if (inicio == null || fin == null) {
             throw new IllegalArgumentException("Las fechas de inicio y fin son obligatorias");
         }
@@ -305,10 +312,12 @@ public class ReporteUtil {
                 JasperViewer.viewReport(jasperPrint, false);
             }
 
-            Path destino = AuditoriaFileUtil.ensureResumenPath(username, usuarioId, tipo, start, end);
+            Path destino = destinoPersonalizado != null
+                    ? AuditoriaFileUtil.ensureCustomDestination(destinoPersonalizado)
+                    : AuditoriaFileUtil.ensureResumenPath(username, usuarioId, tipo, start, end, turnoId);
             JasperExportManager.exportReportToPdfFile(jasperPrint, destino.toString());
 
-            if (usuarioId > 0 && tipo.getAccion() != null) {
+            if (usuarioId > 0 && tipo.getAccion() != null && destinoPersonalizado == null) {
                 AuditoriaUtil.registrarAccion(usuarioId, tipo.getAccion(), destino.toString());
             }
 

@@ -13,11 +13,10 @@ import util.AuditoriaScheduler;
 import util.DatabaseUtil;
 import util.SessionManager;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ResourceBundle;
 
 public class FinalizarTurnoController implements Initializable {
@@ -31,7 +30,6 @@ public class FinalizarTurnoController implements Initializable {
     private double ingresosVentas;
     private double ingresosClientes;
     private Stage dashboardStage;
-    private static final DateTimeFormatter TURNO_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -59,8 +57,22 @@ public class FinalizarTurnoController implements Initializable {
     private void confirmar(ActionEvent event) {
         try {
             DatabaseUtil.finalizarTurno(turno.getId(), stockFinal, ingresosVentas, ingresosClientes);
-            LocalDateTime inicioTurno = obtenerInicioTurno();
-            AuditoriaScheduler.generarResumenDiario(SessionManager.getCurrentUser().getId(), inicioTurno, LocalDateTime.now(), true);
+            turno = DatabaseUtil.obtenerTurnoPorId(turno.getId());
+            if (turno == null) {
+                throw new IllegalStateException("No se pudo recargar el turno finalizado");
+            }
+            turno.setStock_final(stockFinal);
+
+            Path rutaExistente = null;
+            if (turno.getResumenGenerado() != null && !turno.getResumenGenerado().isBlank()) {
+                rutaExistente = Paths.get(turno.getResumenGenerado());
+            }
+
+            Path rutaGenerada = AuditoriaScheduler.generarResumenDiario(turno, rutaExistente);
+            if (rutaGenerada != null) {
+                DatabaseUtil.marcarResumenGenerado(turno.getId(), rutaGenerada.toString());
+            }
+
             enviarResumen();
             SessionManager.clear();
             Stage current = (Stage) lblStockInicial.getScene().getWindow();
@@ -77,23 +89,8 @@ public class FinalizarTurnoController implements Initializable {
             stage.setTitle("Seleccionar perfil");
             stage.setResizable(false);
             stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private LocalDateTime obtenerInicioTurno() {
-        if (turno == null || turno.getFecha_inicio() == null) {
-            return LocalDateTime.now();
-        }
-        String fechaInicio = turno.getFecha_inicio();
-        try {
-            if (fechaInicio.contains("T")) {
-                return LocalDateTime.parse(fechaInicio);
-            }
-            return LocalDateTime.parse(fechaInicio, TURNO_FORMATTER);
         } catch (Exception e) {
-            return LocalDateTime.now();
+            e.printStackTrace();
         }
     }
 

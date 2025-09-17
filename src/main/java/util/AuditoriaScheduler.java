@@ -2,6 +2,7 @@ package util;
 
 import javafx.collections.ObservableList;
 import models.Role;
+import models.Turno;
 import models.User;
 import org.quartz.CronExpression;
 import util.ReporteUtil;
@@ -12,6 +13,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 import java.util.concurrent.Executors;
@@ -33,6 +35,7 @@ public final class AuditoriaScheduler {
     private static final String CRON_MENSUAL = "0 15 23 L * ?";  // último día del mes 23:15
     private static final String CRON_ANUAL = "0 30 23 31 12 ?"; // 31 de diciembre 23:30
     private static final LocalTime FIN_DE_DIA = LocalTime.of(23, 59, 59);
+    private static final DateTimeFormatter SQLITE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private AuditoriaScheduler() {
     }
@@ -48,7 +51,22 @@ public final class AuditoriaScheduler {
     }
 
     public static Path generarResumenDiario(int usuarioId, LocalDateTime inicio, LocalDateTime fin, boolean mostrar) {
-        return ReporteUtil.generarResumenTurno(usuarioId, inicio, fin, mostrar);
+        return ReporteUtil.generarResumenTurno(usuarioId, null, inicio, fin, mostrar, null);
+    }
+
+    public static Path generarResumenDiario(Turno turno, Path destinoPersonalizado) {
+        if (turno == null) {
+            throw new IllegalArgumentException("El turno es obligatorio para generar el resumen");
+        }
+        LocalDateTime inicio = parseDateTime(turno.getFecha_inicio());
+        LocalDateTime fin = parseDateTime(turno.getFecha_fin());
+        if (fin == null) {
+            fin = LocalDateTime.now();
+        }
+        if (inicio == null) {
+            inicio = fin;
+        }
+        return ReporteUtil.generarResumenTurno(turno.getUsuario_id(), turno.getId(), inicio, fin, true, destinoPersonalizado);
     }
 
     private static void generarResumenesSemanales() {
@@ -112,5 +130,19 @@ public final class AuditoriaScheduler {
                 programarSiguiente(cron, tarea);
             }
         }, delay, TimeUnit.MILLISECONDS);
+    }
+
+    private static LocalDateTime parseDateTime(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            if (value.contains("T")) {
+                return LocalDateTime.parse(value);
+            }
+            return LocalDateTime.parse(value, SQLITE_FORMATTER);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
