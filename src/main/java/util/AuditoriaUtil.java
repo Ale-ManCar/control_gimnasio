@@ -215,7 +215,7 @@ public class AuditoriaUtil {
                 if (mes != null && !mes.isBlank()) {
                     try {
                         meses.add(Month.of(Integer.parseInt(mes)));
-                    } catch (NumberFormatException | IllegalArgumentException ignored) {
+                    } catch (IllegalArgumentException ignored) {
                     }
                 }
             }
