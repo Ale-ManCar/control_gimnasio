@@ -69,6 +69,7 @@ public class AuditoriaController implements Initializable {
 
     private final ObservableList<Auditoria> auditorias = FXCollections.observableArrayList();
     private Path archivoSeleccionado;
+    private boolean suspendFiltroEventos;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -183,7 +184,11 @@ public class AuditoriaController implements Initializable {
                 }
             });
             cbTipo.getSelectionModel().select(ResumenTipo.TODOS);
-            cbTipo.valueProperty().addListener((obs, old, value) -> aplicarFiltros());
+            cbTipo.valueProperty().addListener((obs, old, value) -> {
+                if (!suspendFiltroEventos) {
+                    aplicarFiltros();
+                }
+            });
         }
         if (cbMes != null) {
             cbMes.setItems(FXCollections.observableArrayList());
@@ -199,12 +204,18 @@ public class AuditoriaController implements Initializable {
                 }
             });
             cbMes.setDisable(true);
-            cbMes.valueProperty().addListener((obs, old, value) -> aplicarFiltros());
+            cbMes.valueProperty().addListener((obs, old, value) -> {
+                if (!suspendFiltroEventos) {
+                    aplicarFiltros();
+                }
+            });
         }
         if (cbAnio != null) {
             cbAnio.valueProperty().addListener((obs, old, value) -> {
                 actualizarMesesDisponibles(value);
-                aplicarFiltros();
+                if (!suspendFiltroEventos) {
+                    aplicarFiltros();
+                }
             });
         }
         if (btnVer != null) {
@@ -255,7 +266,9 @@ public class AuditoriaController implements Initializable {
             cbUsuarios.getSelectionModel().selectFirst();
             cbUsuarios.valueProperty().addListener((obs, old, value) -> {
                 actualizarAniosDisponibles();
-                aplicarFiltros();
+                if (!suspendFiltroEventos) {
+                    aplicarFiltros();
+                }
             });
             actualizarAniosDisponibles();
         } catch (Exception e) {
@@ -330,6 +343,14 @@ public class AuditoriaController implements Initializable {
 
     @FXML
     private void limpiarFiltros() {
+        suspendFiltroEventos = true;
+        if (cbUsuarios != null) {
+            if (!cbUsuarios.getItems().isEmpty()) {
+                cbUsuarios.getSelectionModel().selectFirst();
+            } else {
+                cbUsuarios.getSelectionModel().clearSelection();
+            }
+        }
         if (cbAnio != null) {
             cbAnio.getSelectionModel().clearSelection();
         }
@@ -341,6 +362,7 @@ public class AuditoriaController implements Initializable {
         if (cbTipo != null) {
             cbTipo.getSelectionModel().select(ResumenTipo.TODOS);
         }
+        suspendFiltroEventos = false;
         aplicarFiltros();
     }
 

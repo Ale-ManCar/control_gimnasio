@@ -154,11 +154,11 @@
 }
 
 .table-view .table-row-cell:selected {
-    -fx-background-color: rgba(74, 108, 247, 0.25);
+    -fx-background-color: rgba(74, 108, 247, 0.35);
 }
 
 .table-view .table-row-cell:selected .text {
-    -fx-fill: #1e3c72;
+    -fx-fill: white;
 }
 
 .table-view .column-header .arrow, .table-view .column-header .sort-order {
@@ -183,8 +183,8 @@
 }
 
 .tree-view .tree-cell:selected {
-    -fx-background-color: rgba(74, 108, 247, 0.25);
-    -fx-text-fill: #1e3c72;
+    -fx-background-color: rgba(74, 108, 247, 0.35);
+    -fx-text-fill: white;
 }
 
 .tree-view .scroll-bar:horizontal .thumb,
