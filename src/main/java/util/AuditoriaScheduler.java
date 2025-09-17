@@ -66,7 +66,7 @@ public final class AuditoriaScheduler {
         if (inicio == null) {
             inicio = fin;
         }
-        return ReporteUtil.generarResumenTurno(turno.getUsuario_id(), turno.getId(), inicio, fin, true, destinoPersonalizado);
+        return ReporteUtil.generarResumenTurno(turno.getUsuario_id(), turno.getId(), inicio, fin, false, destinoPersonalizado);
     }
 
     private static void generarResumenesSemanales() {
