@@ -497,7 +497,7 @@ public class AuditoriaController implements Initializable {
             return;
         }
 
-        Map<String, Map<Integer, EnumMap<ResumenTipo, List<Auditoria>>>> estructura = new TreeMap<>();
+        Map<String, Map<Integer, Map<Month, EnumMap<ResumenTipo, List<Auditoria>>>>> estructura = new TreeMap<>();
         for (Auditoria registro : registros) {
             ResumenTipo tipo = registro.getResumenTipo();
             if (tipo == null || tipo == ResumenTipo.TODOS) {
@@ -510,33 +510,45 @@ public class AuditoriaController implements Initializable {
             if (anio == null) {
                 continue;
             }
+            Month mes = registro.getMes();
+            if (mes == null) {
+                continue;
+            }
             estructura
                     .computeIfAbsent(usuarioNombre, k -> new TreeMap<>(Comparator.reverseOrder()))
-                    .computeIfAbsent(anio, k -> new EnumMap<>(ResumenTipo.class))
+                    .computeIfAbsent(anio, k -> new TreeMap<>(Comparator.reverseOrder()))
+                    .computeIfAbsent(mes, k -> new EnumMap<>(ResumenTipo.class))
                     .computeIfAbsent(tipo, k -> new ArrayList<>())
                     .add(registro);
         }
 
-        for (Map.Entry<String, Map<Integer, EnumMap<ResumenTipo, List<Auditoria>>>> usuarioEntry : estructura.entrySet()) {
+        for (Map.Entry<String, Map<Integer, Map<Month, EnumMap<ResumenTipo, List<Auditoria>>>>> usuarioEntry : estructura.entrySet()) {
             TreeItem<ResumenTreeData> usuarioItem = new TreeItem<>(ResumenTreeData.usuario(usuarioEntry.getKey()));
             usuarioItem.setExpanded(true);
-            for (Map.Entry<Integer, EnumMap<ResumenTipo, List<Auditoria>>> anioEntry : usuarioEntry.getValue().entrySet()) {
+            for (Map.Entry<Integer, Map<Month, EnumMap<ResumenTipo, List<Auditoria>>>> anioEntry : usuarioEntry.getValue().entrySet()) {
                 TreeItem<ResumenTreeData> anioItem = new TreeItem<>(ResumenTreeData.anio(anioEntry.getKey()));
                 anioItem.setExpanded(true);
-                for (ResumenTipo tipo : TIPOS_HIERARCHY) {
-                    List<Auditoria> lista = anioEntry.getValue().get(tipo);
-                    if (lista == null || lista.isEmpty()) {
-                        continue;
+                for (Map.Entry<Month, EnumMap<ResumenTipo, List<Auditoria>>> mesEntry : anioEntry.getValue().entrySet()) {
+                    TreeItem<ResumenTreeData> mesItem = new TreeItem<>(ResumenTreeData.mes(mesEntry.getKey()));
+                    mesItem.setExpanded(true);
+                    for (ResumenTipo tipo : TIPOS_HIERARCHY) {
+                        List<Auditoria> lista = mesEntry.getValue().get(tipo);
+                        if (lista == null || lista.isEmpty()) {
+                            continue;
+                        }
+                        lista.sort(Comparator.comparing(Auditoria::getFecha, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+                        TreeItem<ResumenTreeData> tipoItem = new TreeItem<>(ResumenTreeData.tipo(tipo));
+                        tipoItem.setExpanded(true);
+                        for (Auditoria registro : lista) {
+                            Path archivo = registro.getArchivo();
+                            String nombre = registro.getNombreArchivo();
+                            tipoItem.getChildren().add(new TreeItem<>(ResumenTreeData.archivo(nombre, tipo, archivo, registro)));
+                        }
+                        mesItem.getChildren().add(tipoItem);
                     }
-                    lista.sort(Comparator.comparing(Auditoria::getFecha, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
-                    TreeItem<ResumenTreeData> tipoItem = new TreeItem<>(ResumenTreeData.tipo(tipo));
-                    tipoItem.setExpanded(true);
-                    for (Auditoria registro : lista) {
-                        Path archivo = registro.getArchivo();
-                        String nombre = registro.getNombreArchivo();
-                        tipoItem.getChildren().add(new TreeItem<>(ResumenTreeData.archivo(nombre, tipo, archivo, registro)));
+                    if (!mesItem.getChildren().isEmpty()) {
+                        anioItem.getChildren().add(mesItem);
                     }
-                    anioItem.getChildren().add(tipoItem);
                 }
                 if (!anioItem.getChildren().isEmpty()) {
                     usuarioItem.getChildren().add(anioItem);
@@ -616,6 +628,11 @@ public class AuditoriaController implements Initializable {
 
         static ResumenTreeData anio(int anio) {
             return new ResumenTreeData(String.valueOf(anio), null, null, null);
+        }
+
+        static ResumenTreeData mes(Month mes) {
+            String nombre = mes.getDisplayName(TextStyle.FULL, Locale.getDefault());
+            return new ResumenTreeData(nombre, null, null, null);
         }
 
         static ResumenTreeData tipo(ResumenTipo tipo) {

@@ -21,6 +21,8 @@ public final class AuditoriaFileUtil {
     private static final Path BASE_DIR = Paths.get("Auditoria");
     private static final DateTimeFormatter DIA_FORMATTER = DateTimeFormatter.BASIC_ISO_DATE;
     private static final DateTimeFormatter MES_FORMATTER = DateTimeFormatter.ofPattern("yyyyMM");
+    private static final DateTimeFormatter MES_NOMBRE_FORMATTER =
+            DateTimeFormatter.ofPattern("MMM", Locale.ENGLISH);
 
     private AuditoriaFileUtil() {
     }
@@ -48,7 +50,15 @@ public final class AuditoriaFileUtil {
         Path anioDir = usuarioDir.resolve(String.valueOf(anio));
         Files.createDirectories(anioDir);
 
-        Path tipoDir = anioDir.resolve(tipo.getFolderName());
+        LocalDateTime referencia = fin != null ? fin : inicio;
+        if (referencia == null) {
+            throw new IllegalArgumentException("Las fechas de inicio y fin no pueden ser ambas nulas");
+        }
+        String nombreMes = referencia.format(MES_NOMBRE_FORMATTER);
+        Path mesDir = anioDir.resolve(nombreMes);
+        Files.createDirectories(mesDir);
+
+        Path tipoDir = mesDir.resolve(tipo.getFolderName());
         Files.createDirectories(tipoDir);
 
         String nombreArchivo = construirNombreArchivo(tipo, inicio, fin);
