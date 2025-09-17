@@ -10,7 +10,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -19,6 +21,7 @@ import java.util.List;
 public class AuditoriaUtil {
     private static final List<String> ACCIONES_RESUMEN = List.of(
             "RESUMEN_TURNO", "RESUMEN_SEMANAL", "RESUMEN_MENSUAL", "RESUMEN_ANUAL");
+
     private AuditoriaUtil() {}
 
     /**
@@ -184,6 +187,43 @@ public class AuditoriaUtil {
             e.printStackTrace();
         }
         return anios;
+    }
+
+    public static ObservableList<Month> listarMesesResumenes(Integer usuarioId, int anio) {
+        ObservableList<Month> meses = FXCollections.observableArrayList();
+        StringBuilder sql = new StringBuilder("SELECT DISTINCT strftime('%m', timestamp) AS mes FROM auditoria WHERE accion IN (");
+        sql.append(String.join(",", ACCIONES_RESUMEN.stream().map(a -> "?").toList())).append(")");
+        sql.append(" AND strftime('%Y', timestamp) = ?");
+        if (usuarioId != null && usuarioId > 0) {
+            sql.append(" AND usuario_id = ?");
+        }
+        sql.append(" ORDER BY mes DESC");
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            int idx = 1;
+            for (String accion : ACCIONES_RESUMEN) {
+                stmt.setString(idx++, accion);
+            }
+            stmt.setString(idx++, String.format("%04d", anio));
+            if (usuarioId != null && usuarioId > 0) {
+                stmt.setInt(idx++, usuarioId);
+            }
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                String mes = rs.getString("mes");
+                if (mes != null && !mes.isBlank()) {
+                    try {
+                        meses.add(Month.of(Integer.parseInt(mes)));
+                    } catch (NumberFormatException | IllegalArgumentException ignored) {
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        meses.sort(Comparator.reverseOrder());
+        return meses;
     }
 
     private static List<String> obtenerAccionesParaFiltro(ResumenTipo tipo) {

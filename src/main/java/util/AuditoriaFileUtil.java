@@ -26,7 +26,7 @@ public final class AuditoriaFileUtil {
     }
 
     public static Path getBaseDirectory() {
-        return BASE_DIR;
+        return BASE_DIR.toAbsolutePath();
     }
 
     public static Path ensureResumenPath(String username, int usuarioId, ResumenTipo tipo,
@@ -38,7 +38,10 @@ public final class AuditoriaFileUtil {
                 ? "usuario_" + usuarioId
                 : username;
 
-        Path usuarioDir = BASE_DIR.resolve(construirNombreUsuario(nombreUsuario, usuarioId));
+        Path baseDir = getBaseDirectory();
+        Files.createDirectories(baseDir);
+
+        Path usuarioDir = baseDir.resolve(construirNombreUsuario(nombreUsuario, usuarioId));
         Files.createDirectories(usuarioDir);
 
         int anio = fin != null ? fin.toLocalDate().getYear() : inicio.toLocalDate().getYear();

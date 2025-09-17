@@ -36,14 +36,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.TreeMap;
-import java.util.Locale;
 
 public class AuditoriaController implements Initializable {
 
-    private static final DateTimeFormatter SQLITE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final DateTimeFormatter FECHA_MOSTRAR = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final List<ResumenTipo> TIPOS_HIERARCHY = List.of(
             ResumenTipo.DIARIO, ResumenTipo.SEMANAL, ResumenTipo.MENSUAL, ResumenTipo.ANUAL);
@@ -105,7 +104,7 @@ public class AuditoriaController implements Initializable {
 
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colUsuario.setCellValueFactory(new PropertyValueFactory<>("usuario"));
-        colAccion.setCellValueFactory(data -> new SimpleStringProperty(formatearTipo(data.getValue().getAccion())));
+        colAccion.setCellValueFactory(data -> new SimpleStringProperty(formatearTipo(data.getValue())));
         colDetalle.setCellValueFactory(data -> new SimpleStringProperty(formatearDetalle(data.getValue())));
         colDetalle.setCellFactory(column -> new TableCell<>() {
             @Override
@@ -119,16 +118,11 @@ public class AuditoriaController implements Initializable {
                 setText(item);
                 Auditoria registro = getTableRow() != null ? getTableRow().getItem() : null;
                 Path archivo = obtenerArchivoDesdeRegistro(registro);
-                if (archivo != null) {
-                    Tooltip tooltip = new Tooltip(archivo.toString());
-                    setTooltip(tooltip);
-                } else {
-                    setTooltip(null);
-                }
+                setTooltip(archivo != null ? new Tooltip(archivo.toString()) : null);
             }
         });
 
-        colFecha.setCellValueFactory(data -> new SimpleObjectProperty<>(parseTimestamp(data.getValue().getTimestamp())));
+        colFecha.setCellValueFactory(data -> new SimpleObjectProperty<>(data.getValue().getFecha()));
         colFecha.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(LocalDateTime item, boolean empty) {
@@ -146,7 +140,7 @@ public class AuditoriaController implements Initializable {
         configurarColumnaDescargar();
 
         tablaAuditoria.getSelectionModel().selectedItemProperty().addListener((obs, old, registro) -> {
-            archivoSeleccionado = obtenerArchivoDesdeRegistro(registro);
+            archivoSeleccionado = registro != null ? registro.getArchivo() : null;
             actualizarBotones();
         });
     }
@@ -163,6 +157,7 @@ public class AuditoriaController implements Initializable {
                 tablaAuditoria.scrollTo(registro);
                 archivoSeleccionado = item.getValue().archivo();
             } else {
+                tablaAuditoria.getSelectionModel().clearSelection();
                 archivoSeleccionado = null;
             }
             actualizarBotones();
@@ -187,7 +182,7 @@ public class AuditoriaController implements Initializable {
             cbTipo.valueProperty().addListener((obs, old, value) -> aplicarFiltros());
         }
         if (cbMes != null) {
-            cbMes.setItems(FXCollections.observableArrayList(Month.values()));
+            cbMes.setItems(FXCollections.observableArrayList());
             cbMes.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(Month month) {
@@ -204,12 +199,7 @@ public class AuditoriaController implements Initializable {
         }
         if (cbAnio != null) {
             cbAnio.valueProperty().addListener((obs, old, value) -> {
-                if (cbMes != null) {
-                    cbMes.setDisable(value == null);
-                    if (value == null) {
-                        cbMes.getSelectionModel().clearSelection();
-                    }
-                }
+                actualizarMesesDisponibles(value);
                 aplicarFiltros();
             });
         }
@@ -260,10 +250,23 @@ public class AuditoriaController implements Initializable {
         ObservableList<Integer> anios = AuditoriaUtil.listarAniosResumenes(usuarioId);
         cbAnio.setItems(anios);
         cbAnio.getSelectionModel().clearSelection();
-        if (cbMes != null) {
-            cbMes.getSelectionModel().clearSelection();
-            cbMes.setDisable(true);
+        actualizarMesesDisponibles(null);
+    }
+
+    private void actualizarMesesDisponibles(Integer anio) {
+        if (cbMes == null) {
+            return;
         }
+        cbMes.getSelectionModel().clearSelection();
+        if (anio == null) {
+            cbMes.getItems().clear();
+            cbMes.setDisable(true);
+            return;
+        }
+        Integer usuarioId = getUsuarioSeleccionadoId();
+        ObservableList<Month> meses = AuditoriaUtil.listarMesesResumenes(usuarioId, anio);
+        cbMes.setItems(meses);
+        cbMes.setDisable(meses.isEmpty());
     }
 
     @FXML
@@ -291,10 +294,16 @@ public class AuditoriaController implements Initializable {
 
         ObservableList<Auditoria> registros = AuditoriaUtil.filtrarResumenes(usuarioId, inicio, fin, tipo);
         auditorias.setAll(registros);
-        tablaAuditoria.setItems(auditorias);
+        tablaAuditoria.getSelectionModel().clearSelection();
+        archivoSeleccionado = null;
+        if (treeResumenes != null) {
+            treeResumenes.getSelectionModel().clearSelection();
+        }
         reconstruirArbol(registros);
-        tablaAuditoria.getSortOrder().setAll(colFecha);
-        tablaAuditoria.sort();
+        if (colFecha != null) {
+            tablaAuditoria.getSortOrder().setAll(colFecha);
+            tablaAuditoria.sort();
+        }
         actualizarBotones();
     }
 
@@ -306,6 +315,7 @@ public class AuditoriaController implements Initializable {
         if (cbMes != null) {
             cbMes.getSelectionModel().clearSelection();
             cbMes.setDisable(true);
+            cbMes.getItems().clear();
         }
         if (cbTipo != null) {
             cbTipo.getSelectionModel().select(ResumenTipo.TODOS);
@@ -480,7 +490,7 @@ public class AuditoriaController implements Initializable {
         if (treeResumenes == null) {
             return;
         }
-        TreeItem<ResumenTreeData> root = new TreeItem<>(new ResumenTreeData("Resumenes", null, null, null));
+        TreeItem<ResumenTreeData> root = new TreeItem<>(new ResumenTreeData("Resúmenes", null, null, null));
         root.setExpanded(true);
         if (registros == null || registros.isEmpty()) {
             treeResumenes.setRoot(root);
@@ -489,15 +499,17 @@ public class AuditoriaController implements Initializable {
 
         Map<String, Map<Integer, EnumMap<ResumenTipo, List<Auditoria>>>> estructura = new TreeMap<>();
         for (Auditoria registro : registros) {
-            ResumenTipo tipo = ResumenTipo.fromAccion(registro.getAccion());
-            if (tipo == null) {
+            ResumenTipo tipo = registro.getResumenTipo();
+            if (tipo == null || tipo == ResumenTipo.TODOS) {
                 continue;
             }
             String usuarioNombre = registro.getUsuario() == null || registro.getUsuario().isBlank()
                     ? "Sin usuario"
                     : registro.getUsuario();
-            LocalDateTime fecha = parseTimestamp(registro.getTimestamp());
-            int anio = fecha != null ? fecha.getYear() : 0;
+            Integer anio = registro.getAnio();
+            if (anio == null) {
+                continue;
+            }
             estructura
                     .computeIfAbsent(usuarioNombre, k -> new TreeMap<>(Comparator.reverseOrder()))
                     .computeIfAbsent(anio, k -> new EnumMap<>(ResumenTipo.class))
@@ -509,9 +521,6 @@ public class AuditoriaController implements Initializable {
             TreeItem<ResumenTreeData> usuarioItem = new TreeItem<>(ResumenTreeData.usuario(usuarioEntry.getKey()));
             usuarioItem.setExpanded(true);
             for (Map.Entry<Integer, EnumMap<ResumenTipo, List<Auditoria>>> anioEntry : usuarioEntry.getValue().entrySet()) {
-                if (anioEntry.getKey() == 0) {
-                    continue;
-                }
                 TreeItem<ResumenTreeData> anioItem = new TreeItem<>(ResumenTreeData.anio(anioEntry.getKey()));
                 anioItem.setExpanded(true);
                 for (ResumenTipo tipo : TIPOS_HIERARCHY) {
@@ -519,25 +528,12 @@ public class AuditoriaController implements Initializable {
                     if (lista == null || lista.isEmpty()) {
                         continue;
                     }
+                    lista.sort(Comparator.comparing(Auditoria::getFecha, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
                     TreeItem<ResumenTreeData> tipoItem = new TreeItem<>(ResumenTreeData.tipo(tipo));
                     tipoItem.setExpanded(true);
-                    lista.sort((a, b) -> {
-                        LocalDateTime fa = parseTimestamp(a.getTimestamp());
-                        LocalDateTime fb = parseTimestamp(b.getTimestamp());
-                        if (fa == null && fb == null) {
-                            return 0;
-                        }
-                        if (fa == null) {
-                            return 1;
-                        }
-                        if (fb == null) {
-                            return -1;
-                        }
-                        return fb.compareTo(fa);
-                    });
                     for (Auditoria registro : lista) {
-                        Path archivo = obtenerArchivoDesdeRegistro(registro);
-                        String nombre = archivo != null ? archivo.getFileName().toString() : registro.getDetalle();
+                        Path archivo = registro.getArchivo();
+                        String nombre = registro.getNombreArchivo();
                         tipoItem.getChildren().add(new TreeItem<>(ResumenTreeData.archivo(nombre, tipo, archivo, registro)));
                     }
                     anioItem.getChildren().add(tipoItem);
@@ -573,10 +569,7 @@ public class AuditoriaController implements Initializable {
     }
 
     private Path obtenerArchivoDesdeRegistro(Auditoria registro) {
-        if (registro == null || registro.getDetalle() == null || registro.getDetalle().isBlank()) {
-            return null;
-        }
-        return Path.of(registro.getDetalle());
+        return registro != null ? registro.getArchivo() : null;
     }
 
     private void actualizarBotones() {
@@ -590,28 +583,16 @@ public class AuditoriaController implements Initializable {
         }
     }
 
-    private LocalDateTime parseTimestamp(String timestamp) {
-        if (timestamp == null) {
-            return null;
+    private String formatearTipo(Auditoria registro) {
+        if (registro == null) {
+            return "";
         }
-        try {
-            return LocalDateTime.parse(timestamp, SQLITE_FORMATTER);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private String formatearTipo(String accion) {
-        ResumenTipo tipo = ResumenTipo.fromAccion(accion);
-        return tipo != null ? tipo.getDisplayName() : accion;
+        ResumenTipo tipo = registro.getResumenTipo();
+        return tipo != null ? tipo.getDisplayName() : registro.getAccion();
     }
 
     private String formatearDetalle(Auditoria registro) {
-        Path archivo = obtenerArchivoDesdeRegistro(registro);
-        if (archivo != null) {
-            return archivo.getFileName().toString();
-        }
-        return registro != null ? registro.getDetalle() : "";
+        return registro != null ? registro.getNombreArchivo() : "";
     }
 
     private void mostrarAlerta(String mensaje) {

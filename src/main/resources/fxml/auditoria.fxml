@@ -1,52 +1,83 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.control.SplitPane?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controllers.AuditoriaController" prefWidth="1100" prefHeight="650">
     <top>
-        <VBox spacing="10">
+        <VBox spacing="12" alignment="CENTER_LEFT">
             <padding>
-                <Insets top="12" right="12" bottom="8" left="12"/>
+                <Insets top="12" right="16" bottom="8" left="16"/>
             </padding>
             <children>
-                <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Historial de resúmenes" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                <HBox spacing="16" alignment="CENTER_LEFT">
                     <children>
-                        <ComboBox fx:id="cbUsuarios" promptText="Recepcionista" prefWidth="200" />
-                        <ComboBox fx:id="cbAnio" promptText="Año" prefWidth="120" />
-                        <ComboBox fx:id="cbMes" promptText="Mes" prefWidth="140" />
-                        <ComboBox fx:id="cbTipo" promptText="Tipo de resumen" prefWidth="200" />
-                        <Button text="Filtrar" onAction="#aplicarFiltros" />
-                        <Button text="Limpiar" onAction="#limpiarFiltros" />
+                        <VBox spacing="4">
+                            <Label text="Recepcionista"/>
+                            <ComboBox fx:id="cbUsuarios" promptText="Todos" prefWidth="220"/>
+                        </VBox>
+                        <VBox spacing="4">
+                            <Label text="Año"/>
+                            <ComboBox fx:id="cbAnio" promptText="Todos" prefWidth="120"/>
+                        </VBox>
+                        <VBox spacing="4">
+                            <Label text="Mes"/>
+                            <ComboBox fx:id="cbMes" promptText="Todos" prefWidth="150"/>
+                        </VBox>
+                        <VBox spacing="4">
+                            <Label text="Tipo de resumen"/>
+                            <ComboBox fx:id="cbTipo" promptText="Todos" prefWidth="200"/>
+                        </VBox>
+                        <VBox alignment="CENTER" spacing="6">
+                            <Button text="Aplicar filtros" onAction="#aplicarFiltros" maxWidth="Infinity"/>
+                            <Button text="Limpiar" onAction="#limpiarFiltros" maxWidth="Infinity"/>
+                        </VBox>
                     </children>
                 </HBox>
-                <HBox spacing="10" alignment="CENTER_RIGHT">
+                <HBox alignment="CENTER_RIGHT" spacing="10">
                     <children>
-                        <Button fx:id="btnVer" text="Ver PDF" onAction="#verSeleccion" />
-                        <Button fx:id="btnDescargar" text="Descargar PDF" onAction="#descargarSeleccion" />
-                        <Button text="Exportar historial" onAction="#exportarReporte" />
+                        <Button fx:id="btnVer" text="Ver PDF" onAction="#verSeleccion"/>
+                        <Button fx:id="btnDescargar" text="Descargar PDF" onAction="#descargarSeleccion"/>
+                        <Button text="Exportar historial" onAction="#exportarReporte"/>
                     </children>
                 </HBox>
             </children>
         </VBox>
     </top>
     <center>
-        <SplitPane dividerPositions="0.28">
+        <SplitPane dividerPositions="0.3">
             <items>
-                <TreeView fx:id="treeResumenes" prefWidth="260" />
-                <TableView fx:id="tablaAuditoria">
-                    <columns>
-                        <TableColumn fx:id="colId" text="ID" prefWidth="60" />
-                        <TableColumn fx:id="colUsuario" text="Recepcionista" prefWidth="160" />
-                        <TableColumn fx:id="colAccion" text="Tipo" prefWidth="140" />
-                        <TableColumn fx:id="colDetalle" text="Archivo" prefWidth="220" />
-                        <TableColumn fx:id="colFecha" text="Fecha" prefWidth="180" />
-                        <TableColumn fx:id="colVer" text="Ver" prefWidth="80" />
-                        <TableColumn fx:id="colDescargar" text="Descargar" prefWidth="110" />
-                    </columns>
-                </TableView>
+                <VBox spacing="8" prefWidth="280">
+                    <padding>
+                        <Insets top="10" right="12" bottom="10" left="16"/>
+                    </padding>
+                    <children>
+                        <Label text="Resúmenes generados" style="-fx-font-weight: bold;"/>
+                        <TreeView fx:id="treeResumenes" VBox.vgrow="ALWAYS"/>
+                    </children>
+                </VBox>
+                <VBox spacing="8">
+                    <padding>
+                        <Insets top="10" right="16" bottom="16" left="4"/>
+                    </padding>
+                    <children>
+                        <Label text="Eventos registrados" style="-fx-font-weight: bold;"/>
+                        <TableView fx:id="tablaAuditoria" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+                                <TableColumn fx:id="colUsuario" text="Recepcionista" prefWidth="160"/>
+                                <TableColumn fx:id="colAccion" text="Tipo" prefWidth="140"/>
+                                <TableColumn fx:id="colDetalle" text="Archivo" prefWidth="220"/>
+                                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="180"/>
+                                <TableColumn fx:id="colVer" text="Ver" prefWidth="80"/>
+                                <TableColumn fx:id="colDescargar" text="Descargar" prefWidth="110"/>
+                            </columns>
+                        </TableView>
+                    </children>
+                </VBox>
             </items>
         </SplitPane>
     </center>

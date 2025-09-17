@@ -8,9 +8,11 @@ import util.ReporteUtil;
 import util.UserService;
 
 import java.nio.file.Path;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -30,6 +32,7 @@ public final class AuditoriaScheduler {
     private static final String CRON_SEMANAL = "0 0 23 ? * SAT"; // sábados 23:00
     private static final String CRON_MENSUAL = "0 15 23 L * ?";  // último día del mes 23:15
     private static final String CRON_ANUAL = "0 30 23 31 12 ?"; // 31 de diciembre 23:30
+    private static final LocalTime FIN_DE_DIA = LocalTime.of(23, 59, 59);
 
     private AuditoriaScheduler() {
     }
@@ -49,24 +52,24 @@ public final class AuditoriaScheduler {
     }
 
     private static void generarResumenesSemanales() {
-        LocalDate fin = LocalDate.now();
+        LocalDate fin = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.SATURDAY));
         LocalDate inicio = fin.minusDays(6);
         procesarRecepcionistas(usuario ->
-                ReporteUtil.generarResumenSemanal(usuario.getId(), inicio.atStartOfDay(), fin.atTime(LocalTime.of(23, 59, 59)), false));
+                ReporteUtil.generarResumenSemanal(usuario.getId(), inicio.atStartOfDay(), fin.atTime(FIN_DE_DIA), false));
     }
 
     private static void generarResumenesMensuales() {
-        LocalDate fin = LocalDate.now();
+        LocalDate fin = LocalDate.now().with(TemporalAdjusters.lastDayOfMonth());
         LocalDate inicio = fin.withDayOfMonth(1);
         procesarRecepcionistas(usuario ->
-                ReporteUtil.generarResumenMensual(usuario.getId(), inicio.atStartOfDay(), fin.atTime(LocalTime.of(23, 59, 59)), false));
+                ReporteUtil.generarResumenMensual(usuario.getId(), inicio.atStartOfDay(), fin.atTime(FIN_DE_DIA), false));
     }
 
     private static void generarResumenesAnuales() {
-        LocalDate fin = LocalDate.now();
+        LocalDate fin = LocalDate.now().with(TemporalAdjusters.lastDayOfYear());
         LocalDate inicio = fin.withDayOfYear(1);
         procesarRecepcionistas(usuario ->
-                ReporteUtil.generarResumenAnual(usuario.getId(), inicio.atStartOfDay(), fin.atTime(LocalTime.of(23, 59, 59)), false));
+                ReporteUtil.generarResumenAnual(usuario.getId(), inicio.atStartOfDay(), fin.atTime(FIN_DE_DIA), false));
     }
 
     private static void procesarRecepcionistas(java.util.function.Consumer<User> accion) {
