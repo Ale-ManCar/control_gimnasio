@@ -24,6 +24,7 @@ import models.User;
 import models.Role;
 import models.Turno;
 import models.Equipo;
+import models.EquipoHistorial;
 import models.Proveedor;
 import models.Compra;
 import models.CompraDetalle;
@@ -172,6 +173,8 @@ public class DatabaseUtil {
                 "stock INTEGER NOT NULL," +
                 "umbral INTEGER DEFAULT 0," +
                 "precio REAL NOT NULL," +
+                "costo_compra REAL DEFAULT 0," +
+                "precio_venta REAL DEFAULT 0," +
                 "proveedor_id INTEGER," +
                 "FOREIGN KEY (proveedor_id) REFERENCES proveedores(id))";
 
@@ -193,8 +196,25 @@ public class DatabaseUtil {
                 "equipo_id INTEGER NOT NULL," +
                 "cantidad INTEGER NOT NULL," +
                 "precio REAL NOT NULL," +
+                "moneda TEXT DEFAULT 'PEN'," +
                 "FOREIGN KEY (compra_id) REFERENCES compras(id)," +
                 "FOREIGN KEY (equipo_id) REFERENCES equipos(id))";
+
+        String sqlEquiposHistorial = "CREATE TABLE IF NOT EXISTS equipos_historial (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "equipo_id INTEGER NOT NULL," +
+                "fecha TEXT NOT NULL DEFAULT (datetime('now'))," +
+                "descripcion TEXT," +
+                "stock_anterior INTEGER," +
+                "stock_nuevo INTEGER," +
+                "cantidad INTEGER," +
+                "costo_compra REAL," +
+                "precio_venta REAL," +
+                "proveedor_id INTEGER," +
+                "ruta_pdf TEXT," +
+                "moneda TEXT," +
+                "FOREIGN KEY (equipo_id) REFERENCES equipos(id)," +
+                "FOREIGN KEY (proveedor_id) REFERENCES proveedores(id))";
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
@@ -220,21 +240,26 @@ public class DatabaseUtil {
             stmt.execute(sqlEquipos);
             stmt.execute(sqlCompras);
             stmt.execute(sqlComprasDetalle);
+            stmt.execute(sqlEquiposHistorial);
             try { stmt.execute("ALTER TABLE compras ADD COLUMN estado TEXT DEFAULT 'APROBADA'"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN area TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN coach_id INTEGER REFERENCES coaches(id)"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE equipos ADD COLUMN marca TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE equipos ADD COLUMN peso REAL"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE equipos ADD COLUMN umbral INTEGER DEFAULT 0"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE equipos ADD COLUMN costo_compra REAL DEFAULT 0"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE equipos ADD COLUMN precio_venta REAL DEFAULT 0"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE productos ADD COLUMN umbral INTEGER DEFAULT 0"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE compras_detalle ADD COLUMN moneda TEXT DEFAULT 'PEN'"); } catch (SQLException ignored) {}
+            try { stmt.execute("CREATE TABLE IF NOT EXISTS equipos_historial (id INTEGER PRIMARY KEY AUTOINCREMENT, equipo_id INTEGER NOT NULL, fecha TEXT NOT NULL DEFAULT (datetime('now')), descripcion TEXT, stock_anterior INTEGER, stock_nuevo INTEGER, cantidad INTEGER, costo_compra REAL, precio_venta REAL, proveedor_id INTEGER, ruta_pdf TEXT, moneda TEXT, FOREIGN KEY (equipo_id) REFERENCES equipos(id), FOREIGN KEY (proveedor_id) REFERENCES proveedores(id)))"); } catch (SQLException ignored) {}
             stmt.execute(sqlEquiposIndex);
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
             try { stmt.execute("ALTER TABLE usuarios ADD COLUMN last_login TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE usuarios ADD COLUMN acciones_realizadas INTEGER DEFAULT 0"); } catch (SQLException ignored) {}
             stmt.execute("INSERT OR IGNORE INTO proveedores (id, nombre, contacto, telefono) VALUES (1, 'Proveedor 1', '', ''), (2, 'Proveedor 2', '', '')");
-            stmt.execute("INSERT OR IGNORE INTO equipos (nombre, marca, peso, stock, precio, proveedor_id) VALUES " +
-                    "('Banco de Pesas', 'Generica', 0, 4, 150.0, 1)," +
-                    "('Prensa de Piernas', 'Generica', 0, 2, 700.0, 2)");
+            stmt.execute("INSERT OR IGNORE INTO equipos (nombre, marca, peso, stock, precio, costo_compra, precio_venta, proveedor_id) VALUES " +
+                    "('Banco de Pesas', 'Generica', 0, 4, 150.0, 120.0, 150.0, 1)," +
+                    "('Prensa de Piernas', 'Generica', 0, 2, 700.0, 600.0, 700.0, 2)");
             conn.commit();
 
             System.out.println("Base de datos inicializada correctamente");
@@ -940,7 +965,7 @@ public class DatabaseUtil {
 
     public static ObservableList<Equipo> getEquipos() throws SQLException {
         ObservableList<Equipo> equipos = FXCollections.observableArrayList();
-        String sql = "SELECT id, nombre, marca, peso, stock, precio, proveedor_id FROM equipos";
+        String sql = "SELECT id, nombre, marca, peso, stock, umbral, precio, costo_compra, precio_venta, proveedor_id FROM equipos";
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -951,8 +976,19 @@ public class DatabaseUtil {
                 e.setMarca(rs.getString("marca"));
                 e.setPeso(rs.getDouble("peso"));
                 e.setStock(rs.getInt("stock"));
-                e.setPrecio(rs.getDouble("precio"));
-                e.setProveedorId(rs.getInt("proveedor_id"));
+                e.setUmbral(rs.getInt("umbral"));
+                double costo = rs.getDouble("costo_compra");
+                if (rs.wasNull()) {
+                    costo = rs.getDouble("precio");
+                }
+                double precioVenta = rs.getDouble("precio_venta");
+                if (rs.wasNull() || precioVenta == 0) {
+                    precioVenta = rs.getDouble("precio");
+                }
+                e.setCostoCompra(costo);
+                e.setPrecioVenta(precioVenta);
+                int proveedorId = rs.getInt("proveedor_id");
+                e.setProveedorId(rs.wasNull() ? null : proveedorId);
                 equipos.add(e);
             }
         }
@@ -992,8 +1028,8 @@ public class DatabaseUtil {
 
     public static int insertarEquipo(Equipo equipo) throws SQLException {
         String selectSql = "SELECT id, stock FROM equipos WHERE nombre=? AND marca=? AND peso=?";
-        String insertSql = "INSERT INTO equipos (nombre, marca, peso, stock, precio, proveedor_id) VALUES (?, ?, ?, ?, ?, ?)";
-        String updateSql = "UPDATE equipos SET stock = stock + ?, precio = ? WHERE id = ?";
+        String insertSql = "INSERT INTO equipos (nombre, marca, peso, stock, umbral, precio, costo_compra, precio_venta, proveedor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String updateSql = "UPDATE equipos SET stock = stock + ?, costo_compra = ?, precio = ?, precio_venta = ?, proveedor_id = COALESCE(?, proveedor_id) WHERE id = ?";
 
         try (Connection conn = getConnection()) {
             // Buscar si ya existe un equipo con las mismas características
@@ -1005,9 +1041,17 @@ public class DatabaseUtil {
                     if (rs.next()) {
                         int id = rs.getInt("id");
                         try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
-                            updateStmt.setInt(1, equipo.getStock());
-                            updateStmt.setDouble(2, equipo.getPrecio());
-                            updateStmt.setInt(3, id);
+                            updateStmt.setInt(1, Math.max(0, equipo.getStock()));
+                            updateStmt.setDouble(2, equipo.getCostoCompra());
+                            double precioVenta = equipo.getPrecioVenta() > 0 ? equipo.getPrecioVenta() : equipo.getPrecio();
+                            updateStmt.setDouble(3, precioVenta);
+                            updateStmt.setDouble(4, precioVenta);
+                            if (equipo.getProveedorId() != null) {
+                                updateStmt.setInt(5, equipo.getProveedorId());
+                            } else {
+                                updateStmt.setNull(5, Types.INTEGER);
+                            }
+                            updateStmt.setInt(6, id);
                             updateStmt.executeUpdate();
                         }
                         return id;
@@ -1020,13 +1064,19 @@ public class DatabaseUtil {
                 insertStmt.setString(1, equipo.getNombre());
                 insertStmt.setString(2, equipo.getMarca());
                 insertStmt.setDouble(3, equipo.getPeso());
-                insertStmt.setInt(4, equipo.getStock());
-                insertStmt.setDouble(5, equipo.getPrecio());
-                insertStmt.setObject(6, equipo.getProveedorId());
+                insertStmt.setInt(4, Math.max(0, equipo.getStock()));
+                insertStmt.setInt(5, equipo.getUmbral());
+                double precioVenta = equipo.getPrecioVenta() > 0 ? equipo.getPrecioVenta() : equipo.getPrecio();
+                insertStmt.setDouble(6, precioVenta);
+                insertStmt.setDouble(7, equipo.getCostoCompra() > 0 ? equipo.getCostoCompra() : precioVenta);
+                insertStmt.setDouble(8, precioVenta);
+                insertStmt.setObject(9, equipo.getProveedorId());
                 insertStmt.executeUpdate();
                 try (ResultSet rs = insertStmt.getGeneratedKeys()) {
                     if (rs.next()) {
-                        return rs.getInt(1);
+                        int id = rs.getInt(1);
+                        registrarHistorialEquipo(conn, id, "Registro de equipo", 0, equipo.getStock(), equipo.getStock(), equipo.getCostoCompra(), precioVenta, equipo.getProveedorId(), null, null);
+                        return id;
                     }
                 }
             }
@@ -1034,27 +1084,123 @@ public class DatabaseUtil {
         return -1;
     }
 
-    public static void actualizarStockEquipo(int id, int nuevoStock) throws SQLException {
-        String sql = "UPDATE equipos SET stock = ? WHERE id = ?";
-        executeUpdate(sql, nuevoStock, id);
+    private static void registrarHistorialEquipo(Connection conn,
+                                                 int equipoId,
+                                                 String descripcion,
+                                                 int stockAnterior,
+                                                 int stockNuevo,
+                                                 int cantidad,
+                                                 double costoCompra,
+                                                 double precioVenta,
+                                                 Integer proveedorId,
+                                                 String rutaPdf,
+                                                 String moneda) throws SQLException {
+        String sql = "INSERT INTO equipos_historial (equipo_id, fecha, descripcion, stock_anterior, stock_nuevo, cantidad, costo_compra, precio_venta, proveedor_id, ruta_pdf, moneda) " +
+                "VALUES (?, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, equipoId);
+            stmt.setString(2, descripcion);
+            stmt.setInt(3, stockAnterior);
+            stmt.setInt(4, stockNuevo);
+            stmt.setInt(5, cantidad);
+            stmt.setDouble(6, costoCompra);
+            stmt.setDouble(7, precioVenta);
+            if (proveedorId != null) {
+                stmt.setInt(8, proveedorId);
+            } else {
+                stmt.setNull(8, Types.INTEGER);
+            }
+            stmt.setString(9, rutaPdf);
+            stmt.setString(10, moneda);
+            stmt.executeUpdate();
+        }
     }
 
-    public static void registrarCompra(int proveedorId, Equipo equipo, int cantidad, double precioUnitario, String rutaPdf) throws SQLException {
+    public static void actualizarStockEquipo(Equipo equipo, int nuevoStock, String descripcion) throws SQLException {
+        String sql = "UPDATE equipos SET stock = ? WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, nuevoStock);
+            stmt.setInt(2, equipo.getId());
+            stmt.executeUpdate();
+
+            registrarHistorialEquipo(conn,
+                    equipo.getId(),
+                    descripcion,
+                    equipo.getStock(),
+                    nuevoStock,
+                    nuevoStock - equipo.getStock(),
+                    equipo.getCostoCompra(),
+                    equipo.getPrecioVenta(),
+                    equipo.getProveedorId(),
+                    null,
+                    null);
+
+            conn.commit();
+        } catch (SQLException e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ignored) {}
+            }
+            throw e;
+        } finally {
+            if (stmt != null) {
+                try { stmt.close(); } catch (SQLException ignored) {}
+            }
+            if (conn != null) {
+                try { conn.setAutoCommit(true); } catch (SQLException ignored) {}
+                try { conn.close(); } catch (SQLException ignored) {}
+            }
+        }
+    }
+
+    public static void registrarCompra(int proveedorId,
+                                       Equipo equipo,
+                                       int cantidad,
+                                       double costoUnitario,
+                                       Double precioVenta,
+                                       String rutaPdf,
+                                       String moneda) throws SQLException {
         String sqlCompra = "INSERT INTO compras (proveedor_id, fecha, total, ruta_pdf) VALUES (?, date('now'), ?, ?)";
-        String sqlDetalle = "INSERT INTO compras_detalle (compra_id, equipo_id, cantidad, precio) VALUES (?, ?, ?, ?)";
-        String sqlUpdate = "UPDATE equipos SET stock = stock + ?, precio = ?, marca = ?, peso = ? WHERE id = ?";
+        String sqlDetalle = "INSERT INTO compras_detalle (compra_id, equipo_id, cantidad, precio, moneda) VALUES (?, ?, ?, ?, ?)";
+        String sqlUpdate = "UPDATE equipos SET stock = stock + ?, costo_compra = ?, precio = ?, precio_venta = ? WHERE id = ?";
+        String sqlDatosActuales = "SELECT stock, precio_venta, costo_compra FROM equipos WHERE id = ?";
         Connection conn = null;
         PreparedStatement stmtCompra = null;
         PreparedStatement stmtDetalle = null;
         PreparedStatement stmtUpdate = null;
+        PreparedStatement stmtDatos = null;
         try {
             conn = getConnection();
             conn.setAutoCommit(false);
             stmtCompra = conn.prepareStatement(sqlCompra, Statement.RETURN_GENERATED_KEYS);
             stmtDetalle = conn.prepareStatement(sqlDetalle);
             stmtUpdate = conn.prepareStatement(sqlUpdate);
+            stmtDatos = conn.prepareStatement(sqlDatosActuales);
 
-            double total = cantidad * precioUnitario;
+            stmtDatos.setInt(1, equipo.getId());
+            int stockAnterior = equipo.getStock();
+            double precioVentaActual = equipo.getPrecioVenta();
+            double costoActual = equipo.getCostoCompra();
+            try (ResultSet rs = stmtDatos.executeQuery()) {
+                if (rs.next()) {
+                    stockAnterior = rs.getInt("stock");
+                    double precioDb = rs.getDouble("precio_venta");
+                    if (!rs.wasNull()) {
+                        precioVentaActual = precioDb;
+                    }
+                    double costoDb = rs.getDouble("costo_compra");
+                    if (!rs.wasNull()) {
+                        costoActual = costoDb;
+                    }
+                }
+            }
+
+            double costoFinal = costoUnitario > 0 ? costoUnitario : costoActual;
+            double total = cantidad * costoFinal;
             stmtCompra.setInt(1, proveedorId);
             stmtCompra.setDouble(2, total);
             stmtCompra.setString(3, rutaPdf);
@@ -1070,15 +1216,30 @@ public class DatabaseUtil {
             stmtDetalle.setInt(1, compraId);
             stmtDetalle.setInt(2, equipo.getId());
             stmtDetalle.setInt(3, cantidad);
-            stmtDetalle.setDouble(4, precioUnitario);
+            stmtDetalle.setDouble(4, costoFinal);
+            stmtDetalle.setString(5, moneda);
             stmtDetalle.executeUpdate();
 
+            double precioVentaFinal = precioVenta != null && precioVenta > 0 ? precioVenta : precioVentaActual;
             stmtUpdate.setInt(1, cantidad);
-            stmtUpdate.setDouble(2, precioUnitario);
-            stmtUpdate.setString(3, equipo.getMarca());
-            stmtUpdate.setDouble(4, equipo.getPeso());
+            stmtUpdate.setDouble(2, costoFinal);
+            stmtUpdate.setDouble(3, precioVentaFinal);
+            stmtUpdate.setDouble(4, precioVentaFinal);
             stmtUpdate.setInt(5, equipo.getId());
             stmtUpdate.executeUpdate();
+
+            int stockNuevo = stockAnterior + cantidad;
+            registrarHistorialEquipo(conn,
+                    equipo.getId(),
+                    "Compra registrada",
+                    stockAnterior,
+                    stockNuevo,
+                    cantidad,
+                    costoFinal,
+                    precioVentaFinal,
+                    proveedorId,
+                    rutaPdf,
+                    moneda);
 
             conn.commit();
         } catch (SQLException e) {
@@ -1099,6 +1260,9 @@ public class DatabaseUtil {
             }
             if (stmtCompra != null) {
                 try { stmtCompra.close(); } catch (SQLException ignored) {}
+            }
+            if (stmtDatos != null) {
+                try { stmtDatos.close(); } catch (SQLException ignored) {}
             }
             if (conn != null) {
                 try { conn.setAutoCommit(true); } catch (SQLException ignored) {}
@@ -1162,6 +1326,45 @@ public class DatabaseUtil {
             }
         }
         return data;
+    }
+
+    public static ObservableList<EquipoHistorial> obtenerHistorialEquipo(int equipoId) throws SQLException {
+        ObservableList<EquipoHistorial> historial = FXCollections.observableArrayList();
+        String sql = "SELECT eh.id, eh.fecha, eh.descripcion, eh.stock_anterior, eh.stock_nuevo, eh.cantidad, " +
+                "eh.costo_compra, eh.precio_venta, eh.proveedor_id, eh.ruta_pdf, eh.moneda, p.nombre AS proveedor_nombre " +
+                "FROM equipos_historial eh " +
+                "LEFT JOIN proveedores p ON eh.proveedor_id = p.id " +
+                "WHERE eh.equipo_id = ? ORDER BY datetime(eh.fecha) DESC";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, equipoId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    EquipoHistorial registro = new EquipoHistorial();
+                    registro.setId(rs.getInt("id"));
+                    registro.setEquipoId(equipoId);
+                    String fechaRaw = rs.getString("fecha");
+                    try {
+                        registro.setFecha(LocalDateTime.parse(fechaRaw, SQLITE_DATETIME_FORMATTER));
+                    } catch (Exception e) {
+                        registro.setFecha(null);
+                    }
+                    registro.setDescripcion(rs.getString("descripcion"));
+                    registro.setStockAnterior(rs.getInt("stock_anterior"));
+                    registro.setStockNuevo(rs.getInt("stock_nuevo"));
+                    registro.setCantidad(rs.getInt("cantidad"));
+                    registro.setCostoCompra(rs.getDouble("costo_compra"));
+                    registro.setPrecioVenta(rs.getDouble("precio_venta"));
+                    int provId = rs.getInt("proveedor_id");
+                    registro.setProveedorId(rs.wasNull() ? null : provId);
+                    registro.setRutaPdf(rs.getString("ruta_pdf"));
+                    registro.setMoneda(rs.getString("moneda"));
+                    registro.setProveedorNombre(rs.getString("proveedor_nombre"));
+                    historial.add(registro);
+                }
+            }
+        }
+        return historial;
     }
 
     public static ObservableList<PagoMensual> getEgresosMensuales(int año) throws SQLException {

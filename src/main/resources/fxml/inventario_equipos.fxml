@@ -1,34 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controllers.InventarioEquiposController"
-            prefWidth="800" prefHeight="600"
+            prefWidth="1100" prefHeight="650"
             style="-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e); -fx-padding: 15;">
     <top>
-        <Label text="Inventario de Equipos"
-               style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;"
-               BorderPane.alignment="CENTER"/>
+        <VBox spacing="10" BorderPane.alignment="CENTER">
+            <Label text="Inventario de Equipos"
+                   style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <TextField fx:id="txtBusqueda" promptText="Buscar por nombre o marca"
+                           HBox.hgrow="ALWAYS"
+                           style="-fx-background-radius: 8; -fx-padding: 8;"/>
+                <ComboBox fx:id="cbFiltroProveedor" promptText="Proveedor"
+                          style="-fx-background-radius: 8; -fx-padding: 4 8;"/>
+                <ComboBox fx:id="cbFiltroMarca" promptText="Marca"
+                          style="-fx-background-radius: 8; -fx-padding: 4 8;"/>
+                <Label fx:id="lblStatus" textFill="white"
+                       style="-fx-font-style: italic;"/>
+            </HBox>
+        </VBox>
     </top>
     <center>
-        <TableView fx:id="tablaEquipos" VBox.vgrow="ALWAYS"
-                   style="-fx-background-color: rgba(255,255,255,0.9); -fx-border-radius: 10; -fx-background-radius: 10;">
-            <columns>
-                <TableColumn text="EQUIPO" fx:id="colNombre" prefWidth="200"/>
-                <TableColumn text="MARCA" fx:id="colMarca" prefWidth="120"/>
-                <TableColumn text="PESO" fx:id="colPeso" prefWidth="80"/>
-                <TableColumn text="STOCK" fx:id="colStock" prefWidth="100"/>
-                <TableColumn text="PRECIO" fx:id="colPrecio" prefWidth="100"/>
-                <TableColumn text="PROVEEDOR" fx:id="colProveedor" prefWidth="150"/>
-            </columns>
-        </TableView>
+        <SplitPane dividerPositions="0.58">
+            <TableView fx:id="tablaEquipos" VBox.vgrow="ALWAYS"
+                       style="-fx-background-color: rgba(255,255,255,0.95); -fx-border-radius: 10; -fx-background-radius: 10;">
+                <columns>
+                    <TableColumn text="EQUIPO" fx:id="colNombre" prefWidth="180"/>
+                    <TableColumn text="MARCA" fx:id="colMarca" prefWidth="120"/>
+                    <TableColumn text="PESO" fx:id="colPeso" prefWidth="80"/>
+                    <TableColumn text="STOCK" fx:id="colStock" prefWidth="90"/>
+                    <TableColumn text="COSTO" fx:id="colCosto" prefWidth="100"/>
+                    <TableColumn text="PRECIO VENTA" fx:id="colPrecioVenta" prefWidth="120"/>
+                    <TableColumn text="PROVEEDOR" fx:id="colProveedor" prefWidth="150"/>
+                </columns>
+            </TableView>
+            <VBox spacing="10" padding="10"
+                  style="-fx-background-color: rgba(255,255,255,0.9); -fx-border-radius: 10; -fx-background-radius: 10;">
+                <Label text="Historial de movimientos"
+                       style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                <TableView fx:id="tablaHistorial" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colHistorialFecha" text="FECHA" prefWidth="140"/>
+                        <TableColumn fx:id="colHistorialDescripcion" text="DESCRIPCIÓN" prefWidth="160"/>
+                        <TableColumn fx:id="colHistorialProveedor" text="PROVEEDOR" prefWidth="140"/>
+                        <TableColumn fx:id="colHistorialCantidad" text="CANTIDAD" prefWidth="90"/>
+                        <TableColumn fx:id="colHistorialCosto" text="COSTO" prefWidth="90"/>
+                        <TableColumn fx:id="colHistorialPrecio" text="PRECIO VENTA" prefWidth="110"/>
+                        <TableColumn fx:id="colHistorialTotal" text="TOTAL" prefWidth="100"/>
+                        <TableColumn fx:id="colHistorialMoneda" text="MONEDA" prefWidth="80"/>
+                        <TableColumn fx:id="colHistorialArchivo" text="ARCHIVO" prefWidth="150"/>
+                    </columns>
+                </TableView>
+                <Button fx:id="btnAbrirComprobante" text="Abrir comprobante"
+                        style="-fx-background-color: #1abc9c; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            </VBox>
+        </SplitPane>
     </center>
     <bottom>
-        <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding:10;">
-            <Button text="Registrar Equipo" onAction="#handleRegistrarEquipo"/>
-            <Button text="Actualizar Stock" onAction="#handleActualizarStock"/>
-            <Button text="Subir PDF" onAction="#handleSubirPdf"/>
-        </HBox>
+        <VBox spacing="10" style="-fx-padding: 10 0 0 0;">
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button text="Registrar Equipo" onAction="#handleRegistrarEquipo"
+                        style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button text="Actualizar Stock" onAction="#handleActualizarStock"
+                        style="-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button text="Registrar compra" onAction="#handleSubirPdf"
+                        style="-fx-background-color: #e67e22; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            </HBox>
+            <HBox spacing="20" alignment="CENTER_RIGHT">
+                <Label text="Total unidades:" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Label fx:id="lblTotalUnidades" text="0" style="-fx-text-fill: #1abc9c; -fx-font-size: 16px;"/>
+                <Label text="Valor inventario:" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Label fx:id="lblTotalValor" text="0.00" style="-fx-text-fill: #f1c40f; -fx-font-size: 16px;"/>
+            </HBox>
+        </VBox>
     </bottom>
 </BorderPane>

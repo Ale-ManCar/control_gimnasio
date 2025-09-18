@@ -6,22 +6,25 @@ public class Equipo {
     private String marca;
     private double peso;
     private int stock;
-    private double precio;
+    private double costoCompra;
+    private double precioVenta;
     private Integer proveedorId;
+    private int umbral;
 
     public Equipo() {
     }
 
-    public Equipo(String nombre, int stock, double precio, Integer proveedorId) {
-        this(nombre, null, 0, stock, precio, proveedorId);
+    public Equipo(String nombre, int stock, double costoCompra, double precioVenta, Integer proveedorId) {
+        this(nombre, null, 0, stock, costoCompra, precioVenta, proveedorId);
     }
 
-    public Equipo(String nombre, String marca, double peso, int stock, double precio, Integer proveedorId) {
+    public Equipo(String nombre, String marca, double peso, int stock, double costoCompra, double precioVenta, Integer proveedorId) {
         this.nombre = nombre;
         this.marca = marca;
         this.peso = peso;
         this.stock = stock;
-        this.precio = precio;
+        this.costoCompra = costoCompra;
+        this.precioVenta = precioVenta;
         this.proveedorId = proveedorId;
     }
 
@@ -65,12 +68,20 @@ public class Equipo {
         this.stock = stock;
     }
 
-    public double getPrecio() {
-        return precio;
+    public double getCostoCompra() {
+        return costoCompra;
     }
 
-    public void setPrecio(double precio) {
-        this.precio = precio;
+    public void setCostoCompra(double costoCompra) {
+        this.costoCompra = costoCompra;
+    }
+
+    public double getPrecioVenta() {
+        return precioVenta;
+    }
+
+    public void setPrecioVenta(double precioVenta) {
+        this.precioVenta = precioVenta;
     }
 
     public Integer getProveedorId() {
@@ -79,5 +90,22 @@ public class Equipo {
 
     public void setProveedorId(Integer proveedorId) {
         this.proveedorId = proveedorId;
+    }
+
+    public int getUmbral() {
+        return umbral;
+    }
+
+    public void setUmbral(int umbral) {
+        this.umbral = umbral;
+    }
+
+    // Métodos de compatibilidad con código existente
+    public double getPrecio() {
+        return getPrecioVenta();
+    }
+
+    public void setPrecio(double precio) {
+        setPrecioVenta(precio);
     }
 }
