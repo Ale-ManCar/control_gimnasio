@@ -36,6 +36,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
@@ -230,8 +233,26 @@ public class RecepcionistaDashboardController implements Initializable {
                 if (turnoActual == null) {
                     Turno ultimoTurno = DatabaseUtil.obtenerUltimoTurnoFinalizado(usuarioId);
                     if (ultimoTurno != null) {
-                        DatabaseUtil.reabrirTurno(ultimoTurno.getId());
-                        turnoActual = DatabaseUtil.obtenerTurnoPorId(ultimoTurno.getId());
+                        String fechaFinStr = ultimoTurno.getFecha_fin();
+                        if (fechaFinStr != null && !fechaFinStr.trim().isEmpty()) {
+                            try {
+                                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                                LocalDate fechaFin = LocalDateTime.parse(fechaFinStr, formatter).toLocalDate();
+                                if (fechaFin.isEqual(LocalDate.now())) {
+                                    DatabaseUtil.reabrirTurno(ultimoTurno.getId());
+                                    turnoActual = DatabaseUtil.obtenerTurnoPorId(ultimoTurno.getId());
+                                } else {
+                                    int id = DatabaseUtil.iniciarTurno(usuarioId);
+                                    turnoActual = DatabaseUtil.obtenerTurnoPorId(id);
+                                }
+                            } catch (DateTimeParseException e) {
+                                int id = DatabaseUtil.iniciarTurno(usuarioId);
+                                turnoActual = DatabaseUtil.obtenerTurnoPorId(id);
+                            }
+                        } else {
+                            DatabaseUtil.reabrirTurno(ultimoTurno.getId());
+                            turnoActual = DatabaseUtil.obtenerTurnoPorId(ultimoTurno.getId());
+                        }
                     } else {
                         int id = DatabaseUtil.iniciarTurno(usuarioId);
                         turnoActual = DatabaseUtil.obtenerTurnoPorId(id);
