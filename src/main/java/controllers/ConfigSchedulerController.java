@@ -17,9 +17,6 @@ public class ConfigSchedulerController {
     private TextField txtCronAvisos;
 
     @FXML
-    private TextField txtCronOrdenes;
-
-    @FXML
     private Label lblMensaje;
 
     @FXML
@@ -27,7 +24,6 @@ public class ConfigSchedulerController {
         try {
             AlertScheduler.programarBackup(txtCronBackup.getText());
             AlertScheduler.programarAvisosVencimiento(txtCronAvisos.getText());
-            AlertScheduler.programarOrdenesCompra(txtCronOrdenes.getText());
             lblMensaje.setText("Tareas programadas");
         } catch (Exception e) {
             lblMensaje.setText("Error al programar: " + e.getMessage());

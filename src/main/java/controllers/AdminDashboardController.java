@@ -113,20 +113,6 @@ public class AdminDashboardController implements Initializable {
     }
 
     @FXML
-    private void abrirInventario() {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/inventario_equipos.fxml"));
-            Stage stage = new Stage();
-            stage.setTitle("Inventario");
-            stage.setScene(new Scene(root));
-            stage.show();
-            UserService.registrarActividad(SessionManager.getCurrentUser(), "Abrir inventario");
-        } catch (IOException | SQLException e) {
-            lblMensaje.setText("Error al abrir inventario");
-        }
-    }
-
-    @FXML
     private void abrirProveedores() {
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/fxml/lista_proveedores.fxml"));

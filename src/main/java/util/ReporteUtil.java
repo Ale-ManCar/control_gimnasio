@@ -12,7 +12,6 @@ import javafx.collections.ObservableList;
 import models.Egreso;
 import models.CoachClientes;
 import models.PagoDetalle;
-import models.ProveedorPrecio;
 import models.Auditoria;
 import models.Pago;
 import models.ResumenTipo;
@@ -330,57 +329,6 @@ public class ReporteUtil {
         }
     }
 
-    public static void generarReporteInventario(int mes, int anio) {
-        try {
-            InputStream reporteStream = ReporteUtil.class.getResourceAsStream("/reports/inventario.jrxml");
-            if (reporteStream == null) {
-                System.err.println("❌ No se encontró el archivo inventario.jrxml");
-                return;
-            }
-
-            String sql = "SELECT e.nombre AS producto, " +
-                    "COALESCE(SUM(cd.cantidad),0) AS compras, " +
-                    "e.stock AS stockFinal " +
-                    "FROM equipos e " +
-                    "LEFT JOIN compras_detalle cd ON e.id = cd.equipo_id " +
-                    "LEFT JOIN compras c ON cd.compra_id = c.id " +
-                    "AND strftime('%Y', c.fecha) = ? AND strftime('%m', c.fecha) = ? " +
-                    "GROUP BY e.nombre, e.stock";
-
-            List<ItemInventario> items = new ArrayList<>();
-            try (Connection conn = DatabaseUtil.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, String.format("%04d", anio));
-                ps.setString(2, String.format("%02d", mes));
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        int compras = rs.getInt("compras");
-                        int stockFinal = rs.getInt("stockFinal");
-                        int stockInicial = stockFinal - compras;
-                        items.add(new ItemInventario(
-                                rs.getString("producto"),
-                                stockInicial,
-                                compras,
-                                0,
-                                stockFinal));
-                    }
-                }
-            }
-
-            JasperReport jasperReport = JasperCompileManager.compileReport(reporteStream);
-            JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(items);
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, new HashMap<>(), ds);
-            JasperViewer.viewReport(jasperPrint, false);
-
-            String nombreArchivo = String.format("inventario_%02d_%d.pdf", mes, anio);
-            String pdfPath = System.getProperty("user.dir") + File.separator + nombreArchivo;
-            JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
-            System.out.println("✅ Reporte de inventario generado en: " + pdfPath);
-        } catch (Exception e) {
-            System.err.println("❌ Error generando reporte de inventario: " + e.getMessage());
-        }
-    }
-
     public static void generarReporteMembresiasPorVencer() {
         try {
             InputStream reporteStream = ReporteUtil.class.getResourceAsStream("/reports/membresias_por_vencer.jrxml");
@@ -471,23 +419,6 @@ public class ReporteUtil {
             System.out.println("✅ Reporte de coaches con más clientes Excel generado en: " + path.toAbsolutePath());
         } catch (Exception e) {
             System.err.println("❌ Error generando reporte de coaches Excel: " + e.getMessage());
-        }
-    }
-
-    public static void generarReporteComparadorPrecios(String producto, List<ProveedorPrecio> datos) {
-        try {
-            String base = "comparador_precios_" + producto.replaceAll("[^a-zA-Z0-9]", "_");
-            Path pdf = Path.of(base + ".pdf");
-            Path xls = Path.of(base + ".xlsx");
-            StringBuilder contenido = new StringBuilder("Proveedor\tPrecio\n");
-            for (ProveedorPrecio p : datos) {
-                contenido.append(p.getProveedor()).append('\t').append(p.getPrecio()).append('\n');
-            }
-            Files.writeString(pdf, contenido.toString());
-            Files.writeString(xls, contenido.toString());
-            System.out.println("✅ Reporte comparador de precios generado en: " + pdf.toAbsolutePath() + " y " + xls.toAbsolutePath());
-        } catch (Exception e) {
-            System.err.println("❌ Error generando reporte comparador de precios: " + e.getMessage());
         }
     }
 
@@ -664,6 +595,5 @@ public class ReporteUtil {
     }
 
     public record ActividadRecepcionista(String recepcionista, int turnos, double ventas, double membresias) {}
-    public record ItemInventario(String producto, int stockInicial, int compras, int bajas, int stockFinal) {}
     public record MembresiaPorVencer(String nombres, String apellidos, String telefono, LocalDate fechaVencimiento) {}
 }

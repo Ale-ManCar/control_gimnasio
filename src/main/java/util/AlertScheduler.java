@@ -91,10 +91,6 @@ public class AlertScheduler implements Runnable {
         scheduleCron(cronExpression, () -> new AlertScheduler().run());
     }
 
-    public static void programarOrdenesCompra(String cronExpression) {
-        scheduleCron(cronExpression, () -> StockAlertService.obtenerAlertasStock());
-    }
-
     @Override
     public void run() {
         System.out.println("Ejecutando búsqueda de clientes para alertas de vencimiento...");
@@ -128,8 +124,8 @@ public class AlertScheduler implements Runnable {
             System.out.println("No hay clientes para notificar hoy.");
         }
 
-        // Revisar inventario y notificar al administrador
-        for (String alerta : obtenerAlertasInventario()) {
+        // Revisar inventario de productos y notificar al administrador
+        for (String alerta : obtenerAlertasProductos()) {
             notificarAdmin(alerta);
         }
     }
@@ -157,18 +153,11 @@ public class AlertScheduler implements Runnable {
         return clientes;
     }
 
-    private static List<String> obtenerAlertasInventario() {
+    private static List<String> obtenerAlertasProductos() {
         List<String> alertas = new ArrayList<>();
-        String sqlEquipos = "SELECT nombre, stock, umbral FROM equipos WHERE stock <= umbral";
         String sqlProductos = "SELECT nombre, stock, umbral FROM productos WHERE stock <= umbral";
         try (Connection conn = DatabaseUtil.getConnection();
              Statement stmt = conn.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery(sqlEquipos)) {
-                while (rs.next()) {
-                    alertas.add("Equipo '" + rs.getString("nombre") + "' con stock " +
-                            rs.getInt("stock") + " (umbral " + rs.getInt("umbral") + ")");
-                }
-            }
             try (ResultSet rs = stmt.executeQuery(sqlProductos)) {
                 while (rs.next()) {
                     alertas.add("Producto '" + rs.getString("nombre") + "' con stock " +
@@ -191,7 +180,7 @@ public class AlertScheduler implements Runnable {
         for (Cliente c : EstadoClienteService.obtenerClientesPorVencerEn(7)) {
             alertas.add("Membresía de " + c.getNombreCompleto() + " vence en 7 días");
         }
-        alertas.addAll(obtenerAlertasInventario());
+        alertas.addAll(obtenerAlertasProductos());
         return alertas;
     }
 

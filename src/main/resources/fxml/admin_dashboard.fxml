@@ -22,7 +22,6 @@
     <left>
         <VBox spacing="10" alignment="TOP_LEFT" styleClass="sidebar">
             <Button text="Usuarios" onAction="#abrirUsuarios" styleClass="primary-button"/>
-            <Button text="Inventario" onAction="#abrirInventario" styleClass="primary-button"/>
             <Button text="Proveedores" onAction="#abrirProveedores" styleClass="primary-button"/>
             <Button text="Auditoría" onAction="#abrirAuditoria" styleClass="primary-button"/>
             <Button text="Respaldos" onAction="#abrirRespaldos" styleClass="primary-button"/>

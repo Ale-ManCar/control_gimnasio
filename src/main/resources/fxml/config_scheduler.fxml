@@ -9,7 +9,6 @@
       spacing="10" alignment="CENTER" style="-fx-padding:20;">
     <TextField fx:id="txtCronBackup" promptText="Cron para backup"/>
     <TextField fx:id="txtCronAvisos" promptText="Cron para avisos"/>
-    <TextField fx:id="txtCronOrdenes" promptText="Cron para órdenes"/>
     <Label fx:id="lblMensaje"/>
     <Button text="Guardar" onAction="#guardar"/>
 </VBox>
