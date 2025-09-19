@@ -78,14 +78,6 @@
                         </TableColumn>
                     </columns>
                 </TableView>
-                <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">
-                    <Button text="Ingresar Producto" onAction="#handleIngresarProducto"
-                            style="-fx-background-color: linear-gradient(to right, #4CAF50, #2ECC71); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25;"/>
-                    <Button text="Editar" onAction="#handleEditarProducto"
-                            style="-fx-background-color: linear-gradient(to right, #FF9800, #F39C12); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25;"/>
-                    <Button text="Eliminar" onAction="#handleEliminarProducto"
-                            style="-fx-background-color: linear-gradient(to right, #e67e22, #e74c3c); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25;"/>
-                </HBox>
             </VBox>
 
             <!-- CARRITO DE VENTA -->

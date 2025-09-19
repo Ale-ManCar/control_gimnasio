@@ -730,11 +730,12 @@ public class DatabaseUtil {
     }
 
     public static void insertarProducto(Producto producto) throws SQLException {
-        String sql = "INSERT INTO productos (nombre, stock, precio, tipo, precio_compra, unidades_por_paca, peso_total, peso_por_scoop) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO productos (nombre, stock, umbral, precio, tipo, precio_compra, unidades_por_paca, peso_total, peso_por_scoop) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         executeUpdate(sql,
                 producto.getNombre(),
                 producto.getStock(),
+                producto.getUmbral(),
                 producto.getPrecio(),
                 producto.getTipo(),
                 producto.getPrecioCompra(),
@@ -746,7 +747,7 @@ public class DatabaseUtil {
 
     public static ObservableList<Producto> getProductos() throws SQLException {
         ObservableList<Producto> productos = FXCollections.observableArrayList();
-        String sql = "SELECT id, nombre, stock, precio, tipo, precio_compra, unidades_por_paca, peso_total, peso_por_scoop FROM productos";
+        String sql = "SELECT id, nombre, stock, umbral, precio, tipo, precio_compra, unidades_por_paca, peso_total, peso_por_scoop FROM productos";
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
@@ -757,6 +758,7 @@ public class DatabaseUtil {
                 p.setId(rs.getInt("id"));
                 p.setNombre(rs.getString("nombre").toUpperCase(Locale.ROOT));
                 p.setStock(rs.getInt("stock"));
+                p.setUmbral(rs.getInt("umbral"));
                 p.setPrecio(rs.getDouble("precio"));
                 p.setTipo(rs.getString("tipo"));
                 p.setPrecioCompra(rs.getDouble("precio_compra"));

@@ -127,6 +127,20 @@ public class AdminDashboardController implements Initializable {
     }
 
     @FXML
+    private void abrirInsumos() {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/insumos_admin.fxml"));
+            Stage stage = new Stage();
+            stage.setTitle("Administración de Insumos");
+            stage.setScene(new Scene(root));
+            stage.show();
+            UserService.registrarActividad(SessionManager.getCurrentUser(), "Abrir insumos");
+        } catch (IOException | SQLException e) {
+            lblMensaje.setText("Error al abrir insumos");
+        }
+    }
+
+    @FXML
     private void abrirAuditoria() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/auditoria.fxml"));
