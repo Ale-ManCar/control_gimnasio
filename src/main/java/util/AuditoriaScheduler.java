@@ -73,21 +73,21 @@ public final class AuditoriaScheduler {
         LocalDate fin = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.SATURDAY));
         LocalDate inicio = fin.minusDays(6);
         procesarRecepcionistas(usuario ->
-                ReporteUtil.generarResumenSemanal(usuario.getId(), inicio.atStartOfDay(), fin.atTime(FIN_DE_DIA), false));
+                ReporteUtil.generarResumenSemanalIngresos(usuario.getId(), inicio.atStartOfDay(), fin.atTime(FIN_DE_DIA), false));
     }
 
     private static void generarResumenesMensuales() {
         LocalDate fin = LocalDate.now().with(TemporalAdjusters.lastDayOfMonth());
         LocalDate inicio = fin.withDayOfMonth(1);
         procesarRecepcionistas(usuario ->
-                ReporteUtil.generarResumenMensual(usuario.getId(), inicio.atStartOfDay(), fin.atTime(FIN_DE_DIA), false));
+                ReporteUtil.generarResumenMensualIngresos(usuario.getId(), inicio.atStartOfDay(), fin.atTime(FIN_DE_DIA), false));
     }
 
     private static void generarResumenesAnuales() {
         LocalDate fin = LocalDate.now().with(TemporalAdjusters.lastDayOfYear());
         LocalDate inicio = fin.withDayOfYear(1);
         procesarRecepcionistas(usuario ->
-                ReporteUtil.generarResumenAnual(usuario.getId(), inicio.atStartOfDay(), fin.atTime(FIN_DE_DIA), false));
+                ReporteUtil.generarResumenAnualIngresos(usuario.getId(), inicio.atStartOfDay(), fin.atTime(FIN_DE_DIA), false));
     }
 
     private static void procesarRecepcionistas(java.util.function.Consumer<User> accion) {

@@ -233,27 +233,42 @@ public class ReporteUtil {
     }
 
     public static Path generarResumenSemanal(int usuarioId, LocalDateTime inicio, LocalDateTime fin) {
-        return generarResumenSemanal(usuarioId, inicio, fin, false);
+        return generarResumenSemanalIngresos(usuarioId, inicio, fin, false);
     }
 
     public static Path generarResumenSemanal(int usuarioId, LocalDateTime inicio, LocalDateTime fin, boolean mostrar) {
-        return generarResumenPeriodo(usuarioId, inicio, fin, "Resumen semanal", ResumenTipo.SEMANAL, mostrar, null, null);
+        return generarResumenSemanalIngresos(usuarioId, inicio, fin, mostrar);
+    }
+
+    public static Path generarResumenSemanalIngresos(int usuarioId, LocalDateTime inicio, LocalDateTime fin, boolean mostrar) {
+        return generarResumenTotalesPeriodo(usuarioId, inicio, fin, "Resumen semanal", ResumenTipo.SEMANAL, mostrar,
+                "/reports/resumen_semanal.jrxml", null, null);
     }
 
     public static Path generarResumenMensual(int usuarioId, LocalDateTime inicio, LocalDateTime fin) {
-        return generarResumenMensual(usuarioId, inicio, fin, false);
+        return generarResumenMensualIngresos(usuarioId, inicio, fin, false);
     }
 
     public static Path generarResumenMensual(int usuarioId, LocalDateTime inicio, LocalDateTime fin, boolean mostrar) {
-        return generarResumenPeriodo(usuarioId, inicio, fin, "Resumen mensual", ResumenTipo.MENSUAL, mostrar, null, null);
+        return generarResumenMensualIngresos(usuarioId, inicio, fin, mostrar);
+    }
+
+    public static Path generarResumenMensualIngresos(int usuarioId, LocalDateTime inicio, LocalDateTime fin, boolean mostrar) {
+        return generarResumenTotalesPeriodo(usuarioId, inicio, fin, "Resumen mensual", ResumenTipo.MENSUAL, mostrar,
+                "/reports/resumen_mensual.jrxml", null, null);
     }
 
     public static Path generarResumenAnual(int usuarioId, LocalDateTime inicio, LocalDateTime fin) {
-        return generarResumenAnual(usuarioId, inicio, fin, false);
+        return generarResumenAnualIngresos(usuarioId, inicio, fin, false);
     }
 
     public static Path generarResumenAnual(int usuarioId, LocalDateTime inicio, LocalDateTime fin, boolean mostrar) {
-        return generarResumenPeriodo(usuarioId, inicio, fin, "Resumen anual", ResumenTipo.ANUAL, mostrar, null, null);
+        return generarResumenAnualIngresos(usuarioId, inicio, fin, mostrar);
+    }
+
+    public static Path generarResumenAnualIngresos(int usuarioId, LocalDateTime inicio, LocalDateTime fin, boolean mostrar) {
+        return generarResumenTotalesPeriodo(usuarioId, inicio, fin, "Resumen anual", ResumenTipo.ANUAL, mostrar,
+                "/reports/resumen_anual.jrxml", null, null);
     }
 
     private static Path generarResumenPeriodo(int usuarioId, LocalDateTime inicio, LocalDateTime fin,
@@ -303,6 +318,70 @@ public class ReporteUtil {
             parametros.put("TOTAL_MEMBRESIAS", totalMembresias);
             parametros.put("TOTAL_VENTAS", totalVentas);
             parametros.put("PAGOS_ANULADOS", construirPagosAnulados(pagosAnulados, tiemposAnulacion));
+
+            JasperReport jasperReport = JasperCompileManager.compileReport(reporteStream);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, new JREmptyDataSource());
+
+            if (mostrar) {
+                JasperViewer.viewReport(jasperPrint, false);
+            }
+
+            Path destino = destinoPersonalizado != null
+                    ? AuditoriaFileUtil.ensureCustomDestination(destinoPersonalizado)
+                    : AuditoriaFileUtil.ensureResumenPath(username, usuarioId, tipo, start, end, turnoId);
+            JasperExportManager.exportReportToPdfFile(jasperPrint, destino.toString());
+
+            if (usuarioId > 0 && tipo.getAccion() != null && destinoPersonalizado == null) {
+                AuditoriaUtil.registrarAccion(usuarioId, tipo.getAccion(), destino.toString());
+            }
+
+            System.out.println("✅ " + titulo + " generado en: " + destino.toAbsolutePath());
+            return destino;
+        } catch (Exception e) {
+            System.err.println("❌ Error generando " + titulo.toLowerCase() + ": " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static Path generarResumenTotalesPeriodo(int usuarioId, LocalDateTime inicio, LocalDateTime fin,
+                                                     String titulo, ResumenTipo tipo, boolean mostrar,
+                                                     String plantilla, Path destinoPersonalizado, Integer turnoId) {
+        if (inicio == null || fin == null) {
+            throw new IllegalArgumentException("Las fechas de inicio y fin son obligatorias");
+        }
+
+        LocalDateTime start = inicio;
+        LocalDateTime end = fin;
+        if (end.isBefore(start)) {
+            LocalDateTime temp = start;
+            start = end;
+            end = temp;
+        }
+
+        try {
+            InputStream reporteStream = ReporteUtil.class.getResourceAsStream(plantilla);
+            if (reporteStream == null) {
+                System.err.println("❌ No se encontró la plantilla " + plantilla);
+                return null;
+            }
+
+            String username = usuarioId > 0 ? DatabaseUtil.obtenerNombreUsuarioPorId(usuarioId) : null;
+            if (username == null || username.isBlank()) {
+                username = "Recepcionista " + usuarioId;
+            }
+
+            Map<String, Number> ingresosPagos = DatabaseUtil.obtenerIngresosPagos(usuarioId, start, end);
+            double totalMembresias = ingresosPagos.getOrDefault("total", 0).doubleValue();
+            double totalVentas = DatabaseUtil.obtenerTotalVentasEntre(start, end);
+            double totalGeneral = totalMembresias + totalVentas;
+
+            Map<String, Object> parametros = new HashMap<>();
+            parametros.put("REPORT_TITLE", construirTitulo(titulo, username));
+            parametros.put("RANGO_TURNO", construirRangoPeriodo(start, end));
+            parametros.put("TOTAL_MEMBRESIAS", totalMembresias);
+            parametros.put("TOTAL_VENTAS", totalVentas);
+            parametros.put("TOTAL_GENERAL", totalGeneral);
 
             JasperReport jasperReport = JasperCompileManager.compileReport(reporteStream);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, new JREmptyDataSource());
