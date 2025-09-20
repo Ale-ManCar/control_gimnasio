@@ -61,8 +61,8 @@
                 <Label fx:id="lblPrecio" text="-" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
                 <Label text="Umbral" style="-fx-text-fill: #bdc3c7; -fx-font-size: 12px;" GridPane.columnIndex="2"/>
                 <Label fx:id="lblUmbral" text="-" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
-                <Label text="Objetivo" style="-fx-text-fill: #bdc3c7; -fx-font-size: 12px;" GridPane.columnIndex="3"/>
-                <Label fx:id="lblStockObjetivo" text="-" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
+                <Label text="Stock inicial" style="-fx-text-fill: #bdc3c7; -fx-font-size: 12px;" GridPane.columnIndex="3"/>
+                <Label fx:id="lblStockInicial" text="-" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
                 <Label text="Semáforo: Verde = óptimo | Amarillo = precaución | Rojo = crítico"
                        style="-fx-text-fill: #95a5a6; -fx-font-size: 11px;"
                        GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="4"/>

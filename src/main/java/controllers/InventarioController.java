@@ -32,7 +32,7 @@ public class InventarioController {
     @FXML private Label lblCantidad;
     @FXML private Label lblTotalVenta;
     @FXML private Label lblTotalCarrito;
-    @FXML private Label lblObjetivo;
+    @FXML private Label lblIndicadores;
 
     @FXML private TableView<VentaItem> tablaCarrito;
     @FXML private TableColumn<VentaItem, String> colCarritoNombre;
@@ -171,26 +171,29 @@ public class InventarioController {
     }
 
     private void actualizarIndicadores(Producto producto) {
-        if (lblObjetivo == null) {
+        if (lblIndicadores == null) {
             return;
         }
         if (producto == null) {
-            lblObjetivo.setText("Selecciona un producto para ver su estado.");
-            lblObjetivo.setStyle("-fx-text-fill: #bdc3c7; -fx-font-size: 12px;");
-            lblObjetivo.setTooltip(null);
+            lblIndicadores.setText("Selecciona un producto para ver su estado.");
+            lblIndicadores.setStyle("-fx-text-fill: #bdc3c7; -fx-font-size: 12px;");
+            lblIndicadores.setTooltip(null);
             return;
         }
 
         StockAlertUtil.StockStatus status = StockAlertUtil.evaluate(producto);
-        lblObjetivo.setText(String.format("Stock: %d | Umbral: %d | Punto medio: %d | Objetivo: %d",
-                producto.getStock(), status.getUmbral(), status.getPuntoMedio(), status.getObjetivo()));
+        String stockInicialTexto = status.getStockInicial() > 0
+                ? String.valueOf(status.getStockInicial())
+                : "N/D";
+        lblIndicadores.setText(String.format("Stock: %d | Umbral: %d | Punto medio: %d | Stock inicial: %s",
+                producto.getStock(), status.getUmbral(), status.getPuntoMedio(), stockInicialTexto));
         String color = switch (status.getLevel()) {
             case OPTIMO -> "#2E7D32";
             case PREVENCION -> "#F57C00";
             default -> "#C62828";
         };
-        lblObjetivo.setStyle(String.format("-fx-text-fill: %s; -fx-font-weight: bold; -fx-font-size: 12px;", color));
-        lblObjetivo.setTooltip(new Tooltip(status.getTooltipText()));
+        lblIndicadores.setStyle(String.format("-fx-text-fill: %s; -fx-font-weight: bold; -fx-font-size: 12px;", color));
+        lblIndicadores.setTooltip(new Tooltip(status.getTooltipText()));
     }
 
     private void cargarProductos() {

@@ -17,14 +17,14 @@ public final class StockAlertUtil {
         private final StockLevel level;
         private final int stockActual;
         private final int umbral;
-        private final int objetivo;
+        private final int stockInicial;
         private final int puntoMedio;
 
-        private StockStatus(StockLevel level, int stockActual, int umbral, int objetivo, int puntoMedio) {
+        private StockStatus(StockLevel level, int stockActual, int umbral, int stockInicial, int puntoMedio) {
             this.level = level;
             this.stockActual = stockActual;
             this.umbral = umbral;
-            this.objetivo = objetivo;
+            this.stockInicial = stockInicial;
             this.puntoMedio = puntoMedio;
         }
 
@@ -40,8 +40,8 @@ public final class StockAlertUtil {
             return umbral;
         }
 
-        public int getObjetivo() {
-            return objetivo;
+        public int getStockInicial() {
+            return stockInicial;
         }
 
         public int getPuntoMedio() {
@@ -55,14 +55,17 @@ public final class StockAlertUtil {
                 case PREVENCION -> situacion = "Inventario en observación";
                 default -> situacion = "Inventario crítico";
             }
-            return String.format(
-                    "%s\nActual: %d | Punto medio: %d\nUmbral: %d | Objetivo: %d",
+            String detalleBase = String.format(
+                    "%s\nActual: %d | Punto medio: %d\nUmbral: %d",
                     situacion,
                     stockActual,
                     puntoMedio,
-                    umbral,
-                    objetivo
+                    umbral
             );
+            if (stockInicial > 0) {
+                return detalleBase + String.format(" | Stock inicial: %d", stockInicial);
+            }
+            return detalleBase;
         }
 
         public String getSuggestedColor() {
@@ -78,18 +81,18 @@ public final class StockAlertUtil {
         if (producto == null) {
             return new StockStatus(StockLevel.PREVENCION, 0, 0, 0, 0);
         }
-        return evaluate(producto.getStock(), producto.getUmbral(), producto.getStockObjetivo());
+        return evaluate(producto.getStock(), producto.getUmbral(), producto.getStockInicial());
     }
 
-    public static StockStatus evaluate(int stock, int umbral, int objetivo) {
+    public static StockStatus evaluate(int stock, int umbral, int stockInicial) {
         int umbralSeguro = Math.max(0, umbral);
-        int objetivoSeguro = Math.max(umbralSeguro, objetivo);
-        int puntoMedio;
-        if (objetivoSeguro == umbralSeguro) {
-            puntoMedio = umbralSeguro;
+        int inicialSeguro;
+        if (stockInicial > 0) {
+            inicialSeguro = Math.max(umbralSeguro, stockInicial);
         } else {
-            puntoMedio = (int) Math.ceil((umbralSeguro + objetivoSeguro) / 2.0);
+            inicialSeguro = Math.max(umbralSeguro, stock);
         }
+        int puntoMedio = (int) Math.ceil((umbralSeguro + inicialSeguro) / 2.0);
 
         StockLevel nivel;
         if (stock < umbralSeguro) {
@@ -100,6 +103,6 @@ public final class StockAlertUtil {
             nivel = StockLevel.PREVENCION;
         }
 
-        return new StockStatus(nivel, stock, umbralSeguro, objetivoSeguro, puntoMedio);
+        return new StockStatus(nivel, stock, umbralSeguro, stockInicial, puntoMedio);
     }
 }

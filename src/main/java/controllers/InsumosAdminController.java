@@ -38,7 +38,7 @@ public class InsumosAdminController implements Initializable {
     @FXML private Label lblStock;
     @FXML private Label lblPrecio;
     @FXML private Label lblUmbral;
-    @FXML private Label lblStockObjetivo;
+    @FXML private Label lblStockInicial;
 
     private final ObservableList<Producto> listaProductos = FXCollections.observableArrayList();
 
@@ -105,24 +105,27 @@ public class InsumosAdminController implements Initializable {
             lblStock.setText("-");
             lblPrecio.setText("-");
             lblUmbral.setText("-");
-            lblStockObjetivo.setText("-");
-            lblStockObjetivo.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
-            lblStockObjetivo.setTooltip(null);
+            lblStockInicial.setText("-");
+            lblStockInicial.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
+            lblStockInicial.setTooltip(null);
         } else {
             lblStock.setText(String.valueOf(producto.getStock()));
             lblPrecio.setText(String.format(Locale.getDefault(), "$%.2f", producto.getPrecio()));
             lblUmbral.setText(String.valueOf(producto.getUmbral()));
             StockAlertUtil.StockStatus status = StockAlertUtil.evaluate(producto);
-            lblStockObjetivo.setText(String.format("%d (punto medio: %d)",
-                    producto.getStockObjetivo(), status.getPuntoMedio()));
+            String stockInicialTexto = producto.getStockInicial() > 0
+                    ? String.valueOf(producto.getStockInicial())
+                    : "N/D";
+            lblStockInicial.setText(String.format("%s (punto medio: %d)",
+                    stockInicialTexto, status.getPuntoMedio()));
             String textoColor = switch (status.getLevel()) {
                 case OPTIMO -> "-fx-text-fill: #2E7D32;";
                 case PREVENCION -> "-fx-text-fill: #F57C00;";
                 default -> "-fx-text-fill: #C62828;";
             };
-            lblStockObjetivo.setStyle(textoColor + "-fx-font-size: 16px; -fx-font-weight: bold;");
+            lblStockInicial.setStyle(textoColor + "-fx-font-size: 16px; -fx-font-weight: bold;");
             Tooltip tooltip = new Tooltip(status.getTooltipText());
-            lblStockObjetivo.setTooltip(tooltip);
+            lblStockInicial.setTooltip(tooltip);
         }
     }
 
@@ -223,7 +226,7 @@ public class InsumosAdminController implements Initializable {
         TextField txtPrecioVenta = createStyledTextField("Precio venta", true);
         TextField txtUnidadesPorPaca = createStyledTextField("Unidades por paca", false);
         TextField txtUmbral = createStyledTextField("Umbral mínimo", false);
-        TextField txtStockObjetivo = createStyledTextField("Stock inicial / objetivo", true);
+        TextField txtStockInicial = createStyledTextField("Stock inicial", true);
 
         txtNombre.setTextFormatter(new TextFormatter<>(change -> {
             change.setText(change.getText().toUpperCase());
@@ -235,7 +238,7 @@ public class InsumosAdminController implements Initializable {
         txtPesoScoop.setTextFormatter(createNumericFormatter(true));
         txtUnidadesPorPaca.setTextFormatter(createNumericFormatter(false));
         txtUmbral.setTextFormatter(createNumericFormatter(false));
-        txtStockObjetivo.setTextFormatter(createNumericFormatter(false));
+        txtStockInicial.setTextFormatter(createNumericFormatter(false));
 
         Label lblStockCalculado = new Label();
         lblStockCalculado.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #2c3e50;");
@@ -253,7 +256,7 @@ public class InsumosAdminController implements Initializable {
         Label iconPesoTotal = createIconLabel("fas-weight", "#1abc9c");
         Label iconScoop = createIconLabel("fas-utensil-spoon", "#e67e22");
         Label iconUmbral = createIconLabel("fas-bell", "#f1c40f");
-        Label iconObjetivo = createIconLabel("fas-bullseye", "#16a085");
+        Label iconStockInicial = createIconLabel("fas-flag-checkered", "#16a085");
 
         grid.add(iconNombre, 0, 0);
         grid.add(txtNombre, 1, 0, 2, 1);
@@ -279,8 +282,8 @@ public class InsumosAdminController implements Initializable {
         grid.add(iconUmbral, 0, 7);
         grid.add(txtUmbral, 1, 7, 2, 1);
 
-        grid.add(iconObjetivo, 0, 8);
-        grid.add(txtStockObjetivo, 1, 8, 2, 1);
+        grid.add(iconStockInicial, 0, 8);
+        grid.add(txtStockInicial, 1, 8, 2, 1);
 
         grid.add(lblStockCalculado, 0, 9, 3, 1);
         grid.add(lblResultado, 0, 10, 3, 1);
@@ -387,7 +390,7 @@ public class InsumosAdminController implements Initializable {
         dialog.getDialogPane().setContent(contenedor);
 
         ChangeListener<String> limpiarValidacion = (obs, oldVal, newVal) -> lblValidacion.setText("");
-        txtStockObjetivo.textProperty().addListener(limpiarValidacion);
+        txtStockInicial.textProperty().addListener(limpiarValidacion);
         txtUmbral.textProperty().addListener(limpiarValidacion);
 
         dialog.setResultConverter(dialogButton -> {
@@ -421,19 +424,15 @@ public class InsumosAdminController implements Initializable {
                         nuevo.setPesoScoop(pesoScoop);
                     }
 
-                    if (txtStockObjetivo.getText().isBlank()) {
-                        lblValidacion.setText("Ingrese el stock inicial/objetivo del producto.");
+                    if (txtStockInicial.getText().isBlank()) {
+                        lblValidacion.setText("Ingrese el stock inicial del producto.");
                         return null;
                     }
 
-                    int stockIngresado = Integer.parseInt(txtStockObjetivo.getText());
-                    if (stockIngresado < umbral) {
-                        lblValidacion.setText("El stock objetivo debe ser mayor o igual al umbral configurado.");
-                        return null;
-                    }
+                    int stockIngresado = Integer.parseInt(txtStockInicial.getText());
 
                     nuevo.setStock(stockIngresado);
-                    nuevo.setStockObjetivo(stockIngresado);
+                    nuevo.setStockInicial(stockIngresado);
 
                     return nuevo;
                 } catch (Exception e) {
@@ -480,9 +479,9 @@ public class InsumosAdminController implements Initializable {
         Label lblUmbralNuevo = new Label("Umbral mínimo:");
         TextField tfUmbral = new TextField(String.valueOf(seleccionado.getUmbral()));
 
-        Label lblObjetivo = new Label("Stock objetivo:");
-        TextField tfStockObjetivo = new TextField(String.valueOf(seleccionado.getStockObjetivo()));
-        tfStockObjetivo.setTextFormatter(createNumericFormatter(false));
+        Label lblStockInicialTitulo = new Label("Stock inicial:");
+        Label lblStockInicialValor = new Label(String.valueOf(seleccionado.getStockInicial()));
+        lblStockInicialValor.setStyle("-fx-font-weight: bold; -fx-text-fill: #1565C0;");
 
         Label lblError = new Label();
         lblError.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
@@ -495,8 +494,8 @@ public class InsumosAdminController implements Initializable {
         grid.add(tfStock, 1, 2);
         grid.add(lblUmbralNuevo, 0, 3);
         grid.add(tfUmbral, 1, 3);
-        grid.add(lblObjetivo, 0, 4);
-        grid.add(tfStockObjetivo, 1, 4);
+        grid.add(lblStockInicialTitulo, 0, 4);
+        grid.add(lblStockInicialValor, 1, 4);
         grid.add(lblError, 0, 5, 2, 1);
 
         dialog.getDialogPane().setContent(grid);
@@ -508,12 +507,6 @@ public class InsumosAdminController implements Initializable {
             boolean precioOk = esPrecioValido(tfPrecio.getText());
             boolean stockOk = esStockValido(tfStock.getText());
             boolean umbralOk = esStockValido(tfUmbral.getText());
-            boolean objetivoOk = esStockValido(tfStockObjetivo.getText());
-            boolean relacionOk = true;
-
-            if (objetivoOk && umbralOk) {
-                relacionOk = Integer.parseInt(tfStockObjetivo.getText()) >= Integer.parseInt(tfUmbral.getText());
-            }
 
             if (!precioOk) {
                 lblError.setText("Precio inválido (debe ser número >= 0)");
@@ -521,21 +514,16 @@ public class InsumosAdminController implements Initializable {
                 lblError.setText("Unidades a sumar inválidas (entero >= 0)");
             } else if (!umbralOk) {
                 lblError.setText("Umbral inválido (debe ser entero >= 0)");
-            } else if (!objetivoOk) {
-                lblError.setText("Objetivo inválido (debe ser entero >= 0)");
-            } else if (!relacionOk) {
-                lblError.setText("El stock objetivo debe ser mayor o igual al umbral");
             } else {
                 lblError.setText("");
             }
 
-            btnActualizar.setDisable(!(precioOk && stockOk && umbralOk && objetivoOk && relacionOk));
+            btnActualizar.setDisable(!(precioOk && stockOk && umbralOk));
         };
 
         tfPrecio.textProperty().addListener(validador);
         tfStock.textProperty().addListener(validador);
         tfUmbral.textProperty().addListener(validador);
-        tfStockObjetivo.textProperty().addListener(validador);
         validador.changed(null, null, null);
 
         dialog.setResultConverter(dialogButton -> {
@@ -545,7 +533,6 @@ public class InsumosAdminController implements Initializable {
                 editado.setPrecio(Double.parseDouble(tfPrecio.getText()));
                 editado.setStock(Integer.parseInt(tfStock.getText()));
                 editado.setUmbral(Integer.parseInt(tfUmbral.getText()));
-                editado.setStockObjetivo(Integer.parseInt(tfStockObjetivo.getText()));
                 return editado;
             }
             return null;
@@ -554,7 +541,7 @@ public class InsumosAdminController implements Initializable {
         Optional<Producto> resultado = dialog.showAndWait();
         resultado.ifPresent(prod -> {
             try {
-                DatabaseUtil.actualizarProducto(prod.getId(), prod.getPrecio(), prod.getUmbral(), prod.getStockObjetivo());
+                DatabaseUtil.actualizarProducto(prod.getId(), prod.getPrecio(), prod.getUmbral());
                 if (prod.getStock() > 0) {
                     DatabaseUtil.registrarEntradaProducto(prod.getId(), prod.getStock());
                 }
