@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.ResourceBundle;
 
 public class FinalizarTurnoController implements Initializable {
@@ -29,6 +30,7 @@ public class FinalizarTurnoController implements Initializable {
     private String stockFinal;
     private double ingresosVentas;
     private double ingresosClientes;
+    private LocalDateTime inicioTurno;
     private Stage dashboardStage;
 
     @Override
@@ -36,9 +38,14 @@ public class FinalizarTurnoController implements Initializable {
         try {
             turno = DatabaseUtil.obtenerTurnoActivo(SessionManager.getCurrentUser().getId());
             if (turno != null) {
+                inicioTurno = DatabaseUtil.parseDateTime(turno.getFecha_inicio());
+                if (inicioTurno == null) {
+                    inicioTurno = LocalDateTime.now();
+                }
                 stockFinal = DatabaseUtil.obtenerStockJson();
-                ingresosVentas = DatabaseUtil.obtenerTotalVentasDesde(turno.getFecha_inicio());
-                ingresosClientes = DatabaseUtil.obtenerTotalPagosDesde(turno.getFecha_inicio());
+                LocalDateTime ahora = LocalDateTime.now();
+                ingresosVentas = DatabaseUtil.obtenerTotalVentasDesde(inicioTurno, ahora);
+                ingresosClientes = DatabaseUtil.obtenerTotalPagosDesde(inicioTurno, ahora);
                 lblStockInicial.setText(turno.getStock_inicial());
                 lblStockFinal.setText(stockFinal);
                 lblIngresosVentas.setText(String.format("%.2f", ingresosVentas));
@@ -56,6 +63,17 @@ public class FinalizarTurnoController implements Initializable {
     @FXML
     private void confirmar(ActionEvent event) {
         try {
+            LocalDateTime cierre = LocalDateTime.now();
+            if (inicioTurno == null) {
+                inicioTurno = DatabaseUtil.parseDateTime(turno.getFecha_inicio());
+            }
+            if (inicioTurno == null) {
+                inicioTurno = cierre;
+            }
+            ingresosVentas = DatabaseUtil.obtenerTotalVentasDesde(inicioTurno, cierre);
+            ingresosClientes = DatabaseUtil.obtenerTotalPagosDesde(inicioTurno, cierre);
+            lblIngresosVentas.setText(String.format("%.2f", ingresosVentas));
+            lblIngresosClientes.setText(String.format("%.2f", ingresosClientes));
             DatabaseUtil.finalizarTurno(turno.getId(), stockFinal, ingresosVentas, ingresosClientes);
             turno = DatabaseUtil.obtenerTurnoPorId(turno.getId());
             if (turno == null) {

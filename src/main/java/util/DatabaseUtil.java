@@ -118,7 +118,7 @@ public class DatabaseUtil {
 
         String sqlVentas = "CREATE TABLE IF NOT EXISTS ventas (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "fecha TEXT NOT NULL DEFAULT (date('now'))," +
+                "fecha TEXT NOT NULL DEFAULT (datetime('now','localtime'))," +
                 "total REAL NOT NULL)";
 
         String sqlEgresos = "CREATE TABLE IF NOT EXISTS egresos (" +
@@ -192,6 +192,9 @@ public class DatabaseUtil {
             try { stmt.execute("ALTER TABLE usuarios ADD COLUMN last_login TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE usuarios ADD COLUMN acciones_realizadas INTEGER DEFAULT 0"); } catch (SQLException ignored) {}
             stmt.execute("INSERT OR IGNORE INTO proveedores (id, nombre, contacto, telefono) VALUES (1, 'Proveedor 1', '', ''), (2, 'Proveedor 2', '', '')");
+            try {
+                stmt.execute("UPDATE ventas SET fecha = COALESCE(strftime('%Y-%m-%d %H:%M:%S', fecha), fecha) WHERE fecha IS NOT NULL");
+            } catch (SQLException ignored) {}
             conn.commit();
 
             System.out.println("Base de datos inicializada correctamente");
@@ -210,10 +213,13 @@ public class DatabaseUtil {
             stmt = conn.prepareStatement(sql);
 
             for (int i = 0; i < params.length; i++) {
-                if (params[i] instanceof java.time.LocalDate) {
-                    stmt.setString(i + 1, params[i].toString());
+                Object param = params[i];
+                if (param instanceof LocalDateTime) {
+                    stmt.setString(i + 1, formatDateTime((LocalDateTime) param));
+                } else if (param instanceof LocalDate) {
+                    stmt.setString(i + 1, param.toString());
                 } else {
-                    stmt.setObject(i + 1, params[i]);
+                    stmt.setObject(i + 1, param);
                 }
             }
 
@@ -857,8 +863,8 @@ public class DatabaseUtil {
     }
 
     public static void registrarVenta(double totalVenta) throws SQLException {
-        String sql = "INSERT INTO ventas (fecha, total) VALUES (date('now'), ?)";
-        executeUpdate(sql, totalVenta);
+        String sql = "INSERT INTO ventas (fecha, total) VALUES (?, ?)";
+        executeUpdate(sql, LocalDateTime.now(), totalVenta);
         EventBus.fireVentaRealizadaEvent();
     }
 
@@ -1146,7 +1152,7 @@ public class DatabaseUtil {
 
     public static int iniciarTurno(int usuarioId) throws SQLException {
         String stock = obtenerStockJson();
-        String sql = "INSERT INTO turnos (usuario_id, fecha_inicio, stock_inicial) VALUES (?, datetime('now'), ?)";
+        String sql = "INSERT INTO turnos (usuario_id, fecha_inicio, stock_inicial) VALUES (?, datetime('now','localtime'), ?)";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, usuarioId);
@@ -1231,12 +1237,16 @@ public class DatabaseUtil {
         return turno;
     }
 
-    public static double obtenerTotalVentasDesde(String fechaInicio) {
+    public static double obtenerTotalVentasDesde(LocalDateTime fechaInicio, LocalDateTime fechaFin) {
+        if (fechaInicio == null || fechaFin == null) {
+            return 0.0;
+        }
         double total = 0.0;
-        String sql = "SELECT SUM(total) AS total FROM ventas WHERE date(fecha) >= date(?)";
+        String sql = "SELECT SUM(total) AS total FROM ventas WHERE datetime(fecha) BETWEEN datetime(?) AND datetime(?)";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, fechaInicio);
+            stmt.setString(1, formatDateTime(fechaInicio));
+            stmt.setString(2, formatDateTime(fechaFin));
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 total = rs.getDouble("total");
@@ -1247,12 +1257,24 @@ public class DatabaseUtil {
         return total;
     }
 
-    public static double obtenerTotalPagosDesde(String fechaInicio) {
+    public static double obtenerTotalVentasDesde(LocalDateTime fechaInicio) {
+        return obtenerTotalVentasDesde(fechaInicio, LocalDateTime.now());
+    }
+
+    public static double obtenerTotalVentasDesde(String fechaInicio) {
+        return obtenerTotalVentasDesde(parseDateTime(fechaInicio));
+    }
+
+    public static double obtenerTotalPagosDesde(LocalDateTime fechaInicio, LocalDateTime fechaFin) {
+        if (fechaInicio == null || fechaFin == null) {
+            return 0.0;
+        }
         double total = 0.0;
-        String sql = "SELECT SUM(monto) AS total FROM pagos WHERE date(fecha_pago) >= date(?) AND estado = 'ACTIVO'";
+        String sql = "SELECT SUM(monto) AS total FROM pagos WHERE datetime(fecha_pago) BETWEEN datetime(?) AND datetime(?) AND estado = 'ACTIVO'";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, fechaInicio);
+            stmt.setString(1, formatDateTime(fechaInicio));
+            stmt.setString(2, formatDateTime(fechaFin));
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 total = rs.getDouble("total");
@@ -1261,6 +1283,14 @@ public class DatabaseUtil {
             e.printStackTrace();
         }
         return total;
+    }
+
+    public static double obtenerTotalPagosDesde(LocalDateTime fechaInicio) {
+        return obtenerTotalPagosDesde(fechaInicio, LocalDateTime.now());
+    }
+
+    public static double obtenerTotalPagosDesde(String fechaInicio) {
+        return obtenerTotalPagosDesde(parseDateTime(fechaInicio));
     }
 
     public static void anularPago(int pagoId) throws SQLException {
@@ -1337,11 +1367,14 @@ public class DatabaseUtil {
     }
 
     public static double obtenerTotalVentasEntre(LocalDateTime inicio, LocalDateTime fin) throws SQLException {
-        String sql = "SELECT SUM(total) AS total FROM ventas WHERE date(fecha) BETWEEN date(?) AND date(?)";
+        if (inicio == null || fin == null) {
+            return 0.0;
+        }
+        String sql = "SELECT SUM(total) AS total FROM ventas WHERE datetime(fecha) BETWEEN datetime(?) AND datetime(?)";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, inicio.toLocalDate().toString());
-            stmt.setString(2, fin.toLocalDate().toString());
+            stmt.setString(1, formatDateTime(inicio));
+            stmt.setString(2, formatDateTime(fin));
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return rs.getDouble("total");
@@ -1402,7 +1435,7 @@ public class DatabaseUtil {
     }
 
     public static void finalizarTurno(int id, String stockFinal, double ingresosVentas, double ingresosClientes) {
-        String sql = "UPDATE turnos SET fecha_fin = datetime('now'), stock_final = ?, ingresos_ventas = ?, ingresos_clientes = ? WHERE id = ?";
+        String sql = "UPDATE turnos SET fecha_fin = datetime('now','localtime'), stock_final = ?, ingresos_ventas = ?, ingresos_clientes = ? WHERE id = ?";
         try {
             executeUpdate(sql, stockFinal, ingresosVentas, ingresosClientes, id);
         } catch (SQLException e) {
@@ -1475,10 +1508,6 @@ public class DatabaseUtil {
         return pagos;
     }
 
-    private static String formatDateTime(LocalDateTime value) {
-        return value != null ? value.format(SQLITE_DATETIME_FORMATTER) : null;
-    }
-
     private static Integer extraerPagoId(String detalle) {
         if (detalle == null) {
             return null;
@@ -1526,6 +1555,32 @@ public class DatabaseUtil {
             }
         }
         return false;
+    }
+
+    public static String formatDateTime(LocalDateTime dateTime) {
+        return dateTime == null ? null : SQLITE_DATETIME_FORMATTER.format(dateTime);
+    }
+
+    public static LocalDateTime parseDateTime(String valor) {
+        if (valor == null || valor.isBlank()) {
+            return null;
+        }
+        String normalizado = valor.trim();
+        try {
+            if (normalizado.contains("T")) {
+                return LocalDateTime.parse(normalizado);
+            }
+            if (normalizado.length() == 16) {
+                normalizado = normalizado + ":00";
+            }
+            return LocalDateTime.parse(normalizado, SQLITE_DATETIME_FORMATTER);
+        } catch (DateTimeParseException e) {
+            try {
+                return LocalDateTime.parse(normalizado.replace(' ', 'T'));
+            } catch (DateTimeParseException ignored) {
+                return null;
+            }
+        }
     }
 
     private static LocalDate parseFecha(String valor) {
