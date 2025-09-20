@@ -18,6 +18,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import util.AuditoriaUtil;
 import util.DatabaseUtil;
 import util.SessionManager;
+import util.StockAlertUtil;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -37,6 +38,7 @@ public class InsumosAdminController implements Initializable {
     @FXML private Label lblStock;
     @FXML private Label lblPrecio;
     @FXML private Label lblUmbral;
+    @FXML private Label lblStockObjetivo;
 
     private final ObservableList<Producto> listaProductos = FXCollections.observableArrayList();
 
@@ -49,6 +51,7 @@ public class InsumosAdminController implements Initializable {
             return;
         }
         configurarTabla();
+        configurarSemaforoTabla();
         tablaInsumos.setItems(listaProductos);
         cargarProductos();
         tablaInsumos.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, nuevo) -> mostrarDetalles(nuevo));
@@ -78,15 +81,48 @@ public class InsumosAdminController implements Initializable {
         });
     }
 
+    private void configurarSemaforoTabla() {
+        tablaInsumos.setRowFactory(tv -> new TableRow<>() {
+            @Override
+            protected void updateItem(Producto producto, boolean empty) {
+                super.updateItem(producto, empty);
+                if (empty || producto == null) {
+                    setStyle("");
+                    setTooltip(null);
+                } else {
+                    StockAlertUtil.StockStatus status = StockAlertUtil.evaluate(producto);
+                    String color = status.getSuggestedColor();
+                    setStyle(String.format("-fx-background-color: %s;", color));
+                    Tooltip tooltip = new Tooltip(status.getTooltipText());
+                    setTooltip(tooltip);
+                }
+            }
+        });
+    }
+
     private void mostrarDetalles(Producto producto) {
         if (producto == null) {
             lblStock.setText("-");
             lblPrecio.setText("-");
             lblUmbral.setText("-");
+            lblStockObjetivo.setText("-");
+            lblStockObjetivo.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
+            lblStockObjetivo.setTooltip(null);
         } else {
             lblStock.setText(String.valueOf(producto.getStock()));
             lblPrecio.setText(String.format(Locale.getDefault(), "$%.2f", producto.getPrecio()));
             lblUmbral.setText(String.valueOf(producto.getUmbral()));
+            StockAlertUtil.StockStatus status = StockAlertUtil.evaluate(producto);
+            lblStockObjetivo.setText(String.format("%d (punto medio: %d)",
+                    producto.getStockObjetivo(), status.getPuntoMedio()));
+            String textoColor = switch (status.getLevel()) {
+                case OPTIMO -> "-fx-text-fill: #2E7D32;";
+                case PREVENCION -> "-fx-text-fill: #F57C00;";
+                default -> "-fx-text-fill: #C62828;";
+            };
+            lblStockObjetivo.setStyle(textoColor + "-fx-font-size: 16px; -fx-font-weight: bold;");
+            Tooltip tooltip = new Tooltip(status.getTooltipText());
+            lblStockObjetivo.setTooltip(tooltip);
         }
     }
 
@@ -187,6 +223,7 @@ public class InsumosAdminController implements Initializable {
         TextField txtPrecioVenta = createStyledTextField("Precio venta", true);
         TextField txtUnidadesPorPaca = createStyledTextField("Unidades por paca", false);
         TextField txtUmbral = createStyledTextField("Umbral mínimo", false);
+        TextField txtStockObjetivo = createStyledTextField("Stock inicial / objetivo", true);
 
         txtNombre.setTextFormatter(new TextFormatter<>(change -> {
             change.setText(change.getText().toUpperCase());
@@ -198,6 +235,7 @@ public class InsumosAdminController implements Initializable {
         txtPesoScoop.setTextFormatter(createNumericFormatter(true));
         txtUnidadesPorPaca.setTextFormatter(createNumericFormatter(false));
         txtUmbral.setTextFormatter(createNumericFormatter(false));
+        txtStockObjetivo.setTextFormatter(createNumericFormatter(false));
 
         Label lblStockCalculado = new Label();
         lblStockCalculado.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #2c3e50;");
@@ -215,6 +253,7 @@ public class InsumosAdminController implements Initializable {
         Label iconPesoTotal = createIconLabel("fas-weight", "#1abc9c");
         Label iconScoop = createIconLabel("fas-utensil-spoon", "#e67e22");
         Label iconUmbral = createIconLabel("fas-bell", "#f1c40f");
+        Label iconObjetivo = createIconLabel("fas-bullseye", "#16a085");
 
         grid.add(iconNombre, 0, 0);
         grid.add(txtNombre, 1, 0, 2, 1);
@@ -240,8 +279,16 @@ public class InsumosAdminController implements Initializable {
         grid.add(iconUmbral, 0, 7);
         grid.add(txtUmbral, 1, 7, 2, 1);
 
-        grid.add(lblStockCalculado, 0, 8, 3, 1);
-        grid.add(lblResultado, 0, 9, 3, 1);
+        grid.add(iconObjetivo, 0, 8);
+        grid.add(txtStockObjetivo, 1, 8, 2, 1);
+
+        grid.add(lblStockCalculado, 0, 9, 3, 1);
+        grid.add(lblResultado, 0, 10, 3, 1);
+
+        Label lblValidacion = new Label();
+        lblValidacion.setStyle("-fx-text-fill: #ff6b6b; -fx-font-weight: bold;");
+        lblValidacion.setWrapText(true);
+        grid.add(lblValidacion, 0, 11, 3, 1);
 
         txtPesoTotal.setVisible(false);
         txtPesoScoop.setVisible(false);
@@ -339,6 +386,10 @@ public class InsumosAdminController implements Initializable {
 
         dialog.getDialogPane().setContent(contenedor);
 
+        ChangeListener<String> limpiarValidacion = (obs, oldVal, newVal) -> lblValidacion.setText("");
+        txtStockObjetivo.textProperty().addListener(limpiarValidacion);
+        txtUmbral.textProperty().addListener(limpiarValidacion);
+
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == btnRegistrar) {
                 try {
@@ -362,26 +413,31 @@ public class InsumosAdminController implements Initializable {
                     if ("PACA".equals(tipo)) {
                         int unidadesPorPaca = Integer.parseInt(txtUnidadesPorPaca.getText());
                         nuevo.setUnidadesPorPaca(unidadesPorPaca);
-                        nuevo.setStock(unidadesPorPaca);
                     } else {
                         double pesoTotal = Double.parseDouble(txtPesoTotal.getText());
                         double pesoScoop = Double.parseDouble(txtPesoScoop.getText());
 
                         nuevo.setPesoTotal(pesoTotal);
                         nuevo.setPesoScoop(pesoScoop);
-
-                        int totalScoops;
-                        if ("KG".equals(tipo)) {
-                            totalScoops = (int) ((pesoTotal * 1000) / pesoScoop);
-                        } else {
-                            totalScoops = (int) ((pesoTotal * 453.592) / pesoScoop);
-                        }
-                        nuevo.setStock(totalScoops);
                     }
+
+                    if (txtStockObjetivo.getText().isBlank()) {
+                        lblValidacion.setText("Ingrese el stock inicial/objetivo del producto.");
+                        return null;
+                    }
+
+                    int stockIngresado = Integer.parseInt(txtStockObjetivo.getText());
+                    if (stockIngresado < umbral) {
+                        lblValidacion.setText("El stock objetivo debe ser mayor o igual al umbral configurado.");
+                        return null;
+                    }
+
+                    nuevo.setStock(stockIngresado);
+                    nuevo.setStockObjetivo(stockIngresado);
 
                     return nuevo;
                 } catch (Exception e) {
-                    mostrarAlerta("Error", "Complete los campos requeridos correctamente.");
+                    lblValidacion.setText("Complete los campos requeridos correctamente.");
                     return null;
                 }
             }
@@ -424,6 +480,10 @@ public class InsumosAdminController implements Initializable {
         Label lblUmbralNuevo = new Label("Umbral mínimo:");
         TextField tfUmbral = new TextField(String.valueOf(seleccionado.getUmbral()));
 
+        Label lblObjetivo = new Label("Stock objetivo:");
+        TextField tfStockObjetivo = new TextField(String.valueOf(seleccionado.getStockObjetivo()));
+        tfStockObjetivo.setTextFormatter(createNumericFormatter(false));
+
         Label lblError = new Label();
         lblError.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
 
@@ -435,7 +495,9 @@ public class InsumosAdminController implements Initializable {
         grid.add(tfStock, 1, 2);
         grid.add(lblUmbralNuevo, 0, 3);
         grid.add(tfUmbral, 1, 3);
-        grid.add(lblError, 0, 4, 2, 1);
+        grid.add(lblObjetivo, 0, 4);
+        grid.add(tfStockObjetivo, 1, 4);
+        grid.add(lblError, 0, 5, 2, 1);
 
         dialog.getDialogPane().setContent(grid);
 
@@ -446,23 +508,35 @@ public class InsumosAdminController implements Initializable {
             boolean precioOk = esPrecioValido(tfPrecio.getText());
             boolean stockOk = esStockValido(tfStock.getText());
             boolean umbralOk = esStockValido(tfUmbral.getText());
+            boolean objetivoOk = esStockValido(tfStockObjetivo.getText());
+            boolean relacionOk = true;
+
+            if (objetivoOk && umbralOk) {
+                relacionOk = Integer.parseInt(tfStockObjetivo.getText()) >= Integer.parseInt(tfUmbral.getText());
+            }
 
             if (!precioOk) {
                 lblError.setText("Precio inválido (debe ser número >= 0)");
             } else if (!stockOk) {
-                lblError.setText("Stock inválido (debe ser entero >= 0)");
+                lblError.setText("Unidades a sumar inválidas (entero >= 0)");
             } else if (!umbralOk) {
                 lblError.setText("Umbral inválido (debe ser entero >= 0)");
+            } else if (!objetivoOk) {
+                lblError.setText("Objetivo inválido (debe ser entero >= 0)");
+            } else if (!relacionOk) {
+                lblError.setText("El stock objetivo debe ser mayor o igual al umbral");
             } else {
                 lblError.setText("");
             }
 
-            btnActualizar.setDisable(!(precioOk && stockOk && umbralOk));
+            btnActualizar.setDisable(!(precioOk && stockOk && umbralOk && objetivoOk && relacionOk));
         };
 
         tfPrecio.textProperty().addListener(validador);
         tfStock.textProperty().addListener(validador);
         tfUmbral.textProperty().addListener(validador);
+        tfStockObjetivo.textProperty().addListener(validador);
+        validador.changed(null, null, null);
 
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == botonActualizar) {
@@ -471,6 +545,7 @@ public class InsumosAdminController implements Initializable {
                 editado.setPrecio(Double.parseDouble(tfPrecio.getText()));
                 editado.setStock(Integer.parseInt(tfStock.getText()));
                 editado.setUmbral(Integer.parseInt(tfUmbral.getText()));
+                editado.setStockObjetivo(Integer.parseInt(tfStockObjetivo.getText()));
                 return editado;
             }
             return null;
@@ -479,11 +554,10 @@ public class InsumosAdminController implements Initializable {
         Optional<Producto> resultado = dialog.showAndWait();
         resultado.ifPresent(prod -> {
             try {
-                DatabaseUtil.actualizarProducto(prod.getId(), prod.getPrecio(), 0);
+                DatabaseUtil.actualizarProducto(prod.getId(), prod.getPrecio(), prod.getUmbral(), prod.getStockObjetivo());
                 if (prod.getStock() > 0) {
                     DatabaseUtil.registrarEntradaProducto(prod.getId(), prod.getStock());
                 }
-                DatabaseUtil.executeUpdate("UPDATE productos SET umbral = ? WHERE id = ?", prod.getUmbral(), prod.getId());
 
                 AuditoriaUtil.registrarAccion(
                         SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 0,

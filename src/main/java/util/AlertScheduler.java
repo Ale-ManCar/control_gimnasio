@@ -155,13 +155,15 @@ public class AlertScheduler implements Runnable {
 
     private static List<String> obtenerAlertasProductos() {
         List<String> alertas = new ArrayList<>();
-        String sqlProductos = "SELECT nombre, stock, umbral FROM productos WHERE stock <= umbral";
+        String sqlProductos = "SELECT nombre, stock, umbral, stock_objetivo FROM productos WHERE stock <= umbral";
         try (Connection conn = DatabaseUtil.getConnection();
              Statement stmt = conn.createStatement()) {
             try (ResultSet rs = stmt.executeQuery(sqlProductos)) {
                 while (rs.next()) {
+                    int umbral = rs.getInt("umbral");
+                    int objetivo = rs.getInt("stock_objetivo");
                     alertas.add("Producto '" + rs.getString("nombre") + "' con stock " +
-                            rs.getInt("stock") + " (umbral " + rs.getInt("umbral") + ")");
+                            rs.getInt("stock") + " (umbral " + umbral + ", objetivo " + objetivo + ")");
                 }
             }
 

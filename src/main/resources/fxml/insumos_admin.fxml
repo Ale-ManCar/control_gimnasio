@@ -50,9 +50,10 @@
             </HBox>
             <GridPane hgap="20" vgap="10" style="-fx-background-color: rgba(255,255,255,0.1); -fx-padding: 15; -fx-background-radius: 12; -fx-border-radius: 12; -fx-border-color: rgba(255,255,255,0.15); -fx-border-width: 1;">
                 <columnConstraints>
-                    <ColumnConstraints percentWidth="33"/>
-                    <ColumnConstraints percentWidth="33"/>
-                    <ColumnConstraints percentWidth="34"/>
+                    <ColumnConstraints percentWidth="25"/>
+                    <ColumnConstraints percentWidth="25"/>
+                    <ColumnConstraints percentWidth="25"/>
+                    <ColumnConstraints percentWidth="25"/>
                 </columnConstraints>
                 <Label text="Stock" style="-fx-text-fill: #bdc3c7; -fx-font-size: 12px;" GridPane.columnIndex="0"/>
                 <Label fx:id="lblStock" text="-" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
@@ -60,6 +61,11 @@
                 <Label fx:id="lblPrecio" text="-" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
                 <Label text="Umbral" style="-fx-text-fill: #bdc3c7; -fx-font-size: 12px;" GridPane.columnIndex="2"/>
                 <Label fx:id="lblUmbral" text="-" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+                <Label text="Objetivo" style="-fx-text-fill: #bdc3c7; -fx-font-size: 12px;" GridPane.columnIndex="3"/>
+                <Label fx:id="lblStockObjetivo" text="-" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
+                <Label text="Semáforo: Verde = óptimo | Amarillo = precaución | Rojo = crítico"
+                       style="-fx-text-fill: #95a5a6; -fx-font-size: 11px;"
+                       GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="4"/>
             </GridPane>
         </VBox>
     </center>

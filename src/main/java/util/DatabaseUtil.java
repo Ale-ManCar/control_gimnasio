@@ -99,6 +99,7 @@ public class DatabaseUtil {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "nombre TEXT NOT NULL," +
                 "stock INTEGER NOT NULL," +
+                "stock_objetivo INTEGER DEFAULT 0," +
                 "umbral INTEGER DEFAULT 0," +
                 "precio REAL NOT NULL," +
                 "tipo TEXT NOT NULL," +
@@ -183,6 +184,7 @@ public class DatabaseUtil {
             stmt.execute(sqlProveedores);
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN area TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN coach_id INTEGER REFERENCES coaches(id)"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE productos ADD COLUMN stock_objetivo INTEGER DEFAULT 0"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE productos ADD COLUMN umbral INTEGER DEFAULT 0"); } catch (SQLException ignored) {}
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
             try { stmt.execute("ALTER TABLE usuarios ADD COLUMN last_login TEXT"); } catch (SQLException ignored) {}
@@ -730,11 +732,12 @@ public class DatabaseUtil {
     }
 
     public static void insertarProducto(Producto producto) throws SQLException {
-        String sql = "INSERT INTO productos (nombre, stock, umbral, precio, tipo, precio_compra, unidades_por_paca, peso_total, peso_por_scoop) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO productos (nombre, stock, stock_objetivo, umbral, precio, tipo, precio_compra, unidades_por_paca, peso_total, peso_por_scoop) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         executeUpdate(sql,
                 producto.getNombre(),
                 producto.getStock(),
+                producto.getStockObjetivo(),
                 producto.getUmbral(),
                 producto.getPrecio(),
                 producto.getTipo(),
@@ -747,7 +750,7 @@ public class DatabaseUtil {
 
     public static ObservableList<Producto> getProductos() throws SQLException {
         ObservableList<Producto> productos = FXCollections.observableArrayList();
-        String sql = "SELECT id, nombre, stock, umbral, precio, tipo, precio_compra, unidades_por_paca, peso_total, peso_por_scoop FROM productos";
+        String sql = "SELECT id, nombre, stock, stock_objetivo, umbral, precio, tipo, precio_compra, unidades_por_paca, peso_total, peso_por_scoop FROM productos";
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
@@ -758,6 +761,7 @@ public class DatabaseUtil {
                 p.setId(rs.getInt("id"));
                 p.setNombre(rs.getString("nombre").toUpperCase(Locale.ROOT));
                 p.setStock(rs.getInt("stock"));
+                p.setStockObjetivo(rs.getInt("stock_objetivo"));
                 p.setUmbral(rs.getInt("umbral"));
                 p.setPrecio(rs.getDouble("precio"));
                 p.setTipo(rs.getString("tipo"));
@@ -776,9 +780,9 @@ public class DatabaseUtil {
         executeUpdate(sql, cantidadVendida, id);
     }
 
-    public static void actualizarProducto(int id, double nuevoPrecio, int unidadesExtra) throws SQLException {
-        String sql = "UPDATE productos SET precio = ?, stock = stock + ? WHERE id = ?";
-        executeUpdate(sql, nuevoPrecio, unidadesExtra, id);
+    public static void actualizarProducto(int id, double nuevoPrecio, int nuevoUmbral, int nuevoStockObjetivo) throws SQLException {
+        String sql = "UPDATE productos SET precio = ?, umbral = ?, stock_objetivo = ? WHERE id = ?";
+        executeUpdate(sql, nuevoPrecio, nuevoUmbral, nuevoStockObjetivo, id);
     }
 
     public static void registrarEntradaProducto(int productoId, int cantidad) throws SQLException {

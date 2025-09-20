@@ -18,6 +18,7 @@ import util.EventBus;
 import util.AuditoriaUtil;
 import util.SessionManager;
 import models.Role;
+import util.StockAlertUtil;
 
 import java.util.Optional;
 
@@ -31,6 +32,7 @@ public class InventarioController {
     @FXML private Label lblCantidad;
     @FXML private Label lblTotalVenta;
     @FXML private Label lblTotalCarrito;
+    @FXML private Label lblObjetivo;
 
     @FXML private TableView<VentaItem> tablaCarrito;
     @FXML private TableColumn<VentaItem, String> colCarritoNombre;
@@ -49,6 +51,9 @@ public class InventarioController {
             return;
         }
         configurarTabla();
+        configurarSemaforoTabla();
+        tablaProductos.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> actualizarIndicadores(newVal));
+        actualizarIndicadores(null);
         configurarTablaCarrito();
         cargarProductos();
         configurarComboBox();
@@ -73,6 +78,23 @@ public class InventarioController {
                     setText(null);
                 } else {
                     setText(String.format("$%.2f", precio));
+                }
+            }
+        });
+    }
+
+    private void configurarSemaforoTabla() {
+        tablaProductos.setRowFactory(tv -> new TableRow<>() {
+            @Override
+            protected void updateItem(Producto producto, boolean empty) {
+                super.updateItem(producto, empty);
+                if (empty || producto == null) {
+                    setStyle("");
+                    setTooltip(null);
+                } else {
+                    StockAlertUtil.StockStatus status = StockAlertUtil.evaluate(producto);
+                    setStyle(String.format("-fx-background-color: %s;", status.getSuggestedColor()));
+                    setTooltip(new Tooltip(status.getTooltipText()));
                 }
             }
         });
@@ -148,11 +170,41 @@ public class InventarioController {
         tablaCarrito.setItems(carrito);
     }
 
+    private void actualizarIndicadores(Producto producto) {
+        if (lblObjetivo == null) {
+            return;
+        }
+        if (producto == null) {
+            lblObjetivo.setText("Selecciona un producto para ver su estado.");
+            lblObjetivo.setStyle("-fx-text-fill: #bdc3c7; -fx-font-size: 12px;");
+            lblObjetivo.setTooltip(null);
+            return;
+        }
+
+        StockAlertUtil.StockStatus status = StockAlertUtil.evaluate(producto);
+        lblObjetivo.setText(String.format("Stock: %d | Umbral: %d | Punto medio: %d | Objetivo: %d",
+                producto.getStock(), status.getUmbral(), status.getPuntoMedio(), status.getObjetivo()));
+        String color = switch (status.getLevel()) {
+            case OPTIMO -> "#2E7D32";
+            case PREVENCION -> "#F57C00";
+            default -> "#C62828";
+        };
+        lblObjetivo.setStyle(String.format("-fx-text-fill: %s; -fx-font-weight: bold; -fx-font-size: 12px;", color));
+        lblObjetivo.setTooltip(new Tooltip(status.getTooltipText()));
+    }
+
     private void cargarProductos() {
         try {
             listaProductos.setAll(DatabaseUtil.getProductos());
             tablaProductos.setItems(listaProductos);
             cbProductos.setItems(listaProductos);
+            if (!listaProductos.isEmpty()) {
+                tablaProductos.getSelectionModel().selectFirst();
+                cbProductos.getSelectionModel().selectFirst();
+                actualizarIndicadores(listaProductos.get(0));
+            } else {
+                actualizarIndicadores(null);
+            }
         } catch (Exception e) {
             mostrarAlerta("Error", "No se pudieron cargar los productos");
             e.printStackTrace();
@@ -186,9 +238,13 @@ public class InventarioController {
 
         cbProductos.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
+                tablaProductos.getSelectionModel().select(newVal);
                 cantidadActual = 1;
                 actualizarLabelCantidad();
                 calcularTotalVenta();
+                actualizarIndicadores(newVal);
+            } else {
+                actualizarIndicadores(null);
             }
         });
     }

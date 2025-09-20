@@ -78,6 +78,8 @@
                         </TableColumn>
                     </columns>
                 </TableView>
+                <Label fx:id="lblObjetivo" text="Selecciona un producto para ver su estado."
+                       style="-fx-text-fill: #bdc3c7; -fx-font-size: 12px; -fx-padding: 5 0 0 0;"/>
             </VBox>
 
             <!-- CARRITO DE VENTA -->
