@@ -795,7 +795,7 @@ public class DatabaseUtil {
 
     public static void registrarEntradaProducto(int productoId, int cantidad) throws SQLException {
         String updateSql = "UPDATE productos SET stock = stock + ? WHERE id = ?";
-        String insertSql = "INSERT INTO inventario_historial (producto_id, tipo, cantidad, fecha) VALUES (?, 'ENTRADA', ?, datetime('now'))";
+        String insertSql = "INSERT INTO inventario_historial (producto_id, tipo, cantidad, fecha) VALUES (?, 'ENTRADA', ?, ?)";
 
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
@@ -807,6 +807,7 @@ public class DatabaseUtil {
 
                 psInsert.setInt(1, productoId);
                 psInsert.setInt(2, cantidad);
+                psInsert.setString(3, formatDateTime(LocalDateTime.now()));
                 psInsert.executeUpdate();
 
                 conn.commit();
@@ -819,7 +820,7 @@ public class DatabaseUtil {
 
     public static void registrarSalidaProducto(int productoId, int cantidad) throws SQLException {
         String updateSql = "UPDATE productos SET stock = stock - ? WHERE id = ?";
-        String insertSql = "INSERT INTO inventario_historial (producto_id, tipo, cantidad, fecha) VALUES (?, 'SALIDA', ?, datetime('now'))";
+        String insertSql = "INSERT INTO inventario_historial (producto_id, tipo, cantidad, fecha) VALUES (?, 'SALIDA', ?, ?)";
 
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
@@ -831,6 +832,7 @@ public class DatabaseUtil {
 
                 psInsert.setInt(1, productoId);
                 psInsert.setInt(2, cantidad);
+                psInsert.setString(3, formatDateTime(LocalDateTime.now()));
                 psInsert.executeUpdate();
 
                 conn.commit();
@@ -1152,11 +1154,12 @@ public class DatabaseUtil {
 
     public static int iniciarTurno(int usuarioId) throws SQLException {
         String stock = obtenerStockJson();
-        String sql = "INSERT INTO turnos (usuario_id, fecha_inicio, stock_inicial) VALUES (?, datetime('now','localtime'), ?)";
+        String sql = "INSERT INTO turnos (usuario_id, fecha_inicio, stock_inicial) VALUES (?, ?, ?)";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, usuarioId);
-            stmt.setString(2, stock);
+            stmt.setString(2, formatDateTime(LocalDateTime.now()));
+            stmt.setString(3, stock);
             stmt.executeUpdate();
             ResultSet rs = stmt.getGeneratedKeys();
             if (rs.next()) {
@@ -1435,9 +1438,9 @@ public class DatabaseUtil {
     }
 
     public static void finalizarTurno(int id, String stockFinal, double ingresosVentas, double ingresosClientes) {
-        String sql = "UPDATE turnos SET fecha_fin = datetime('now','localtime'), stock_final = ?, ingresos_ventas = ?, ingresos_clientes = ? WHERE id = ?";
+        String sql = "UPDATE turnos SET fecha_fin = ?, stock_final = ?, ingresos_ventas = ?, ingresos_clientes = ? WHERE id = ?";
         try {
-            executeUpdate(sql, stockFinal, ingresosVentas, ingresosClientes, id);
+            executeUpdate(sql, LocalDateTime.now(), stockFinal, ingresosVentas, ingresosClientes, id);
         } catch (SQLException e) {
             e.printStackTrace();
         }

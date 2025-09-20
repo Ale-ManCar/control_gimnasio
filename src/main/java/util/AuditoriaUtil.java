@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -28,9 +29,9 @@ public class AuditoriaUtil {
      * Registra una acción realizada por un usuario.
      */
     public static void registrarAccion(int usuarioId, String accion, String detalle) {
-        String sql = "INSERT INTO auditoria (usuario_id, accion, detalle, timestamp) VALUES (?, ?, ?, datetime('now'))";
+        String sql = "INSERT INTO auditoria (usuario_id, accion, detalle, timestamp) VALUES (?, ?, ?, ?)";
         try {
-            DatabaseUtil.executeUpdate(sql, usuarioId, accion, detalle);
+            DatabaseUtil.executeUpdate(sql, usuarioId, accion, detalle, LocalDateTime.now());
         } catch (SQLException e) {
             e.printStackTrace();
         }
