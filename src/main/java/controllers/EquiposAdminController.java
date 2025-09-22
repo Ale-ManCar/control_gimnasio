@@ -12,6 +12,7 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import models.Equipo;
 import models.Role;
 import models.User;
@@ -35,7 +36,10 @@ public class EquiposAdminController implements Initializable {
     @FXML private TableColumn<Equipo, String> colNombre;
     @FXML private TableColumn<Equipo, String> colTipo;
     @FXML private TableColumn<Equipo, String> colEstado;
+    @FXML private TableColumn<Equipo, String> colMarca;
+    @FXML private TableColumn<Equipo, String> colModelo;
     @FXML private TableColumn<Equipo, Integer> colCantidad;
+    @FXML private TableColumn<Equipo, String> colPeso;
     @FXML private TableColumn<Equipo, String> colUbicacion;
     @FXML private TableColumn<Equipo, String> colUltimoMantenimiento;
     @FXML private TableColumn<Equipo, String> colProximoMantenimiento;
@@ -70,7 +74,10 @@ public class EquiposAdminController implements Initializable {
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colTipo.setCellValueFactory(new PropertyValueFactory<>("tipo"));
         colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
+        colMarca.setCellValueFactory(new PropertyValueFactory<>("marca"));
+        colModelo.setCellValueFactory(new PropertyValueFactory<>("modelo"));
         colCantidad.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
+        colPeso.setCellValueFactory(new PropertyValueFactory<>("peso"));
         colUbicacion.setCellValueFactory(new PropertyValueFactory<>("ubicacion"));
         colUltimoMantenimiento.setCellValueFactory(cellData ->
                 new SimpleStringProperty(formatearFecha(cellData.getValue().getFechaUltimoMantenimiento())));
@@ -234,8 +241,10 @@ public class EquiposAdminController implements Initializable {
 
         TextField txtNombre = new TextField();
         txtNombre.setPromptText("Nombre del equipo");
-        TextField txtTipo = new TextField();
-        txtTipo.setPromptText("Tipo");
+        ComboBox<String> cbTipo = new ComboBox<>();
+        cbTipo.getItems().addAll("Máquina Estática", "Equipo con Peso");
+        cbTipo.setPromptText("Tipo de equipo");
+        cbTipo.getSelectionModel().selectFirst();
         ComboBox<String> cbEstado = new ComboBox<>(FXCollections.observableArrayList(
                 "OPERATIVO", "MANTENIMIENTO", "CRITICO", "FUERA DE SERVICIO"));
         cbEstado.setEditable(true);
@@ -244,6 +253,8 @@ public class EquiposAdminController implements Initializable {
         spCantidad.setEditable(true);
         TextField txtMarca = new TextField();
         txtMarca.setPromptText("Marca");
+        TextField txtModelo = new TextField();
+        txtModelo.setPromptText("Modelo (opcional)");
         TextField txtPeso = new TextField();
         txtPeso.setPromptText("Peso (kg)");
         txtPeso.setTextFormatter(crearFormatterEntero());
@@ -257,13 +268,23 @@ public class EquiposAdminController implements Initializable {
         TextArea txtDescripcion = new TextArea();
         txtDescripcion.setPromptText("Notas o descripción");
         txtDescripcion.setPrefRowCount(3);
+        txtDescripcion.setWrapText(true);
 
         if (esEdicion) {
             txtNombre.setText(equipoExistente.getNombre());
-            txtTipo.setText(equipoExistente.getTipo());
+            String tipoExistente = equipoExistente.getTipo();
+            if (tipoExistente != null && !tipoExistente.isBlank()) {
+                boolean existe = cbTipo.getItems().stream()
+                        .anyMatch(item -> item.equalsIgnoreCase(tipoExistente));
+                if (!existe) {
+                    cbTipo.getItems().add(tipoExistente);
+                }
+                cbTipo.setValue(tipoExistente);
+            }
             cbEstado.setValue(equipoExistente.getEstado());
             spCantidad.getValueFactory().setValue(equipoExistente.getCantidad());
             txtMarca.setText(equipoExistente.getMarca());
+            txtModelo.setText(equipoExistente.getModelo());
             if (equipoExistente.getPeso() != null) {
                 txtPeso.setText(equipoExistente.getPeso());
             }
@@ -274,40 +295,83 @@ public class EquiposAdminController implements Initializable {
             txtDescripcion.setText(equipoExistente.getDescripcion());
         }
 
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
+        GridPane seccionIdentidad = new GridPane();
+        seccionIdentidad.setHgap(10);
+        seccionIdentidad.setVgap(10);
+        seccionIdentidad.add(new Label("Nombre:"), 0, 0);
+        seccionIdentidad.add(txtNombre, 1, 0);
+        seccionIdentidad.add(new Label("Tipo:"), 0, 1);
+        seccionIdentidad.add(cbTipo, 1, 1);
 
-        int fila = 0;
-        grid.add(new Label("Nombre:"), 0, fila);
-        grid.add(txtNombre, 1, fila++);
-        grid.add(new Label("Tipo:"), 0, fila);
-        grid.add(txtTipo, 1, fila++);
-        grid.add(new Label("Marca:"), 0, fila);
-        grid.add(txtMarca, 1, fila++);
-        grid.add(new Label("Estado:"), 0, fila);
-        grid.add(cbEstado, 1, fila++);
-        grid.add(new Label("Cantidad:"), 0, fila);
-        grid.add(spCantidad, 1, fila++);
-        grid.add(new Label("Peso (kg):"), 0, fila);
-        grid.add(txtPeso, 1, fila++);
-        grid.add(new Label("Fecha de adquisición:"), 0, fila);
-        grid.add(dpCompra, 1, fila++);
-        grid.add(new Label("Último mantenimiento:"), 0, fila);
-        grid.add(dpUltimoMantenimiento, 1, fila++);
-        grid.add(new Label("Frecuencia (días):"), 0, fila);
-        grid.add(txtFrecuencia, 1, fila++);
-        grid.add(new Label("Ubicación:"), 0, fila);
-        grid.add(txtUbicacion, 1, fila++);
-        grid.add(new Label("Descripción:"), 0, fila);
-        grid.add(txtDescripcion, 1, fila);
+        GridPane seccionMarcaModelo = new GridPane();
+        seccionMarcaModelo.setHgap(10);
+        seccionMarcaModelo.setVgap(10);
+        seccionMarcaModelo.add(new Label("Marca:"), 0, 0);
+        seccionMarcaModelo.add(txtMarca, 1, 0);
+        seccionMarcaModelo.add(new Label("Modelo:"), 0, 1);
+        seccionMarcaModelo.add(txtModelo, 1, 1);
 
-        dialogo.getDialogPane().setContent(grid);
+        GridPane seccionEstadoUbicacion = new GridPane();
+        seccionEstadoUbicacion.setHgap(10);
+        seccionEstadoUbicacion.setVgap(10);
+        seccionEstadoUbicacion.add(new Label("Estado:"), 0, 0);
+        seccionEstadoUbicacion.add(cbEstado, 1, 0);
+        seccionEstadoUbicacion.add(new Label("Ubicación:"), 0, 1);
+        seccionEstadoUbicacion.add(txtUbicacion, 1, 1);
+
+        GridPane seccionFechas = new GridPane();
+        seccionFechas.setHgap(10);
+        seccionFechas.setVgap(10);
+        seccionFechas.add(new Label("Fecha de adquisición:"), 0, 0);
+        seccionFechas.add(dpCompra, 1, 0);
+        seccionFechas.add(new Label("Último mantenimiento:"), 0, 1);
+        seccionFechas.add(dpUltimoMantenimiento, 1, 1);
+        seccionFechas.add(new Label("Frecuencia (días):"), 0, 2);
+        seccionFechas.add(txtFrecuencia, 1, 2);
+
+        GridPane seccionPesoCantidad = new GridPane();
+        seccionPesoCantidad.setHgap(10);
+        seccionPesoCantidad.setVgap(10);
+        seccionPesoCantidad.add(new Label("Cantidad:"), 0, 0);
+        seccionPesoCantidad.add(spCantidad, 1, 0);
+        seccionPesoCantidad.add(new Label("Peso (kg):"), 0, 1);
+        seccionPesoCantidad.add(txtPeso, 1, 1);
+        seccionPesoCantidad.managedProperty().bind(seccionPesoCantidad.visibleProperty());
+
+        VBox seccionDescripcion = new VBox(6);
+        seccionDescripcion.getChildren().addAll(new Label("Descripción:"), txtDescripcion);
+
+        VBox contenedor = new VBox(12);
+        contenedor.setPrefWidth(420);
+        contenedor.getChildren().addAll(
+                seccionIdentidad,
+                seccionMarcaModelo,
+                seccionEstadoUbicacion,
+                seccionFechas,
+                seccionPesoCantidad,
+                seccionDescripcion
+        );
+
+        boolean mostrarPeso = esEquipoConPeso(cbTipo.getValue());
+        seccionPesoCantidad.setVisible(mostrarPeso);
+        cbTipo.valueProperty().addListener((obs, oldValue, newValue) -> {
+            boolean esPeso = esEquipoConPeso(newValue);
+            seccionPesoCantidad.setVisible(esPeso);
+            if (!esPeso) {
+                txtPeso.clear();
+                if (spCantidad.getValueFactory() != null) {
+                    spCantidad.getValueFactory().setValue(0);
+                }
+            }
+        });
+
+        dialogo.getDialogPane().setContent(contenedor);
 
         Node btnAceptar = dialogo.getDialogPane().lookupButton(btnGuardar);
         btnAceptar.addEventFilter(ActionEvent.ACTION, event -> {
-            Optional<String> error = validarFormulario(txtNombre.getText(), txtTipo.getText(), cbEstado.getValue(),
-                    spCantidad.getValue(), txtPeso.getText(), txtFrecuencia.getText());
+            boolean requiereMedidas = esEquipoConPeso(cbTipo.getValue());
+            Optional<String> error = validarFormulario(txtNombre.getText(), cbTipo.getValue(), cbEstado.getValue(),
+                    txtMarca.getText(), requiereMedidas, txtPeso.getText(), spCantidad.getValue(), txtFrecuencia.getText());
             if (error.isPresent()) {
                 mostrarAdvertencia("Validación", error.get());
                 event.consume();
@@ -316,16 +380,23 @@ public class EquiposAdminController implements Initializable {
 
         dialogo.setResultConverter(dialogButton -> {
             if (dialogButton == btnGuardar) {
-                Equipo equipo = esEdicion ? new Equipo() : new Equipo();
+                Equipo equipo = new Equipo();
                 if (esEdicion) {
                     equipo.setId(equipoExistente.getId());
                 }
                 equipo.setNombre(txtNombre.getText());
-                equipo.setTipo(txtTipo.getText());
+                equipo.setTipo(cbTipo.getValue());
                 equipo.setEstado(cbEstado.getValue());
-                equipo.setCantidad(spCantidad.getValue());
+                boolean requiereMedidas = esEquipoConPeso(cbTipo.getValue());
+                if (requiereMedidas) {
+                    equipo.setCantidad(spCantidad.getValue());
+                    equipo.setPeso(txtPeso.getText());
+                } else {
+                    equipo.setCantidad(0);
+                    equipo.setPeso((String) null);
+                }
                 equipo.setMarca(txtMarca.getText());
-                equipo.setPeso(txtPeso.getText());
+                equipo.setModelo(txtModelo.getText());
                 equipo.setFechaAdquisicion(dpCompra.getValue());
                 equipo.setFechaUltimoMantenimiento(dpUltimoMantenimiento.getValue());
                 equipo.setUbicacion(txtUbicacion.getText());
@@ -339,7 +410,13 @@ public class EquiposAdminController implements Initializable {
         return dialogo;
     }
 
-    private Optional<String> validarFormulario(String nombre, String tipo, String estado, int cantidad, String pesoTexto, String frecuenciaTexto) {
+    private boolean esEquipoConPeso(String tipo) {
+        return tipo != null && tipo.trim().equalsIgnoreCase("Equipo con Peso");
+    }
+
+    private Optional<String> validarFormulario(String nombre, String tipo, String estado, String marca,
+                                               boolean requiereMedidas, String pesoTexto, Integer cantidad,
+                                               String frecuenciaTexto) {
         if (nombre == null || nombre.isBlank()) {
             return Optional.of("El nombre es obligatorio.");
         }
@@ -349,18 +426,26 @@ public class EquiposAdminController implements Initializable {
         if (estado == null || estado.isBlank()) {
             return Optional.of("Debe seleccionar un estado.");
         }
-        if (cantidad < 0) {
-            return Optional.of("La cantidad debe ser un número positivo.");
+        if (marca == null || marca.isBlank()) {
+            return Optional.of("La marca es obligatoria.");
         }
-        if (pesoTexto != null && !pesoTexto.isBlank()) {
+        if (requiereMedidas) {
+            if (cantidad == null || cantidad <= 0) {
+                return Optional.of("La cantidad debe ser un entero positivo para equipos con peso.");
+            }
+            if (pesoTexto == null || pesoTexto.isBlank()) {
+                return Optional.of("El peso es obligatorio para equipos con peso.");
+            }
             try {
                 int peso = Integer.parseInt(pesoTexto);
-                if (peso < 0) {
-                    return Optional.of("El peso debe ser un número positivo.");
+                if (peso <= 0) {
+                    return Optional.of("El peso debe ser un entero positivo.");
                 }
             } catch (NumberFormatException e) {
-                return Optional.of("El peso debe ser un número entero.");
+                return Optional.of("El peso debe ser un entero positivo.");
             }
+        } else if (cantidad != null && cantidad < 0) {
+            return Optional.of("La cantidad no puede ser negativa.");
         }
         if (frecuenciaTexto != null && !frecuenciaTexto.isBlank()) {
             try {

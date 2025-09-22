@@ -95,6 +95,7 @@ public class DatabaseUtil {
                 "estado TEXT NOT NULL," +
                 "cantidad INTEGER NOT NULL DEFAULT 0," +
                 "marca VARCHAR(255)," +
+                "modelo VARCHAR(255)," +
                 "peso INTEGER," +
                 "fecha_adquisicion TEXT," +
                 "frecuencia_mantenimiento TEXT," +
@@ -291,6 +292,7 @@ public class DatabaseUtil {
     private static void actualizarEsquemaEquipos(Connection conn) throws SQLException {
         try (Statement stmt = conn.createStatement()) {
             try { stmt.execute("ALTER TABLE equipos ADD COLUMN marca VARCHAR(255)"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE equipos ADD COLUMN modelo VARCHAR(255)"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE equipos ADD COLUMN peso INTEGER"); } catch (SQLException ignored) {}
 
             boolean renombradaFecha = false;
@@ -826,7 +828,7 @@ public class DatabaseUtil {
 
     public static ObservableList<Equipo> listarEquipos() throws SQLException {
         ObservableList<Equipo> equipos = FXCollections.observableArrayList();
-        String sql = "SELECT id, nombre, tipo, estado, cantidad, marca, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion FROM equipos ORDER BY nombre";
+        String sql = "SELECT id, nombre, tipo, estado, cantidad, marca, modelo, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion FROM equipos ORDER BY nombre";
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -839,13 +841,14 @@ public class DatabaseUtil {
     }
 
     public static void insertarEquipo(Equipo equipo) throws SQLException {
-        String sql = "INSERT INTO equipos (nombre, tipo, estado, cantidad, marca, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO equipos (nombre, tipo, estado, cantidad, marca, modelo, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         executeUpdate(sql,
                 equipo.getNombre(),
                 equipo.getTipo(),
                 equipo.getEstado(),
                 equipo.getCantidad(),
                 nullIfBlank(equipo.getMarca()),
+                nullIfBlank(equipo.getModelo()),
                 equipo.getPesoAsInteger(),
                 nullIfBlank(equipo.getFechaAdquisicion()),
                 nullIfBlank(equipo.getFrecuenciaMantenimiento()),
@@ -855,13 +858,14 @@ public class DatabaseUtil {
     }
 
     public static void actualizarEquipo(Equipo equipo) throws SQLException {
-        String sql = "UPDATE equipos SET nombre = ?, tipo = ?, estado = ?, cantidad = ?, marca = ?, peso = ?, fecha_adquisicion = ?, frecuencia_mantenimiento = ?, fecha_ultimo_mantenimiento = ?, ubicacion = ?, descripcion = ? WHERE id = ?";
+        String sql = "UPDATE equipos SET nombre = ?, tipo = ?, estado = ?, cantidad = ?, marca = ?, modelo = ?, peso = ?, fecha_adquisicion = ?, frecuencia_mantenimiento = ?, fecha_ultimo_mantenimiento = ?, ubicacion = ?, descripcion = ? WHERE id = ?";
         executeUpdate(sql,
                 equipo.getNombre(),
                 equipo.getTipo(),
                 equipo.getEstado(),
                 equipo.getCantidad(),
                 nullIfBlank(equipo.getMarca()),
+                nullIfBlank(equipo.getModelo()),
                 equipo.getPesoAsInteger(),
                 nullIfBlank(equipo.getFechaAdquisicion()),
                 nullIfBlank(equipo.getFrecuenciaMantenimiento()),
@@ -878,7 +882,7 @@ public class DatabaseUtil {
 
     public static ObservableList<Equipo> buscarEquiposPorEstado(String estado) throws SQLException {
         ObservableList<Equipo> equipos = FXCollections.observableArrayList();
-        String sql = "SELECT id, nombre, tipo, estado, cantidad, marca, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion FROM equipos WHERE UPPER(estado) = UPPER(?) ORDER BY nombre";
+        String sql = "SELECT id, nombre, tipo, estado, cantidad, marca, modelo, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion FROM equipos WHERE UPPER(estado) = UPPER(?) ORDER BY nombre";
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -894,7 +898,7 @@ public class DatabaseUtil {
 
     public static ObservableList<Equipo> buscarEquiposPorTipo(String tipo) throws SQLException {
         ObservableList<Equipo> equipos = FXCollections.observableArrayList();
-        String sql = "SELECT id, nombre, tipo, estado, cantidad, marca, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion FROM equipos WHERE UPPER(tipo) = UPPER(?) ORDER BY nombre";
+        String sql = "SELECT id, nombre, tipo, estado, cantidad, marca, modelo, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion FROM equipos WHERE UPPER(tipo) = UPPER(?) ORDER BY nombre";
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -910,7 +914,7 @@ public class DatabaseUtil {
 
     public static List<Equipo> obtenerEquiposConMantenimientoProximo(int dias) throws SQLException {
         List<Equipo> equipos = new ArrayList<>();
-        String sql = "SELECT id, nombre, tipo, estado, cantidad, marca, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion " +
+        String sql = "SELECT id, nombre, tipo, estado, cantidad, marca, modelo, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion " +
                 "FROM equipos " +
                 "WHERE TRIM(COALESCE(frecuencia_mantenimiento, '')) <> '' " +
                 "AND CAST(frecuencia_mantenimiento AS INTEGER) > 0 " +
@@ -932,7 +936,7 @@ public class DatabaseUtil {
 
     public static List<Equipo> obtenerEquiposConMantenimientoVencido() throws SQLException {
         List<Equipo> equipos = new ArrayList<>();
-        String sql = "SELECT id, nombre, tipo, estado, cantidad, marca, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion " +
+        String sql = "SELECT id, nombre, tipo, estado, cantidad, marca, modelo, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion " +
                 "FROM equipos " +
                 "WHERE TRIM(COALESCE(frecuencia_mantenimiento, '')) <> '' " +
                 "AND CAST(frecuencia_mantenimiento AS INTEGER) > 0 " +
@@ -951,7 +955,7 @@ public class DatabaseUtil {
 
     public static List<Equipo> obtenerEquiposEnEstadoCritico() throws SQLException {
         List<Equipo> equipos = new ArrayList<>();
-        String sql = "SELECT id, nombre, tipo, estado, cantidad, marca, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion " +
+        String sql = "SELECT id, nombre, tipo, estado, cantidad, marca, modelo, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion " +
                 "FROM equipos WHERE UPPER(estado) IN ('CRITICO', 'FUERA DE SERVICIO', 'FUERA_SERVICIO')";
 
         try (Connection conn = getConnection();
@@ -966,7 +970,7 @@ public class DatabaseUtil {
 
     public static List<Equipo> obtenerEquiposEnMalEstado() throws SQLException {
         List<Equipo> equipos = new ArrayList<>();
-        String sql = "SELECT id, nombre, tipo, estado, cantidad, marca, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion " +
+        String sql = "SELECT id, nombre, tipo, estado, cantidad, marca, modelo, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion " +
                 "FROM equipos WHERE UPPER(estado) LIKE '%MAL%' OR UPPER(estado) LIKE '%DEFECT%'";
 
         try (Connection conn = getConnection();
@@ -987,6 +991,7 @@ public class DatabaseUtil {
         equipo.setEstado(Optional.ofNullable(rs.getString("estado")).orElse(""));
         equipo.setCantidad(rs.getInt("cantidad"));
         equipo.setMarca(rs.getString("marca"));
+        equipo.setModelo(rs.getString("modelo"));
         Object pesoObj = rs.getObject("peso");
         if (pesoObj instanceof Number number) {
             equipo.setPeso(number.intValue());

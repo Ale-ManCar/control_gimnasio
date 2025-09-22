@@ -34,10 +34,13 @@
                 <columns>
                     <TableColumn fx:id="colNombre" text="EQUIPO" prefWidth="150"/>
                     <TableColumn fx:id="colTipo" text="TIPO" prefWidth="120"/>
-                    <TableColumn fx:id="colEstado" text="ESTADO" prefWidth="120"/>
+                    <TableColumn fx:id="colEstado" text="ESTADO" prefWidth="110"/>
+                    <TableColumn fx:id="colMarca" text="MARCA" prefWidth="120"/>
+                    <TableColumn fx:id="colModelo" text="MODELO" prefWidth="120"/>
                     <TableColumn fx:id="colCantidad" text="CANTIDAD" prefWidth="100"/>
-                    <TableColumn fx:id="colUltimoMantenimiento" text="ÚLTIMO MTTO" prefWidth="140"/>
-                    <TableColumn fx:id="colProximoMantenimiento" text="PRÓXIMO MTTO" prefWidth="140"/>
+                    <TableColumn fx:id="colPeso" text="PESO (KG)" prefWidth="100"/>
+                    <TableColumn fx:id="colUltimoMantenimiento" text="ÚLTIMO MTTO" prefWidth="135"/>
+                    <TableColumn fx:id="colProximoMantenimiento" text="PRÓXIMO MTTO" prefWidth="135"/>
                     <TableColumn fx:id="colUbicacion" text="UBICACIÓN" prefWidth="120"/>
                 </columns>
             </TableView>

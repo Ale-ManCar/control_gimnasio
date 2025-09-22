@@ -12,6 +12,7 @@ public class Equipo {
     private String estado = "";
     private int cantidad;
     private String marca = "";
+    private String modelo = "";
     private String peso;
     private String fechaAdquisicion;
     private LocalDate fechaUltimoMantenimiento;
@@ -68,6 +69,14 @@ public class Equipo {
 
     public void setMarca(String marca) {
         this.marca = marca != null ? marca.trim() : "";
+    }
+
+    public String getModelo() {
+        return modelo;
+    }
+
+    public void setModelo(String modelo) {
+        this.modelo = modelo != null ? modelo.trim() : "";
     }
 
     public String getPeso() {
