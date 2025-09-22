@@ -1199,6 +1199,35 @@ public class DatabaseUtil {
         return null;
     }
 
+    public static String obtenerResumenGeneradoPrimerTurnoDelDia(int usuarioId, LocalDateTime fechaReferencia) {
+        LocalDate diaReferencia = fechaReferencia != null ? fechaReferencia.toLocalDate() : LocalDate.now();
+        LocalDateTime inicioDia = diaReferencia.atStartOfDay();
+        LocalDateTime finDia = diaReferencia.plusDays(1).atStartOfDay();
+        String sql = "SELECT resumen_generado FROM turnos WHERE usuario_id = ? " +
+                "AND fecha_fin IS NOT NULL " +
+                "AND resumen_generado IS NOT NULL " +
+                "AND TRIM(resumen_generado) <> '' " +
+                "AND datetime(fecha_fin) >= datetime(?) " +
+                "AND datetime(fecha_fin) < datetime(?) " +
+                "ORDER BY datetime(fecha_fin) ASC LIMIT 1";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, usuarioId);
+            stmt.setString(2, formatDateTime(inicioDia));
+            stmt.setString(3, formatDateTime(finDia));
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String ruta = rs.getString("resumen_generado");
+                if (ruta != null && !ruta.isBlank()) {
+                    return ruta;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static Turno obtenerUltimoTurnoFinalizado(int usuarioId) {
         String sql = "SELECT * FROM turnos WHERE usuario_id = ? AND fecha_fin IS NOT NULL " +
                 "ORDER BY datetime(fecha_fin) DESC LIMIT 1";

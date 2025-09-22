@@ -82,6 +82,15 @@ public class FinalizarTurnoController implements Initializable {
             if (turno.getResumenGenerado() != null && !turno.getResumenGenerado().isBlank()) {
                 rutaExistente = Paths.get(turno.getResumenGenerado());
             }
+            if (rutaExistente == null) {
+                String rutaPrimerTurno = DatabaseUtil.obtenerResumenGeneradoPrimerTurnoDelDia(
+                        turno.getUsuario_id(),
+                        cierre
+                );
+                if (rutaPrimerTurno != null && !rutaPrimerTurno.isBlank()) {
+                    rutaExistente = Paths.get(rutaPrimerTurno);
+                }
+            }
 
             Path rutaGenerada = AuditoriaScheduler.generarResumenDiario(turno, rutaExistente);
             if (rutaGenerada != null) {
