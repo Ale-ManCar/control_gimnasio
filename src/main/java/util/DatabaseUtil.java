@@ -1273,11 +1273,14 @@ public class DatabaseUtil {
             return 0.0;
         }
         double total = 0.0;
-        String sql = "SELECT SUM(monto) AS total FROM pagos WHERE date(fecha_pago) BETWEEN date(?) AND date(?) AND estado = 'ACTIVO'";
+        LocalDateTime inicio = fechaInicio.isAfter(fechaFin) ? fechaFin : fechaInicio;
+        LocalDateTime fin = fechaInicio.isAfter(fechaFin) ? fechaInicio : fechaFin;
+        String sql = "SELECT SUM(monto) AS total FROM pagos WHERE estado = 'ACTIVO' " +
+                "AND datetime(fecha_pago) BETWEEN datetime(?) AND datetime(?)";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, formatDateTime(fechaInicio));
-            stmt.setString(2, formatDateTime(fechaFin));
+            stmt.setString(1, formatDateTime(inicio));
+            stmt.setString(2, formatDateTime(fin));
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 total = rs.getDouble("total");

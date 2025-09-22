@@ -18,6 +18,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 public class FinalizarTurnoController implements Initializable {
@@ -43,7 +44,7 @@ public class FinalizarTurnoController implements Initializable {
                 stockFinal = DatabaseUtil.obtenerStockJson();
                 LocalDateTime ahora = LocalDateTime.now();
                 ingresosVentas = DatabaseUtil.obtenerTotalVentasDesde(inicioTurno, ahora);
-                ingresosClientes = DatabaseUtil.obtenerTotalPagosDesde(inicioTurno, ahora);
+                ingresosClientes = obtenerIngresosClientes(inicioTurno, ahora);
                 lblIngresosVentas.setText(String.format("%.2f", ingresosVentas));
                 lblIngresosClientes.setText(String.format("%.2f", ingresosClientes));
             }
@@ -67,7 +68,7 @@ public class FinalizarTurnoController implements Initializable {
                 inicioTurno = cierre;
             }
             ingresosVentas = DatabaseUtil.obtenerTotalVentasDesde(inicioTurno, cierre);
-            ingresosClientes = DatabaseUtil.obtenerTotalPagosDesde(inicioTurno, cierre);
+            ingresosClientes = obtenerIngresosClientes(inicioTurno, cierre);
             lblIngresosVentas.setText(String.format("%.2f", ingresosVentas));
             lblIngresosClientes.setText(String.format("%.2f", ingresosClientes));
             DatabaseUtil.finalizarTurno(turno.getId(), stockFinal, ingresosVentas, ingresosClientes);
@@ -118,5 +119,21 @@ public class FinalizarTurnoController implements Initializable {
     @FXML
     private void cancelar(ActionEvent event) {
         ((Stage) lblIngresosVentas.getScene().getWindow()).close();
+    }
+
+    private double obtenerIngresosClientes(LocalDateTime inicio, LocalDateTime fin) throws Exception {
+        if (inicio == null || fin == null) {
+            return 0.0;
+        }
+        if (SessionManager.getCurrentUser() == null) {
+            return 0.0;
+        }
+        Map<String, Number> resumen = DatabaseUtil.obtenerIngresosPagos(
+                SessionManager.getCurrentUser().getId(),
+                inicio,
+                fin
+        );
+        Number total = resumen.get("total");
+        return total != null ? total.doubleValue() : 0.0;
     }
 }

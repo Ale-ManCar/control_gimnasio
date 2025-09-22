@@ -239,8 +239,8 @@ public class RecepcionistaDashboardController implements Initializable {
                                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                                 LocalDate fechaFin = LocalDateTime.parse(fechaFinStr, formatter).toLocalDate();
                                 if (fechaFin.isEqual(LocalDate.now())) {
-                                    DatabaseUtil.reabrirTurno(ultimoTurno.getId());
-                                    turnoActual = DatabaseUtil.obtenerTurnoPorId(ultimoTurno.getId());
+                                    int id = DatabaseUtil.iniciarTurno(usuarioId);
+                                    turnoActual = DatabaseUtil.obtenerTurnoPorId(id);
                                 } else {
                                     int id = DatabaseUtil.iniciarTurno(usuarioId);
                                     turnoActual = DatabaseUtil.obtenerTurnoPorId(id);
@@ -250,8 +250,8 @@ public class RecepcionistaDashboardController implements Initializable {
                                 turnoActual = DatabaseUtil.obtenerTurnoPorId(id);
                             }
                         } else {
-                            DatabaseUtil.reabrirTurno(ultimoTurno.getId());
-                            turnoActual = DatabaseUtil.obtenerTurnoPorId(ultimoTurno.getId());
+                            int id = DatabaseUtil.iniciarTurno(usuarioId);
+                            turnoActual = DatabaseUtil.obtenerTurnoPorId(id);
                         }
                     } else {
                         int id = DatabaseUtil.iniciarTurno(usuarioId);
