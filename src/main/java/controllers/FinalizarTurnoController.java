@@ -21,8 +21,6 @@ import java.time.LocalDateTime;
 import java.util.ResourceBundle;
 
 public class FinalizarTurnoController implements Initializable {
-    @FXML private Label lblStockInicial;
-    @FXML private Label lblStockFinal;
     @FXML private Label lblIngresosVentas;
     @FXML private Label lblIngresosClientes;
 
@@ -46,8 +44,6 @@ public class FinalizarTurnoController implements Initializable {
                 LocalDateTime ahora = LocalDateTime.now();
                 ingresosVentas = DatabaseUtil.obtenerTotalVentasDesde(inicioTurno, ahora);
                 ingresosClientes = DatabaseUtil.obtenerTotalPagosDesde(inicioTurno, ahora);
-                lblStockInicial.setText(turno.getStock_inicial());
-                lblStockFinal.setText(stockFinal);
                 lblIngresosVentas.setText(String.format("%.2f", ingresosVentas));
                 lblIngresosClientes.setText(String.format("%.2f", ingresosClientes));
             }
@@ -93,7 +89,7 @@ public class FinalizarTurnoController implements Initializable {
 
             enviarResumen();
             SessionManager.clear();
-            Stage current = (Stage) lblStockInicial.getScene().getWindow();
+            Stage current = (Stage) lblIngresosVentas.getScene().getWindow();
             current.close();
             if (dashboardStage != null) {
                 dashboardStage.close();
@@ -114,8 +110,6 @@ public class FinalizarTurnoController implements Initializable {
 
     private void enviarResumen() {
         String resumen = "Turno " + turno.getId() + "\n" +
-                "Stock inicial: " + turno.getStock_inicial() + "\n" +
-                "Stock final: " + stockFinal + "\n" +
                 "Ingresos ventas: " + ingresosVentas + "\n" +
                 "Ingresos clientes: " + ingresosClientes;
         System.out.println(resumen);
@@ -123,6 +117,6 @@ public class FinalizarTurnoController implements Initializable {
 
     @FXML
     private void cancelar(ActionEvent event) {
-        ((Stage) lblStockInicial.getScene().getWindow()).close();
+        ((Stage) lblIngresosVentas.getScene().getWindow()).close();
     }
 }

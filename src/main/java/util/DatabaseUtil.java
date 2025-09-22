@@ -1273,7 +1273,7 @@ public class DatabaseUtil {
             return 0.0;
         }
         double total = 0.0;
-        String sql = "SELECT SUM(monto) AS total FROM pagos WHERE datetime(fecha_pago) BETWEEN datetime(?) AND datetime(?) AND estado = 'ACTIVO'";
+        String sql = "SELECT SUM(monto) AS total FROM pagos WHERE date(fecha_pago) BETWEEN date(?) AND date(?) AND estado = 'ACTIVO'";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, formatDateTime(fechaInicio));
