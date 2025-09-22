@@ -10,6 +10,7 @@ import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
 import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
 import javafx.collections.ObservableList;
 import models.Egreso;
+import models.Equipo;
 import models.CoachClientes;
 import models.PagoDetalle;
 import models.Auditoria;
@@ -30,6 +31,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -174,6 +176,60 @@ public class ReporteUtil {
             System.out.println("✅ Reporte de pagos generado en: " + pdfPath);
         } catch (Exception e) {
             System.err.println("❌ Error generando reporte de pagos: " + e.getMessage());
+        }
+    }
+
+    public static void generarReporteEquipos(int diasAviso) {
+        try {
+            InputStream reporteStream = ReporteUtil.class.getResourceAsStream("/reports/equipos_estado.jrxml");
+            if (reporteStream == null) {
+                System.err.println("❌ No se encontró el archivo equipos_estado.jrxml");
+                return;
+            }
+
+            List<Equipo> proximos = DatabaseUtil.obtenerEquiposConMantenimientoProximo(diasAviso);
+            List<Equipo> vencidos = DatabaseUtil.obtenerEquiposConMantenimientoVencido();
+            List<Equipo> criticos = DatabaseUtil.obtenerEquiposEnEstadoCritico();
+            List<Equipo> malEstado = DatabaseUtil.obtenerEquiposEnMalEstado();
+
+            Map<Integer, Equipo> combinado = new LinkedHashMap<>();
+            for (Equipo equipo : vencidos) {
+                combinado.put(equipo.getId(), equipo);
+            }
+            for (Equipo equipo : proximos) {
+                combinado.putIfAbsent(equipo.getId(), equipo);
+            }
+            for (Equipo equipo : criticos) {
+                combinado.putIfAbsent(equipo.getId(), equipo);
+            }
+            for (Equipo equipo : malEstado) {
+                combinado.putIfAbsent(equipo.getId(), equipo);
+            }
+
+            Map<String, Object> parametros = new HashMap<>();
+            parametros.put("diasAviso", diasAviso);
+            parametros.put("totalProximos", proximos.size());
+            parametros.put("totalVencidos", vencidos.size());
+            parametros.put("totalCriticos", criticos.size());
+            parametros.put("totalMalEstado", malEstado.size());
+
+            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(new ArrayList<>(combinado.values()));
+            JasperReport jasperReport = JasperCompileManager.compileReport(reporteStream);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, dataSource);
+
+            if (jasperPrint.getPages().isEmpty()) {
+                System.out.println("⚠️ No se encontraron equipos para el reporte.");
+                return;
+            }
+
+            JasperViewer.viewReport(jasperPrint, false);
+            String nombreArchivo = String.format("equipos_estado_%s.pdf", LocalDate.now());
+            String ruta = System.getProperty("user.dir") + File.separator + nombreArchivo;
+            JasperExportManager.exportReportToPdfFile(jasperPrint, ruta);
+            System.out.println("✅ Reporte de equipos generado en: " + ruta);
+        } catch (Exception e) {
+            System.err.println("❌ Error generando reporte de equipos: " + e.getMessage());
+            throw new RuntimeException("Error generando reporte de equipos", e);
         }
     }
 

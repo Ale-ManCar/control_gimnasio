@@ -25,6 +25,7 @@ import models.Role;
 import models.Turno;
 import models.Proveedor;
 import models.CoachClientes;
+import models.Equipo;
 
 public class DatabaseUtil {
     private static final String URL = "jdbc:sqlite:database/gimnasio.db";
@@ -86,6 +87,18 @@ public class DatabaseUtil {
                 "telefono TEXT," +
                 "area TEXT NOT NULL," +
                 "foto_path TEXT)";
+
+        String sqlEquipos = "CREATE TABLE IF NOT EXISTS equipos (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "nombre TEXT NOT NULL," +
+                "tipo TEXT NOT NULL," +
+                "estado TEXT NOT NULL," +
+                "cantidad INTEGER NOT NULL DEFAULT 0," +
+                "fecha_compra TEXT," +
+                "frecuencia_mantenimiento INTEGER DEFAULT 0," +
+                "fecha_ultimo_mantenimiento TEXT," +
+                "ubicacion TEXT," +
+                "descripcion TEXT)";
 
         String sqlUsuarios = "CREATE TABLE IF NOT EXISTS usuarios (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -176,6 +189,7 @@ public class DatabaseUtil {
             stmt.execute(sqlVentas);
             stmt.execute(sqlEgresos);
             stmt.execute(sqlCoaches);
+            stmt.execute(sqlEquipos);
             stmt.execute(sqlUsuarios);
             stmt.execute(sqlTurnos);
             try { stmt.execute("ALTER TABLE turnos ADD COLUMN resumen_generado TEXT"); } catch (SQLException ignored) {}
@@ -191,6 +205,12 @@ public class DatabaseUtil {
             stmt.execute("INSERT OR IGNORE INTO config (id) VALUES (1)");
             try { stmt.execute("ALTER TABLE usuarios ADD COLUMN last_login TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE usuarios ADD COLUMN acciones_realizadas INTEGER DEFAULT 0"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE equipos ADD COLUMN ubicacion TEXT"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE equipos ADD COLUMN descripcion TEXT"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE equipos ADD COLUMN frecuencia_mantenimiento INTEGER DEFAULT 0"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE equipos ADD COLUMN fecha_compra TEXT"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE equipos ADD COLUMN fecha_ultimo_mantenimiento TEXT"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE equipos ADD COLUMN cantidad INTEGER NOT NULL DEFAULT 0"); } catch (SQLException ignored) {}
             stmt.execute("INSERT OR IGNORE INTO proveedores (id, nombre, contacto, telefono) VALUES (1, 'Proveedor 1', '', ''), (2, 'Proveedor 2', '', '')");
             try {
                 stmt.execute("UPDATE ventas SET fecha = COALESCE(strftime('%Y-%m-%d %H:%M:%S', fecha), fecha) WHERE fecha IS NOT NULL");
@@ -738,6 +758,183 @@ public class DatabaseUtil {
         }
         return "Desconocido";
     }
+
+    // ---------------------------------------------------------------------
+    // Gestión de equipos
+    // ---------------------------------------------------------------------
+
+    public static ObservableList<Equipo> listarEquipos() throws SQLException {
+        ObservableList<Equipo> equipos = FXCollections.observableArrayList();
+        String sql = "SELECT id, nombre, tipo, estado, cantidad, fecha_compra, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion FROM equipos ORDER BY nombre";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                equipos.add(mapEquipo(rs));
+            }
+        }
+        return equipos;
+    }
+
+    public static void insertarEquipo(Equipo equipo) throws SQLException {
+        String sql = "INSERT INTO equipos (nombre, tipo, estado, cantidad, fecha_compra, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        executeUpdate(sql,
+                equipo.getNombre(),
+                equipo.getTipo(),
+                equipo.getEstado(),
+                equipo.getCantidad(),
+                equipo.getFechaCompra(),
+                equipo.getFrecuenciaMantenimiento(),
+                equipo.getFechaUltimoMantenimiento(),
+                equipo.getUbicacion(),
+                equipo.getDescripcion());
+    }
+
+    public static void actualizarEquipo(Equipo equipo) throws SQLException {
+        String sql = "UPDATE equipos SET nombre = ?, tipo = ?, estado = ?, cantidad = ?, fecha_compra = ?, frecuencia_mantenimiento = ?, fecha_ultimo_mantenimiento = ?, ubicacion = ?, descripcion = ? WHERE id = ?";
+        executeUpdate(sql,
+                equipo.getNombre(),
+                equipo.getTipo(),
+                equipo.getEstado(),
+                equipo.getCantidad(),
+                equipo.getFechaCompra(),
+                equipo.getFrecuenciaMantenimiento(),
+                equipo.getFechaUltimoMantenimiento(),
+                equipo.getUbicacion(),
+                equipo.getDescripcion(),
+                equipo.getId());
+    }
+
+    public static void eliminarEquipo(int equipoId) throws SQLException {
+        String sql = "DELETE FROM equipos WHERE id = ?";
+        executeUpdate(sql, equipoId);
+    }
+
+    public static ObservableList<Equipo> buscarEquiposPorEstado(String estado) throws SQLException {
+        ObservableList<Equipo> equipos = FXCollections.observableArrayList();
+        String sql = "SELECT id, nombre, tipo, estado, cantidad, fecha_compra, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion FROM equipos WHERE UPPER(estado) = UPPER(?) ORDER BY nombre";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, estado);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    equipos.add(mapEquipo(rs));
+                }
+            }
+        }
+        return equipos;
+    }
+
+    public static ObservableList<Equipo> buscarEquiposPorTipo(String tipo) throws SQLException {
+        ObservableList<Equipo> equipos = FXCollections.observableArrayList();
+        String sql = "SELECT id, nombre, tipo, estado, cantidad, fecha_compra, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion FROM equipos WHERE UPPER(tipo) = UPPER(?) ORDER BY nombre";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, tipo);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    equipos.add(mapEquipo(rs));
+                }
+            }
+        }
+        return equipos;
+    }
+
+    public static List<Equipo> obtenerEquiposConMantenimientoProximo(int dias) throws SQLException {
+        List<Equipo> equipos = new ArrayList<>();
+        String sql = "SELECT id, nombre, tipo, estado, cantidad, fecha_compra, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion " +
+                "FROM equipos " +
+                "WHERE frecuencia_mantenimiento IS NOT NULL AND frecuencia_mantenimiento > 0 " +
+                "AND fecha_ultimo_mantenimiento IS NOT NULL " +
+                "AND date(fecha_ultimo_mantenimiento, '+' || frecuencia_mantenimiento || ' day') <= date('now', '+' || ? || ' day') " +
+                "AND date(fecha_ultimo_mantenimiento, '+' || frecuencia_mantenimiento || ' day') >= date('now')";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, dias);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    equipos.add(mapEquipo(rs));
+                }
+            }
+        }
+        return equipos;
+    }
+
+    public static List<Equipo> obtenerEquiposConMantenimientoVencido() throws SQLException {
+        List<Equipo> equipos = new ArrayList<>();
+        String sql = "SELECT id, nombre, tipo, estado, cantidad, fecha_compra, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion " +
+                "FROM equipos " +
+                "WHERE frecuencia_mantenimiento IS NOT NULL AND frecuencia_mantenimiento > 0 " +
+                "AND fecha_ultimo_mantenimiento IS NOT NULL " +
+                "AND date(fecha_ultimo_mantenimiento, '+' || frecuencia_mantenimiento || ' day') < date('now')";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                equipos.add(mapEquipo(rs));
+            }
+        }
+        return equipos;
+    }
+
+    public static List<Equipo> obtenerEquiposEnEstadoCritico() throws SQLException {
+        List<Equipo> equipos = new ArrayList<>();
+        String sql = "SELECT id, nombre, tipo, estado, cantidad, fecha_compra, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion " +
+                "FROM equipos WHERE UPPER(estado) IN ('CRITICO', 'FUERA DE SERVICIO', 'FUERA_SERVICIO')";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                equipos.add(mapEquipo(rs));
+            }
+        }
+        return equipos;
+    }
+
+    public static List<Equipo> obtenerEquiposEnMalEstado() throws SQLException {
+        List<Equipo> equipos = new ArrayList<>();
+        String sql = "SELECT id, nombre, tipo, estado, cantidad, fecha_compra, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion " +
+                "FROM equipos WHERE UPPER(estado) LIKE '%MAL%' OR UPPER(estado) LIKE '%DEFECT%'";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                equipos.add(mapEquipo(rs));
+            }
+        }
+        return equipos;
+    }
+
+    private static Equipo mapEquipo(ResultSet rs) throws SQLException {
+        Equipo equipo = new Equipo();
+        equipo.setId(rs.getInt("id"));
+        equipo.setNombre(Optional.ofNullable(rs.getString("nombre")).orElse(""));
+        equipo.setTipo(Optional.ofNullable(rs.getString("tipo")).orElse(""));
+        equipo.setEstado(Optional.ofNullable(rs.getString("estado")).orElse(""));
+        equipo.setCantidad(rs.getInt("cantidad"));
+        equipo.setFechaCompra(parseFecha(rs.getString("fecha_compra")));
+        equipo.setFechaUltimoMantenimiento(parseFecha(rs.getString("fecha_ultimo_mantenimiento")));
+        int frecuencia = rs.getInt("frecuencia_mantenimiento");
+        if (rs.wasNull()) {
+            equipo.setFrecuenciaMantenimiento(null);
+        } else {
+            equipo.setFrecuenciaMantenimiento(frecuencia);
+        }
+        equipo.setUbicacion(rs.getString("ubicacion"));
+        equipo.setDescripcion(rs.getString("descripcion"));
+        return equipo;
+    }
+
+    // ---------------------------------------------------------------------
+    // Gestión de productos
+    // ---------------------------------------------------------------------
 
     public static void insertarProducto(Producto producto) throws SQLException {
         String sql = "INSERT INTO productos (nombre, stock, stock_inicial, umbral, precio, tipo, precio_compra, unidades_por_paca, peso_total, peso_por_scoop) " +

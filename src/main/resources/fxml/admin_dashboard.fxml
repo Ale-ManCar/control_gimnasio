@@ -24,6 +24,7 @@
             <Button text="Usuarios" onAction="#abrirUsuarios" styleClass="primary-button"/>
             <Button text="Proveedores" onAction="#abrirProveedores" styleClass="primary-button"/>
             <Button text="Insumos" onAction="#abrirInsumos" styleClass="primary-button"/>
+            <Button text="Equipos" onAction="#abrirEquipos" styleClass="primary-button"/>
             <Button text="Auditoría" onAction="#abrirAuditoria" styleClass="primary-button"/>
             <Button text="Respaldos" onAction="#abrirRespaldos" styleClass="primary-button"/>
             <Button text="Configuración" onAction="#abrirConfiguracion" styleClass="primary-button"/>

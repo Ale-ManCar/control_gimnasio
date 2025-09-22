@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.EquiposAdminController"
+            prefWidth="900" prefHeight="600"
+            style="-fx-background-color: linear-gradient(to bottom, #1f2937, #111827); -fx-padding: 20;"
+            stylesheets="@../css/dashboard.css">
+    <top>
+        <VBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Administración de Equipos"
+                   style="-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+            <Label text="Gestione el inventario de máquinas y aparatos del gimnasio"
+                   style="-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 13px;"/>
+        </VBox>
+    </top>
+    <center>
+        <VBox spacing="15">
+            <HBox spacing="10" alignment="CENTER_LEFT"
+                  style="-fx-background-color: rgba(255,255,255,0.08); -fx-padding: 12; -fx-background-radius: 12;">
+                <Label text="Estado:" style="-fx-text-fill: white;"/>
+                <ComboBox fx:id="filtroEstado" promptText="Todos"
+                          style="-fx-background-radius: 8; -fx-padding: 4 10;"/>
+                <Label text="Tipo:" style="-fx-text-fill: white;"/>
+                <ComboBox fx:id="filtroTipo" promptText="Todos"
+                          style="-fx-background-radius: 8; -fx-padding: 4 10;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Generar reporte" onAction="#handleGenerarReporte"
+                        styleClass="primary-button"/>
+            </HBox>
+            <TableView fx:id="tablaEquipos" VBox.vgrow="ALWAYS"
+                       style="-fx-background-radius: 12; -fx-table-cell-border-color: transparent; -fx-padding: 0;">
+                <columns>
+                    <TableColumn fx:id="colNombre" text="EQUIPO" prefWidth="150"/>
+                    <TableColumn fx:id="colTipo" text="TIPO" prefWidth="120"/>
+                    <TableColumn fx:id="colEstado" text="ESTADO" prefWidth="120"/>
+                    <TableColumn fx:id="colCantidad" text="CANTIDAD" prefWidth="100"/>
+                    <TableColumn fx:id="colUltimoMantenimiento" text="ÚLTIMO MTTO" prefWidth="140"/>
+                    <TableColumn fx:id="colProximoMantenimiento" text="PRÓXIMO MTTO" prefWidth="140"/>
+                    <TableColumn fx:id="colUbicacion" text="UBICACIÓN" prefWidth="120"/>
+                </columns>
+            </TableView>
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button text="Registrar" onAction="#handleRegistrarEquipo"
+                        style="-fx-background-color: linear-gradient(to right, #10b981, #059669); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25;"/>
+                <Button text="Editar" onAction="#handleEditarEquipo"
+                        style="-fx-background-color: linear-gradient(to right, #f59e0b, #d97706); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25;"/>
+                <Button text="Eliminar" onAction="#handleEliminarEquipo"
+                        style="-fx-background-color: linear-gradient(to right, #ef4444, #dc2626); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25;"/>
+            </HBox>
+        </VBox>
+    </center>
+    <bottom>
+        <Label fx:id="lblMensaje"
+               style="-fx-text-fill: rgba(255,255,255,0.85); -fx-padding: 8 0 0 0; -fx-font-size: 12px;"/>
+    </bottom>
+</BorderPane>

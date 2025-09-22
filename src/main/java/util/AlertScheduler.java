@@ -1,10 +1,14 @@
 package util;
 
 import models.Cliente;
+import models.Equipo;
+import util.AuditoriaUtil;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -128,6 +132,8 @@ public class AlertScheduler implements Runnable {
         for (String alerta : obtenerAlertasProductos()) {
             notificarAdmin(alerta);
         }
+
+        notificarMantenimientoEquipos();
     }
 
     private static boolean clienteExisteYActivo(String telefono) {
@@ -181,6 +187,38 @@ public class AlertScheduler implements Runnable {
         }
         return alertas;
     }
+
+    private void notificarMantenimientoEquipos() {
+        try {
+            List<Equipo> vencidos = DatabaseUtil.obtenerEquiposConMantenimientoVencido();
+            List<Equipo> proximos = DatabaseUtil.obtenerEquiposConMantenimientoProximo(7);
+            List<Equipo> criticos = DatabaseUtil.obtenerEquiposEnEstadoCritico();
+            Set<Integer> procesados = new HashSet<>();
+
+            for (Equipo equipo : vencidos) {
+                procesados.add(equipo.getId());
+                registrarAlertaEquipo(equipo, "Mantenimiento vencido");
+            }
+            for (Equipo equipo : proximos) {
+                if (procesados.add(equipo.getId())) {
+                    registrarAlertaEquipo(equipo, "Mantenimiento próximo");
+                }
+            }
+            for (Equipo equipo : criticos) {
+                if (procesados.add(equipo.getId())) {
+                    registrarAlertaEquipo(equipo, "Estado crítico");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al consultar equipos para mantenimiento: " + e.getMessage());
+        }
+    }
+
+    private void registrarAlertaEquipo(Equipo equipo, String motivo) {
+        String mensaje = String.format("Equipo '%s' (%s) - %s", equipo.getNombre(), equipo.getEstado(), motivo);
+        notificarAdmin(mensaje);
+        AuditoriaUtil.registrarAccion(0, "ALERTA_EQUIPO", mensaje);
+    }
     private static void notificarAdmin(String mensaje) {
         // En un futuro esto podría integrarse con un servicio de mensajería
         System.out.println("Notificación al administrador: " + mensaje);
@@ -192,6 +230,16 @@ public class AlertScheduler implements Runnable {
             alertas.add("Membresía de " + c.getNombreCompleto() + " vence en 7 días");
         }
         alertas.addAll(obtenerAlertasProductos());
+        try {
+            for (Equipo equipo : DatabaseUtil.obtenerEquiposConMantenimientoVencido()) {
+                alertas.add("Mantenimiento vencido: " + equipo.getNombre());
+            }
+            for (Equipo equipo : DatabaseUtil.obtenerEquiposConMantenimientoProximo(7)) {
+                alertas.add("Mantenimiento próximo (7 días): " + equipo.getNombre());
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al generar alertas de equipos: " + e.getMessage());
+        }
         return alertas;
     }
 

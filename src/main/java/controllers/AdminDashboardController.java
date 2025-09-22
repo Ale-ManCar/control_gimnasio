@@ -141,6 +141,20 @@ public class AdminDashboardController implements Initializable {
     }
 
     @FXML
+    private void abrirEquipos() {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/equipos_admin.fxml"));
+            Stage stage = new Stage();
+            stage.setTitle("Administración de Equipos");
+            stage.setScene(new Scene(root));
+            stage.show();
+            UserService.registrarActividad(SessionManager.getCurrentUser(), "Abrir equipos");
+        } catch (IOException | SQLException e) {
+            lblMensaje.setText("Error al abrir equipos");
+        }
+    }
+
+    @FXML
     private void abrirAuditoria() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/auditoria.fxml"));
