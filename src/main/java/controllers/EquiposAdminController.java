@@ -242,6 +242,11 @@ public class EquiposAdminController implements Initializable {
         cbEstado.getSelectionModel().selectFirst();
         Spinner<Integer> spCantidad = new Spinner<>(0, Integer.MAX_VALUE, 0);
         spCantidad.setEditable(true);
+        TextField txtMarca = new TextField();
+        txtMarca.setPromptText("Marca");
+        TextField txtPeso = new TextField();
+        txtPeso.setPromptText("Peso (kg)");
+        txtPeso.setTextFormatter(crearFormatterEntero());
         DatePicker dpCompra = new DatePicker();
         DatePicker dpUltimoMantenimiento = new DatePicker();
         TextField txtFrecuencia = new TextField();
@@ -258,11 +263,13 @@ public class EquiposAdminController implements Initializable {
             txtTipo.setText(equipoExistente.getTipo());
             cbEstado.setValue(equipoExistente.getEstado());
             spCantidad.getValueFactory().setValue(equipoExistente.getCantidad());
-            dpCompra.setValue(equipoExistente.getFechaCompra());
-            dpUltimoMantenimiento.setValue(equipoExistente.getFechaUltimoMantenimiento());
-            if (equipoExistente.getFrecuenciaMantenimiento() != null) {
-                txtFrecuencia.setText(String.valueOf(equipoExistente.getFrecuenciaMantenimiento()));
+            txtMarca.setText(equipoExistente.getMarca());
+            if (equipoExistente.getPeso() != null) {
+                txtPeso.setText(equipoExistente.getPeso());
             }
+            dpCompra.setValue(equipoExistente.getFechaAdquisicionDate());
+            dpUltimoMantenimiento.setValue(equipoExistente.getFechaUltimoMantenimiento());
+            txtFrecuencia.setText(Optional.ofNullable(equipoExistente.getFrecuenciaMantenimiento()).orElse(""));
             txtUbicacion.setText(equipoExistente.getUbicacion());
             txtDescripcion.setText(equipoExistente.getDescripcion());
         }
@@ -276,11 +283,15 @@ public class EquiposAdminController implements Initializable {
         grid.add(txtNombre, 1, fila++);
         grid.add(new Label("Tipo:"), 0, fila);
         grid.add(txtTipo, 1, fila++);
+        grid.add(new Label("Marca:"), 0, fila);
+        grid.add(txtMarca, 1, fila++);
         grid.add(new Label("Estado:"), 0, fila);
         grid.add(cbEstado, 1, fila++);
         grid.add(new Label("Cantidad:"), 0, fila);
         grid.add(spCantidad, 1, fila++);
-        grid.add(new Label("Fecha de compra:"), 0, fila);
+        grid.add(new Label("Peso (kg):"), 0, fila);
+        grid.add(txtPeso, 1, fila++);
+        grid.add(new Label("Fecha de adquisición:"), 0, fila);
         grid.add(dpCompra, 1, fila++);
         grid.add(new Label("Último mantenimiento:"), 0, fila);
         grid.add(dpUltimoMantenimiento, 1, fila++);
@@ -296,7 +307,7 @@ public class EquiposAdminController implements Initializable {
         Node btnAceptar = dialogo.getDialogPane().lookupButton(btnGuardar);
         btnAceptar.addEventFilter(ActionEvent.ACTION, event -> {
             Optional<String> error = validarFormulario(txtNombre.getText(), txtTipo.getText(), cbEstado.getValue(),
-                    spCantidad.getValue(), txtFrecuencia.getText());
+                    spCantidad.getValue(), txtPeso.getText(), txtFrecuencia.getText());
             if (error.isPresent()) {
                 mostrarAdvertencia("Validación", error.get());
                 event.consume();
@@ -313,7 +324,9 @@ public class EquiposAdminController implements Initializable {
                 equipo.setTipo(txtTipo.getText());
                 equipo.setEstado(cbEstado.getValue());
                 equipo.setCantidad(spCantidad.getValue());
-                equipo.setFechaCompra(dpCompra.getValue());
+                equipo.setMarca(txtMarca.getText());
+                equipo.setPeso(txtPeso.getText());
+                equipo.setFechaAdquisicion(dpCompra.getValue());
                 equipo.setFechaUltimoMantenimiento(dpUltimoMantenimiento.getValue());
                 equipo.setUbicacion(txtUbicacion.getText());
                 equipo.setDescripcion(txtDescripcion.getText());
@@ -326,7 +339,7 @@ public class EquiposAdminController implements Initializable {
         return dialogo;
     }
 
-    private Optional<String> validarFormulario(String nombre, String tipo, String estado, int cantidad, String frecuenciaTexto) {
+    private Optional<String> validarFormulario(String nombre, String tipo, String estado, int cantidad, String pesoTexto, String frecuenciaTexto) {
         if (nombre == null || nombre.isBlank()) {
             return Optional.of("El nombre es obligatorio.");
         }
@@ -338,6 +351,16 @@ public class EquiposAdminController implements Initializable {
         }
         if (cantidad < 0) {
             return Optional.of("La cantidad debe ser un número positivo.");
+        }
+        if (pesoTexto != null && !pesoTexto.isBlank()) {
+            try {
+                int peso = Integer.parseInt(pesoTexto);
+                if (peso < 0) {
+                    return Optional.of("El peso debe ser un número positivo.");
+                }
+            } catch (NumberFormatException e) {
+                return Optional.of("El peso debe ser un número entero.");
+            }
         }
         if (frecuenciaTexto != null && !frecuenciaTexto.isBlank()) {
             try {
@@ -352,11 +375,11 @@ public class EquiposAdminController implements Initializable {
         return Optional.empty();
     }
 
-    private Integer parseFrecuencia(String texto) {
+    private String parseFrecuencia(String texto) {
         if (texto == null || texto.isBlank()) {
             return null;
         }
-        return Integer.parseInt(texto);
+        return String.valueOf(Integer.parseInt(texto));
     }
 
     private void registrarAuditoria(String accion, String detalle) {

@@ -1,7 +1,9 @@
 package models;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.Objects;
+import java.util.OptionalInt;
 
 public class Equipo {
     private int id;
@@ -9,9 +11,11 @@ public class Equipo {
     private String tipo = "";
     private String estado = "";
     private int cantidad;
-    private LocalDate fechaCompra;
+    private String marca = "";
+    private String peso;
+    private String fechaAdquisicion;
     private LocalDate fechaUltimoMantenimiento;
-    private Integer frecuenciaMantenimiento;
+    private String frecuenciaMantenimiento;
     private String ubicacion;
     private String descripcion;
 
@@ -58,12 +62,88 @@ public class Equipo {
         this.cantidad = cantidad;
     }
 
-    public LocalDate getFechaCompra() {
-        return fechaCompra;
+    public String getMarca() {
+        return marca;
     }
 
-    public void setFechaCompra(LocalDate fechaCompra) {
-        this.fechaCompra = fechaCompra;
+    public void setMarca(String marca) {
+        this.marca = marca != null ? marca.trim() : "";
+    }
+
+    public String getPeso() {
+        return peso;
+    }
+
+    public void setPeso(String peso) {
+        if (peso == null || peso.isBlank()) {
+            this.peso = null;
+            return;
+        }
+        String trimmed = peso.trim();
+        try {
+            int valor = Integer.parseInt(trimmed);
+            if (valor < 0) {
+                throw new IllegalArgumentException("El peso debe ser mayor o igual a cero");
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("El peso debe ser un número entero válido");
+        }
+        this.peso = trimmed;
+    }
+
+    public void setPeso(Integer peso) {
+        if (peso == null) {
+            this.peso = null;
+            return;
+        }
+        if (peso < 0) {
+            throw new IllegalArgumentException("El peso debe ser mayor o igual a cero");
+        }
+        this.peso = String.valueOf(peso);
+    }
+
+    public Integer getPesoAsInteger() {
+        if (peso == null || peso.isBlank()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(peso.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    public String getFechaAdquisicion() {
+        return fechaAdquisicion;
+    }
+
+    public void setFechaAdquisicion(String fechaAdquisicion) {
+        if (fechaAdquisicion == null || fechaAdquisicion.isBlank()) {
+            this.fechaAdquisicion = null;
+            return;
+        }
+        String trimmed = fechaAdquisicion.trim();
+        try {
+            LocalDate.parse(trimmed);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("La fecha de adquisición debe tener el formato yyyy-MM-dd");
+        }
+        this.fechaAdquisicion = trimmed;
+    }
+
+    public void setFechaAdquisicion(LocalDate fechaAdquisicion) {
+        this.fechaAdquisicion = fechaAdquisicion != null ? fechaAdquisicion.toString() : null;
+    }
+
+    public LocalDate getFechaAdquisicionDate() {
+        if (fechaAdquisicion == null || fechaAdquisicion.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(fechaAdquisicion);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
     }
 
     public LocalDate getFechaUltimoMantenimiento() {
@@ -74,15 +154,47 @@ public class Equipo {
         this.fechaUltimoMantenimiento = fechaUltimoMantenimiento;
     }
 
-    public Integer getFrecuenciaMantenimiento() {
+    public String getFrecuenciaMantenimiento() {
         return frecuenciaMantenimiento;
     }
 
+    public void setFrecuenciaMantenimiento(String frecuenciaMantenimiento) {
+        if (frecuenciaMantenimiento == null || frecuenciaMantenimiento.isBlank()) {
+            this.frecuenciaMantenimiento = null;
+            return;
+        }
+        String trimmed = frecuenciaMantenimiento.trim();
+        try {
+            int valor = Integer.parseInt(trimmed);
+            if (valor < 0) {
+                throw new IllegalArgumentException("La frecuencia de mantenimiento debe ser positiva");
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("La frecuencia de mantenimiento debe ser un número entero");
+        }
+        this.frecuenciaMantenimiento = trimmed;
+    }
+
     public void setFrecuenciaMantenimiento(Integer frecuenciaMantenimiento) {
-        if (frecuenciaMantenimiento != null && frecuenciaMantenimiento < 0) {
+        if (frecuenciaMantenimiento == null) {
+            this.frecuenciaMantenimiento = null;
+            return;
+        }
+        if (frecuenciaMantenimiento < 0) {
             throw new IllegalArgumentException("La frecuencia de mantenimiento debe ser positiva");
         }
-        this.frecuenciaMantenimiento = frecuenciaMantenimiento;
+        this.frecuenciaMantenimiento = String.valueOf(frecuenciaMantenimiento);
+    }
+
+    public OptionalInt getFrecuenciaMantenimientoDias() {
+        if (frecuenciaMantenimiento == null || frecuenciaMantenimiento.isBlank()) {
+            return OptionalInt.empty();
+        }
+        try {
+            return OptionalInt.of(Integer.parseInt(frecuenciaMantenimiento.trim()));
+        } catch (NumberFormatException e) {
+            return OptionalInt.empty();
+        }
     }
 
     public String getUbicacion() {
@@ -102,10 +214,11 @@ public class Equipo {
     }
 
     public LocalDate getProximoMantenimiento() {
-        if (fechaUltimoMantenimiento == null || frecuenciaMantenimiento == null || frecuenciaMantenimiento <= 0) {
+        OptionalInt frecuenciaDias = getFrecuenciaMantenimientoDias();
+        if (fechaUltimoMantenimiento == null || frecuenciaDias.isEmpty() || frecuenciaDias.getAsInt() <= 0) {
             return null;
         }
-        return fechaUltimoMantenimiento.plusDays(frecuenciaMantenimiento);
+        return fechaUltimoMantenimiento.plusDays(frecuenciaDias.getAsInt());
     }
 
     public boolean needsMaintenance(LocalDate now) {
