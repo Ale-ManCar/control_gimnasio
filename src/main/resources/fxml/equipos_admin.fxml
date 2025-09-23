@@ -26,7 +26,7 @@
                 <ComboBox fx:id="filtroTipo" promptText="Todos"
                           style="-fx-background-radius: 8; -fx-padding: 4 10;"/>
                 <Button text="Limpiar" onAction="#handleLimpiarFiltros"
-                        styleClass="secondary-button"/>
+                        styleClass="ghost-button"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button text="Generar reporte" onAction="#handleGenerarReporte"
                         styleClass="primary-button"/>
@@ -47,11 +47,11 @@
             </TableView>
             <HBox spacing="10" alignment="CENTER_RIGHT">
                 <Button text="Registrar" onAction="#handleRegistrarEquipo"
-                        style="-fx-background-color: linear-gradient(to right, #10b981, #059669); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25;"/>
+                        styleClass="action-button action-button--success"/>
                 <Button text="Editar" onAction="#handleEditarEquipo"
-                        style="-fx-background-color: linear-gradient(to right, #f59e0b, #d97706); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25;"/>
+                        styleClass="action-button action-button--warning"/>
                 <Button text="Eliminar" onAction="#handleEliminarEquipo"
-                        style="-fx-background-color: linear-gradient(to right, #ef4444, #dc2626); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25;"/>
+                        styleClass="action-button action-button--danger"/>
             </HBox>
         </VBox>
     </center>

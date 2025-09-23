@@ -243,8 +243,9 @@ public class EquiposAdminController implements Initializable {
         dialogo.setHeaderText(null);
 
         ButtonType btnGuardar = new ButtonType(esEdicion ? "Actualizar" : "Guardar", ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
         DialogPane dialogPane = dialogo.getDialogPane();
-        dialogPane.getButtonTypes().addAll(btnGuardar, ButtonType.CANCEL);
+        dialogPane.getButtonTypes().addAll(btnGuardar, btnCancelar);
         dialogPane.getStylesheets().add(getClass().getResource("/css/dashboard.css").toExternalForm());
         dialogPane.getStyleClass().add("dialog-dark-pane");
         dialogPane.setPrefSize(900, 600);
@@ -458,8 +459,21 @@ public class EquiposAdminController implements Initializable {
 
         dialogo.getDialogPane().setContent(contenedor);
 
-        Node btnAceptar = dialogo.getDialogPane().lookupButton(btnGuardar);
-        btnAceptar.addEventFilter(ActionEvent.ACTION, event -> {
+        Node btnGuardarNode = dialogo.getDialogPane().lookupButton(btnGuardar);
+        if (btnGuardarNode instanceof Button botonGuardar) {
+            botonGuardar.setDefaultButton(true);
+        }
+        btnGuardarNode.getStyleClass().addAll("dialog-action-button", "dialog-action-button--primary");
+
+        Node btnCancelarNode = dialogo.getDialogPane().lookupButton(btnCancelar);
+        if (btnCancelarNode != null) {
+            btnCancelarNode.getStyleClass().addAll("dialog-action-button", "dialog-action-button--ghost");
+            if (btnCancelarNode instanceof Button botonCancelar) {
+                botonCancelar.setCancelButton(true);
+            }
+        }
+
+        btnGuardarNode.addEventFilter(ActionEvent.ACTION, event -> {
             boolean requiereMedidas = esEquipoConPeso(cbTipo.getValue());
             Optional<String> error = validarFormulario(txtNombre.getText(), cbTipo.getValue(), cbEstado.getValue(),
                     txtMarca.getText(), requiereMedidas, txtPeso.getText(), spCantidad.getValue(), txtFrecuencia.getText());
