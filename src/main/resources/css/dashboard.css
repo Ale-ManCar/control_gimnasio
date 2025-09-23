@@ -23,15 +23,18 @@
 }
 
 .dialog-dark-pane {
-    -fx-background-color: transparent;
+    -fx-background-color: linear-gradient(to bottom, rgba(6, 18, 34, 0.95), rgba(2, 12, 28, 0.98));
     -fx-background-insets: 0;
+    -fx-background-radius: 22;
     -fx-border-color: rgba(46, 139, 255, 0.45);
-    -fx-border-radius: 16;
-    -fx-padding: 18;
+    -fx-border-radius: 22;
+        -fx-padding: 22;
+        -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.45), 24, 0, 0, 12);
 }
 
 .dialog-dark-pane > .content {
     -fx-background-color: transparent;
+    -fx-padding: 0;
 }
 
 .dialog-dark-pane > *.button-bar > *.container {
@@ -39,17 +42,19 @@
 }
 
 .dialog-grid {
-    -fx-background-color: linear-gradient(to bottom, rgba(14, 32, 52, 0.92), rgba(6, 18, 34, 0.95));
+    -fx-background-color: linear-gradient(to bottom, rgba(22, 46, 88, 0.94), rgba(8, 24, 48, 0.97));
     -fx-background-radius: 18;
-    -fx-border-color: rgba(78, 133, 255, 0.45);
+    -fx-border-color: rgba(78, 133, 255, 0.55);
     -fx-border-radius: 18;
-    -fx-padding: 18;
+    -fx-border-width: 1.5;
+    -fx-padding: 22;
     -fx-hgap: 18;
     -fx-vgap: 18;
+    -fx-effect: innershadow(three-pass-box, rgba(12, 28, 52, 0.65), 18, 0.12, 0, 4);
 }
 
 .dialog-grid > .dialog-section {
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.18), 12, 0, 0, 4);
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.25), 16, 0, 0, 6);
 }
 
 .dialog-grid > .dialog-section:focused {
@@ -57,12 +62,13 @@
 }
 
 .dialog-section {
-    -fx-background-color: linear-gradient(to bottom, rgba(20, 45, 78, 0.96), rgba(10, 22, 40, 0.98));
-    -fx-background-radius: 14;
-    -fx-border-color: rgba(78, 133, 255, 0.55);
-    -fx-border-radius: 14;
-    -fx-padding: 14;
-    -fx-spacing: 12;
+    -fx-background-color: linear-gradient(to bottom, rgba(32, 64, 120, 0.9), rgba(16, 36, 70, 0.94));
+        -fx-background-radius: 16;
+        -fx-border-color: rgba(110, 173, 255, 0.65);
+        -fx-border-radius: 16;
+        -fx-border-width: 1.2;
+        -fx-padding: 18;
+        -fx-spacing: 14;
 }
 
 .dialog-section .dialog-section {
@@ -86,9 +92,10 @@
 }
 
 .text-area.dialog-field {
-    -fx-text-fill: #000000;
-    -fx-prompt-text-fill: rgba(0, 0, 0, 0.45);
-    -fx-control-inner-background: #f2f4f8;
+    -fx-text-fill: #e6f0ff;
+        -fx-prompt-text-fill: rgba(230, 240, 255, 0.6);
+        -fx-control-inner-background: rgba(10, 24, 46, 0.92);
+        -fx-background-color: rgba(10, 24, 46, 0.92);
 }
 
 .dialog-field:focused {
