@@ -2,6 +2,7 @@ package models;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.OptionalInt;
 
@@ -33,7 +34,7 @@ public class Equipo {
     }
 
     public void setNombre(String nombre) {
-        this.nombre = nombre != null ? nombre.trim() : "";
+        this.nombre = nombre != null ? nombre.trim().toUpperCase(Locale.ROOT) : "";
     }
 
     public String getTipo() {
@@ -41,7 +42,7 @@ public class Equipo {
     }
 
     public void setTipo(String tipo) {
-        this.tipo = tipo != null ? tipo.trim() : "";
+        this.tipo = tipo != null ? tipo.trim().toUpperCase(Locale.ROOT) : "";
     }
 
     public String getEstado() {
@@ -49,7 +50,7 @@ public class Equipo {
     }
 
     public void setEstado(String estado) {
-        this.estado = estado != null ? estado.trim() : "";
+        this.estado = estado != null ? estado.trim().toUpperCase(Locale.ROOT) : "";
     }
 
     public int getCantidad() {
@@ -68,7 +69,7 @@ public class Equipo {
     }
 
     public void setMarca(String marca) {
-        this.marca = marca != null ? marca.trim() : "";
+        this.marca = marca != null ? marca.trim().toUpperCase(Locale.ROOT) : "";
     }
 
     public String getModelo() {
@@ -76,7 +77,7 @@ public class Equipo {
     }
 
     public void setModelo(String modelo) {
-        this.modelo = modelo != null ? modelo.trim() : "";
+        this.modelo = modelo != null ? modelo.trim().toUpperCase(Locale.ROOT) : "";
     }
 
     public String getPeso() {
@@ -211,7 +212,9 @@ public class Equipo {
     }
 
     public void setUbicacion(String ubicacion) {
-        this.ubicacion = ubicacion != null && !ubicacion.isBlank() ? ubicacion.trim() : null;
+        this.ubicacion = ubicacion != null && !ubicacion.isBlank()
+                ? ubicacion.trim().toUpperCase(Locale.ROOT)
+                : null;
     }
 
     public String getDescripcion() {
@@ -219,7 +222,9 @@ public class Equipo {
     }
 
     public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion != null && !descripcion.isBlank() ? descripcion.trim() : null;
+        this.descripcion = descripcion != null && !descripcion.isBlank()
+                ? descripcion.trim().toUpperCase(Locale.ROOT)
+                : null;
     }
 
     public LocalDate getProximoMantenimiento() {

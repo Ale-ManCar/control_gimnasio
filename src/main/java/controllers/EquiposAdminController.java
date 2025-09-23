@@ -12,6 +12,7 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.geometry.Insets;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
@@ -34,6 +35,7 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.net.URL;
 import java.util.Set;
+import java.util.Locale;
 
 public class EquiposAdminController implements Initializable {
 
@@ -250,6 +252,7 @@ public class EquiposAdminController implements Initializable {
         dialogPane.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
         TextField txtNombre = estilizarCampo(new TextField());
+        aplicarFormatoMayusculas(txtNombre);
         txtNombre.setPromptText("Nombre del equipo");
         ComboBox<String> cbTipo = estilizarCampo(new ComboBox<>());
         cbTipo.getItems().addAll("Máquina Estática", "Equipo con Peso");
@@ -264,13 +267,16 @@ public class EquiposAdminController implements Initializable {
         cbEstado.getSelectionModel().selectFirst();
         if (cbEstado.getEditor() != null) {
             cbEstado.getEditor().getStyleClass().add("dialog-field");
+            aplicarFormatoMayusculas(cbEstado.getEditor());
         }
         Spinner<Integer> spCantidad = estilizarCampo(new Spinner<>(0, Integer.MAX_VALUE, 0));
         spCantidad.setEditable(true);
         spCantidad.getEditor().getStyleClass().add("dialog-field");
         TextField txtMarca = estilizarCampo(new TextField());
+        aplicarFormatoMayusculas(txtMarca);
         txtMarca.setPromptText("Marca");
         TextField txtModelo = estilizarCampo(new TextField());
+        aplicarFormatoMayusculas(txtModelo);
         txtModelo.setPromptText("Modelo (opcional)");
         TextField txtPeso = estilizarCampo(new TextField());
         txtPeso.setPromptText("Peso (kg)");
@@ -283,8 +289,10 @@ public class EquiposAdminController implements Initializable {
         txtFrecuencia.setPromptText("Frecuencia en días");
         txtFrecuencia.setTextFormatter(crearFormatterEntero());
         TextField txtUbicacion = estilizarCampo(new TextField());
+        aplicarFormatoMayusculas(txtUbicacion);
         txtUbicacion.setPromptText("Ubicación");
         TextArea txtDescripcion = estilizarCampo(new TextArea());
+        aplicarFormatoMayusculas(txtDescripcion);
         txtDescripcion.setPromptText("Notas o descripción");
         txtDescripcion.setPrefRowCount(3);
         txtDescripcion.setWrapText(true);
@@ -293,14 +301,25 @@ public class EquiposAdminController implements Initializable {
             txtNombre.setText(equipoExistente.getNombre());
             String tipoExistente = equipoExistente.getTipo();
             if (tipoExistente != null && !tipoExistente.isBlank()) {
-                boolean existe = cbTipo.getItems().stream()
-                        .anyMatch(item -> item.equalsIgnoreCase(tipoExistente));
-                if (!existe) {
-                    cbTipo.getItems().add(tipoExistente);
-                }
-                cbTipo.setValue(tipoExistente);
+                cbTipo.getItems().stream()
+                        .filter(item -> item.equalsIgnoreCase(tipoExistente))
+                        .findFirst()
+                        .ifPresentOrElse(cbTipo::setValue, () -> {
+                            cbTipo.getItems().add(tipoExistente);
+                            cbTipo.setValue(tipoExistente);
+                        });
             }
-            cbEstado.setValue(equipoExistente.getEstado());
+            String estadoExistente = equipoExistente.getEstado();
+            if (estadoExistente != null && !estadoExistente.isBlank()) {
+                cbEstado.getItems().stream()
+                        .filter(item -> item.equalsIgnoreCase(estadoExistente))
+                        .findFirst()
+                        .ifPresentOrElse(cbEstado::setValue, () -> {
+                            String mayusculas = estadoExistente.toUpperCase(Locale.ROOT);
+                            cbEstado.getItems().add(mayusculas);
+                            cbEstado.setValue(mayusculas);
+                        });
+            }
             spCantidad.getValueFactory().setValue(equipoExistente.getCantidad());
             txtMarca.setText(equipoExistente.getMarca());
             txtModelo.setText(equipoExistente.getModelo());
@@ -459,6 +478,16 @@ public class EquiposAdminController implements Initializable {
                 }
                 equipo.setNombre(txtNombre.getText());
                 equipo.setTipo(cbTipo.getValue());
+                if (cbEstado.isEditable()) {
+                    String textoEstado = cbEstado.getEditor().getText();
+                    if (textoEstado != null && !textoEstado.isBlank()) {
+                        String mayusculas = textoEstado.toUpperCase(Locale.ROOT);
+                        if (cbEstado.getItems().stream().noneMatch(item -> item.equalsIgnoreCase(mayusculas))) {
+                            cbEstado.getItems().add(mayusculas);
+                        }
+                        cbEstado.setValue(mayusculas);
+                    }
+                }
                 equipo.setEstado(cbEstado.getValue());
                 boolean requiereMedidas = esEquipoConPeso(cbTipo.getValue());
                 if (requiereMedidas) {
@@ -588,6 +617,23 @@ public class EquiposAdminController implements Initializable {
                 return change;
             }
             return null;
+        });
+    }
+
+    private void aplicarFormatoMayusculas(TextInputControl control) {
+        if (control == null) {
+            return;
+        }
+        control.setTextFormatter(crearFormatterMayusculas());
+    }
+
+    private TextFormatter<String> crearFormatterMayusculas() {
+        return new TextFormatter<>(change -> {
+            String texto = change.getText();
+            if (texto != null) {
+                change.setText(texto.toUpperCase(Locale.ROOT));
+            }
+            return change;
         });
     }
 

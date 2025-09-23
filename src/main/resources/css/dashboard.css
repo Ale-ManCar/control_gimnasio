@@ -39,7 +39,7 @@
 }
 
 .dialog-grid {
-    -fx-background-color: linear-gradient(to bottom, rgba(28, 47, 72, 0.85), rgba(16, 27, 44, 0.88));
+    -fx-background-color: linear-gradient(to bottom, rgba(14, 32, 52, 0.92), rgba(6, 18, 34, 0.95));
     -fx-background-radius: 18;
     -fx-border-color: rgba(78, 133, 255, 0.45);
     -fx-border-radius: 18;
@@ -57,7 +57,7 @@
 }
 
 .dialog-section {
-    -fx-background-color: linear-gradient(to bottom, rgba(36, 59, 85, 0.95), rgba(20, 30, 48, 0.95));
+    -fx-background-color: linear-gradient(to bottom, rgba(20, 45, 78, 0.96), rgba(10, 22, 40, 0.98));
     -fx-background-radius: 14;
     -fx-border-color: rgba(78, 133, 255, 0.55);
     -fx-border-radius: 14;
@@ -76,7 +76,7 @@
 }
 
 .dialog-field {
-    -fx-background-color: rgba(28, 45, 68, 0.85);
+    -fx-background-color: rgba(10, 22, 40, 0.9);
     -fx-text-fill: #e6f0ff;
     -fx-prompt-text-fill: rgba(230, 240, 255, 0.6);
     -fx-border-color: rgba(78, 133, 255, 0.55);
@@ -96,7 +96,49 @@
     -fx-effect: dropshadow(three-pass-box, rgba(46, 139, 255, 0.35), 8, 0, 0, 0);
 }
 
+.dialog-field:hover,
+.dialog-field:filled {
+    -fx-border-color: rgba(110, 173, 255, 0.85);
+    -fx-background-color: rgba(14, 32, 52, 0.95);
+}
+
 .dialog-label {
     -fx-text-fill: #e6f0ff;
     -fx-font-weight: 600;
+}
+
+.combo-box {
+    -fx-background-color: linear-gradient(to bottom, rgba(14, 32, 52, 0.95), rgba(6, 18, 34, 0.95));
+    -fx-border-color: rgba(110, 173, 255, 0.8);
+    -fx-text-fill: #ffffff;
+}
+
+.combo-box:focused,
+.combo-box:hover,
+.combo-box:filled {
+    -fx-border-color: rgba(144, 199, 255, 0.95);
+}
+
+.combo-box .text,
+.combo-box .arrow,
+.combo-box .list-cell {
+    -fx-fill: #ffffff;
+    -fx-text-fill: #ffffff;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: rgba(6, 18, 34, 0.96);
+    -fx-control-inner-background: rgba(6, 18, 34, 0.96);
+}
+
+.combo-box-popup .list-view .list-cell {
+    -fx-text-fill: #ffffff;
+    -fx-background-color: transparent;
+}
+
+.combo-box-popup .list-view .list-cell:hover,
+.combo-box-popup .list-view .list-cell:filled:hover,
+.combo-box-popup .list-view .list-cell:selected {
+    -fx-background-color: rgba(46, 139, 255, 0.45);
+    -fx-text-fill: #ffffff;
 }
