@@ -41,7 +41,6 @@ public class EquiposAdminController implements Initializable {
 
     @FXML private TableView<Equipo> tablaEquipos;
     @FXML private TableColumn<Equipo, String> colNombre;
-    @FXML private TableColumn<Equipo, String> colTipo;
     @FXML private TableColumn<Equipo, String> colEstado;
     @FXML private TableColumn<Equipo, String> colMarca;
     @FXML private TableColumn<Equipo, String> colModelo;
@@ -79,7 +78,6 @@ public class EquiposAdminController implements Initializable {
 
     private void configurarTabla() {
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
-        colTipo.setCellValueFactory(new PropertyValueFactory<>("tipo"));
         colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
         colMarca.setCellValueFactory(new PropertyValueFactory<>("marca"));
         colModelo.setCellValueFactory(new PropertyValueFactory<>("modelo"));
@@ -114,7 +112,7 @@ public class EquiposAdminController implements Initializable {
 
     private void configurarFiltros() {
         filtroEstado.getItems().setAll("Todos");
-        filtroTipo.getItems().setAll("Todos");
+        filtroTipo.getItems().setAll("Todos", "Máquina Estática", "Equipo con Peso");
         actualizarOpcionesFiltros();
 
         filtroEstado.setValue("Todos");
@@ -126,19 +124,13 @@ public class EquiposAdminController implements Initializable {
 
     private void actualizarOpcionesFiltros() {
         Set<String> estados = new HashSet<>();
-        Set<String> tipos = new HashSet<>();
         for (Equipo equipo : equipos) {
             if (equipo.getEstado() != null && !equipo.getEstado().isBlank()) {
                 estados.add(equipo.getEstado());
             }
-            if (equipo.getTipo() != null && !equipo.getTipo().isBlank()) {
-                tipos.add(equipo.getTipo());
-            }
         }
         filtroEstado.getItems().setAll("Todos");
         filtroEstado.getItems().addAll(estados.stream().sorted().toList());
-        filtroTipo.getItems().setAll("Todos");
-        filtroTipo.getItems().addAll(tipos.stream().sorted().toList());
     }
 
     private void aplicarFiltros() {
@@ -151,6 +143,13 @@ public class EquiposAdminController implements Initializable {
                     || equipo.getTipo().equalsIgnoreCase(tipoSeleccionado);
             return coincideEstado && coincideTipo;
         });
+    }
+
+    @FXML
+    private void handleLimpiarFiltros() {
+        filtroEstado.setValue("Todos");
+        filtroTipo.setValue("Todos");
+        aplicarFiltros();
     }
 
     private void cargarEquipos() {
