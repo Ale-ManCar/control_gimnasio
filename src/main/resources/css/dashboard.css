@@ -21,3 +21,58 @@
 .dashboard-root {
     -fx-background-color: linear-gradient(to bottom, #1e3c72, #2a5298);
 }
+
+.dialog-dark-pane {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: rgba(46, 139, 255, 0.45);
+    -fx-border-radius: 16;
+    -fx-padding: 18;
+}
+
+.dialog-dark-pane > .content {
+    -fx-background-color: transparent;
+}
+
+.dialog-dark-pane > *.button-bar > *.container {
+    -fx-background-color: transparent;
+}
+
+.dialog-section {
+    -fx-background-color: linear-gradient(to bottom, rgba(36, 59, 85, 0.95), rgba(20, 30, 48, 0.95));
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(78, 133, 255, 0.55);
+    -fx-border-radius: 14;
+    -fx-padding: 14;
+    -fx-spacing: 12;
+}
+
+.dialog-section .dialog-section {
+    -fx-background-color: linear-gradient(to bottom, rgba(43, 62, 80, 0.9), rgba(31, 45, 68, 0.9));
+    -fx-border-color: rgba(46, 139, 255, 0.35);
+}
+
+.dialog-section > .label {
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+}
+
+.dialog-field {
+    -fx-background-color: rgba(28, 45, 68, 0.85);
+    -fx-text-fill: #e6f0ff;
+    -fx-prompt-text-fill: rgba(230, 240, 255, 0.6);
+    -fx-border-color: rgba(78, 133, 255, 0.55);
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 8;
+}
+
+.dialog-field:focused {
+    -fx-border-color: #2E8BFF;
+    -fx-effect: dropshadow(three-pass-box, rgba(46, 139, 255, 0.35), 8, 0, 0, 0);
+}
+
+.dialog-label {
+    -fx-text-fill: #e6f0ff;
+    -fx-font-weight: 600;
+}

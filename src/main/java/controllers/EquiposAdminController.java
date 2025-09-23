@@ -12,6 +12,8 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import models.Equipo;
 import models.Role;
@@ -238,34 +240,45 @@ public class EquiposAdminController implements Initializable {
 
         ButtonType btnGuardar = new ButtonType(esEdicion ? "Actualizar" : "Guardar", ButtonBar.ButtonData.OK_DONE);
         dialogo.getDialogPane().getButtonTypes().addAll(btnGuardar, ButtonType.CANCEL);
+        dialogo.getDialogPane().getStylesheets().add(getClass().getResource("/css/dashboard.css").toExternalForm());
+        dialogo.getDialogPane().getStyleClass().add("dialog-dark-pane");
 
-        TextField txtNombre = new TextField();
+        TextField txtNombre = estilizarCampo(new TextField());
         txtNombre.setPromptText("Nombre del equipo");
-        ComboBox<String> cbTipo = new ComboBox<>();
+        ComboBox<String> cbTipo = estilizarCampo(new ComboBox<>());
         cbTipo.getItems().addAll("Máquina Estática", "Equipo con Peso");
         cbTipo.setPromptText("Tipo de equipo");
         cbTipo.getSelectionModel().selectFirst();
-        ComboBox<String> cbEstado = new ComboBox<>(FXCollections.observableArrayList(
-                "OPERATIVO", "MANTENIMIENTO", "CRITICO", "FUERA DE SERVICIO"));
+        if (cbTipo.getEditor() != null) {
+            cbTipo.getEditor().getStyleClass().add("dialog-field");
+        }
+        ComboBox<String> cbEstado = estilizarCampo(new ComboBox<>(FXCollections.observableArrayList(
+                "OPERATIVO", "MANTENIMIENTO", "CRITICO", "FUERA DE SERVICIO")));
         cbEstado.setEditable(true);
         cbEstado.getSelectionModel().selectFirst();
-        Spinner<Integer> spCantidad = new Spinner<>(0, Integer.MAX_VALUE, 0);
+        if (cbEstado.getEditor() != null) {
+            cbEstado.getEditor().getStyleClass().add("dialog-field");
+        }
+        Spinner<Integer> spCantidad = estilizarCampo(new Spinner<>(0, Integer.MAX_VALUE, 0));
         spCantidad.setEditable(true);
-        TextField txtMarca = new TextField();
+        spCantidad.getEditor().getStyleClass().add("dialog-field");
+        TextField txtMarca = estilizarCampo(new TextField());
         txtMarca.setPromptText("Marca");
-        TextField txtModelo = new TextField();
+        TextField txtModelo = estilizarCampo(new TextField());
         txtModelo.setPromptText("Modelo (opcional)");
-        TextField txtPeso = new TextField();
+        TextField txtPeso = estilizarCampo(new TextField());
         txtPeso.setPromptText("Peso (kg)");
         txtPeso.setTextFormatter(crearFormatterEntero());
-        DatePicker dpCompra = new DatePicker();
-        DatePicker dpUltimoMantenimiento = new DatePicker();
-        TextField txtFrecuencia = new TextField();
+        DatePicker dpCompra = estilizarCampo(new DatePicker());
+        dpCompra.getEditor().getStyleClass().add("dialog-field");
+        DatePicker dpUltimoMantenimiento = estilizarCampo(new DatePicker());
+        dpUltimoMantenimiento.getEditor().getStyleClass().add("dialog-field");
+        TextField txtFrecuencia = estilizarCampo(new TextField());
         txtFrecuencia.setPromptText("Frecuencia en días");
         txtFrecuencia.setTextFormatter(crearFormatterEntero());
-        TextField txtUbicacion = new TextField();
+        TextField txtUbicacion = estilizarCampo(new TextField());
         txtUbicacion.setPromptText("Ubicación");
-        TextArea txtDescripcion = new TextArea();
+        TextArea txtDescripcion = estilizarCampo(new TextArea());
         txtDescripcion.setPromptText("Notas o descripción");
         txtDescripcion.setPrefRowCount(3);
         txtDescripcion.setWrapText(true);
@@ -298,65 +311,76 @@ public class EquiposAdminController implements Initializable {
         GridPane seccionIdentidad = new GridPane();
         seccionIdentidad.setHgap(10);
         seccionIdentidad.setVgap(10);
-        seccionIdentidad.add(new Label("Nombre:"), 0, 0);
+        seccionIdentidad.setMaxWidth(Double.MAX_VALUE);
+        seccionIdentidad.add(crearEtiquetaCampo("Nombre:"), 0, 0);
         seccionIdentidad.add(txtNombre, 1, 0);
-        seccionIdentidad.add(new Label("Tipo:"), 0, 1);
+        seccionIdentidad.add(crearEtiquetaCampo("Tipo:"), 0, 1);
         seccionIdentidad.add(cbTipo, 1, 1);
 
         GridPane seccionMarcaModelo = new GridPane();
         seccionMarcaModelo.setHgap(10);
         seccionMarcaModelo.setVgap(10);
-        seccionMarcaModelo.add(new Label("Marca:"), 0, 0);
+        seccionMarcaModelo.setMaxWidth(Double.MAX_VALUE);
+        seccionMarcaModelo.add(crearEtiquetaCampo("Marca:"), 0, 0);
         seccionMarcaModelo.add(txtMarca, 1, 0);
-        seccionMarcaModelo.add(new Label("Modelo:"), 0, 1);
+        seccionMarcaModelo.add(crearEtiquetaCampo("Modelo:"), 0, 1);
         seccionMarcaModelo.add(txtModelo, 1, 1);
 
         GridPane seccionEstadoUbicacion = new GridPane();
         seccionEstadoUbicacion.setHgap(10);
         seccionEstadoUbicacion.setVgap(10);
-        seccionEstadoUbicacion.add(new Label("Estado:"), 0, 0);
+        seccionEstadoUbicacion.setMaxWidth(Double.MAX_VALUE);
+        seccionEstadoUbicacion.add(crearEtiquetaCampo("Estado:"), 0, 0);
         seccionEstadoUbicacion.add(cbEstado, 1, 0);
-        seccionEstadoUbicacion.add(new Label("Ubicación:"), 0, 1);
+        seccionEstadoUbicacion.add(crearEtiquetaCampo("Ubicación:"), 0, 1);
         seccionEstadoUbicacion.add(txtUbicacion, 1, 1);
 
         GridPane seccionFechas = new GridPane();
         seccionFechas.setHgap(10);
         seccionFechas.setVgap(10);
-        seccionFechas.add(new Label("Fecha de adquisición:"), 0, 0);
+        seccionFechas.setMaxWidth(Double.MAX_VALUE);
+        seccionFechas.add(crearEtiquetaCampo("Fecha de adquisición:"), 0, 0);
         seccionFechas.add(dpCompra, 1, 0);
-        seccionFechas.add(new Label("Último mantenimiento:"), 0, 1);
+        seccionFechas.add(crearEtiquetaCampo("Último mantenimiento:"), 0, 1);
         seccionFechas.add(dpUltimoMantenimiento, 1, 1);
-        seccionFechas.add(new Label("Frecuencia (días):"), 0, 2);
+        seccionFechas.add(crearEtiquetaCampo("Frecuencia (días):"), 0, 2);
         seccionFechas.add(txtFrecuencia, 1, 2);
 
         GridPane seccionPesoCantidad = new GridPane();
         seccionPesoCantidad.setHgap(10);
         seccionPesoCantidad.setVgap(10);
-        seccionPesoCantidad.add(new Label("Cantidad:"), 0, 0);
+        seccionPesoCantidad.setMaxWidth(Double.MAX_VALUE);
+        seccionPesoCantidad.add(crearEtiquetaCampo("Cantidad:"), 0, 0);
         seccionPesoCantidad.add(spCantidad, 1, 0);
-        seccionPesoCantidad.add(new Label("Peso (kg):"), 0, 1);
+        seccionPesoCantidad.add(crearEtiquetaCampo("Peso (kg):"), 0, 1);
         seccionPesoCantidad.add(txtPeso, 1, 1);
-        seccionPesoCantidad.managedProperty().bind(seccionPesoCantidad.visibleProperty());
 
-        VBox seccionDescripcion = new VBox(6);
-        seccionDescripcion.getChildren().addAll(new Label("Descripción:"), txtDescripcion);
+        VBox bloqueIdentidad = crearSeccion("Identidad del equipo", seccionIdentidad);
+        VBox bloqueMarcaModelo = crearSeccion("Marca y modelo", seccionMarcaModelo);
+        VBox bloqueEstadoUbicacion = crearSeccion("Estado y ubicación", seccionEstadoUbicacion);
+        VBox bloqueFechas = crearSeccion("Plan de mantenimiento", seccionFechas);
+        VBox bloquePesoCantidad = crearSeccion("Cantidad y peso", seccionPesoCantidad);
+        bloquePesoCantidad.managedProperty().bind(bloquePesoCantidad.visibleProperty());
+        VBox bloqueDescripcion = crearSeccion("Descripción", txtDescripcion);
 
-        VBox contenedor = new VBox(12);
+        VBox contenedor = new VBox(16);
         contenedor.setPrefWidth(420);
+        contenedor.setFillWidth(true);
+        contenedor.getStyleClass().add("dialog-section");
         contenedor.getChildren().addAll(
-                seccionIdentidad,
-                seccionMarcaModelo,
-                seccionEstadoUbicacion,
-                seccionFechas,
-                seccionPesoCantidad,
-                seccionDescripcion
+                bloqueIdentidad,
+                bloqueMarcaModelo,
+                bloqueEstadoUbicacion,
+                bloqueFechas,
+                bloquePesoCantidad,
+                bloqueDescripcion
         );
 
         boolean mostrarPeso = esEquipoConPeso(cbTipo.getValue());
-        seccionPesoCantidad.setVisible(mostrarPeso);
+        bloquePesoCantidad.setVisible(mostrarPeso);
         cbTipo.valueProperty().addListener((obs, oldValue, newValue) -> {
             boolean esPeso = esEquipoConPeso(newValue);
-            seccionPesoCantidad.setVisible(esPeso);
+            bloquePesoCantidad.setVisible(esPeso);
             if (!esPeso) {
                 txtPeso.clear();
                 if (spCantidad.getValueFactory() != null) {
@@ -408,6 +432,29 @@ public class EquiposAdminController implements Initializable {
         });
 
         return dialogo;
+    }
+
+    private Label crearEtiquetaCampo(String texto) {
+        Label label = new Label(texto);
+        label.getStyleClass().add("dialog-label");
+        return label;
+    }
+
+    private VBox crearSeccion(String titulo, Node contenido) {
+        Label tituloSeccion = new Label(titulo);
+        tituloSeccion.getStyleClass().add("dialog-label");
+        VBox seccion = new VBox(10, tituloSeccion, contenido);
+        seccion.setFillWidth(true);
+        seccion.getStyleClass().add("dialog-section");
+        if (contenido instanceof Region region) {
+            VBox.setVgrow(region, Priority.ALWAYS);
+        }
+        return seccion;
+    }
+
+    private <T extends Control> T estilizarCampo(T control) {
+        control.getStyleClass().add("dialog-field");
+        return control;
     }
 
     private boolean esEquipoConPeso(String tipo) {
