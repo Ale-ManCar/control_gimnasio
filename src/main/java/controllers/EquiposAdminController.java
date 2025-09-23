@@ -11,6 +11,8 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.geometry.Insets;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -363,18 +365,42 @@ public class EquiposAdminController implements Initializable {
         bloquePesoCantidad.managedProperty().bind(bloquePesoCantidad.visibleProperty());
         VBox bloqueDescripcion = crearSeccion("Descripción", txtDescripcion);
 
-        VBox contenedor = new VBox(16);
-        contenedor.setPrefWidth(420);
-        contenedor.setFillWidth(true);
-        contenedor.getStyleClass().add("dialog-section");
-        contenedor.getChildren().addAll(
-                bloqueIdentidad,
-                bloqueMarcaModelo,
-                bloqueEstadoUbicacion,
-                bloqueFechas,
-                bloquePesoCantidad,
-                bloqueDescripcion
-        );
+        GridPane contenedor = new GridPane();
+        contenedor.setHgap(18);
+        contenedor.setVgap(18);
+        contenedor.setPrefWidth(460);
+        contenedor.setMaxWidth(Double.MAX_VALUE);
+        contenedor.getStyleClass().add("dialog-grid");
+
+        ColumnConstraints columnaIzquierda = new ColumnConstraints();
+        columnaIzquierda.setPercentWidth(50);
+        columnaIzquierda.setHgrow(Priority.ALWAYS);
+        ColumnConstraints columnaDerecha = new ColumnConstraints();
+        columnaDerecha.setPercentWidth(50);
+        columnaDerecha.setHgrow(Priority.ALWAYS);
+        contenedor.getColumnConstraints().addAll(columnaIzquierda, columnaDerecha);
+
+        GridPane.setHgrow(bloqueIdentidad, Priority.ALWAYS);
+        GridPane.setHgrow(bloqueMarcaModelo, Priority.ALWAYS);
+        GridPane.setHgrow(bloqueEstadoUbicacion, Priority.ALWAYS);
+        GridPane.setHgrow(bloqueFechas, Priority.ALWAYS);
+        GridPane.setHgrow(bloquePesoCantidad, Priority.ALWAYS);
+        GridPane.setHgrow(bloqueDescripcion, Priority.ALWAYS);
+
+        Insets margenSeccion = new Insets(0);
+        GridPane.setMargin(bloqueIdentidad, margenSeccion);
+        GridPane.setMargin(bloqueMarcaModelo, margenSeccion);
+        GridPane.setMargin(bloqueEstadoUbicacion, margenSeccion);
+        GridPane.setMargin(bloqueFechas, margenSeccion);
+        GridPane.setMargin(bloquePesoCantidad, margenSeccion);
+        GridPane.setMargin(bloqueDescripcion, margenSeccion);
+
+        contenedor.add(bloqueIdentidad, 0, 0);
+        contenedor.add(bloqueMarcaModelo, 1, 0);
+        contenedor.add(bloqueEstadoUbicacion, 0, 1);
+        contenedor.add(bloqueFechas, 1, 1);
+        contenedor.add(bloquePesoCantidad, 0, 2);
+        contenedor.add(bloqueDescripcion, 0, 3, 2, 1);
 
         boolean mostrarPeso = esEquipoConPeso(cbTipo.getValue());
         bloquePesoCantidad.setVisible(mostrarPeso);
@@ -445,10 +471,14 @@ public class EquiposAdminController implements Initializable {
         tituloSeccion.getStyleClass().add("dialog-label");
         VBox seccion = new VBox(10, tituloSeccion, contenido);
         seccion.setFillWidth(true);
+        seccion.setMaxWidth(Double.MAX_VALUE);
         seccion.getStyleClass().add("dialog-section");
         if (contenido instanceof Region region) {
+            region.setMaxWidth(Double.MAX_VALUE);
             VBox.setVgrow(region, Priority.ALWAYS);
         }
+        GridPane.setFillWidth(seccion, true);
+        GridPane.setHgrow(seccion, Priority.ALWAYS);
         return seccion;
     }
 
