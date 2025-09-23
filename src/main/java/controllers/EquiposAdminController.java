@@ -17,6 +17,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.stage.Window;
 import models.Equipo;
 import models.Role;
 import models.User;
@@ -411,8 +412,20 @@ public class EquiposAdminController implements Initializable {
         contenedor.add(bloquePesoCantidad, 0, 2);
         contenedor.add(bloqueDescripcion, 0, 3, 2, 1);
 
+        Runnable ajustarAlturaDialogo = () -> {
+            double alturaPreferida = esEquipoConPeso(cbTipo.getValue()) ? 720 : 600;
+            dialogPane.setPrefHeight(alturaPreferida);
+            if (dialogPane.getScene() != null) {
+                Window window = dialogPane.getScene().getWindow();
+                if (window != null) {
+                    window.sizeToScene();
+                }
+            }
+        };
+
         boolean mostrarPeso = esEquipoConPeso(cbTipo.getValue());
         bloquePesoCantidad.setVisible(mostrarPeso);
+        ajustarAlturaDialogo.run();
         cbTipo.valueProperty().addListener((obs, oldValue, newValue) -> {
             boolean esPeso = esEquipoConPeso(newValue);
             bloquePesoCantidad.setVisible(esPeso);
@@ -422,6 +435,7 @@ public class EquiposAdminController implements Initializable {
                     spCantidad.getValueFactory().setValue(0);
                 }
             }
+            ajustarAlturaDialogo.run();
         });
 
         dialogo.getDialogPane().setContent(contenedor);
