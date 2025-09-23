@@ -241,9 +241,12 @@ public class EquiposAdminController implements Initializable {
         dialogo.setHeaderText(null);
 
         ButtonType btnGuardar = new ButtonType(esEdicion ? "Actualizar" : "Guardar", ButtonBar.ButtonData.OK_DONE);
-        dialogo.getDialogPane().getButtonTypes().addAll(btnGuardar, ButtonType.CANCEL);
-        dialogo.getDialogPane().getStylesheets().add(getClass().getResource("/css/dashboard.css").toExternalForm());
-        dialogo.getDialogPane().getStyleClass().add("dialog-dark-pane");
+        DialogPane dialogPane = dialogo.getDialogPane();
+        dialogPane.getButtonTypes().addAll(btnGuardar, ButtonType.CANCEL);
+        dialogPane.getStylesheets().add(getClass().getResource("/css/dashboard.css").toExternalForm());
+        dialogPane.getStyleClass().add("dialog-dark-pane");
+        dialogPane.setPrefSize(900, 600);
+        dialogPane.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
         TextField txtNombre = estilizarCampo(new TextField());
         txtNombre.setPromptText("Nombre del equipo");
@@ -368,8 +371,8 @@ public class EquiposAdminController implements Initializable {
         GridPane contenedor = new GridPane();
         contenedor.setHgap(18);
         contenedor.setVgap(18);
-        contenedor.setPrefWidth(460);
-        contenedor.setMaxWidth(Double.MAX_VALUE);
+        contenedor.setPrefSize(900, 600);
+        contenedor.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         contenedor.getStyleClass().add("dialog-grid");
 
         ColumnConstraints columnaIzquierda = new ColumnConstraints();
@@ -381,11 +384,17 @@ public class EquiposAdminController implements Initializable {
         contenedor.getColumnConstraints().addAll(columnaIzquierda, columnaDerecha);
 
         GridPane.setHgrow(bloqueIdentidad, Priority.ALWAYS);
+        GridPane.setVgrow(bloqueIdentidad, Priority.ALWAYS);
         GridPane.setHgrow(bloqueMarcaModelo, Priority.ALWAYS);
+        GridPane.setVgrow(bloqueMarcaModelo, Priority.ALWAYS);
         GridPane.setHgrow(bloqueEstadoUbicacion, Priority.ALWAYS);
+        GridPane.setVgrow(bloqueEstadoUbicacion, Priority.ALWAYS);
         GridPane.setHgrow(bloqueFechas, Priority.ALWAYS);
+        GridPane.setVgrow(bloqueFechas, Priority.ALWAYS);
         GridPane.setHgrow(bloquePesoCantidad, Priority.ALWAYS);
+        GridPane.setVgrow(bloquePesoCantidad, Priority.ALWAYS);
         GridPane.setHgrow(bloqueDescripcion, Priority.ALWAYS);
+        GridPane.setVgrow(bloqueDescripcion, Priority.ALWAYS);
 
         Insets margenSeccion = new Insets(0);
         GridPane.setMargin(bloqueIdentidad, margenSeccion);
