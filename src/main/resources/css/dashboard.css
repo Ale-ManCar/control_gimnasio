@@ -85,6 +85,12 @@
     -fx-padding: 8;
 }
 
+.text-area.dialog-field {
+    -fx-text-fill: #000000;
+    -fx-prompt-text-fill: rgba(0, 0, 0, 0.45);
+    -fx-control-inner-background: #f2f4f8;
+}
+
 .dialog-field:focused {
     -fx-border-color: #2E8BFF;
     -fx-effect: dropshadow(three-pass-box, rgba(46, 139, 255, 0.35), 8, 0, 0, 0);
