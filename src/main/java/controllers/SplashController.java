@@ -18,6 +18,7 @@ import util.AuditoriaScheduler;
 import util.BackupUtil;
 import util.DatabaseUtil;
 import util.EstadoClienteService;
+import util.MantenimientoEquipoScheduler;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -55,6 +56,7 @@ public class SplashController {
 
                 // Paso 3: Iniciar servicios
                 EstadoClienteService.iniciarActualizacionDiaria();
+                MantenimientoEquipoScheduler.iniciar();
                 updateProgress(70, 100);
 
                 // Paso 4: Programar tareas en segundo plano

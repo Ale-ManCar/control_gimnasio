@@ -916,6 +916,14 @@ public class DatabaseUtil {
         return equipos;
     }
 
+    public static void actualizarMantenimientosProgramados() {
+        try (Connection conn = getConnection()) {
+            actualizarMantenimientosVencidos(conn);
+        } catch (SQLException e) {
+            System.err.println("No se pudieron actualizar los mantenimientos programados: " + e.getMessage());
+        }
+    }
+
     public static void insertarEquipo(Equipo equipo) throws SQLException {
         String sql = "INSERT INTO equipos (nombre, tipo, estado, cantidad, marca, modelo, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         executeUpdate(sql,
