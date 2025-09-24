@@ -1000,6 +1000,7 @@ public class DatabaseUtil {
         }
         equipo.setFechaAdquisicion(rs.getString("fecha_adquisicion"));
         equipo.setFechaUltimoMantenimiento(parseFecha(rs.getString("fecha_ultimo_mantenimiento")));
+        equipo.setFrecuenciaMantenimiento(rs.getString("frecuencia_mantenimiento"));
         equipo.setUbicacion(rs.getString("ubicacion"));
         equipo.setDescripcion(rs.getString("descripcion"));
         return equipo;
