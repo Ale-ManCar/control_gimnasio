@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -198,6 +199,11 @@ public class DatabaseUtil {
             } catch (SQLException e) {
                 System.err.println("No se pudo actualizar el esquema de equipos: " + e.getMessage());
             }
+            try {
+                actualizarMantenimientosVencidos(conn);
+            } catch (SQLException e) {
+                System.err.println("No se pudieron actualizar los mantenimientos vencidos: " + e.getMessage());
+            }
             stmt.execute(sqlUsuarios);
             stmt.execute(sqlTurnos);
             try { stmt.execute("ALTER TABLE turnos ADD COLUMN resumen_generado TEXT"); } catch (SQLException ignored) {}
@@ -313,26 +319,94 @@ public class DatabaseUtil {
                 try { stmt.execute("UPDATE equipos SET fecha_adquisicion = fecha_compra WHERE fecha_compra IS NOT NULL AND (fecha_adquisicion IS NULL OR fecha_adquisicion = '')"); } catch (SQLException ignored) {}
             }
 
-            boolean renombradaFrecuencia = false;
+            boolean migrarFrecuenciaLegacy = false;
             boolean existeFrecuencia = columnExists(conn, "equipos", "frecuencia_mantenimiento");
             boolean existeFrecuenciaLegacy = columnExists(conn, "equipos", "frecuencia_mantenimiento_legacy");
             if (existeFrecuencia && !existeFrecuenciaLegacy) {
                 try {
                     stmt.execute("ALTER TABLE equipos RENAME COLUMN frecuencia_mantenimiento TO frecuencia_mantenimiento_legacy");
-                    renombradaFrecuencia = true;
+                    migrarFrecuenciaLegacy = true;
                     existeFrecuencia = false;
                     existeFrecuenciaLegacy = true;
                 } catch (SQLException ignored) {}
             }
             if (!existeFrecuencia) {
                 try { stmt.execute("ALTER TABLE equipos ADD COLUMN frecuencia_mantenimiento TEXT"); } catch (SQLException ignored) {}
+                existeFrecuencia = true;
             }
 
-            if (renombradaFrecuencia || existeFrecuenciaLegacy) {
+            if (migrarFrecuenciaLegacy) {
                 try { stmt.execute("UPDATE equipos SET frecuencia_mantenimiento = TRIM(CAST(frecuencia_mantenimiento_legacy AS TEXT)) WHERE frecuencia_mantenimiento_legacy IS NOT NULL"); } catch (SQLException ignored) {}
+                try { stmt.execute("ALTER TABLE equipos DROP COLUMN frecuencia_mantenimiento_legacy"); } catch (SQLException ignored) {}
             } else {
                 try { stmt.execute("UPDATE equipos SET frecuencia_mantenimiento = TRIM(CAST(frecuencia_mantenimiento AS TEXT)) WHERE frecuencia_mantenimiento IS NOT NULL"); } catch (SQLException ignored) {}
+                if (existeFrecuenciaLegacy) {
+                    try { stmt.execute("ALTER TABLE equipos DROP COLUMN frecuencia_mantenimiento_legacy"); } catch (SQLException ignored) {}
+                }
             }
+        }
+    }
+
+    private static void actualizarMantenimientosVencidos(Connection conn) throws SQLException {
+        String selectSql = "SELECT id, fecha_ultimo_mantenimiento, frecuencia_mantenimiento " +
+                "FROM equipos " +
+                "WHERE TRIM(COALESCE(frecuencia_mantenimiento, '')) <> '' " +
+                "AND CAST(frecuencia_mantenimiento AS INTEGER) > 0 " +
+                "AND fecha_ultimo_mantenimiento IS NOT NULL";
+
+        List<Integer> pendientes = new ArrayList<>();
+        List<LocalDate> nuevasFechas = new ArrayList<>();
+
+        try (PreparedStatement selectStmt = conn.prepareStatement(selectSql);
+             ResultSet rs = selectStmt.executeQuery()) {
+            LocalDate hoy = LocalDate.now();
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                LocalDate fechaUltimo = parseFecha(rs.getString("fecha_ultimo_mantenimiento"));
+                int frecuencia = parseEnteroSeguro(rs.getString("frecuencia_mantenimiento"));
+                if (fechaUltimo == null || frecuencia <= 0) {
+                    continue;
+                }
+                long diasTranscurridos = ChronoUnit.DAYS.between(fechaUltimo, hoy);
+                if (diasTranscurridos < frecuencia) {
+                    continue;
+                }
+                long ciclos = diasTranscurridos / frecuencia;
+                if (ciclos <= 0) {
+                    continue;
+                }
+                LocalDate nuevaFecha = fechaUltimo.plusDays(ciclos * (long) frecuencia);
+                if (nuevaFecha.isAfter(hoy)) {
+                    nuevaFecha = hoy;
+                }
+                if (!nuevaFecha.isEqual(fechaUltimo)) {
+                    pendientes.add(id);
+                    nuevasFechas.add(nuevaFecha);
+                }
+            }
+        }
+
+        if (!pendientes.isEmpty()) {
+            String updateSql = "UPDATE equipos SET fecha_ultimo_mantenimiento = ? WHERE id = ?";
+            try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                for (int i = 0; i < pendientes.size(); i++) {
+                    updateStmt.setString(1, nuevasFechas.get(i).toString());
+                    updateStmt.setInt(2, pendientes.get(i));
+                    updateStmt.addBatch();
+                }
+                updateStmt.executeBatch();
+            }
+        }
+    }
+
+    private static int parseEnteroSeguro(String valor) {
+        if (valor == null) {
+            return 0;
+        }
+        try {
+            return Integer.parseInt(valor.trim());
+        } catch (NumberFormatException e) {
+            return 0;
         }
     }
 
@@ -830,11 +904,13 @@ public class DatabaseUtil {
         ObservableList<Equipo> equipos = FXCollections.observableArrayList();
         String sql = "SELECT id, nombre, tipo, estado, cantidad, marca, modelo, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion FROM equipos ORDER BY nombre";
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                equipos.add(mapEquipo(rs));
+        try (Connection conn = getConnection()) {
+            actualizarMantenimientosVencidos(conn);
+            try (PreparedStatement stmt = conn.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    equipos.add(mapEquipo(rs));
+                }
             }
         }
         return equipos;
@@ -884,12 +960,14 @@ public class DatabaseUtil {
         ObservableList<Equipo> equipos = FXCollections.observableArrayList();
         String sql = "SELECT id, nombre, tipo, estado, cantidad, marca, modelo, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion FROM equipos WHERE UPPER(estado) = UPPER(?) ORDER BY nombre";
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, estado);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    equipos.add(mapEquipo(rs));
+        try (Connection conn = getConnection()) {
+            actualizarMantenimientosVencidos(conn);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, estado);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        equipos.add(mapEquipo(rs));
+                    }
                 }
             }
         }
@@ -922,12 +1000,14 @@ public class DatabaseUtil {
                 "AND date(fecha_ultimo_mantenimiento, '+' || CAST(frecuencia_mantenimiento AS INTEGER) || ' day') <= date('now', '+' || ? || ' day') " +
                 "AND date(fecha_ultimo_mantenimiento, '+' || CAST(frecuencia_mantenimiento AS INTEGER) || ' day') >= date('now')";
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, dias);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    equipos.add(mapEquipo(rs));
+        try (Connection conn = getConnection()) {
+            actualizarMantenimientosVencidos(conn);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, dias);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        equipos.add(mapEquipo(rs));
+                    }
                 }
             }
         }
@@ -943,11 +1023,13 @@ public class DatabaseUtil {
                 "AND fecha_ultimo_mantenimiento IS NOT NULL " +
                 "AND date(fecha_ultimo_mantenimiento, '+' || CAST(frecuencia_mantenimiento AS INTEGER) || ' day') < date('now')";
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                equipos.add(mapEquipo(rs));
+        try (Connection conn = getConnection()) {
+            actualizarMantenimientosVencidos(conn);
+            try (PreparedStatement stmt = conn.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    equipos.add(mapEquipo(rs));
+                }
             }
         }
         return equipos;
