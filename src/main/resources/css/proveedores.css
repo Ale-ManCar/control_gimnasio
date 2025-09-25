@@ -149,7 +149,11 @@
     -fx-border-width: 0;
     -fx-text-fill: #f1f5f9;
     -fx-font-weight: 700;
-    -fx-alignment: CENTER_LEFT;
+    -fx-alignment: CENTER;
+}
+
+.modern-table .column-header .label {
+    -fx-alignment: CENTER;
 }
 
 .modern-table .table-row-cell {

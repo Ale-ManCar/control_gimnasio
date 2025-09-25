@@ -30,7 +30,6 @@ import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 
 public class ListaProveedoresController {
@@ -40,7 +39,6 @@ public class ListaProveedoresController {
     @FXML private TableColumn<Proveedor, String> colContacto;
     @FXML private TableColumn<Proveedor, String> colTelefono;
     @FXML private TableColumn<Proveedor, String> colCategorias;
-    @FXML private TableColumn<Proveedor, String> colPrecioProducto;
 
     @FXML private CheckBox chkEquipos;
     @FXML private CheckBox chkInsumos;
@@ -77,7 +75,6 @@ public class ListaProveedoresController {
         colContacto.setCellValueFactory(new PropertyValueFactory<>("contacto"));
         colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
         colCategorias.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getResumenCategorias()));
-        colPrecioProducto.setCellValueFactory(cell -> new SimpleStringProperty(obtenerPrecioFormateado(cell.getValue())));
 
         proveedoresFiltrados = new FilteredList<>(proveedores, this::filtrarProveedor);
         SortedList<Proveedor> ordenados = new SortedList<>(proveedoresFiltrados);
@@ -211,18 +208,6 @@ public class ListaProveedoresController {
         String etiqueta = "EQUIPO".equals(tipo) ? "Equipo" : "Insumo";
         String precio = producto.getPrecio() > 0 ? String.format("$ %.2f", producto.getPrecio()) : "Sin precio";
         return etiqueta + ": " + nombre + " - " + precio;
-    }
-
-    private String obtenerPrecioFormateado(Proveedor proveedor) {
-        if (productoSeleccionado == null || categoriaSeleccionada == null || proveedor == null) {
-            return "-";
-        }
-        String tipo = categoriaSeleccionada.equals("EQUIPOS") ? "EQUIPO" : "INSUMO";
-        OptionalDouble precio = proveedor.obtenerPrecioPara(tipo, productoSeleccionado.getId());
-        if (precio.isPresent()) {
-            return String.format("$ %.2f", precio.getAsDouble());
-        }
-        return "No disponible";
     }
 
     @FXML

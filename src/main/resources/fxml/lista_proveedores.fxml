@@ -36,16 +36,15 @@
             <items>
                 <VBox spacing="15" styleClass="table-container">
                     <HBox spacing="10" alignment="CENTER_LEFT" styleClass="table-header">
-                        <Label text="Listado de proveedores" styleClass="section-title"/>
-                        <Label text="Actualiza, filtra y compara tus aliados estratégicos" styleClass="section-subtitle"/>
+                        <Label text="Listado de proveedores" styleClass="section-title" style="-fx-text-fill: #000000;"/>
+                        <Label text="Actualiza, filtra y compara tus aliados estratégicos" styleClass="section-subtitle" style="-fx-text-fill: #000000;"/>
                     </HBox>
                     <TableView fx:id="tablaProveedores" VBox.vgrow="ALWAYS" styleClass="modern-table">
                         <columns>
-                            <TableColumn fx:id="colNombre" text="Proveedor" prefWidth="180"/>
-                            <TableColumn fx:id="colContacto" text="Contacto" prefWidth="160"/>
-                            <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="140"/>
-                            <TableColumn fx:id="colCategorias" text="Categorías" prefWidth="160"/>
-                            <TableColumn fx:id="colPrecioProducto" text="Precio del producto seleccionado" prefWidth="220"/>
+                            <TableColumn fx:id="colNombre" text="Proveedor" prefWidth="220" style="-fx-alignment: CENTER;"/>
+                            <TableColumn fx:id="colContacto" text="Contacto" prefWidth="220" style="-fx-alignment: CENTER;"/>
+                            <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="180" style="-fx-alignment: CENTER;"/>
+                            <TableColumn fx:id="colCategorias" text="Categorías" prefWidth="220" style="-fx-alignment: CENTER;"/>
                         </columns>
                     </TableView>
                     <HBox spacing="12" alignment="CENTER_RIGHT" styleClass="actions-bar">
