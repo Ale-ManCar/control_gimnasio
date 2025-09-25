@@ -25,6 +25,7 @@ import models.User;
 import models.Role;
 import models.Turno;
 import models.Proveedor;
+import models.ProveedorProducto;
 import models.CoachClientes;
 import models.Equipo;
 
@@ -178,6 +179,17 @@ public class DatabaseUtil {
                 "contacto TEXT," +
                 "telefono TEXT)";
 
+        String sqlProveedorProductos = "CREATE TABLE IF NOT EXISTS proveedor_productos (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "proveedor_id INTEGER NOT NULL," +
+                "tipo TEXT NOT NULL CHECK(tipo IN ('EQUIPO','INSUMO'))," +
+                "equipo_id INTEGER," +
+                "producto_id INTEGER," +
+                "precio REAL NOT NULL DEFAULT 0," +
+                "FOREIGN KEY (proveedor_id) REFERENCES proveedores(id) ON DELETE CASCADE," +
+                "FOREIGN KEY (equipo_id) REFERENCES equipos(id) ON DELETE CASCADE," +
+                "FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE)";
+
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
 
@@ -210,6 +222,7 @@ public class DatabaseUtil {
             stmt.execute(sqlAuditoria);
             stmt.execute(sqlAuditoriaUsuarios);
             stmt.execute(sqlProveedores);
+            stmt.execute(sqlProveedorProductos);
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN area TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE clientes ADD COLUMN coach_id INTEGER REFERENCES coaches(id)"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE productos ADD COLUMN stock_inicial INTEGER DEFAULT 0"); } catch (SQLException ignored) {}
@@ -1266,6 +1279,216 @@ public class DatabaseUtil {
             }
         }
         return -1;
+    }
+
+    public static void actualizarProveedor(Proveedor proveedor) throws SQLException {
+        String sql = "UPDATE proveedores SET nombre = ?, contacto = ?, telefono = ? WHERE id = ?";
+        executeUpdate(sql,
+                proveedor.getNombre(),
+                proveedor.getContacto(),
+                proveedor.getTelefono(),
+                proveedor.getId());
+    }
+
+    public static void eliminarProveedor(int proveedorId) throws SQLException {
+        String sql = "DELETE FROM proveedores WHERE id = ?";
+        executeUpdate(sql, proveedorId);
+    }
+
+    public static ObservableList<ProveedorProducto> obtenerProductosProveedor(int proveedorId) throws SQLException {
+        ObservableList<ProveedorProducto> productos = FXCollections.observableArrayList();
+        String sql = "SELECT pp.id, pp.tipo, pp.precio, pp.equipo_id, pp.producto_id, " +
+                "COALESCE(e.nombre, pr.nombre) AS nombre " +
+                "FROM proveedor_productos pp " +
+                "LEFT JOIN equipos e ON pp.equipo_id = e.id " +
+                "LEFT JOIN productos pr ON pp.producto_id = pr.id " +
+                "WHERE pp.proveedor_id = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, proveedorId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ProveedorProducto producto = new ProveedorProducto();
+                    producto.setId(rs.getInt("id"));
+                    producto.setProveedorId(proveedorId);
+                    producto.setTipo(rs.getString("tipo"));
+                    int equipoId = rs.getInt("equipo_id");
+                    if (!rs.wasNull()) {
+                        producto.setEquipoId(equipoId);
+                    }
+                    int insumoId = rs.getInt("producto_id");
+                    if (!rs.wasNull()) {
+                        producto.setProductoId(insumoId);
+                    }
+                    producto.setNombreProducto(rs.getString("nombre"));
+                    producto.setPrecio(rs.getDouble("precio"));
+                    producto.setSeleccionado(true);
+                    productos.add(producto);
+                }
+            }
+        }
+        return productos;
+    }
+
+    public static void reemplazarProductosProveedor(int proveedorId, List<ProveedorProducto> productos) throws SQLException {
+        String deleteSql = "DELETE FROM proveedor_productos WHERE proveedor_id = ?";
+        String insertSql = "INSERT INTO proveedor_productos (proveedor_id, tipo, equipo_id, producto_id, precio) VALUES (?, ?, ?, ?, ?)";
+
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+            try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
+                deleteStmt.setInt(1, proveedorId);
+                deleteStmt.executeUpdate();
+            }
+
+            try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                for (ProveedorProducto producto : productos) {
+                    insertStmt.setInt(1, proveedorId);
+                    insertStmt.setString(2, producto.getTipo());
+                    if ("EQUIPO".equalsIgnoreCase(producto.getTipo())) {
+                        if (producto.getEquipoId() != null) {
+                            insertStmt.setInt(3, producto.getEquipoId());
+                        } else {
+                            insertStmt.setNull(3, Types.INTEGER);
+                        }
+                        insertStmt.setNull(4, Types.INTEGER);
+                    } else {
+                        insertStmt.setNull(3, Types.INTEGER);
+                        if (producto.getProductoId() != null) {
+                            insertStmt.setInt(4, producto.getProductoId());
+                        } else {
+                            insertStmt.setNull(4, Types.INTEGER);
+                        }
+                    }
+                    insertStmt.setDouble(5, producto.getPrecio());
+                    insertStmt.addBatch();
+                }
+                insertStmt.executeBatch();
+            }
+
+            conn.commit();
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ignored) {
+                }
+            }
+            throw e;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException ignored) {
+                }
+            }
+        }
+    }
+
+    public static ObservableList<Proveedor> obtenerProveedoresDetallados() throws SQLException {
+        ObservableList<Proveedor> proveedores = getProveedores();
+        if (proveedores.isEmpty()) {
+            return proveedores;
+        }
+
+        Map<Integer, Proveedor> mapa = new HashMap<>();
+        for (Proveedor proveedor : proveedores) {
+            mapa.put(proveedor.getId(), proveedor);
+        }
+
+        String sql = "SELECT pp.id, pp.proveedor_id, pp.tipo, pp.precio, pp.equipo_id, pp.producto_id, " +
+                "COALESCE(e.nombre, pr.nombre) AS nombre " +
+                "FROM proveedor_productos pp " +
+                "LEFT JOIN equipos e ON pp.equipo_id = e.id " +
+                "LEFT JOIN productos pr ON pp.producto_id = pr.id";
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                Proveedor proveedor = mapa.get(rs.getInt("proveedor_id"));
+                if (proveedor == null) {
+                    continue;
+                }
+                ProveedorProducto producto = new ProveedorProducto();
+                producto.setId(rs.getInt("id"));
+                producto.setProveedorId(proveedor.getId());
+                producto.setTipo(rs.getString("tipo"));
+                int equipoId = rs.getInt("equipo_id");
+                if (!rs.wasNull()) {
+                    producto.setEquipoId(equipoId);
+                }
+                int insumoId = rs.getInt("producto_id");
+                if (!rs.wasNull()) {
+                    producto.setProductoId(insumoId);
+                }
+                producto.setNombreProducto(rs.getString("nombre"));
+                producto.setPrecio(rs.getDouble("precio"));
+                producto.setSeleccionado(true);
+                producto.setProveedor(proveedor);
+                proveedor.agregarProducto(producto);
+            }
+        }
+        return proveedores;
+    }
+
+    public static ObservableList<ProveedorProducto> obtenerComparativaProducto(String tipo, int itemId) throws SQLException {
+        ObservableList<ProveedorProducto> comparacion = FXCollections.observableArrayList();
+        String sql;
+        if ("EQUIPO".equalsIgnoreCase(tipo)) {
+            sql = "SELECT pp.id, pp.proveedor_id, pp.tipo, pp.precio, pp.equipo_id, prov.nombre AS proveedor_nombre, " +
+                    "prov.contacto, prov.telefono, e.nombre AS producto_nombre " +
+                    "FROM proveedor_productos pp " +
+                    "JOIN proveedores prov ON prov.id = pp.proveedor_id " +
+                    "LEFT JOIN equipos e ON pp.equipo_id = e.id " +
+                    "WHERE pp.tipo = 'EQUIPO' AND pp.equipo_id = ?";
+        } else {
+            sql = "SELECT pp.id, pp.proveedor_id, pp.tipo, pp.precio, pp.producto_id, prov.nombre AS proveedor_nombre, " +
+                    "prov.contacto, prov.telefono, p.nombre AS producto_nombre " +
+                    "FROM proveedor_productos pp " +
+                    "JOIN proveedores prov ON prov.id = pp.proveedor_id " +
+                    "LEFT JOIN productos p ON pp.producto_id = p.id " +
+                    "WHERE pp.tipo = 'INSUMO' AND pp.producto_id = ?";
+        }
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, itemId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ProveedorProducto producto = new ProveedorProducto();
+                    producto.setId(rs.getInt("id"));
+                    producto.setProveedorId(rs.getInt("proveedor_id"));
+                    producto.setTipo(rs.getString("tipo"));
+                    if ("EQUIPO".equalsIgnoreCase(tipo)) {
+                        int equipoId = rs.getInt("equipo_id");
+                        if (!rs.wasNull()) {
+                            producto.setEquipoId(equipoId);
+                        }
+                    } else {
+                        int productoId = rs.getInt("producto_id");
+                        if (!rs.wasNull()) {
+                            producto.setProductoId(productoId);
+                        }
+                    }
+                    producto.setNombreProducto(rs.getString("producto_nombre"));
+                    producto.setPrecio(rs.getDouble("precio"));
+                    Proveedor proveedor = new Proveedor();
+                    proveedor.setId(rs.getInt("proveedor_id"));
+                    proveedor.setNombre(rs.getString("proveedor_nombre"));
+                    proveedor.setContacto(rs.getString("contacto"));
+                    proveedor.setTelefono(rs.getString("telefono"));
+                    producto.setProveedor(proveedor);
+                    comparacion.add(producto);
+                }
+            }
+        }
+
+        return comparacion;
     }
 
     public static ObservableList<PagoMensual> getEgresosMensuales(int año) throws SQLException {

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.ProveedorDialogController"
+            prefWidth="900" prefHeight="600"
+            style="-fx-background-color: linear-gradient(to bottom, #0f172a, #1e293b); -fx-padding: 20;">
+    <top>
+        <VBox spacing="10">
+            <Label text="Registro de proveedor"
+                   style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+            <GridPane hgap="10" vgap="10">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="30"/>
+                    <ColumnConstraints percentWidth="70"/>
+                </columnConstraints>
+                <Label text="Nombre" GridPane.rowIndex="0" GridPane.columnIndex="0"
+                       style="-fx-text-fill: #cbd5f5;"/>
+                <TextField fx:id="txtNombre" GridPane.rowIndex="0" GridPane.columnIndex="1"
+                           promptText="Nombre del proveedor"/>
+                <Label text="Contacto" GridPane.rowIndex="1" GridPane.columnIndex="0"
+                       style="-fx-text-fill: #cbd5f5;"/>
+                <TextField fx:id="txtContacto" GridPane.rowIndex="1" GridPane.columnIndex="1"
+                           promptText="Persona de contacto"/>
+                <Label text="Teléfono" GridPane.rowIndex="2" GridPane.columnIndex="0"
+                       style="-fx-text-fill: #cbd5f5;"/>
+                <TextField fx:id="txtTelefono" GridPane.rowIndex="2" GridPane.columnIndex="1"
+                           promptText="Número telefónico"/>
+            </GridPane>
+        </VBox>
+    </top>
+    <center>
+        <TabPane tabClosingPolicy="UNAVAILABLE"
+                 style="-fx-background-color: transparent; -fx-text-base-color: white;">
+            <tabs>
+                <Tab text="Equipos">
+                    <BorderPane>
+                        <center>
+                            <TableView fx:id="tablaEquipos" editable="true"
+                                       style="-fx-background-color: rgba(15,23,42,0.85); -fx-border-color: rgba(148,163,184,0.3); -fx-border-radius: 10; -fx-background-radius: 10;">
+                                <columns>
+                                    <TableColumn fx:id="colEquipoSeleccion" text="Seleccionar" prefWidth="120"/>
+                                    <TableColumn fx:id="colEquipoNombre" text="Equipo" prefWidth="260"/>
+                                    <TableColumn fx:id="colEquipoPrecio" text="Precio" prefWidth="140"/>
+                                </columns>
+                            </TableView>
+                        </center>
+                        <bottom>
+                            <Label text="Selecciona los equipos que suministra el proveedor e indica su precio"
+                                   style="-fx-text-fill: #94a3b8; -fx-padding: 10;"/>
+                        </bottom>
+                    </BorderPane>
+                </Tab>
+                <Tab text="Insumos">
+                    <BorderPane>
+                        <center>
+                            <TableView fx:id="tablaInsumos" editable="true"
+                                       style="-fx-background-color: rgba(15,23,42,0.85); -fx-border-color: rgba(148,163,184,0.3); -fx-border-radius: 10; -fx-background-radius: 10;">
+                                <columns>
+                                    <TableColumn fx:id="colInsumoSeleccion" text="Seleccionar" prefWidth="120"/>
+                                    <TableColumn fx:id="colInsumoNombre" text="Insumo" prefWidth="260"/>
+                                    <TableColumn fx:id="colInsumoPrecio" text="Precio" prefWidth="140"/>
+                                </columns>
+                            </TableView>
+                        </center>
+                        <bottom>
+                            <Label text="Selecciona los insumos y registra su precio de compra"
+                                   style="-fx-text-fill: #94a3b8; -fx-padding: 10;"/>
+                        </bottom>
+                    </BorderPane>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </center>
+    <bottom>
+        <HBox spacing="12" alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">
+            <Button fx:id="btnCancelar" text="Cancelar" onAction="#cancelar"
+                    style="-fx-background-color: #475569; -fx-text-fill: white; -fx-background-radius: 18;"/>
+            <Button fx:id="btnGuardar" text="Guardar" onAction="#guardar"
+                    style="-fx-background-color: linear-gradient(to right, #22c55e, #16a34a); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 18;"/>
+        </HBox>
+    </bottom>
+</BorderPane>
