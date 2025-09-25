@@ -2,85 +2,195 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import java.lang.String?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controllers.ProveedorDialogController"
             prefWidth="900" prefHeight="600"
-            style="-fx-background-color: linear-gradient(to bottom, #0f172a, #1e293b); -fx-padding: 20;">
+            stylesheets="@../css/proveedor_dialog.css">
+    <styleClass>
+        <String fx:value="proveedor-dialog-root"/>
+    </styleClass>
     <top>
-        <VBox spacing="10">
-            <Label text="Registro de proveedor"
-                   style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"/>
-            <GridPane hgap="10" vgap="10">
-                <columnConstraints>
-                    <ColumnConstraints percentWidth="30"/>
-                    <ColumnConstraints percentWidth="70"/>
-                </columnConstraints>
-                <Label text="Nombre" GridPane.rowIndex="0" GridPane.columnIndex="0"
-                       style="-fx-text-fill: #cbd5f5;"/>
-                <TextField fx:id="txtNombre" GridPane.rowIndex="0" GridPane.columnIndex="1"
-                           promptText="Nombre del proveedor"/>
-                <Label text="Contacto" GridPane.rowIndex="1" GridPane.columnIndex="0"
-                       style="-fx-text-fill: #cbd5f5;"/>
-                <TextField fx:id="txtContacto" GridPane.rowIndex="1" GridPane.columnIndex="1"
-                           promptText="Persona de contacto"/>
-                <Label text="Teléfono" GridPane.rowIndex="2" GridPane.columnIndex="0"
-                       style="-fx-text-fill: #cbd5f5;"/>
-                <TextField fx:id="txtTelefono" GridPane.rowIndex="2" GridPane.columnIndex="1"
-                           promptText="Número telefónico"/>
-            </GridPane>
+        <VBox spacing="18" BorderPane.alignment="CENTER">
+            <StackPane>
+                <children>
+                    <VBox spacing="18">
+                        <styleClass>
+                            <String fx:value="header-card"/>
+                        </styleClass>
+                        <children>
+                            <HBox spacing="16" alignment="CENTER_LEFT">
+                                <children>
+                                    <StackPane>
+                                        <styleClass>
+                                            <String fx:value="header-badge"/>
+                                        </styleClass>
+                                        <children>
+                                            <Label text="🛒">
+                                                <styleClass>
+                                                    <String fx:value="badge-emoji"/>
+                                                </styleClass>
+                                            </Label>
+                                        </children>
+                                    </StackPane>
+                                    <VBox spacing="4">
+                                        <children>
+                                            <Label text="Registro de proveedor">
+                                                <styleClass>
+                                                    <String fx:value="title-label"/>
+                                                </styleClass>
+                                            </Label>
+                                            <Label text="Agrega nuevos aliados comerciales y asigna los productos que pueden suministrar.">
+                                                <styleClass>
+                                                    <String fx:value="subtitle-label"/>
+                                                </styleClass>
+                                            </Label>
+                                        </children>
+                                    </VBox>
+                                </children>
+                            </HBox>
+                            <GridPane hgap="14" vgap="14">
+                                <styleClass>
+                                    <String fx:value="form-grid"/>
+                                </styleClass>
+                                <columnConstraints>
+                                    <ColumnConstraints percentWidth="30"/>
+                                    <ColumnConstraints percentWidth="70"/>
+                                </columnConstraints>
+                                <children>
+                                    <Label text="Nombre" GridPane.rowIndex="0" GridPane.columnIndex="0">
+                                        <styleClass>
+                                            <String fx:value="input-label"/>
+                                        </styleClass>
+                                    </Label>
+                                    <TextField fx:id="txtNombre" promptText="Nombre del proveedor" GridPane.rowIndex="0" GridPane.columnIndex="1">
+                                        <styleClass>
+                                            <String fx:value="modern-field"/>
+                                        </styleClass>
+                                    </TextField>
+                                    <Label text="Contacto" GridPane.rowIndex="1" GridPane.columnIndex="0">
+                                        <styleClass>
+                                            <String fx:value="input-label"/>
+                                        </styleClass>
+                                    </Label>
+                                    <TextField fx:id="txtContacto" promptText="Persona de contacto" GridPane.rowIndex="1" GridPane.columnIndex="1">
+                                        <styleClass>
+                                            <String fx:value="modern-field"/>
+                                        </styleClass>
+                                    </TextField>
+                                    <Label text="Teléfono" GridPane.rowIndex="2" GridPane.columnIndex="0">
+                                        <styleClass>
+                                            <String fx:value="input-label"/>
+                                        </styleClass>
+                                    </Label>
+                                    <TextField fx:id="txtTelefono" promptText="Número telefónico" GridPane.rowIndex="2" GridPane.columnIndex="1">
+                                        <styleClass>
+                                            <String fx:value="modern-field"/>
+                                        </styleClass>
+                                    </TextField>
+                                </children>
+                            </GridPane>
+                        </children>
+                    </VBox>
+                </children>
+            </StackPane>
         </VBox>
     </top>
     <center>
-        <TabPane tabClosingPolicy="UNAVAILABLE"
-                 style="-fx-background-color: transparent; -fx-text-base-color: white;">
-            <tabs>
-                <Tab text="Equipos">
-                    <BorderPane>
-                        <center>
-                            <TableView fx:id="tablaEquipos" editable="true"
-                                       style="-fx-background-color: rgba(15,23,42,0.85); -fx-border-color: rgba(148,163,184,0.3); -fx-border-radius: 10; -fx-background-radius: 10;">
-                                <columns>
-                                    <TableColumn fx:id="colEquipoSeleccion" text="Seleccionar" prefWidth="120"/>
-                                    <TableColumn fx:id="colEquipoNombre" text="Equipo" prefWidth="260"/>
-                                    <TableColumn fx:id="colEquipoPrecio" text="Precio" prefWidth="140"/>
-                                </columns>
-                            </TableView>
-                        </center>
-                        <bottom>
-                            <Label text="Selecciona los equipos que suministra el proveedor e indica su precio"
-                                   style="-fx-text-fill: #94a3b8; -fx-padding: 10;"/>
-                        </bottom>
-                    </BorderPane>
-                </Tab>
-                <Tab text="Insumos">
-                    <BorderPane>
-                        <center>
-                            <TableView fx:id="tablaInsumos" editable="true"
-                                       style="-fx-background-color: rgba(15,23,42,0.85); -fx-border-color: rgba(148,163,184,0.3); -fx-border-radius: 10; -fx-background-radius: 10;">
-                                <columns>
-                                    <TableColumn fx:id="colInsumoSeleccion" text="Seleccionar" prefWidth="120"/>
-                                    <TableColumn fx:id="colInsumoNombre" text="Insumo" prefWidth="260"/>
-                                    <TableColumn fx:id="colInsumoPrecio" text="Precio" prefWidth="140"/>
-                                </columns>
-                            </TableView>
-                        </center>
-                        <bottom>
-                            <Label text="Selecciona los insumos y registra su precio de compra"
-                                   style="-fx-text-fill: #94a3b8; -fx-padding: 10;"/>
-                        </bottom>
-                    </BorderPane>
-                </Tab>
-            </tabs>
-        </TabPane>
+        <VBox spacing="18" BorderPane.alignment="CENTER">
+            <StackPane>
+                <styleClass>
+                    <String fx:value="content-card"/>
+                </styleClass>
+                <children>
+                    <TabPane tabClosingPolicy="UNAVAILABLE">
+                        <styleClass>
+                            <String fx:value="accent-tabpane"/>
+                        </styleClass>
+                        <tabs>
+                            <Tab text="Equipos">
+                                <content>
+                                    <VBox spacing="12">
+                                        <styleClass>
+                                            <String fx:value="tab-content"/>
+                                        </styleClass>
+                                        <children>
+                                            <Label text="Selecciona los equipos que suministra el proveedor e indica su precio.">
+                                                <styleClass>
+                                                    <String fx:value="tab-description"/>
+                                                </styleClass>
+                                            </Label>
+                                            <TableView fx:id="tablaEquipos" editable="true" VBox.vgrow="ALWAYS">
+                                                <styleClass>
+                                                    <String fx:value="glass-table"/>
+                                                </styleClass>
+                                                <columns>
+                                                    <TableColumn fx:id="colEquipoSeleccion" text="Seleccionar" prefWidth="140"/>
+                                                    <TableColumn fx:id="colEquipoNombre" text="Equipo" prefWidth="300"/>
+                                                    <TableColumn fx:id="colEquipoPrecio" text="Precio" prefWidth="160"/>
+                                                </columns>
+                                            </TableView>
+                                        </children>
+                                    </VBox>
+                                </content>
+                            </Tab>
+                            <Tab text="Insumos">
+                                <content>
+                                    <VBox spacing="12">
+                                        <styleClass>
+                                            <String fx:value="tab-content"/>
+                                        </styleClass>
+                                        <children>
+                                            <Label text="Selecciona los insumos y registra su precio de compra.">
+                                                <styleClass>
+                                                    <String fx:value="tab-description"/>
+                                                </styleClass>
+                                            </Label>
+                                            <TableView fx:id="tablaInsumos" editable="true" VBox.vgrow="ALWAYS">
+                                                <styleClass>
+                                                    <String fx:value="glass-table"/>
+                                                </styleClass>
+                                                <columns>
+                                                    <TableColumn fx:id="colInsumoSeleccion" text="Seleccionar" prefWidth="140"/>
+                                                    <TableColumn fx:id="colInsumoNombre" text="Insumo" prefWidth="300"/>
+                                                    <TableColumn fx:id="colInsumoPrecio" text="Precio" prefWidth="160"/>
+                                                </columns>
+                                            </TableView>
+                                        </children>
+                                    </VBox>
+                                </content>
+                            </Tab>
+                        </tabs>
+                    </TabPane>
+                </children>
+            </StackPane>
+        </VBox>
     </center>
     <bottom>
-        <HBox spacing="12" alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">
-            <Button fx:id="btnCancelar" text="Cancelar" onAction="#cancelar"
-                    style="-fx-background-color: #475569; -fx-text-fill: white; -fx-background-radius: 18;"/>
-            <Button fx:id="btnGuardar" text="Guardar" onAction="#guardar"
-                    style="-fx-background-color: linear-gradient(to right, #22c55e, #16a34a); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 18;"/>
+        <HBox spacing="16" alignment="CENTER_LEFT" BorderPane.alignment="CENTER">
+            <styleClass>
+                <String fx:value="footer-actions"/>
+            </styleClass>
+            <children>
+                <Label text="Revisa la información antes de guardar los cambios." wrapText="true">
+                    <styleClass>
+                        <String fx:value="footer-note"/>
+                    </styleClass>
+                </Label>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnCancelar" text="Cancelar" onAction="#cancelar">
+                    <styleClass>
+                        <String fx:value="secondary-button"/>
+                    </styleClass>
+                </Button>
+                <Button fx:id="btnGuardar" text="Guardar" onAction="#guardar">
+                    <styleClass>
+                        <String fx:value="primary-button"/>
+                    </styleClass>
+                </Button>
+            </children>
         </HBox>
     </bottom>
 </BorderPane>
