@@ -1,15 +1,27 @@
 package controllers;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import models.Proveedor;
@@ -29,6 +41,10 @@ public class ProveedorDialogController {
     @FXML private TextField txtNombre;
     @FXML private TextField txtContacto;
     @FXML private TextField txtTelefono;
+
+    @FXML private TabPane tabPaneCatalogos;
+    @FXML private Tab tabEquipos;
+    @FXML private Tab tabInsumos;
 
     @FXML private TableView<ProveedorProducto> tablaEquipos;
     @FXML private TableColumn<ProveedorProducto, Boolean> colEquipoSeleccion;
@@ -51,11 +67,34 @@ public class ProveedorDialogController {
     private boolean guardado;
     private Proveedor proveedorResultado;
     private boolean catalogosCargados;
+    private boolean inicializandoTabs;
 
     @FXML
     public void initialize() {
+        inicializandoTabs = true;
         configurarTabla(tablaEquipos, colEquipoSeleccion, colEquipoNombre, colEquipoPrecio, equiposDisponibles, "EQUIPO");
         configurarTabla(tablaInsumos, colInsumoSeleccion, colInsumoNombre, colInsumoPrecio, insumosDisponibles, "INSUMO");
+        if (tabPaneCatalogos != null) {
+            tabPaneCatalogos.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
+                if (inicializandoTabs) {
+                    return;
+                }
+                if (newTab != null) {
+                    if (newTab == tabEquipos) {
+                        mostrarCatalogoModal("Equipos", equiposDisponibles, "EQUIPO");
+                    } else if (newTab == tabInsumos) {
+                        mostrarCatalogoModal("Insumos", insumosDisponibles, "INSUMO");
+                    }
+                    Platform.runLater(() -> tabPaneCatalogos.getSelectionModel().clearSelection());
+                }
+            });
+            Platform.runLater(() -> {
+                tabPaneCatalogos.getSelectionModel().clearSelection();
+                inicializandoTabs = false;
+            });
+        } else {
+            inicializandoTabs = false;
+        }
         cargarCatalogos();
     }
 
@@ -257,6 +296,93 @@ public class ProveedorDialogController {
         if (stage != null) {
             stage.close();
         }
+    }
+
+    private void mostrarCatalogoModal(String titulo, ObservableList<ProveedorProducto> datos, String tipo) {
+        Stage dialogo = new Stage();
+        if (stage != null) {
+            dialogo.initOwner(stage);
+        }
+        dialogo.initModality(Modality.APPLICATION_MODAL);
+        dialogo.setTitle("Catálogo de " + titulo);
+
+        TableView<ProveedorProducto> tabla = new TableView<>();
+        tabla.setEditable(true);
+        tabla.setItems(datos);
+        tabla.getStyleClass().add("glass-table");
+
+        TableColumn<ProveedorProducto, Boolean> colSeleccion = new TableColumn<>("Seleccionar");
+        colSeleccion.setPrefWidth(140);
+        colSeleccion.setCellValueFactory(cell -> cell.getValue().seleccionadoProperty());
+        colSeleccion.setCellFactory(column -> {
+            CheckBoxTableCell<ProveedorProducto, Boolean> cell = new CheckBoxTableCell<>(index -> {
+                ProveedorProducto producto = tabla.getItems().get(index);
+                return producto.seleccionadoProperty();
+            });
+            cell.setEditable(true);
+            return cell;
+        });
+
+        TableColumn<ProveedorProducto, String> colNombre = new TableColumn<>("EQUIPO".equalsIgnoreCase(tipo) ? "Equipo" : "Insumo");
+        colNombre.setPrefWidth(300);
+        colNombre.setCellValueFactory(cell -> cell.getValue().nombreProductoProperty());
+        colNombre.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : Optional.ofNullable(item).orElse("Sin nombre"));
+            }
+        });
+
+        TableColumn<ProveedorProducto, Double> colPrecio = new TableColumn<>("Precio");
+        colPrecio.setPrefWidth(160);
+        colPrecio.setCellValueFactory(cell -> cell.getValue().precioProperty().asObject());
+        colPrecio.setCellFactory(column -> new PrecioTableCell());
+        colPrecio.setOnEditCommit(event -> {
+            ProveedorProducto producto = event.getRowValue();
+            Double nuevo = event.getNewValue();
+            if (producto != null && nuevo != null) {
+                producto.setPrecio(Math.max(0, nuevo));
+            }
+        });
+
+        tabla.getColumns().addAll(colSeleccion, colNombre, colPrecio);
+        tabla.setPlaceholder(new Label("No hay productos disponibles"));
+
+        Label descripcion = new Label(
+                "EQUIPO".equalsIgnoreCase(tipo)
+                        ? "Selecciona los equipos que suministra el proveedor e indica su precio."
+                        : "Selecciona los insumos y registra su precio de compra."
+        );
+        descripcion.getStyleClass().add("tab-description");
+
+        VBox encabezado = new VBox(8, descripcion);
+        encabezado.getStyleClass().add("tab-content");
+
+        Button btnCerrar = new Button("Cerrar");
+        btnCerrar.getStyleClass().add("secondary-button");
+        btnCerrar.setOnAction(e -> dialogo.close());
+
+        Region espacio = new Region();
+        HBox.setHgrow(espacio, Priority.ALWAYS);
+        HBox pie = new HBox(12, espacio, btnCerrar);
+        pie.getStyleClass().add("footer-actions");
+
+        BorderPane contenedor = new BorderPane();
+        contenedor.setPadding(new Insets(20));
+        contenedor.setTop(encabezado);
+        BorderPane.setMargin(encabezado, new Insets(0, 0, 16, 0));
+        contenedor.setCenter(tabla);
+        contenedor.setBottom(pie);
+        BorderPane.setMargin(pie, new Insets(16, 0, 0, 0));
+
+        Scene escena = new Scene(contenedor, 720, 480);
+        java.net.URL css = getClass().getResource("/css/proveedor_dialog.css");
+        if (css != null) {
+            escena.getStylesheets().add(css.toExternalForm());
+        }
+        dialogo.setScene(escena);
+        dialogo.showAndWait();
     }
 
     public boolean isGuardado() {

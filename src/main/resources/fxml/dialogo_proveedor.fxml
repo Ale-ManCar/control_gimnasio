@@ -105,12 +105,12 @@
                     <String fx:value="content-card"/>
                 </styleClass>
                 <children>
-                    <TabPane tabClosingPolicy="UNAVAILABLE">
+                    <TabPane fx:id="tabPaneCatalogos" tabClosingPolicy="UNAVAILABLE">
                         <styleClass>
                             <String fx:value="accent-tabpane"/>
                         </styleClass>
                         <tabs>
-                            <Tab text="Equipos">
+                            <Tab fx:id="tabEquipos" text="Equipos">
                                 <content>
                                     <VBox spacing="12">
                                         <styleClass>
@@ -136,7 +136,7 @@
                                     </VBox>
                                 </content>
                             </Tab>
-                            <Tab text="Insumos">
+                            <Tab fx:id="tabInsumos" text="Insumos">
                                 <content>
                                     <VBox spacing="12">
                                         <styleClass>
