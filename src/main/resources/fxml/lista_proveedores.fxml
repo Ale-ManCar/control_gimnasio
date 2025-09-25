@@ -41,10 +41,10 @@
                     </HBox>
                     <TableView fx:id="tablaProveedores" VBox.vgrow="ALWAYS" styleClass="modern-table">
                         <columns>
-                            <TableColumn fx:id="colNombre" text="Proveedor" prefWidth="220" style="-fx-alignment: CENTER;"/>
-                            <TableColumn fx:id="colContacto" text="Contacto" prefWidth="220" style="-fx-alignment: CENTER;"/>
-                            <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="180" style="-fx-alignment: CENTER;"/>
-                            <TableColumn fx:id="colCategorias" text="Categorías" prefWidth="220" style="-fx-alignment: CENTER;"/>
+                            <TableColumn fx:id="colNombre" text="Proveedor" prefWidth="130" style="-fx-alignment: CENTER;"/>
+                            <TableColumn fx:id="colContacto" text="Contacto" prefWidth="130" style="-fx-alignment: CENTER;"/>
+                            <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="120" style="-fx-alignment: CENTER;"/>
+                            <TableColumn fx:id="colCategorias" text="Categorías" prefWidth="120" style="-fx-alignment: CENTER;"/>
                         </columns>
                     </TableView>
                     <HBox spacing="12" alignment="CENTER_RIGHT" styleClass="actions-bar">
