@@ -7,37 +7,39 @@
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controllers.ListaProveedoresController"
             prefWidth="1000" prefHeight="650"
-            style="-fx-background-color: linear-gradient(to bottom, #1e293b, #0f172a); -fx-padding: 20;">
+            stylesheets="@../css/proveedores.css"
+            styleClass="proveedores-root">
     <top>
-        <VBox spacing="15">
-            <Label text="Gestión de Proveedores"
-                   style="-fx-text-fill: white; -fx-font-size: 24px; -fx-font-weight: bold;"/>
-            <HBox spacing="10" alignment="CENTER_LEFT">
-                <Label text="Filtrar por categoría:" style="-fx-text-fill: #cbd5f5; -fx-font-size: 14px;"/>
+        <VBox spacing="18" styleClass="header-card">
+            <Label text="Gestión de Proveedores" styleClass="title-label"/>
+            <HBox spacing="12" alignment="CENTER_LEFT" styleClass="filter-box">
+                <Label text="Filtrar por categoría:" styleClass="subtitle-label"/>
                 <ComboBox fx:id="cmbCategoriaProducto" promptText="Selecciona categoría"
-                          styleClass="combo-box"/>
+                          prefWidth="200" styleClass="pill-combobox"/>
                 <ComboBox fx:id="cmbProductoFiltro" promptText="Selecciona producto"
-                          prefWidth="220" styleClass="combo-box"/>
-                <Button text="Limpiar" onAction="#limpiarFiltroProducto"
-                        style="-fx-background-color: #475569; -fx-text-fill: white; -fx-background-radius: 20;"/>
+                          prefWidth="220" styleClass="pill-combobox"/>
+                <Button text="Limpiar" onAction="#limpiarFiltroProducto" styleClass="ghost-button"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button fx:id="btnComparador" text="Comparar precios" onAction="#abrirComparador"
-                        style="-fx-background-color: linear-gradient(to right, #14b8a6, #06b6d4); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 25;"/>
+                        styleClass="accent-button"/>
             </HBox>
-            <HBox spacing="15" alignment="CENTER_LEFT">
-                <CheckBox fx:id="chkEquipos" text="Mostrar proveedores de equipos" style="-fx-text-fill: #e2e8f0;"/>
-                <CheckBox fx:id="chkInsumos" text="Mostrar proveedores de insumos" style="-fx-text-fill: #e2e8f0;"/>
+            <HBox spacing="15" alignment="CENTER_LEFT" styleClass="secondary-filter-box">
+                <CheckBox fx:id="chkEquipos" text="Mostrar proveedores de equipos" styleClass="filter-check"/>
+                <CheckBox fx:id="chkInsumos" text="Mostrar proveedores de insumos" styleClass="filter-check"/>
                 <Label fx:id="lblProductoSeleccionado" text="Sin filtro de producto"
-                       style="-fx-text-fill: #94a3b8; -fx-font-style: italic;"/>
+                       styleClass="chip-label"/>
             </HBox>
         </VBox>
     </top>
     <center>
-        <SplitPane dividerPositions="0.6">
+        <SplitPane dividerPositions="0.58" styleClass="content-split">
             <items>
-                <VBox spacing="12" style="-fx-padding: 10;">
-                    <TableView fx:id="tablaProveedores" VBox.vgrow="ALWAYS"
-                               style="-fx-background-color: rgba(15,23,42,0.8); -fx-border-color: rgba(255,255,255,0.1); -fx-border-radius: 12; -fx-background-radius: 12; -fx-table-cell-border-color: rgba(148,163,184,0.3);">
+                <VBox spacing="15" styleClass="table-container">
+                    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="table-header">
+                        <Label text="Listado de proveedores" styleClass="section-title"/>
+                        <Label text="Actualiza, filtra y compara tus aliados estratégicos" styleClass="section-subtitle"/>
+                    </HBox>
+                    <TableView fx:id="tablaProveedores" VBox.vgrow="ALWAYS" styleClass="modern-table">
                         <columns>
                             <TableColumn fx:id="colNombre" text="Proveedor" prefWidth="180"/>
                             <TableColumn fx:id="colContacto" text="Contacto" prefWidth="160"/>
@@ -46,36 +48,27 @@
                             <TableColumn fx:id="colPrecioProducto" text="Precio del producto seleccionado" prefWidth="220"/>
                         </columns>
                     </TableView>
-                    <HBox spacing="10" alignment="CENTER_RIGHT">
-                        <Button text="Actualizar" onAction="#refrescarTabla"
-                                style="-fx-background-color: #334155; -fx-text-fill: white; -fx-background-radius: 18;"/>
-                        <Button text="Agregar" onAction="#agregarProveedor"
-                                style="-fx-background-color: linear-gradient(to right, #6366f1, #8b5cf6); -fx-text-fill: white; -fx-background-radius: 18;"/>
-                        <Button fx:id="btnEditar" text="Editar" onAction="#editarProveedor"
-                                style="-fx-background-color: #0ea5e9; -fx-text-fill: white; -fx-background-radius: 18;"/>
-                        <Button fx:id="btnEliminar" text="Eliminar" onAction="#eliminarProveedor"
-                                style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-background-radius: 18;"/>
+                    <HBox spacing="12" alignment="CENTER_RIGHT" styleClass="actions-bar">
+                        <Button text="Actualizar" onAction="#refrescarTabla" styleClass="ghost-button"/>
+                        <Button text="Agregar" onAction="#agregarProveedor" styleClass="primary-button"/>
+                        <Button fx:id="btnEditar" text="Editar" onAction="#editarProveedor" styleClass="secondary-button"/>
+                        <Button fx:id="btnEliminar" text="Eliminar" onAction="#eliminarProveedor" styleClass="danger-button"/>
                     </HBox>
                 </VBox>
-                <VBox spacing="12" style="-fx-padding: 15; -fx-background-color: rgba(15,23,42,0.7); -fx-background-radius: 12;">
-                    <Label text="Detalle del proveedor"
-                           style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
-                    <Label fx:id="lblNombreDetalle" text="Selecciona un proveedor"
-                           style="-fx-text-fill: #f8fafc; -fx-font-size: 16px;"/>
-                    <Label fx:id="lblContactoDetalle" text="-" style="-fx-text-fill: #cbd5f5;"/>
-                    <Label fx:id="lblTelefonoDetalle" text="-" style="-fx-text-fill: #cbd5f5;"/>
-                    <TitledPane text="Equipos suministrados" expanded="true"
-                                style="-fx-text-fill: white; -fx-font-weight: bold;">
+                <VBox spacing="18" styleClass="detail-card">
+                    <Label text="Detalle del proveedor" styleClass="section-title"/>
+                    <Label fx:id="lblNombreDetalle" text="Selecciona un proveedor" styleClass="detail-name"/>
+                    <Label fx:id="lblContactoDetalle" text="-" styleClass="detail-contact"/>
+                    <Label fx:id="lblTelefonoDetalle" text="-" styleClass="detail-contact"/>
+                    <Separator styleClass="detail-separator"/>
+                    <TitledPane text="Equipos suministrados" expanded="true" styleClass="detail-pane">
                         <content>
-                            <ListView fx:id="listaEquipos"
-                                      style="-fx-control-inner-background: rgba(15,23,42,0.8); -fx-text-fill: white;"/>
+                            <ListView fx:id="listaEquipos" styleClass="detail-list"/>
                         </content>
                     </TitledPane>
-                    <TitledPane text="Insumos suministrados" expanded="true"
-                                style="-fx-text-fill: white; -fx-font-weight: bold;">
+                    <TitledPane text="Insumos suministrados" expanded="true" styleClass="detail-pane">
                         <content>
-                            <ListView fx:id="listaInsumos"
-                                      style="-fx-control-inner-background: rgba(15,23,42,0.8); -fx-text-fill: white;"/>
+                            <ListView fx:id="listaInsumos" styleClass="detail-list"/>
                         </content>
                     </TitledPane>
                 </VBox>
