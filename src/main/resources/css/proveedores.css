@@ -63,8 +63,11 @@
 }
 
 .pill-combobox:focused {
-    -fx-background-color: rgba(59, 130, 246, 0.35);
-    -fx-border-color: rgba(56, 189, 248, 0.45);
+    -fx-background-color: rgba(71, 85, 105, 0.35);
+    -fx-border-color: transparent;
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-effect: none;
 }
 
 .ghost-button {
