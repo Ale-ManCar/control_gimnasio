@@ -104,10 +104,12 @@ public class IngresosMensualesController implements Initializable {
     @FXML private TableColumn<EgresoDetalle, String> colDescripcion;
     @FXML private TableColumn<EgresoDetalle, String> colCategoria;
     @FXML private TableColumn<EgresoDetalle, Double> colMontoEgreso;
+    @FXML private HBox contenedorFiltros;
     @FXML private HBox contenedorAnio;
     @FXML private HBox contenedorMes;
     @FXML private HBox contenedorDia;
     @FXML private HBox contenedorSemana;
+    @FXML private HBox contenedorBotonesMetricas;
 
     private final ObservableList<PagoDetalle> detallesPagos = FXCollections.observableArrayList();
     private final ObservableList<EgresoDetalle> detallesEgresos = FXCollections.observableArrayList();
@@ -117,7 +119,7 @@ public class IngresosMensualesController implements Initializable {
     private int anioActual = Year.now().getValue();
     private Consumer<EventBus.EventType> eventConsumer;
 
-    private ReportType reporteActual = ReportType.ANUAL;
+    private ReportType reporteActual = ReportType.DIARIO;
     private LocalDate periodoInicio;
     private LocalDate periodoFin;
     private String ultimoMetric1Title;
@@ -156,6 +158,7 @@ public class IngresosMensualesController implements Initializable {
         });
 
         actualizarControlesVisibles();
+        actualizarPosicionBotones(reporteActual);
         actualizarReporte();
     }
 
@@ -178,7 +181,7 @@ public class IngresosMensualesController implements Initializable {
 
     private void configurarTipoReporte() {
         cbTipoReporte.getItems().setAll(ReportType.values());
-        cbTipoReporte.setValue(ReportType.ANUAL);
+        cbTipoReporte.setValue(ReportType.DIARIO);
         Callback<javafx.scene.control.ListView<ReportType>, javafx.scene.control.ListCell<ReportType>> cellFactory = list -> new javafx.scene.control.ListCell<>() {
             @Override
             protected void updateItem(ReportType item, boolean empty) {
@@ -198,9 +201,29 @@ public class IngresosMensualesController implements Initializable {
             if (newVal != null) {
                 reporteActual = newVal;
                 actualizarControlesVisibles();
+                actualizarPosicionBotones(newVal);
                 actualizarReporte();
             }
         });
+    }
+
+    private void actualizarPosicionBotones(ReportType tipo) {
+        boolean esSemanal = tipo == ReportType.SEMANAL;
+
+        if (esSemanal) {
+            contenedorFiltros.getChildren().removeAll(btnExportarPDF, btnRegistrarEgreso);
+            if (!contenedorBotonesMetricas.getChildren().contains(btnExportarPDF)) {
+                contenedorBotonesMetricas.getChildren().addAll(btnExportarPDF, btnRegistrarEgreso);
+            }
+        } else {
+            contenedorBotonesMetricas.getChildren().removeAll(btnExportarPDF, btnRegistrarEgreso);
+            if (!contenedorFiltros.getChildren().contains(btnExportarPDF)) {
+                contenedorFiltros.getChildren().addAll(btnExportarPDF, btnRegistrarEgreso);
+            }
+        }
+
+        contenedorBotonesMetricas.setVisible(esSemanal);
+        contenedorBotonesMetricas.setManaged(esSemanal);
     }
 
     private void configurarAnioSelector() {
