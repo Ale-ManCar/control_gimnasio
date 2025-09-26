@@ -46,16 +46,6 @@ public class ProveedorDialogController {
     @FXML private Tab tabEquipos;
     @FXML private Tab tabInsumos;
 
-    @FXML private TableView<ProveedorProducto> tablaEquipos;
-    @FXML private TableColumn<ProveedorProducto, Boolean> colEquipoSeleccion;
-    @FXML private TableColumn<ProveedorProducto, String> colEquipoNombre;
-    @FXML private TableColumn<ProveedorProducto, Double> colEquipoPrecio;
-
-    @FXML private TableView<ProveedorProducto> tablaInsumos;
-    @FXML private TableColumn<ProveedorProducto, Boolean> colInsumoSeleccion;
-    @FXML private TableColumn<ProveedorProducto, String> colInsumoNombre;
-    @FXML private TableColumn<ProveedorProducto, Double> colInsumoPrecio;
-
     @FXML private Button btnGuardar;
     @FXML private Button btnCancelar;
 
@@ -72,8 +62,6 @@ public class ProveedorDialogController {
     @FXML
     public void initialize() {
         inicializandoTabs = true;
-        configurarTabla(tablaEquipos, colEquipoSeleccion, colEquipoNombre, colEquipoPrecio, equiposDisponibles, "EQUIPO");
-        configurarTabla(tablaInsumos, colInsumoSeleccion, colInsumoNombre, colInsumoPrecio, insumosDisponibles, "INSUMO");
         if (tabPaneCatalogos != null) {
             tabPaneCatalogos.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
                 if (inicializandoTabs) {
@@ -107,46 +95,6 @@ public class ProveedorDialogController {
         inicializandoTabs = true;
         tabPaneCatalogos.getSelectionModel().select(tab);
         inicializandoTabs = false;
-    }
-
-    private void configurarTabla(TableView<ProveedorProducto> tabla,
-                                 TableColumn<ProveedorProducto, Boolean> colSeleccion,
-                                 TableColumn<ProveedorProducto, String> colNombre,
-                                 TableColumn<ProveedorProducto, Double> colPrecio,
-                                 ObservableList<ProveedorProducto> datos,
-                                 String tipo) {
-        tabla.setEditable(true);
-        tabla.setItems(datos);
-        colSeleccion.setCellValueFactory(cell -> cell.getValue().seleccionadoProperty());
-        colNombre.setCellValueFactory(cell -> cell.getValue().nombreProductoProperty());
-        colNombre.setCellFactory(column -> new TableCell<>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty ? null : Optional.ofNullable(item).orElse("Sin nombre"));
-            }
-        });
-
-        colPrecio.setCellValueFactory(cell -> cell.getValue().precioProperty().asObject());
-        colPrecio.setCellFactory(column -> new PrecioTableCell());
-        colPrecio.setOnEditCommit(event -> {
-            ProveedorProducto producto = event.getRowValue();
-            Double nuevo = event.getNewValue();
-            if (producto != null && nuevo != null) {
-                producto.setPrecio(Math.max(0, nuevo));
-            }
-        });
-
-        colSeleccion.setCellFactory(column -> {
-            CheckBoxTableCell<ProveedorProducto, Boolean> cell = new CheckBoxTableCell<>(index -> {
-                ProveedorProducto producto = tabla.getItems().get(index);
-                return producto.seleccionadoProperty();
-            });
-            cell.setEditable(true);
-            return cell;
-        });
-
-        tabla.setPlaceholder(new javafx.scene.control.Label("No hay productos disponibles"));
     }
 
     private void cargarCatalogos() {
@@ -208,8 +156,6 @@ public class ProveedorDialogController {
                     insumosDisponibles.add(producto);
                 }
             }
-            tablaEquipos.refresh();
-            tablaInsumos.refresh();
         } catch (SQLException e) {
             mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudieron cargar los productos del proveedor.");
         }

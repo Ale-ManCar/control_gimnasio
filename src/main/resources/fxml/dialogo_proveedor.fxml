@@ -122,72 +122,12 @@
                         <tabs>
                             <Tab fx:id="tabEquipos" text="Equipos">
                                 <content>
-                                    <VBox spacing="12">
-                                        <styleClass>
-                                            <String fx:value="tab-content"/>
-                                        </styleClass>
-                                        <children>
-                                            <Label text="Selecciona los equipos que suministra el proveedor e indica su precio.">
-                                                <styleClass>
-                                                    <String fx:value="tab-description"/>
-                                                </styleClass>
-                                            </Label>
-                                            <TableView fx:id="tablaEquipos" editable="true" VBox.vgrow="ALWAYS">
-                                                <styleClass>
-                                                    <String fx:value="glass-table"/>
-                                                </styleClass>
-                                                <columns>
-                                                    <TableColumn fx:id="colEquipoSeleccion" text="Seleccionar" prefWidth="140"/>
-                                                    <TableColumn fx:id="colEquipoNombre" text="Equipo" prefWidth="300"/>
-                                                    <TableColumn fx:id="colEquipoPrecio" text="Precio" prefWidth="160"/>
-                                                </columns>
-                                            </TableView>
-                                            <HBox spacing="10" alignment="CENTER_LEFT">
-                                                <children>
-                                                    <Label text="Consejo: marca solo los equipos que realmente ofreces para mantener tu catálogo impecable.">
-                                                        <styleClass>
-                                                            <String fx:value="tab-hint"/>
-                                                        </styleClass>
-                                                    </Label>
-                                                </children>
-                                            </HBox>
-                                        </children>
-                                    </VBox>
+                                    <StackPane/>
                                 </content>
                             </Tab>
                             <Tab fx:id="tabInsumos" text="Insumos">
                                 <content>
-                                    <VBox spacing="12">
-                                        <styleClass>
-                                            <String fx:value="tab-content"/>
-                                        </styleClass>
-                                        <children>
-                                            <Label text="Selecciona los insumos y registra su precio de compra.">
-                                                <styleClass>
-                                                    <String fx:value="tab-description"/>
-                                                </styleClass>
-                                            </Label>
-                                            <TableView fx:id="tablaInsumos" editable="true" VBox.vgrow="ALWAYS">
-                                                <styleClass>
-                                                    <String fx:value="glass-table"/>
-                                                </styleClass>
-                                                <columns>
-                                                    <TableColumn fx:id="colInsumoSeleccion" text="Seleccionar" prefWidth="140"/>
-                                                    <TableColumn fx:id="colInsumoNombre" text="Insumo" prefWidth="300"/>
-                                                    <TableColumn fx:id="colInsumoPrecio" text="Precio" prefWidth="160"/>
-                                                </columns>
-                                            </TableView>
-                                            <HBox spacing="10" alignment="CENTER_LEFT">
-                                                <children>
-                                                    <Label text="Tip: registra precios competitivos para optimizar tus compras.">
-                                                        <styleClass>
-                                                            <String fx:value="tab-hint"/>
-                                                        </styleClass>
-                                                    </Label>
-                                                </children>
-                                            </HBox>
-                                        </children>
-                                    </VBox>
+                                    <StackPane/>
                                 </content>
                             </Tab>
                         </tabs>
