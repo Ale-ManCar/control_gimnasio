@@ -13,6 +13,7 @@
 		rightMargin="20"
 		topMargin="20"
 		bottomMargin="20"
+		whenNoDataType="AllSectionsNoDetail"
 		uuid="e73b923e-d8e0-437a-9cc5-c43cc7a35117">
 
 	<!-- Parámetros para los totales -->
@@ -22,6 +23,9 @@
 	<parameter name="resultadoNeto" class="java.lang.Double"/>
 	<parameter name="mesReporte" class="java.lang.Integer"/>
 	<parameter name="anioReporte" class="java.lang.Integer"/>
+	<parameter name="mostrarDetalle" class="java.lang.Boolean">
+		<defaultValueExpression><![CDATA[Boolean.TRUE]]></defaultValueExpression>
+	</parameter>
 
 	<!-- Campos para el detalle de egresos -->
 	<field name="descripcion" class="java.lang.String"/>
@@ -68,6 +72,7 @@
 
 	<columnHeader>
 		<band height="30">
+			<printWhenExpression><![CDATA[$P{mostrarDetalle}]]></printWhenExpression>
 			<staticText>
 				<reportElement x="0" y="0" width="200" height="30" backcolor="#3F51B5" mode="Opaque" forecolor="#FFFFFF"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
@@ -101,6 +106,7 @@
 
 	<detail>
 		<band height="25" splitType="Stretch">
+			<printWhenExpression><![CDATA[$P{mostrarDetalle}]]></printWhenExpression>
 			<textField textAdjust="StretchHeight">
 				<reportElement x="0" y="0" width="200" height="25" positionType="Float"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle"/>

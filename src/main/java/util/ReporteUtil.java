@@ -69,6 +69,8 @@ public class ReporteUtil {
                     })
                     .collect(Collectors.toList());
 
+            boolean mostrarDetalle = !egresos.isEmpty();
+
             Map<String, Object> parametros = new HashMap<>();
             parametros.put("totalMembresias", totalMembresias);
             parametros.put("totalVentas", totalVentas);
@@ -76,8 +78,11 @@ public class ReporteUtil {
             parametros.put("resultadoNeto", resultadoNeto);
             parametros.put("mesReporte", mes);
             parametros.put("anioReporte", anio);
+            parametros.put("mostrarDetalle", mostrarDetalle);
 
-            JRDataSource dataSourceEgresos = new JRBeanCollectionDataSource(egresos);
+            JRDataSource dataSourceEgresos = mostrarDetalle
+                    ? new JRBeanCollectionDataSource(egresos)
+                    : new JREmptyDataSource(1);
 
             JasperReport jasperReport = JasperCompileManager.compileReport(reporteStream);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, dataSourceEgresos);
@@ -118,6 +123,8 @@ public class ReporteUtil {
 
             List<Egreso> egresos = DatabaseUtil.filtrarEgresos(fechaInicio, fechaFin, null);
 
+            boolean mostrarDetalle = !egresos.isEmpty();
+
             Map<String, Object> parametros = new HashMap<>();
             parametros.put("totalMembresias", totalMembresias);
             parametros.put("totalVentas", totalVentas);
@@ -125,8 +132,11 @@ public class ReporteUtil {
             parametros.put("resultadoNeto", resultadoNeto);
             parametros.put("fechaInicio", fechaInicio.toString());
             parametros.put("fechaFin", fechaFin.toString());
+            parametros.put("mostrarDetalle", mostrarDetalle);
 
-            JRDataSource dataSourceEgresos = new JRBeanCollectionDataSource(egresos);
+            JRDataSource dataSourceEgresos = mostrarDetalle
+                    ? new JRBeanCollectionDataSource(egresos)
+                    : new JREmptyDataSource(1);
             JasperReport jasperReport = JasperCompileManager.compileReport(reporteStream);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, dataSourceEgresos);
 
