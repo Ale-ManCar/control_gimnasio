@@ -28,6 +28,7 @@ import models.Proveedor;
 import models.ProveedorProducto;
 import models.CoachClientes;
 import models.Equipo;
+import models.IngresoData;
 
 public class DatabaseUtil {
     private static final String URL = "jdbc:sqlite:database/gimnasio.db";
@@ -793,27 +794,109 @@ public class DatabaseUtil {
     }
 
     public static ObservableList<PieChart.Data> getDistribucionMembresias(int año) throws SQLException {
+        return getDistribucionMembresias(LocalDate.of(año, 1, 1), LocalDate.of(año, 12, 31));
+    }
+
+    public static ObservableList<PieChart.Data> getDistribucionMembresias(LocalDate inicio, LocalDate fin) throws SQLException {
+        if (inicio == null || fin == null) {
+            return FXCollections.observableArrayList();
+        }
+
+        LocalDate start = inicio;
+        LocalDate end = fin;
+        if (end.isBefore(start)) {
+            LocalDate temp = start;
+            start = end;
+            end = temp;
+        }
+
         ObservableList<PieChart.Data> datos = FXCollections.observableArrayList();
-        String sql = "SELECT tipo_membresia, SUM(monto) AS total "
+        String sql = "SELECT COALESCE(tipo_membresia, 'SIN MEMBRESÍA') AS tipo, SUM(monto) AS total "
                 + "FROM pagos "
-                + "WHERE strftime('%Y', fecha_pago) = ? "
-                + "AND tipo_membresia IS NOT NULL "
+                + "WHERE date(fecha_pago) BETWEEN ? AND ? "
                 + "AND estado = 'ACTIVO' "
-                + "GROUP BY tipo_membresia";
+                + "GROUP BY tipo";
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, String.valueOf(año));
+            stmt.setString(1, start.toString());
+            stmt.setString(2, end.toString());
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
                 datos.add(new PieChart.Data(
-                        rs.getString("tipo_membresia"),
+                        rs.getString("tipo"),
                         rs.getDouble("total")
                 ));
             }
         }
         return datos;
+    }
+
+    public static List<IngresoData> getIngresosPorDia(LocalDate fecha) throws SQLException {
+        if (fecha == null) {
+            return Collections.emptyList();
+        }
+
+        String sql = "SELECT COALESCE(tipo_membresia, 'SIN MEMBRESÍA') AS etiqueta, SUM(monto) AS total "
+                + "FROM pagos WHERE date(fecha_pago) = ? AND estado = 'ACTIVO' "
+                + "GROUP BY etiqueta ORDER BY total DESC";
+        return obtenerIngresosAgrupados(sql, fecha.toString());
+    }
+
+    public static List<IngresoData> getIngresosPorSemana(LocalDate inicio, LocalDate fin) throws SQLException {
+        if (inicio == null || fin == null) {
+            return Collections.emptyList();
+        }
+
+        LocalDate[] rango = ordenarFechas(inicio, fin);
+        String sql = "SELECT date(fecha_pago) AS etiqueta, SUM(monto) AS total "
+                + "FROM pagos WHERE date(fecha_pago) BETWEEN ? AND ? "
+                + "AND estado = 'ACTIVO' GROUP BY etiqueta ORDER BY etiqueta";
+        return obtenerIngresosAgrupados(sql, rango[0].toString(), rango[1].toString());
+    }
+
+    public static List<IngresoData> getIngresosPorMes(int año, int mes) throws SQLException {
+        LocalDate inicio = LocalDate.of(año, mes, 1);
+        LocalDate fin = inicio.withDayOfMonth(inicio.lengthOfMonth());
+        String sql = "SELECT date(fecha_pago) AS etiqueta, SUM(monto) AS total "
+                + "FROM pagos WHERE date(fecha_pago) BETWEEN ? AND ? "
+                + "AND estado = 'ACTIVO' GROUP BY etiqueta ORDER BY etiqueta";
+        return obtenerIngresosAgrupados(sql, inicio.toString(), fin.toString());
+    }
+
+    public static List<IngresoData> getIngresosPorAnio(int año) throws SQLException {
+        List<IngresoData> datos = new ArrayList<>();
+        for (PagoMensual mensual : getIngresosMensuales(año)) {
+            datos.add(new IngresoData(mensual.getMes(), mensual.getTotal()));
+        }
+        return datos;
+    }
+
+    private static List<IngresoData> obtenerIngresosAgrupados(String sql, Object... params) throws SQLException {
+        List<IngresoData> datos = new ArrayList<>();
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            for (int i = 0; i < params.length; i++) {
+                stmt.setObject(i + 1, params[i]);
+            }
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                datos.add(new IngresoData(rs.getString("etiqueta"), rs.getDouble("total")));
+            }
+        }
+        return datos;
+    }
+
+    private static LocalDate[] ordenarFechas(LocalDate inicio, LocalDate fin) {
+        LocalDate start = inicio;
+        LocalDate end = fin;
+        if (end.isBefore(start)) {
+            LocalDate temp = start;
+            start = end;
+            end = temp;
+        }
+        return new LocalDate[]{start, end};
     }
 
     public static ObservableList<PagoDetalle> buscarPagos(Integer clienteId, LocalDate fechaInicio, LocalDate fechaFin, String tipoMembresia) throws SQLException {
@@ -901,19 +984,31 @@ public class DatabaseUtil {
     }
 
     public static List<PagoDetalle> getDetallesPagos(int año) throws SQLException {
+        LocalDate inicio = LocalDate.of(año, 1, 1);
+        LocalDate fin = LocalDate.of(año, 12, 31);
+        return getDetallesPagosEntre(inicio, fin);
+    }
+
+    public static List<PagoDetalle> getDetallesPagosEntre(LocalDate inicio, LocalDate fin) throws SQLException {
+        if (inicio == null || fin == null) {
+            return Collections.emptyList();
+        }
+
+        LocalDate[] rango = ordenarFechas(inicio, fin);
         List<PagoDetalle> detalles = new ArrayList<>();
-        String sql = "SELECT pagos.fecha_pago AS fecha, "
+        String sql = "SELECT date(pagos.fecha_pago) AS fecha, "
                 + "clientes.nombres || ' ' || clientes.apellidos AS cliente, "
                 + "clientes.id AS cliente_id, "
-                + "pagos.tipo_membresia AS membresia, pagos.monto "
+                + "COALESCE(pagos.tipo_membresia, 'SIN MEMBRESÍA') AS membresia, pagos.monto "
                 + "FROM pagos pagos "
                 + "JOIN clientes clientes ON pagos.cliente_id = clientes.id "
-                + "WHERE strftime('%Y', pagos.fecha_pago) = ? "
+                + "WHERE date(pagos.fecha_pago) BETWEEN ? AND ? "
                 + "AND pagos.estado = 'ACTIVO'";
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, String.valueOf(año));
+            stmt.setString(1, rango[0].toString());
+            stmt.setString(2, rango[1].toString());
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -1567,16 +1662,47 @@ public class DatabaseUtil {
         return total;
     }
 
-    public static ObservableList<EgresoDetalle> getDetallesEgresos(int año) throws SQLException {
-        ObservableList<EgresoDetalle> detalles = FXCollections.observableArrayList();
-        String sql = "SELECT descripcion, categoria, fecha, monto " +
-                "FROM egresos " +
-                "WHERE strftime('%Y', fecha) = ? " +
-                "ORDER BY fecha DESC";
+    public static double getTotalEgresosEntre(LocalDate inicio, LocalDate fin) throws SQLException {
+        if (inicio == null || fin == null) {
+            return 0.0;
+        }
+
+        LocalDate[] rango = ordenarFechas(inicio, fin);
+        String sql = "SELECT SUM(monto) AS total FROM egresos WHERE date(fecha) BETWEEN ? AND ?";
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, String.valueOf(año));
+            stmt.setString(1, rango[0].toString());
+            stmt.setString(2, rango[1].toString());
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getDouble("total");
+            }
+        }
+        return 0.0;
+    }
+
+    public static ObservableList<EgresoDetalle> getDetallesEgresos(int año) throws SQLException {
+        return getDetallesEgresosEntre(LocalDate.of(año, 1, 1), LocalDate.of(año, 12, 31));
+    }
+
+    public static ObservableList<EgresoDetalle> getDetallesEgresosEntre(LocalDate inicio, LocalDate fin) throws SQLException {
+        ObservableList<EgresoDetalle> detalles = FXCollections.observableArrayList();
+        if (inicio == null || fin == null) {
+            return detalles;
+        }
+
+        LocalDate[] rango = ordenarFechas(inicio, fin);
+        String sql = "SELECT descripcion, categoria, fecha, monto "
+                + "FROM egresos "
+                + "WHERE date(fecha) BETWEEN ? AND ? "
+                + "ORDER BY fecha DESC";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, rango[0].toString());
+            stmt.setString(2, rango[1].toString());
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {

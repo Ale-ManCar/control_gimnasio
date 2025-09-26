@@ -10,34 +10,71 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
-
-import models.Egreso;
+import javafx.util.Callback;
 import models.EgresoDetalle;
+import models.IngresoData;
 import models.PagoDetalle;
-import models.PagoMensual;
 import util.DatabaseUtil;
 import util.EventBus;
-import util.ReporteUtil;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.SQLException;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.Year;
 import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class IngresosMensualesController implements Initializable {
+
+    private enum ReportType {
+        DIARIO("Diario"),
+        SEMANAL("Semanal"),
+        MENSUAL("Mensual"),
+        ANUAL("Anual");
+
+        private final String displayName;
+
+        ReportType(String displayName) {
+            this.displayName = displayName;
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
+    }
 
     @FXML private BarChart<String, Number> barChart;
     @FXML private PieChart pieChart;
@@ -46,49 +83,84 @@ public class IngresosMensualesController implements Initializable {
     @FXML private TableColumn<PagoDetalle, String> colCliente;
     @FXML private TableColumn<PagoDetalle, String> colMembresia;
     @FXML private TableColumn<PagoDetalle, Double> colMonto;
+    @FXML private ComboBox<ReportType> cbTipoReporte;
     @FXML private ComboBox<Integer> cbAnio;
-    @FXML private Label lblTotalAnual;
-    @FXML private Label lblPromedioMensual;
-    @FXML private Label lblMejorMes;
+    @FXML private ComboBox<Month> cbMes;
+    @FXML private DatePicker dpFecha;
+    @FXML private DatePicker dpSemanaInicio;
+    @FXML private DatePicker dpSemanaFin;
+    @FXML private Label lblTituloGrafico;
+    @FXML private Label lblTituloMetricas;
+    @FXML private Label lblMetric1Title;
+    @FXML private Label lblMetric1Value;
+    @FXML private Label lblMetric2Title;
+    @FXML private Label lblMetric2Value;
+    @FXML private Label lblMetric3Title;
+    @FXML private Label lblMetric3Value;
     @FXML private Button btnExportarPDF;
+    @FXML private Button btnExportarExcel;
     @FXML private Button btnRegistrarEgreso;
-
     @FXML private TableView<EgresoDetalle> tablaEgresos;
     @FXML private TableColumn<EgresoDetalle, LocalDate> colFechaEgreso;
     @FXML private TableColumn<EgresoDetalle, String> colDescripcion;
     @FXML private TableColumn<EgresoDetalle, String> colCategoria;
     @FXML private TableColumn<EgresoDetalle, Double> colMontoEgreso;
+    @FXML private HBox contenedorAnio;
+    @FXML private HBox contenedorMes;
+    @FXML private HBox contenedorDia;
+    @FXML private HBox contenedorSemana;
 
-    private ObservableList<PagoDetalle> detallesPagos = FXCollections.observableArrayList();
+    private final ObservableList<PagoDetalle> detallesPagos = FXCollections.observableArrayList();
+    private final ObservableList<EgresoDetalle> detallesEgresos = FXCollections.observableArrayList();
+    private final Locale localeEs = new Locale("es", "ES");
+    private final DateTimeFormatter fechaLarga = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private final DateTimeFormatter fechaCorta = DateTimeFormatter.ofPattern("dd/MM");
     private int anioActual = Year.now().getValue();
     private Consumer<EventBus.EventType> eventConsumer;
 
+    private ReportType reporteActual = ReportType.ANUAL;
+    private LocalDate periodoInicio;
+    private LocalDate periodoFin;
+    private String ultimoMetric1Title;
+    private String ultimoMetric2Title;
+    private String ultimoMetric3Title;
+    private String ultimoMetric3Value;
+    private double ultimoTotal;
+    private double ultimoPromedio;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        configurarTabla();
-        configurarAnioSelector();
-        cargarDatos(anioActual);
+        configurarTablaPagos();
         configurarTablaEgresos();
-        configurarBotonEgreso();
+        configurarTipoReporte();
+        configurarAnioSelector();
+        configurarMesSelector();
+        configurarDatePickers();
+        configurarBotones();
+
+        tablaDetalles.setItems(detallesPagos);
+        tablaEgresos.setItems(detallesEgresos);
 
         eventConsumer = eventType -> {
             if (eventType == EventBus.EventType.EGRESO_REGISTRADO) {
-                Platform.runLater(() -> {
-                    int selectedYear = cbAnio.getValue();
-                    cargarDatos(selectedYear);
-                });
+                Platform.runLater(this::actualizarReporte);
             }
         };
         EventBus.registerListener(EventBus.EventType.EGRESO_REGISTRADO, eventConsumer);
 
         Platform.runLater(() -> {
             Stage stage = (Stage) barChart.getScene().getWindow();
-            stage.setOnCloseRequest(e ->
-                    EventBus.unregisterListener(EventBus.EventType.EGRESO_REGISTRADO, eventConsumer));
+            if (stage != null) {
+                stage.setOnCloseRequest(e ->
+                        EventBus.unregisterListener(EventBus.EventType.EGRESO_REGISTRADO, eventConsumer));
+            }
         });
+
+        actualizarControlesVisibles();
+        actualizarReporte();
     }
 
-    private void configurarBotonEgreso() {
+    private void configurarBotones() {
         btnRegistrarEgreso.setOnAction(e -> abrirRegistroEgreso());
     }
 
@@ -105,7 +177,107 @@ public class IngresosMensualesController implements Initializable {
         }
     }
 
-    private void configurarTabla() {
+    private void configurarTipoReporte() {
+        cbTipoReporte.getItems().setAll(ReportType.values());
+        cbTipoReporte.setValue(ReportType.ANUAL);
+        Callback<javafx.scene.control.ListView<ReportType>, javafx.scene.control.ListCell<ReportType>> cellFactory = list -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(ReportType item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.toString());
+            }
+        };
+        cbTipoReporte.setCellFactory(cellFactory);
+        cbTipoReporte.setButtonCell(new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(ReportType item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.toString());
+            }
+        });
+        cbTipoReporte.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                reporteActual = newVal;
+                actualizarControlesVisibles();
+                actualizarReporte();
+            }
+        });
+    }
+
+    private void configurarAnioSelector() {
+        int añoInicial = 2025;
+        for (int año = añoInicial; año <= anioActual + 1; año++) {
+            cbAnio.getItems().add(año);
+        }
+        cbAnio.setValue(anioActual);
+        cbAnio.valueProperty().addListener((obs, old, val) -> actualizarReporte());
+    }
+
+    private void configurarMesSelector() {
+        cbMes.getItems().setAll(Month.values());
+        cbMes.setValue(LocalDate.now().getMonth());
+        Callback<javafx.scene.control.ListView<Month>, javafx.scene.control.ListCell<Month>> cellFactory = list -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(Month item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : formatearMes(item));
+            }
+        };
+        cbMes.setCellFactory(cellFactory);
+        cbMes.setButtonCell(new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(Month item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : formatearMes(item));
+            }
+        });
+        cbMes.valueProperty().addListener((obs, old, val) -> actualizarReporte());
+    }
+
+    private void configurarDatePickers() {
+        dpFecha.setValue(LocalDate.now());
+        dpFecha.valueProperty().addListener((obs, old, val) -> actualizarReporte());
+
+        LocalDate inicioSemana = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        dpSemanaInicio.setValue(inicioSemana);
+        dpSemanaFin.setValue(inicioSemana.plusDays(6));
+
+        dpSemanaInicio.valueProperty().addListener((obs, old, val) -> {
+            if (val != null) {
+                dpSemanaFin.setValue(val.plusDays(6));
+                actualizarReporte();
+            }
+        });
+        dpSemanaFin.valueProperty().addListener((obs, old, val) -> {
+            if (val != null && dpSemanaInicio.getValue() != null) {
+                if (!val.equals(dpSemanaInicio.getValue().plusDays(6))) {
+                    dpSemanaInicio.setValue(val.minusDays(6));
+                    return;
+                }
+                actualizarReporte();
+            }
+        });
+    }
+
+    private void actualizarControlesVisibles() {
+        ReportType tipo = cbTipoReporte.getValue();
+        boolean mostrarAnio = tipo == ReportType.MENSUAL || tipo == ReportType.ANUAL;
+        boolean mostrarMes = tipo == ReportType.MENSUAL;
+        boolean mostrarDia = tipo == ReportType.DIARIO;
+        boolean mostrarSemana = tipo == ReportType.SEMANAL;
+
+        configurarVisibilidad(contenedorAnio, mostrarAnio);
+        configurarVisibilidad(contenedorMes, mostrarMes);
+        configurarVisibilidad(contenedorDia, mostrarDia);
+        configurarVisibilidad(contenedorSemana, mostrarSemana);
+    }
+
+    private void configurarVisibilidad(HBox contenedor, boolean visible) {
+        contenedor.setVisible(visible);
+        contenedor.setManaged(visible);
+    }
+
+    private void configurarTablaPagos() {
         colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
         colCliente.setCellValueFactory(new PropertyValueFactory<>("cliente"));
         colMembresia.setCellValueFactory(new PropertyValueFactory<>("membresia"));
@@ -122,7 +294,7 @@ public class IngresosMensualesController implements Initializable {
         colMembresia.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.15));
         colMonto.prefWidthProperty().bind(tablaDetalles.widthProperty().multiply(0.15));
 
-        colMonto.setCellFactory(column -> new TableCell<PagoDetalle, Double>() {
+        colMonto.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(Double monto, boolean empty) {
                 super.updateItem(monto, empty);
@@ -130,13 +302,13 @@ public class IngresosMensualesController implements Initializable {
                     setText(null);
                     setStyle("");
                 } else {
-                    setText(String.format("$%,.2f", monto));
+                    setText(formatearMoneda(monto));
                     setStyle(centerStyle + " -fx-font-weight: bold;");
                 }
             }
         });
 
-        colFecha.setCellFactory(column -> new TableCell<PagoDetalle, LocalDate>() {
+        colFecha.setCellFactory(column -> new TableCell<>() {
             private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
             @Override
@@ -152,7 +324,7 @@ public class IngresosMensualesController implements Initializable {
             }
         });
 
-        colCliente.setCellFactory(column -> new TableCell<PagoDetalle, String>() {
+        colCliente.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(String cliente, boolean empty) {
                 super.updateItem(cliente, empty);
@@ -166,7 +338,7 @@ public class IngresosMensualesController implements Initializable {
             }
         });
 
-        colMembresia.setCellFactory(column -> new TableCell<PagoDetalle, String>() {
+        colMembresia.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(String membresia, boolean empty) {
                 super.updateItem(membresia, empty);
@@ -180,34 +352,7 @@ public class IngresosMensualesController implements Initializable {
             }
         });
 
-        tablaDetalles.setItems(detallesPagos);
         tablaDetalles.setStyle("-fx-font-size: 14px;");
-    }
-
-    private <T> void centrarColumna(TableColumn<PagoDetalle, T> columna, Function<T, String> formateador) {
-        columna.setCellFactory(column -> new TableCell<PagoDetalle, T>() {
-            @Override
-            protected void updateItem(T item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(formateador.apply(item));
-                    setStyle("-fx-alignment: CENTER;");
-                }
-            }
-        });
-    }
-
-    private void configurarAnioSelector() {
-        int añoInicial = 2025;
-        for (int año = añoInicial; año <= anioActual + 1; año++) {
-            cbAnio.getItems().add(año);
-        }
-        cbAnio.setValue(anioActual);
-
-        cbAnio.setOnAction(event -> cargarDatos(cbAnio.getValue()));
     }
 
     private void configurarTablaEgresos() {
@@ -227,7 +372,7 @@ public class IngresosMensualesController implements Initializable {
         colCategoria.setStyle(centerStyle);
         colMontoEgreso.setStyle(centerStyle);
 
-        colFechaEgreso.setCellFactory(column -> new TableCell<EgresoDetalle, LocalDate>() {
+        colFechaEgreso.setCellFactory(column -> new TableCell<>() {
             private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
             @Override
@@ -243,7 +388,7 @@ public class IngresosMensualesController implements Initializable {
             }
         });
 
-        colMontoEgreso.setCellFactory(column -> new TableCell<EgresoDetalle, Double>() {
+        colMontoEgreso.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(Double monto, boolean empty) {
                 super.updateItem(monto, empty);
@@ -251,13 +396,13 @@ public class IngresosMensualesController implements Initializable {
                     setText(null);
                     setStyle("");
                 } else {
-                    setText(String.format("$%,.2f", monto));
+                    setText(formatearMoneda(monto));
                     setStyle(centerStyle + "-fx-font-weight: bold;");
                 }
             }
         });
 
-        colDescripcion.setCellFactory(column -> new TableCell<EgresoDetalle, String>() {
+        colDescripcion.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(String value, boolean empty) {
                 super.updateItem(value, empty);
@@ -271,7 +416,7 @@ public class IngresosMensualesController implements Initializable {
             }
         });
 
-        colCategoria.setCellFactory(column -> new TableCell<EgresoDetalle, String>() {
+        colCategoria.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(String value, boolean empty) {
                 super.updateItem(value, empty);
@@ -288,150 +433,314 @@ public class IngresosMensualesController implements Initializable {
         tablaEgresos.setStyle("-fx-font-size: 14px;");
     }
 
-    private void cargarDatos(int año) {
-        cargarGraficoBarras(año);
-        cargarGraficoCircular(año);
-        cargarTablaDetalles(año);
-        calcularMetricas(año);
-        cargarTablaEgresos(año);
-    }
-
-    private void cargarTablaEgresos(int año) {
-        try {
-            ObservableList<EgresoDetalle> egresos = DatabaseUtil.getDetallesEgresos(año);
-            tablaEgresos.setItems(egresos);
-
-            for (TableColumn<EgresoDetalle, ?> col : tablaEgresos.getColumns()) {
-                col.setStyle("-fx-alignment: CENTER;");
-            }
-        } catch (Exception e) {
-            mostrarAlerta("Error", "No se pudieron cargar los egresos");
-            e.printStackTrace();
+    private void actualizarReporte() {
+        switch (reporteActual) {
+            case DIARIO -> cargarReporteDiario();
+            case SEMANAL -> cargarReporteSemanal();
+            case MENSUAL -> cargarReporteMensual();
+            case ANUAL -> cargarReporteAnual();
         }
     }
 
-    private void cargarGraficoBarras(int año) {
-        XYChart.Series<String, Number> datosActual = new XYChart.Series<>();
-        datosActual.setName("Ingresos " + año);
+    private void cargarReporteDiario() {
+        LocalDate fecha = dpFecha.getValue() != null ? dpFecha.getValue() : LocalDate.now();
+        dpFecha.setValue(fecha);
+        periodoInicio = fecha;
+        periodoFin = fecha;
 
-        XYChart.Series<String, Number> datosAnterior = new XYChart.Series<>();
-        datosAnterior.setName("Ingresos " + (año - 1));
+        lblTituloGrafico.setText("Ingresos del " + fecha.format(fechaLarga));
+        lblTituloMetricas.setText("Métricas del día");
+        actualizarBarChart(() -> DatabaseUtil.getIngresosPorDia(fecha),
+                "Ingresos por tipo", Function.identity());
+        actualizarPieChart(fecha, fecha);
+        actualizarTablaPagos(obtenerPagos(fecha, fecha), Comparator.comparing(PagoDetalle::getFecha).reversed());
+        actualizarEgresos(fecha, fecha);
 
+        double total = calcularTotalIngresos();
+        actualizarMetricas("Total del día", total, "Promedio diario", total, null, null);
+    }
+
+    private void cargarReporteSemanal() {
+        LocalDate inicio = dpSemanaInicio.getValue();
+        if (inicio == null) {
+            inicio = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+            dpSemanaInicio.setValue(inicio);
+        }
+        LocalDate fin = dpSemanaFin.getValue();
+        if (fin == null) {
+            fin = inicio.plusDays(6);
+            dpSemanaFin.setValue(fin);
+        }
+        final LocalDate inicioSemana = inicio;
+        final LocalDate finSemana = fin;
+        periodoInicio = inicioSemana;
+        periodoFin = finSemana;
+
+        lblTituloGrafico.setText("Ingresos del " + inicioSemana.format(fechaLarga) + " al " + finSemana.format(fechaLarga));
+        lblTituloMetricas.setText("Métricas de la semana");
+        actualizarBarChart(() -> DatabaseUtil.getIngresosPorSemana(inicioSemana, finSemana),
+                "Ingresos diarios", etiqueta -> LocalDate.parse(etiqueta).format(fechaCorta));
+        actualizarPieChart(inicioSemana, finSemana);
+        actualizarTablaPagos(obtenerPagos(inicioSemana, finSemana), Comparator.comparing(PagoDetalle::getFecha).reversed());
+        actualizarEgresos(inicioSemana, finSemana);
+
+        double total = calcularTotalIngresos();
+        double promedio = total / 7.0;
+        actualizarMetricas("Total de la semana", total, "Promedio semanal", promedio, null, null);
+    }
+
+    private void cargarReporteMensual() {
+        Integer año = cbAnio.getValue() != null ? cbAnio.getValue() : anioActual;
+        cbAnio.setValue(año);
+        Month mes = cbMes.getValue() != null ? cbMes.getValue() : LocalDate.now().getMonth();
+        cbMes.setValue(mes);
+
+        LocalDate inicio = LocalDate.of(año, mes, 1);
+        LocalDate fin = inicio.withDayOfMonth(inicio.lengthOfMonth());
+        periodoInicio = inicio;
+        periodoFin = fin;
+
+        lblTituloGrafico.setText("Ingresos de " + formatearMes(mes) + " " + año);
+        lblTituloMetricas.setText("Métricas del mes");
+        actualizarBarChart(() -> DatabaseUtil.getIngresosPorMes(año, mes.getValue()),
+                "Ingresos diarios", etiqueta -> LocalDate.parse(etiqueta).format(fechaCorta));
+        actualizarPieChart(inicio, fin);
+        actualizarTablaPagos(obtenerPagos(inicio, fin), Comparator.comparing(PagoDetalle::getFecha).reversed());
+        actualizarEgresos(inicio, fin);
+
+        double total = calcularTotalIngresos();
+        double promedio = total / inicio.lengthOfMonth();
+        actualizarMetricas("Total mensual", total, "Promedio mensual", promedio, null, null);
+    }
+
+    private void cargarReporteAnual() {
+        Integer año = cbAnio.getValue() != null ? cbAnio.getValue() : anioActual;
+        cbAnio.setValue(año);
+        LocalDate inicio = LocalDate.of(año, Month.JANUARY, 1);
+        LocalDate fin = LocalDate.of(año, Month.DECEMBER, 31);
+        periodoInicio = inicio;
+        periodoFin = fin;
+
+        lblTituloGrafico.setText("Ingresos del año " + año);
+        lblTituloMetricas.setText("Métricas anuales");
+        actualizarBarChart(() -> DatabaseUtil.getIngresosPorAnio(año),
+                "Ingresos mensuales", this::formatearMesDesdeEtiqueta);
+        actualizarPieChart(inicio, fin);
+        List<PagoDetalle> pagosAnuales = obtenerPagos(inicio, fin);
+        List<PagoDetalle> pagosAgrupados = agruparPagosPorMes(pagosAnuales, año);
+        actualizarTablaPagos(pagosAgrupados, Comparator.comparing(PagoDetalle::getFecha).reversed());
+        actualizarEgresos(inicio, fin);
+
+        double total = pagosAnuales.stream().mapToDouble(PagoDetalle::getMonto).sum();
+        double promedio = total / 12.0;
+        String mejorMes = determinarMejorMes(año);
+        actualizarMetricas("Total anual", total, "Promedio mensual", promedio, "Mejor mes", mejorMes);
+    }
+
+    private void actualizarBarChart(ThrowingSupplier<List<IngresoData>> supplier,
+                                    String serieNombre,
+                                    Function<String, String> etiquetaFormatter) {
         try {
-            List<PagoMensual> ingresosActual = DatabaseUtil.getIngresosMensuales(año);
-            List<PagoMensual> ingresosAnterior = DatabaseUtil.getIngresosMensuales(año - 1);
+            List<IngresoData> datos = supplier.get();
+            XYChart.Series<String, Number> serie = new XYChart.Series<>();
+            serie.setName(serieNombre);
+            serie.getData().addAll(datos.stream()
+                    .map(d -> new XYChart.Data<String, Number>(
+                            etiquetaFormatter.apply(d.getEtiqueta()), d.getTotal()))
+                    .collect(Collectors.toList()));
 
-            Map<String, Double> mapaAnterior = ingresosAnterior.stream()
-                    .collect(Collectors.toMap(PagoMensual::getMes, PagoMensual::getTotal));
-
-            for (PagoMensual ingreso : ingresosActual) {
-                String mes = obtenerNombreMes(ingreso.getMes());
-                datosActual.getData().add(new XYChart.Data<>(mes, ingreso.getTotal()));
-                double valorAnterior = mapaAnterior.getOrDefault(ingreso.getMes(), 0.0);
-                datosAnterior.getData().add(new XYChart.Data<>(mes, valorAnterior));
+            barChart.getData().setAll(serie);
+            CategoryAxis xAxis = (CategoryAxis) barChart.getXAxis();
+            switch (reporteActual) {
+                case DIARIO -> xAxis.setLabel("Tipo de ingreso");
+                case SEMANAL -> xAxis.setLabel("Día");
+                case MENSUAL -> xAxis.setLabel("Día");
+                case ANUAL -> xAxis.setLabel("Mes");
             }
-
-            barChart.getData().clear();
-            barChart.getData().addAll(datosActual, datosAnterior);
-
-            barChart.setStyle(
-                    "-fx-background-color: white;" +
-                            "-fx-background-radius: 10px;" +
-                            "-fx-padding: 15px;" +
-                            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);"
-            );
-
-            barChart.getXAxis().setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
-            barChart.getYAxis().setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
-
-            barChart.setLegendVisible(true);
-
-        } catch (Exception e) {
+        } catch (SQLException e) {
             mostrarAlerta("Error", "No se pudieron cargar los datos del gráfico");
             e.printStackTrace();
         }
     }
 
-    private void cargarGraficoCircular(int año) {
+    private List<PagoDetalle> obtenerPagos(LocalDate inicio, LocalDate fin) {
         try {
-            ObservableList<PieChart.Data> datosPie = DatabaseUtil.getDistribucionMembresias(año);
-            pieChart.setData(datosPie);
+            return DatabaseUtil.getDetallesPagosEntre(inicio, fin);
+        } catch (SQLException e) {
+            mostrarAlerta("Error", "No se pudieron cargar los detalles de pagos");
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
 
+    private void actualizarPieChart(LocalDate inicio, LocalDate fin) {
+        try {
+            ObservableList<PieChart.Data> datosPie = DatabaseUtil.getDistribucionMembresias(inicio, fin);
+            pieChart.setData(datosPie);
             pieChart.setLabelLineLength(15);
             pieChart.setLegendVisible(true);
-        } catch (Exception e) {
+        } catch (SQLException e) {
             mostrarAlerta("Error", "No se pudo cargar la distribución de membresías");
             e.printStackTrace();
         }
     }
 
-    private void cargarTablaDetalles(int año) {
-        try {
-            detallesPagos.setAll(DatabaseUtil.getDetallesPagos(año));
+    private void actualizarTablaPagos(List<PagoDetalle> pagos, Comparator<PagoDetalle> comparator) {
+        detallesPagos.setAll(pagos);
+        if (comparator != null) {
+            detallesPagos.sort(comparator);
+        }
+    }
 
-            detallesPagos.sort(Comparator.comparing(PagoDetalle::getFecha).reversed());
-        } catch (Exception e) {
-            mostrarAlerta("Error", "No se pudieron cargar los detalles de pagos");
+    private void actualizarEgresos(LocalDate inicio, LocalDate fin) {
+        try {
+            detallesEgresos.setAll(DatabaseUtil.getDetallesEgresosEntre(inicio, fin));
+            for (TableColumn<EgresoDetalle, ?> col : tablaEgresos.getColumns()) {
+                col.setStyle("-fx-alignment: CENTER;");
+            }
+        } catch (SQLException e) {
+            mostrarAlerta("Error", "No se pudieron cargar los egresos");
             e.printStackTrace();
         }
     }
 
-    private void calcularMetricas(int año) {
+    private double calcularTotalIngresos() {
+        return detallesPagos.stream().mapToDouble(PagoDetalle::getMonto).sum();
+    }
+
+    private void actualizarMetricas(String titulo1, double valor1,
+                                    String titulo2, double valor2,
+                                    String titulo3, String valor3) {
+        lblMetric1Title.setText(titulo1);
+        lblMetric1Value.setText(formatearMoneda(valor1));
+        lblMetric2Title.setText(titulo2);
+        lblMetric2Value.setText(formatearMoneda(valor2));
+
+        boolean mostrarTercera = titulo3 != null && valor3 != null && !valor3.isBlank();
+        if (mostrarTercera) {
+            lblMetric3Title.setText(titulo3);
+            lblMetric3Value.setText(valor3);
+        } else {
+            lblMetric3Title.setText("");
+            lblMetric3Value.setText("");
+        }
+        lblMetric3Title.setVisible(mostrarTercera);
+        lblMetric3Title.setManaged(mostrarTercera);
+        lblMetric3Value.setVisible(mostrarTercera);
+        lblMetric3Value.setManaged(mostrarTercera);
+
+        ultimoMetric1Title = titulo1;
+        ultimoMetric2Title = titulo2;
+        ultimoMetric3Title = titulo3;
+        ultimoMetric3Value = valor3;
+        ultimoTotal = valor1;
+        ultimoPromedio = valor2;
+    }
+
+    private List<PagoDetalle> agruparPagosPorMes(List<PagoDetalle> pagos, int año) {
+        Map<Month, Map<String, Double>> agrupado = new LinkedHashMap<>();
+        pagos.forEach(pago -> {
+            Month mes = pago.getFecha().getMonth();
+            agrupado
+                    .computeIfAbsent(mes, m -> new LinkedHashMap<>())
+                    .merge(pago.getMembresia(), pago.getMonto(), Double::sum);
+        });
+
+        List<PagoDetalle> resultado = new ArrayList<>();
+        agrupado.forEach((mes, mapaMembresias) -> mapaMembresias.forEach((membresia, total) ->
+                resultado.add(new PagoDetalle(LocalDate.of(año, mes, 1),
+                        formatearMes(mes), 0, membresia, total))));
+        return resultado;
+    }
+
+    private String determinarMejorMes(int año) {
         try {
-            double totalIngresos = detallesPagos.stream()
-                    .mapToDouble(PagoDetalle::getMonto)
-                    .sum();
-
-            double totalEgresos = DatabaseUtil.getTotalEgresosAnual(año);
-            double totalAnual = totalIngresos - totalEgresos;
-            double promedioMensual = totalAnual / 12;
-
-            String mejorMes = "N/A";
-            double maxUtilidad = Double.NEGATIVE_INFINITY;
-
-            List<PagoMensual> ingresos = DatabaseUtil.getIngresosMensuales(año);
-            List<PagoMensual> egresos = DatabaseUtil.getEgresosMensuales(año);
-
-            for (PagoMensual ingreso : ingresos) {
-                double totalEgresosMes = 0;
-                for (PagoMensual egreso : egresos) {
-                    if (egreso.getMes().equals(ingreso.getMes())) {
-                        totalEgresosMes = egreso.getTotal();
-                        break;
-                    }
-                }
-
-                double utilidad = ingreso.getTotal() - totalEgresosMes;
-                if (utilidad > maxUtilidad) {
-                    maxUtilidad = utilidad;
-                    mejorMes = obtenerNombreMes(ingreso.getMes());
-                }
-            }
-
-            lblTotalAnual.setText(String.format("$%,.2f", totalAnual));
-            lblPromedioMensual.setText(String.format("$%,.2f", promedioMensual));
-            lblMejorMes.setText(mejorMes + ": $" + String.format("%,.2f", maxUtilidad));
-
-        } catch (Exception e) {
+            List<IngresoData> datos = DatabaseUtil.getIngresosPorAnio(año);
+            return datos.stream()
+                    .max(Comparator.comparingDouble(IngresoData::getTotal))
+                    .map(data -> formatearMesDesdeEtiqueta(data.getEtiqueta())
+                            + " (" + formatearMoneda(data.getTotal()) + ")")
+                    .orElse("N/A");
+        } catch (SQLException e) {
             mostrarAlerta("Error", "No se pudieron calcular las métricas");
             e.printStackTrace();
+            return "N/A";
         }
     }
 
-    private String obtenerNombreMes(String mesNumero) {
+    private String formatearMes(Month mes) {
+        return mes.getDisplayName(TextStyle.FULL, localeEs).toUpperCase(localeEs);
+    }
+
+    private String formatearMesDesdeEtiqueta(String etiqueta) {
         try {
-            int mes = Integer.parseInt(mesNumero.split("-")[1]);
-            return DateTimeFormatter.ofPattern("MMMM")
-                    .format(LocalDate.of(2000, mes, 1))
-                    .toUpperCase();
+            if (reporteActual == ReportType.ANUAL) {
+                String[] partes = etiqueta.split("-");
+                int mesNumero = Integer.parseInt(partes[1]);
+                return formatearMes(Month.of(mesNumero));
+            }
+            LocalDate fecha = LocalDate.parse(etiqueta);
+            return formatearMes(fecha.getMonth()) + " " + fecha.getDayOfMonth();
         } catch (Exception e) {
-            return mesNumero;
+            return etiqueta;
         }
+    }
+
+    private String formatearMoneda(double monto) {
+        return String.format(localeEs, "$%,.2f", monto);
     }
 
     @FXML
     private void handleExportarPDF(ActionEvent event) {
-        ReporteUtil.generarReporteFinanciero(8, 2025);
+        exportarReporte(true);
+    }
+
+    @FXML
+    private void handleExportarExcel(ActionEvent event) {
+        exportarReporte(false);
+    }
+
+    private void exportarReporte(boolean pdf) {
+        String extension = pdf ? ".pdf" : ".csv";
+        String prefijo = pdf ? "reporte_ingresos" : "reporte_ingresos_excel";
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String nombreArchivo = prefijo + "_" + reporteActual.name().toLowerCase() + "_" + timestamp + extension;
+        Path destino = Paths.get(nombreArchivo);
+
+        try {
+            Files.writeString(destino, construirContenidoReporte(pdf));
+            mostrarAlerta("Exportación exitosa", "Reporte exportado en: " + destino.toAbsolutePath());
+        } catch (IOException e) {
+            mostrarAlerta("Error", "No se pudo exportar el reporte");
+            e.printStackTrace();
+        }
+    }
+
+    private String construirContenidoReporte(boolean pdf) {
+        String separador = pdf ? "\n" : ";";
+        StringBuilder builder = new StringBuilder();
+        builder.append("Tipo de reporte: ").append(reporteActual.toString()).append('\n');
+        if (periodoInicio != null && periodoFin != null) {
+            builder.append("Periodo: ")
+                    .append(periodoInicio.format(fechaLarga))
+                    .append(" - ")
+                    .append(periodoFin.format(fechaLarga))
+                    .append('\n');
+        }
+        builder.append(ultimoMetric1Title).append(':').append(pdf ? ' ' : separador).append(formatearMoneda(ultimoTotal)).append('\n');
+        builder.append(ultimoMetric2Title).append(':').append(pdf ? ' ' : separador).append(formatearMoneda(ultimoPromedio)).append('\n');
+        if (ultimoMetric3Title != null && ultimoMetric3Value != null && !ultimoMetric3Value.isBlank()) {
+            builder.append(ultimoMetric3Title).append(':').append(pdf ? ' ' : separador).append(ultimoMetric3Value).append('\n');
+        }
+        builder.append('\n');
+        builder.append("Fecha").append(separador).append("Detalle").append(separador)
+                .append("Membresía").append(separador).append("Monto").append('\n');
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        detallesPagos.forEach(pago -> builder.append(pago.getFecha().format(formatter)).append(separador)
+                .append(pago.getCliente()).append(separador)
+                .append(pago.getMembresia()).append(separador)
+                .append(formatearMoneda(pago.getMonto())).append('\n'));
+        return builder.toString();
     }
 
     @FXML
@@ -446,5 +755,10 @@ public class IngresosMensualesController implements Initializable {
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
         alert.showAndWait();
+    }
+
+    @FunctionalInterface
+    private interface ThrowingSupplier<T> {
+        T get() throws SQLException;
     }
 }
