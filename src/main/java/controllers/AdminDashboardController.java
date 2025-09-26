@@ -9,7 +9,6 @@ import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import models.Role;
 import util.BackupUtil;
@@ -213,21 +212,6 @@ public class AdminDashboardController implements Initializable {
             }
         } catch (IOException e) {
             lblMensaje.setText("Error al listar respaldos");
-        }
-    }
-
-    @FXML
-    private void abrirConfiguracion() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/config_scheduler.fxml"));
-            Parent root = loader.load();
-            Stage stage = new Stage();
-            stage.setTitle("Configuración de Tareas");
-            stage.setScene(new Scene(root));
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.show();
-        } catch (IOException e) {
-            lblMensaje.setText("No se pudo abrir configuración: " + e.getMessage());
         }
     }
 }
