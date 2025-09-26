@@ -43,10 +43,8 @@ public class EquiposAdminController implements Initializable {
     @FXML private TableColumn<Equipo, String> colNombre;
     @FXML private TableColumn<Equipo, String> colEstado;
     @FXML private TableColumn<Equipo, String> colMarca;
-    @FXML private TableColumn<Equipo, String> colModelo;
     @FXML private TableColumn<Equipo, Integer> colCantidad;
     @FXML private TableColumn<Equipo, String> colPeso;
-    @FXML private TableColumn<Equipo, String> colUbicacion;
     @FXML private TableColumn<Equipo, String> colUltimoMantenimiento;
     @FXML private TableColumn<Equipo, String> colProximoMantenimiento;
     @FXML private ComboBox<String> filtroEstado;
@@ -80,14 +78,15 @@ public class EquiposAdminController implements Initializable {
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
         colMarca.setCellValueFactory(new PropertyValueFactory<>("marca"));
-        colModelo.setCellValueFactory(new PropertyValueFactory<>("modelo"));
         colCantidad.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
         colPeso.setCellValueFactory(new PropertyValueFactory<>("peso"));
-        colUbicacion.setCellValueFactory(new PropertyValueFactory<>("ubicacion"));
         colUltimoMantenimiento.setCellValueFactory(cellData ->
                 new SimpleStringProperty(formatearFecha(cellData.getValue().getFechaUltimoMantenimiento())));
         colProximoMantenimiento.setCellValueFactory(cellData ->
                 new SimpleStringProperty(formatearFecha(cellData.getValue().getProximoMantenimiento())));
+
+        centrarColumnas(colNombre, colEstado, colMarca, colCantidad, colPeso,
+                colUltimoMantenimiento, colProximoMantenimiento);
 
         tablaEquipos.setRowFactory(tv -> new TableRow<>() {
             @Override
@@ -108,6 +107,12 @@ public class EquiposAdminController implements Initializable {
                 }
             }
         });
+    }
+
+    private void centrarColumnas(TableColumn<?, ?>... columnas) {
+        for (TableColumn<?, ?> columna : columnas) {
+            columna.setStyle("-fx-alignment: CENTER;");
+        }
     }
 
     private void configurarFiltros() {

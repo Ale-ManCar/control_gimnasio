@@ -169,9 +169,20 @@
         -fx-background-color: rgba(51, 65, 85, 0.45);
     }
 
-    .dialog-action-button--ghost:pressed {
-        -fx-background-color: rgba(30, 41, 59, 0.65);
-        -fx-border-color: rgba(100, 116, 139, 0.9);
+.dialog-action-button--ghost:pressed {
+    -fx-background-color: rgba(30, 41, 59, 0.65);
+    -fx-border-color: rgba(100, 116, 139, 0.9);
+}
+
+.table-view.equipos-table .column-header,
+.table-view.equipos-table .table-cell {
+    -fx-alignment: CENTER;
+}
+
+.table-view.equipos-table .column-header .label {
+    -fx-alignment: CENTER;
+    -fx-text-alignment: center;
+    -fx-padding: 0;
 }
 
 .dialog-grid {
