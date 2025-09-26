@@ -16,6 +16,16 @@
         <VBox spacing="18" BorderPane.alignment="CENTER">
             <StackPane>
                 <children>
+                    <Region StackPane.alignment="TOP_RIGHT" prefWidth="180" prefHeight="180">
+                        <styleClass>
+                            <String fx:value="header-glow"/>
+                        </styleClass>
+                    </Region>
+                    <Region StackPane.alignment="BOTTOM_LEFT" prefWidth="120" prefHeight="120">
+                        <styleClass>
+                            <String fx:value="header-glow-soft"/>
+                        </styleClass>
+                    </Region>
                     <VBox spacing="18">
                         <styleClass>
                             <String fx:value="header-card"/>
@@ -132,6 +142,15 @@
                                                     <TableColumn fx:id="colEquipoPrecio" text="Precio" prefWidth="160"/>
                                                 </columns>
                                             </TableView>
+                                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                                <children>
+                                                    <Label text="Consejo: marca solo los equipos que realmente ofreces para mantener tu catálogo impecable.">
+                                                        <styleClass>
+                                                            <String fx:value="tab-hint"/>
+                                                        </styleClass>
+                                                    </Label>
+                                                </children>
+                                            </HBox>
                                         </children>
                                     </VBox>
                                 </content>
@@ -158,6 +177,15 @@
                                                     <TableColumn fx:id="colInsumoPrecio" text="Precio" prefWidth="160"/>
                                                 </columns>
                                             </TableView>
+                                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                                <children>
+                                                    <Label text="Tip: registra precios competitivos para optimizar tus compras.">
+                                                        <styleClass>
+                                                            <String fx:value="tab-hint"/>
+                                                        </styleClass>
+                                                    </Label>
+                                                </children>
+                                            </HBox>
                                         </children>
                                     </VBox>
                                 </content>
