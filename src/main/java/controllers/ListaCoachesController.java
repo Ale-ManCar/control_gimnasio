@@ -41,6 +41,7 @@ public class ListaCoachesController {
     @FXML private TableColumn<Coach, Void> colAcciones;
     @FXML private TextField txtBuscar;
     @FXML private Button btnLimpiar;
+    @FXML private Button btnAgregar;
 
     private final ObservableList<Coach> coaches = FXCollections.observableArrayList();
     private final ObservableList<Coach> coachesOriginales = FXCollections.observableArrayList();
@@ -310,6 +311,38 @@ public class ListaCoachesController {
                 )
         );
 
+        btnAgregar.setStyle(
+                "-fx-background-color: linear-gradient(to right, #4CAF50, #2E7D32);" +
+                        "-fx-text-fill: white;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-padding: 8px 18px;" +
+                        "-fx-background-radius: 20px;" +
+                        "-fx-border-radius: 20px;" +
+                        "-fx-cursor: hand;"
+        );
+        btnAgregar.setOnMouseEntered(e ->
+                btnAgregar.setStyle(
+                        "-fx-background-color: linear-gradient(to right, #66BB6A, #388E3C);" +
+                                "-fx-text-fill: white;" +
+                                "-fx-font-weight: bold;" +
+                                "-fx-padding: 8px 18px;" +
+                                "-fx-background-radius: 20px;" +
+                                "-fx-border-radius: 20px;" +
+                                "-fx-cursor: hand;"
+                )
+        );
+        btnAgregar.setOnMouseExited(e ->
+                btnAgregar.setStyle(
+                        "-fx-background-color: linear-gradient(to right, #4CAF50, #2E7D32);" +
+                                "-fx-text-fill: white;" +
+                                "-fx-font-weight: bold;" +
+                                "-fx-padding: 8px 18px;" +
+                                "-fx-background-radius: 20px;" +
+                                "-fx-border-radius: 20px;" +
+                                "-fx-cursor: hand;"
+                )
+        );
+
         txtBuscar.textProperty().addListener((observable, oldValue, newValue) -> {
             filtrarCoaches();
         });
@@ -411,6 +444,24 @@ public class ListaCoachesController {
             Stage stage = (Stage) tablaCoaches.getScene().getWindow();
             ToastController.showToast(stage, mensaje, ToastController.SUCCESS);
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void abrirRegistroCoach() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/registro_coach.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Registrar Coach");
+            stage.initOwner(tablaCoaches.getScene().getWindow());
+            stage.showAndWait();
+
+            recargarCoaches();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
