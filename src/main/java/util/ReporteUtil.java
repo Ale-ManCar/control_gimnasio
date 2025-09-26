@@ -11,7 +11,6 @@ import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
 import javafx.collections.ObservableList;
 import models.Egreso;
 import models.Equipo;
-import models.CoachClientes;
 import models.PagoDetalle;
 import models.Auditoria;
 import models.Pago;
@@ -554,65 +553,9 @@ public class ReporteUtil {
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, new HashMap<>(), ds);
             JasperViewer.viewReport(jasperPrint, false);
 
-            String pdfPath = System.getProperty("user.dir") + File.separator + "membresias_por_vencer.pdf";
-            JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
-            System.out.println("✅ Reporte de membresías por vencer generado en: " + pdfPath);
+            System.out.println("✅ Reporte de membresías por vencer mostrado en pantalla.");
         } catch (Exception e) {
             System.err.println("❌ Error generando reporte de membresías: " + e.getMessage());
-        }
-    }
-
-    public static void generarReporteClientesMorososPDF() {
-        try {
-            int total = DatabaseUtil.contarClientesMorosos();
-            String contenido = "Clientes morosos: " + total + "\n";
-            Path path = Path.of("clientes_morosos.pdf");
-            Files.writeString(path, contenido);
-            System.out.println("✅ Reporte de clientes morosos PDF generado en: " + path.toAbsolutePath());
-        } catch (Exception e) {
-            System.err.println("❌ Error generando reporte de clientes morosos PDF: " + e.getMessage());
-        }
-    }
-
-    public static void generarReporteClientesMorososExcel() {
-        try {
-            int total = DatabaseUtil.contarClientesMorosos();
-            String contenido = "ClientesMorosos\n" + total + "\n";
-            Path path = Path.of("clientes_morosos.csv");
-            Files.writeString(path, contenido);
-            System.out.println("✅ Reporte de clientes morosos Excel generado en: " + path.toAbsolutePath());
-        } catch (Exception e) {
-            System.err.println("❌ Error generando reporte de clientes morosos Excel: " + e.getMessage());
-        }
-    }
-
-    public static void generarReporteCoachesConMasClientesPDF() {
-        try {
-            List<CoachClientes> lista = DatabaseUtil.listarCoachesConMasClientes();
-            StringBuilder contenido = new StringBuilder("Coach,Clientes\n");
-            for (CoachClientes c : lista) {
-                contenido.append(c.getCoach()).append(',').append(c.getClientes()).append("\n");
-            }
-            Path path = Path.of("coaches_con_mas_clientes.pdf");
-            Files.writeString(path, contenido.toString());
-            System.out.println("✅ Reporte de coaches con más clientes PDF generado en: " + path.toAbsolutePath());
-        } catch (Exception e) {
-            System.err.println("❌ Error generando reporte de coaches PDF: " + e.getMessage());
-        }
-    }
-
-    public static void generarReporteCoachesConMasClientesExcel() {
-        try {
-            List<CoachClientes> lista = DatabaseUtil.listarCoachesConMasClientes();
-            StringBuilder contenido = new StringBuilder("Coach,Clientes\n");
-            for (CoachClientes c : lista) {
-                contenido.append(c.getCoach()).append(',').append(c.getClientes()).append("\n");
-            }
-            Path path = Path.of("coaches_con_mas_clientes.csv");
-            Files.writeString(path, contenido.toString());
-            System.out.println("✅ Reporte de coaches con más clientes Excel generado en: " + path.toAbsolutePath());
-        } catch (Exception e) {
-            System.err.println("❌ Error generando reporte de coaches Excel: " + e.getMessage());
         }
     }
 
