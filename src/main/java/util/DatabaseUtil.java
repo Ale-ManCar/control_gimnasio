@@ -145,7 +145,9 @@ public class DatabaseUtil {
                 "descripcion TEXT NOT NULL," +
                 "monto REAL NOT NULL," +
                 "fecha TEXT NOT NULL," +
-                "categoria TEXT NOT NULL)";
+                "categoria TEXT NOT NULL," +
+                "proveedor TEXT," +
+                "pdf_path TEXT)";
 
         String sqlTurnos = "CREATE TABLE IF NOT EXISTS turnos (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -237,6 +239,8 @@ public class DatabaseUtil {
             try { stmt.execute("ALTER TABLE equipos ADD COLUMN descripcion TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE equipos ADD COLUMN fecha_ultimo_mantenimiento TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE equipos ADD COLUMN cantidad INTEGER NOT NULL DEFAULT 0"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE egresos ADD COLUMN proveedor TEXT"); } catch (SQLException ignored) {}
+            try { stmt.execute("ALTER TABLE egresos ADD COLUMN pdf_path TEXT"); } catch (SQLException ignored) {}
             stmt.execute("INSERT OR IGNORE INTO proveedores (id, nombre, contacto, telefono) VALUES (1, 'Proveedor 1', '', ''), (2, 'Proveedor 2', '', '')");
             try {
                 stmt.execute("UPDATE ventas SET fecha = COALESCE(strftime('%Y-%m-%d %H:%M:%S', fecha), fecha) WHERE fecha IS NOT NULL");
@@ -516,7 +520,7 @@ public class DatabaseUtil {
 
     public static ObservableList<Egreso> getEgresosParaMes(int mes, int anio) {
         ObservableList<Egreso> egresos = FXCollections.observableArrayList();
-        String sql = "SELECT id, descripcion, monto, fecha, categoria FROM egresos " +
+        String sql = "SELECT id, descripcion, monto, fecha, categoria, proveedor, pdf_path FROM egresos " +
                 "WHERE strftime('%Y', fecha) = ? " +
                 "AND strftime('%m', fecha) = ?";
 
@@ -533,6 +537,8 @@ public class DatabaseUtil {
                 e.setMonto(rs.getDouble("monto"));
                 e.setFecha(LocalDate.parse(rs.getString("fecha")));
                 e.setCategoria(rs.getString("categoria"));
+                e.setProveedor(rs.getString("proveedor"));
+                e.setPdfPath(rs.getString("pdf_path"));
                 egresos.add(e);
             }
         } catch (SQLException e) {
@@ -561,15 +567,32 @@ public class DatabaseUtil {
         return getEgresosParaMes(hoy.getMonthValue(), hoy.getYear());
     }
 
-    public static void registrarEgreso(Egreso egreso) throws SQLException {
-        String sql = "INSERT INTO egresos (descripcion, monto, fecha, categoria) VALUES (?, ?, ?, ?)";
-        executeUpdate(sql,
-                egreso.getDescripcion(),
-                egreso.getMonto(),
-                egreso.getFecha(),
-                egreso.getCategoria());
-
+    public static int registrarEgreso(Egreso egreso) throws SQLException {
+        String sql = "INSERT INTO egresos (descripcion, monto, fecha, categoria, proveedor, pdf_path) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, egreso.getDescripcion());
+            stmt.setDouble(2, egreso.getMonto());
+            stmt.setString(3, egreso.getFecha() != null ? egreso.getFecha().toString() : LocalDate.now().toString());
+            stmt.setString(4, egreso.getCategoria());
+            stmt.setString(5, egreso.getProveedor());
+            stmt.setString(6, egreso.getPdfPath());
+            stmt.executeUpdate();
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    int id = rs.getInt(1);
+                    EventBus.fireEvent(EventBus.EventType.EGRESO_REGISTRADO);
+                    return id;
+                }
+            }
+        }
         EventBus.fireEvent(EventBus.EventType.EGRESO_REGISTRADO);
+        return -1;
+    }
+
+    public static void actualizarRutaPdfEgreso(int egresoId, String pdfPath) throws SQLException {
+        String sql = "UPDATE egresos SET pdf_path = ? WHERE id = ?";
+        executeUpdate(sql, pdfPath, egresoId);
     }
 
     /**
@@ -582,7 +605,7 @@ public class DatabaseUtil {
 
     public static ObservableList<Egreso> listarEgresos() throws SQLException {
         ObservableList<Egreso> egresos = FXCollections.observableArrayList();
-        String sql = "SELECT id, descripcion, monto, fecha, categoria FROM egresos ORDER BY fecha DESC";
+        String sql = "SELECT id, descripcion, monto, fecha, categoria, proveedor, pdf_path FROM egresos ORDER BY fecha DESC";
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -593,6 +616,8 @@ public class DatabaseUtil {
                 e.setMonto(rs.getDouble("monto"));
                 e.setFecha(LocalDate.parse(rs.getString("fecha")));
                 e.setCategoria(rs.getString("categoria"));
+                e.setProveedor(rs.getString("proveedor"));
+                e.setPdfPath(rs.getString("pdf_path"));
                 egresos.add(e);
             }
         }
@@ -601,7 +626,7 @@ public class DatabaseUtil {
 
     public static ObservableList<Egreso> filtrarEgresos(LocalDate fechaInicio, LocalDate fechaFin, String categoria) throws SQLException {
         ObservableList<Egreso> egresos = FXCollections.observableArrayList();
-        StringBuilder sql = new StringBuilder("SELECT id, descripcion, monto, fecha, categoria FROM egresos WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT id, descripcion, monto, fecha, categoria, proveedor, pdf_path FROM egresos WHERE 1=1");
         List<Object> params = new ArrayList<>();
 
         if (fechaInicio != null && fechaFin != null) {
@@ -636,6 +661,8 @@ public class DatabaseUtil {
                     e.setMonto(rs.getDouble("monto"));
                     e.setFecha(LocalDate.parse(rs.getString("fecha")));
                     e.setCategoria(rs.getString("categoria"));
+                    e.setProveedor(rs.getString("proveedor"));
+                    e.setPdfPath(rs.getString("pdf_path"));
                     egresos.add(e);
                 }
             }
@@ -1694,7 +1721,7 @@ public class DatabaseUtil {
         }
 
         LocalDate[] rango = ordenarFechas(inicio, fin);
-        String sql = "SELECT descripcion, categoria, fecha, monto "
+        String sql = "SELECT id, descripcion, categoria, fecha, monto, proveedor, pdf_path "
                 + "FROM egresos "
                 + "WHERE date(fecha) BETWEEN ? AND ? "
                 + "ORDER BY fecha DESC";
@@ -1707,10 +1734,13 @@ public class DatabaseUtil {
 
             while (rs.next()) {
                 detalles.add(new EgresoDetalle(
+                        rs.getInt("id"),
                         LocalDate.parse(rs.getString("fecha")),
                         rs.getString("descripcion"),
                         rs.getString("categoria"),
-                        rs.getDouble("monto")
+                        rs.getDouble("monto"),
+                        rs.getString("proveedor"),
+                        rs.getString("pdf_path")
                 ));
             }
         }

@@ -15,15 +15,24 @@ import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.stage.Stage;
+import javafx.stage.FileChooser;
 import javafx.util.Callback;
 import models.EgresoDetalle;
 import models.IngresoData;
@@ -32,6 +41,8 @@ import util.DatabaseUtil;
 import util.EventBus;
 import util.ReporteUtil;
 
+import java.awt.Desktop;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
@@ -55,6 +66,8 @@ import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 public class IngresosMensualesController implements Initializable {
 
@@ -101,9 +114,9 @@ public class IngresosMensualesController implements Initializable {
     @FXML private Button btnRegistrarEgreso;
     @FXML private TableView<EgresoDetalle> tablaEgresos;
     @FXML private TableColumn<EgresoDetalle, LocalDate> colFechaEgreso;
-    @FXML private TableColumn<EgresoDetalle, String> colDescripcion;
     @FXML private TableColumn<EgresoDetalle, String> colCategoria;
     @FXML private TableColumn<EgresoDetalle, Double> colMontoEgreso;
+    @FXML private TableColumn<EgresoDetalle, Void> colAcciones;
     @FXML private HBox contenedorFiltros;
     @FXML private HBox contenedorAnio;
     @FXML private HBox contenedorMes;
@@ -379,20 +392,19 @@ public class IngresosMensualesController implements Initializable {
 
     private void configurarTablaEgresos() {
         colFechaEgreso.setCellValueFactory(new PropertyValueFactory<>("fecha"));
-        colDescripcion.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
         colCategoria.setCellValueFactory(new PropertyValueFactory<>("categoria"));
         colMontoEgreso.setCellValueFactory(new PropertyValueFactory<>("monto"));
 
-        colFechaEgreso.prefWidthProperty().bind(tablaEgresos.widthProperty().multiply(0.15));
-        colDescripcion.prefWidthProperty().bind(tablaEgresos.widthProperty().multiply(0.52));
-        colCategoria.prefWidthProperty().bind(tablaEgresos.widthProperty().multiply(0.15));
-        colMontoEgreso.prefWidthProperty().bind(tablaEgresos.widthProperty().multiply(0.15));
+        colFechaEgreso.prefWidthProperty().bind(tablaEgresos.widthProperty().multiply(0.2));
+        colCategoria.prefWidthProperty().bind(tablaEgresos.widthProperty().multiply(0.35));
+        colMontoEgreso.prefWidthProperty().bind(tablaEgresos.widthProperty().multiply(0.3));
+        colAcciones.prefWidthProperty().bind(tablaEgresos.widthProperty().multiply(0.15));
 
         String centerStyle = "-fx-alignment: CENTER;";
         colFechaEgreso.setStyle(centerStyle);
-        colDescripcion.setStyle(centerStyle);
         colCategoria.setStyle(centerStyle);
         colMontoEgreso.setStyle(centerStyle);
+        colAcciones.setStyle(centerStyle);
 
         colFechaEgreso.setCellFactory(column -> new TableCell<>() {
             private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -424,20 +436,6 @@ public class IngresosMensualesController implements Initializable {
             }
         });
 
-        colDescripcion.setCellFactory(column -> new TableCell<>() {
-            @Override
-            protected void updateItem(String value, boolean empty) {
-                super.updateItem(value, empty);
-                if (empty || value == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(value);
-                    setStyle(centerStyle);
-                }
-            }
-        });
-
         colCategoria.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(String value, boolean empty) {
@@ -452,7 +450,134 @@ public class IngresosMensualesController implements Initializable {
             }
         });
 
+        colAcciones.setCellFactory(column -> new TableCell<>() {
+            private final Button btnVerMas = crearBotonVerMas();
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                    setText(null);
+                } else {
+                    btnVerMas.setOnAction(event -> {
+                        int index = getIndex();
+                        if (index >= 0 && index < tablaEgresos.getItems().size()) {
+                            EgresoDetalle detalle = tablaEgresos.getItems().get(index);
+                            mostrarVentanaDetalleEgreso(detalle);
+                        }
+                    });
+                    setGraphic(btnVerMas);
+                    setText(null);
+                    setAlignment(Pos.CENTER);
+                }
+            }
+
+            private Button crearBotonVerMas() {
+                Button button = new Button("🔍");
+                button.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-font-size: 16px;");
+                button.setTooltip(new Tooltip("Ver más"));
+                return button;
+            }
+        });
+
         tablaEgresos.setStyle("-fx-font-size: 14px;");
+    }
+
+    private void mostrarVentanaDetalleEgreso(EgresoDetalle egreso) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Detalle del Egreso");
+        dialog.initOwner(tablaEgresos.getScene().getWindow());
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+
+        VBox contenido = new VBox(12);
+        contenido.setPadding(new Insets(20));
+
+        Label lblMonto = new Label("Monto: " + formatearMoneda(egreso.getMonto()));
+        lblMonto.setStyle("-fx-font-weight: bold;");
+
+        Label lblProveedor = new Label("Proveedor: " + valorPorDefecto(egreso.getProveedor(), "No especificado"));
+        Label lblFecha = new Label("Fecha: " + egreso.getFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        Label lblCategoria = new Label("Categoría: " + valorPorDefecto(egreso.getCategoria(), "No especificada"));
+
+        Label lblDescripcionTitulo = new Label("Descripción:");
+        lblDescripcionTitulo.setStyle("-fx-font-weight: bold;");
+        Label lblDescripcion = new Label(valorPorDefecto(egreso.getDescripcion(), "Sin descripción"));
+        lblDescripcion.setWrapText(true);
+
+        contenido.getChildren().addAll(lblMonto, lblProveedor, lblFecha, lblCategoria, lblDescripcionTitulo, lblDescripcion);
+
+        if (egreso.getPdfPath() != null && !egreso.getPdfPath().isBlank()) {
+            File pdf = new File(egreso.getPdfPath());
+            Label lblFactura = new Label("Factura PDF:");
+            lblFactura.setStyle("-fx-font-weight: bold;");
+            if (pdf.exists()) {
+                Hyperlink enlaceVer = new Hyperlink("Ver factura");
+                enlaceVer.setOnAction(e -> abrirPdf(pdf));
+
+                Hyperlink enlaceDescargar = new Hyperlink("Descargar factura");
+                enlaceDescargar.setOnAction(e -> descargarPdf(pdf));
+
+                HBox accionesPdf = new HBox(15, enlaceVer, enlaceDescargar);
+                accionesPdf.setAlignment(Pos.CENTER_LEFT);
+                contenido.getChildren().addAll(lblFactura, accionesPdf);
+            } else {
+                Label lblNoDisponible = new Label("Factura PDF: Archivo no encontrado.");
+                contenido.getChildren().add(lblNoDisponible);
+            }
+        } else {
+            Label lblSinFactura = new Label("Factura PDF: No se adjuntó");
+            contenido.getChildren().add(lblSinFactura);
+        }
+
+        dialog.getDialogPane().setContent(contenido);
+        dialog.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+        dialog.showAndWait();
+    }
+
+    private void abrirPdf(File pdf) {
+        if (pdf == null || !pdf.exists()) {
+            mostrarAlerta("Archivo no disponible", "No se encontró la factura seleccionada.");
+            return;
+        }
+
+        if (!Desktop.isDesktopSupported()) {
+            mostrarAlerta("Funcionalidad no soportada", "No es posible abrir el archivo PDF en este sistema.");
+            return;
+        }
+
+        try {
+            Desktop.getDesktop().open(pdf);
+        } catch (IOException e) {
+            mostrarAlerta("Error", "No se pudo abrir la factura: " + e.getMessage());
+        }
+    }
+
+    private void descargarPdf(File pdf) {
+        if (pdf == null || !pdf.exists()) {
+            mostrarAlerta("Archivo no disponible", "No se encontró la factura seleccionada.");
+            return;
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Guardar Factura PDF");
+        fileChooser.setInitialFileName(pdf.getName());
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archivos PDF", "*.pdf"));
+        File destino = fileChooser.showSaveDialog(tablaEgresos.getScene().getWindow());
+        if (destino == null) {
+            return;
+        }
+
+        try {
+            Files.copy(pdf.toPath(), destino.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            mostrarAlerta("Descarga completada", "La factura se guardó correctamente.");
+        } catch (IOException e) {
+            mostrarAlerta("Error", "No se pudo guardar la factura: " + e.getMessage());
+        }
+    }
+
+    private String valorPorDefecto(String valor, String porDefecto) {
+        return (valor == null || valor.isBlank()) ? porDefecto : valor;
     }
 
     private void actualizarReporte() {

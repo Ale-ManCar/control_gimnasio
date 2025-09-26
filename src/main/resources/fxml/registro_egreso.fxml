@@ -29,15 +29,22 @@
                   style="-fx-font-size: 14px; -fx-pref-height: 35px; -fx-background-color: rgba(255,255,255,0.9);"/>
         <Label text="Monto ($):" style="-fx-font-weight: bold; -fx-text-fill: white;"
                GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-        <TextField fx:id="txtMonto" GridPane.rowIndex="1" GridPane.columnIndex="1"
-                   style="-fx-font-size: 14px; -fx-pref-height: 35px; -fx-background-color: rgba(255,255,255,0.9);"/>
+        <HBox spacing="10" alignment="CENTER_LEFT" GridPane.rowIndex="1" GridPane.columnIndex="1">
+            <TextField fx:id="txtMonto" HBox.hgrow="ALWAYS"
+                       style="-fx-font-size: 14px; -fx-pref-height: 35px; -fx-background-color: rgba(255,255,255,0.9);"/>
+            <Button fx:id="btnSubirPdf" text="Subir Factura (PDF)" onAction="#handleSeleccionarPdf"
+                    style="-fx-background-color: #2980B9; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 16; -fx-background-radius: 20;"/>
+        </HBox>
+        <Label fx:id="lblPdfSeleccionado" text="Ningún archivo seleccionado"
+               style="-fx-text-fill: #bdc3c7; -fx-font-size: 12px;"
+               GridPane.rowIndex="2" GridPane.columnIndex="1"/>
         <Label text="Descripción:" style="-fx-font-weight: bold; -fx-text-fill: white;"
-               GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-        <TextArea fx:id="txtDescripcion" GridPane.rowIndex="2" GridPane.columnIndex="1"
+               GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextArea fx:id="txtDescripcion" GridPane.rowIndex="3" GridPane.columnIndex="1"
                   style="-fx-font-size: 14px; -fx-background-color: rgba(255,255,255,0.9);"
                   prefRowCount="4"/>
         <HBox spacing="15" alignment="CENTER_RIGHT"
-              GridPane.columnIndex="1" GridPane.rowIndex="3">
+              GridPane.columnIndex="1" GridPane.rowIndex="4">
             <Button fx:id="btnRegistrar" text="Registrar" onAction="#handleRegistrar"
                     style="-fx-background-color: linear-gradient(to right, #4CAF50, #2ECC71);
                            -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20; -fx-background-radius: 25;

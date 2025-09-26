@@ -76,9 +76,9 @@
                                style="-fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 15; -fx-border-radius: 15; -fx-border-color: rgba(255,255,255,0.2);">
                         <columns>
                             <TableColumn fx:id="colFechaEgreso" text="Fecha" prefWidth="100" style="-fx-text-fill: white;"/>
-                            <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="290" style="-fx-text-fill: white;"/>
                             <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="150" style="-fx-text-fill: white;"/>
                             <TableColumn fx:id="colMontoEgreso" text="Monto" prefWidth="120" style="-fx-text-fill: white;"/>
+                            <TableColumn fx:id="colAcciones" text="" prefWidth="80" style="-fx-text-fill: white;"/>
                         </columns>
                     </TableView>
                 </VBox>
