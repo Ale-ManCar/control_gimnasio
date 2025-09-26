@@ -52,9 +52,18 @@ public class AdminDashboardController implements Initializable {
 
     private void inicializarTarjetas() throws IOException {
         ctrlClientesActivos = DashboardService.cargarTarjeta(cardClientesActivos, "Clientes Activos");
+        ctrlClientesActivos.setIconLiteral("fas-users");
+        ctrlClientesActivos.setAccent("metric-card--success");
+
         ctrlIngresos = DashboardService.cargarTarjeta(cardIngresos, "Ingresos");
+        ctrlIngresos.setIconLiteral("fas-wallet");
+        ctrlIngresos.setAccent("metric-card--info");
+        ctrlIngresos.setOnClick(this::handleVerIngresosMensuales);
+
         ctrlCoaches = DashboardService.cargarTarjeta(cardCoaches, "Coaches");
-        cardCoaches.setOnMouseClicked(e -> abrirCoaches());
+        ctrlCoaches.setIconLiteral("fas-chalkboard-teacher");
+        ctrlCoaches.setAccent("metric-card--purple");
+        ctrlCoaches.setOnClick(e -> abrirCoaches());
     }
 
     private void cargarDatos() {

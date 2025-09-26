@@ -170,6 +170,76 @@
     -fx-translate-y: -3;
 }
 
+.metric-card {
+    -fx-background-color: rgba(15, 23, 42, 0.55);
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-padding: 18;
+    -fx-background-insets: 0;
+    -fx-border-width: 1.2;
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(three-pass-box, rgba(15, 23, 42, 0.45), 16, 0.16, 0, 6);
+    -fx-cursor: hand;
+    -fx-translate-y: 0;
+}
+
+.metric-card:hover,
+.metric-card:focused {
+    -fx-effect: dropshadow(three-pass-box, rgba(59, 130, 246, 0.45), 22, 0.2, 0, 8);
+    -fx-border-color: rgba(148, 163, 184, 0.55);
+    -fx-translate-y: -3;
+}
+
+.metric-card:focused {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.metric-card__icon {
+    -fx-icon-size: 34px;
+    -fx-icon-color: rgba(226, 232, 240, 0.9);
+}
+
+.metric-card__title {
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: rgba(226, 232, 240, 0.85);
+    -fx-text-alignment: center;
+}
+
+.metric-card__value {
+    -fx-font-size: 26px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #f8fafc;
+}
+
+.metric-card--success {
+    -fx-background-color: linear-gradient(to bottom, rgba(34, 197, 94, 0.92), rgba(21, 128, 61, 0.92));
+    -fx-border-color: rgba(134, 239, 172, 0.75);
+}
+
+.metric-card--success .metric-card__icon {
+    -fx-icon-color: #bbf7d0;
+}
+
+.metric-card--info {
+    -fx-background-color: linear-gradient(to bottom, rgba(59, 130, 246, 0.92), rgba(30, 64, 175, 0.92));
+    -fx-border-color: rgba(147, 197, 253, 0.75);
+}
+
+.metric-card--info .metric-card__icon {
+    -fx-icon-color: #bfdbfe;
+}
+
+.metric-card--purple {
+    -fx-background-color: linear-gradient(to bottom, rgba(168, 85, 247, 0.92), rgba(109, 40, 217, 0.92));
+    -fx-border-color: rgba(233, 213, 255, 0.75);
+}
+
+.metric-card--purple .metric-card__icon {
+    -fx-icon-color: #e9d5ff;
+}
+
 .action-card-title {
     -fx-font-size: 16px;
     -fx-font-weight: bold;

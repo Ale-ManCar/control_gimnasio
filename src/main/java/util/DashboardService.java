@@ -3,7 +3,6 @@ package util;
 import controllers.MetricCardController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -17,12 +16,14 @@ public class DashboardService {
      */
     public static MetricCardController cargarTarjeta(AnchorPane contenedor, String titulo) throws IOException {
         FXMLLoader loader = new FXMLLoader(DashboardService.class.getResource("/fxml/components/metric_card.fxml"));
-        Pane pane = loader.load();
+        AnchorPane pane = loader.load();
+        AnchorPane.setTopAnchor(pane, 0.0);
+        AnchorPane.setRightAnchor(pane, 0.0);
+        AnchorPane.setBottomAnchor(pane, 0.0);
+        AnchorPane.setLeftAnchor(pane, 0.0);
         MetricCardController controller = loader.getController();
         controller.setTitulo(titulo);
-        pane.prefWidthProperty().bind(contenedor.widthProperty());
-        pane.prefHeightProperty().bind(contenedor.heightProperty());
-        contenedor.getChildren().add(pane);
+        contenedor.getChildren().setAll(pane);
         return controller;
     }
 

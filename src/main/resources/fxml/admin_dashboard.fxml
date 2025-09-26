@@ -21,13 +21,9 @@
     <center>
         <VBox spacing="25" alignment="TOP_CENTER" style="-fx-padding: 20;">
             <HBox spacing="20" alignment="CENTER">
-                <AnchorPane fx:id="cardClientesActivos" prefWidth="200" prefHeight="120"
-                            style="-fx-background-color: rgba(76,175,80,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
-                <AnchorPane fx:id="cardIngresos" prefWidth="200" prefHeight="120"
-                            onMouseClicked="#handleVerIngresosMensuales"
-                            style="-fx-background-color: rgba(33,150,243,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
-                <AnchorPane fx:id="cardCoaches" prefWidth="200" prefHeight="120"
-                            style="-fx-background-color: rgba(123,31,162,0.9); -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10,0,0,5);"/>
+                <AnchorPane fx:id="cardClientesActivos" prefWidth="200" prefHeight="120"/>
+                <AnchorPane fx:id="cardIngresos" prefWidth="200" prefHeight="120"/>
+                <AnchorPane fx:id="cardCoaches" prefWidth="200" prefHeight="120"/>
             </HBox>
 
             <FlowPane hgap="20" vgap="20" prefWrapLength="620" alignment="CENTER">
