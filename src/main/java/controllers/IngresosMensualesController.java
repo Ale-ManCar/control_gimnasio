@@ -34,13 +34,9 @@ import util.ReporteUtil;
 
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.Year;
 import java.time.format.DateTimeFormatter;
@@ -99,7 +95,6 @@ public class IngresosMensualesController implements Initializable {
     @FXML private Label lblMetric3Title;
     @FXML private Label lblMetric3Value;
     @FXML private Button btnExportarPDF;
-    @FXML private Button btnExportarExcel;
     @FXML private Button btnRegistrarEgreso;
     @FXML private TableView<EgresoDetalle> tablaEgresos;
     @FXML private TableColumn<EgresoDetalle, LocalDate> colFechaEgreso;
@@ -727,54 +722,6 @@ public class IngresosMensualesController implements Initializable {
         if (!generado) {
             mostrarAlerta("Sin datos", "No se encontraron movimientos para el periodo seleccionado.");
         }
-    }
-
-    @FXML
-    private void handleExportarExcel(ActionEvent event) {
-        exportarReporteCsv();
-    }
-
-    private void exportarReporteCsv() {
-        String extension = ".csv";
-        String prefijo = "reporte_ingresos_excel";
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-        String nombreArchivo = prefijo + "_" + reporteActual.name().toLowerCase() + "_" + timestamp + extension;
-        Path destino = Paths.get(nombreArchivo);
-
-        try {
-            Files.writeString(destino, construirContenidoReporteCsv());
-            mostrarAlerta("Exportación exitosa", "Reporte exportado en: " + destino.toAbsolutePath());
-        } catch (IOException e) {
-            mostrarAlerta("Error", "No se pudo exportar el reporte");
-            e.printStackTrace();
-        }
-    }
-
-    private String construirContenidoReporteCsv() {
-        String separador = ";";
-        StringBuilder builder = new StringBuilder();
-        builder.append("Tipo de reporte: ").append(reporteActual).append('\n');
-        if (periodoInicio != null && periodoFin != null) {
-            builder.append("Periodo: ")
-                    .append(periodoInicio.format(fechaLarga))
-                    .append(" - ")
-                    .append(periodoFin.format(fechaLarga))
-                    .append('\n');
-        }
-        builder.append(ultimoMetric1Title).append(':').append(separador).append(formatearMoneda(ultimoTotal)).append('\n');
-        builder.append(ultimoMetric2Title).append(':').append(separador).append(formatearMoneda(ultimoPromedio)).append('\n');
-        if (ultimoMetric3Title != null && ultimoMetric3Value != null && !ultimoMetric3Value.isBlank()) {
-            builder.append(ultimoMetric3Title).append(':').append(separador).append(ultimoMetric3Value).append('\n');
-        }
-        builder.append('\n');
-        builder.append("Fecha").append(separador).append("Detalle").append(separador)
-                .append("Membresía").append(separador).append("Monto").append('\n');
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        detallesPagos.forEach(pago -> builder.append(pago.getFecha().format(formatter)).append(separador)
-                .append(pago.getCliente()).append(separador)
-                .append(pago.getMembresia()).append(separador)
-                .append(formatearMoneda(pago.getMonto())).append('\n'));
-        return builder.toString();
     }
 
     @FXML

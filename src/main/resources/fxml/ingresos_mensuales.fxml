@@ -41,8 +41,6 @@
                 <Button fx:id="btnExportarPDF" text="Exportar a PDF" onAction="#handleExportarPDF"
                         style="-fx-background-color: linear-gradient(to right, #4A6CF7, #2E8BFF); -fx-text-fill: white;
                                -fx-font-weight: bold; -fx-padding: 8 15; -fx-background-radius: 25; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
-                <Button fx:id="btnExportarExcel" text="Exportar a Excel" onAction="#handleExportarExcel"
-                        style="-fx-background-color: linear-gradient(to right, #1abc9c, #16a085); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 15; -fx-background-radius: 25; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
                 <Button fx:id="btnRegistrarEgreso" text="Registrar Egreso"
                         style="-fx-background-color: linear-gradient(to right, #e67e22, #e74c3c); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 15; -fx-background-radius: 25;"
                         GridPane.columnIndex="3" GridPane.rowIndex="0"/>
