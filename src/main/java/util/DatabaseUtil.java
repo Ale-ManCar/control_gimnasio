@@ -361,7 +361,7 @@ public class DatabaseUtil {
     }
 
     private static void actualizarMantenimientosVencidos(Connection conn) throws SQLException {
-        String selectSql = "SELECT id, fecha_ultimo_mantenimiento, frecuencia_mantenimiento " +
+        String selectSql = "SELECT id, nombre, estado, fecha_ultimo_mantenimiento, frecuencia_mantenimiento " +
                 "FROM equipos " +
                 "WHERE TRIM(COALESCE(frecuencia_mantenimiento, '')) <> '' " +
                 "AND CAST(frecuencia_mantenimiento AS INTEGER) > 0 " +
@@ -369,12 +369,16 @@ public class DatabaseUtil {
 
         List<Integer> pendientes = new ArrayList<>();
         List<LocalDate> nuevasFechas = new ArrayList<>();
+        List<String> nombresEquipos = new ArrayList<>();
+        List<String> estadosPrevios = new ArrayList<>();
 
         try (PreparedStatement selectStmt = conn.prepareStatement(selectSql);
              ResultSet rs = selectStmt.executeQuery()) {
             LocalDate hoy = LocalDate.now();
             while (rs.next()) {
                 int id = rs.getInt("id");
+                String nombre = rs.getString("nombre");
+                String estadoActual = rs.getString("estado");
                 LocalDate fechaUltimo = parseFecha(rs.getString("fecha_ultimo_mantenimiento"));
                 int frecuencia = parseEnteroSeguro(rs.getString("frecuencia_mantenimiento"));
                 if (fechaUltimo == null || frecuencia <= 0) {
@@ -395,19 +399,53 @@ public class DatabaseUtil {
                 if (!nuevaFecha.isEqual(fechaUltimo)) {
                     pendientes.add(id);
                     nuevasFechas.add(nuevaFecha);
+                    nombresEquipos.add(nombre);
+                    estadosPrevios.add(estadoActual);
                 }
             }
         }
 
         if (!pendientes.isEmpty()) {
-            String updateSql = "UPDATE equipos SET fecha_ultimo_mantenimiento = ? WHERE id = ?";
+            String updateSql = "UPDATE equipos SET fecha_ultimo_mantenimiento = ?, frecuencia_mantenimiento = NULL, estado = ? WHERE id = ?";
             try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
                 for (int i = 0; i < pendientes.size(); i++) {
                     updateStmt.setString(1, nuevasFechas.get(i).toString());
-                    updateStmt.setInt(2, pendientes.get(i));
+                    updateStmt.setString(2, "MANTENIMIENTO");
+                    updateStmt.setInt(3, pendientes.get(i));
                     updateStmt.addBatch();
                 }
                 updateStmt.executeBatch();
+            }
+
+            String insertAuditoriaSql = "INSERT INTO auditoria (usuario_id, accion, detalle, timestamp) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement auditoriaStmt = conn.prepareStatement(insertAuditoriaSql)) {
+                boolean registrar = false;
+                LocalDateTime ahora = LocalDateTime.now();
+                for (int i = 0; i < pendientes.size(); i++) {
+                    String estadoAnterior = estadosPrevios.get(i);
+                    if (estadoAnterior != null && estadoAnterior.equalsIgnoreCase("MANTENIMIENTO")) {
+                        continue;
+                    }
+                    String nombreEquipo = nombresEquipos.get(i);
+                    String identificador = (nombreEquipo != null && !nombreEquipo.isBlank())
+                            ? nombreEquipo.trim()
+                            : "ID " + pendientes.get(i);
+                    String estadoAnteriorDesc = (estadoAnterior == null || estadoAnterior.isBlank())
+                            ? "DESCONOCIDO"
+                            : estadoAnterior;
+                    String detalle = "Equipo " + identificador +
+                            " marcado automáticamente como MANTENIMIENTO por mantenimiento vencido (estado anterior: " +
+                            estadoAnteriorDesc + ", nueva fecha registrada: " + nuevasFechas.get(i) + ")";
+                    auditoriaStmt.setInt(1, 0);
+                    auditoriaStmt.setString(2, "EQUIPO_MANTENIMIENTO_AUTOMATICO");
+                    auditoriaStmt.setString(3, detalle);
+                    auditoriaStmt.setString(4, formatDateTime(ahora));
+                    auditoriaStmt.addBatch();
+                    registrar = true;
+                }
+                if (registrar) {
+                    auditoriaStmt.executeBatch();
+                }
             }
         }
     }
