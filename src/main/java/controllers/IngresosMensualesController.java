@@ -42,8 +42,11 @@ import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.time.temporal.TemporalAdjusters;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -452,7 +455,8 @@ public class IngresosMensualesController implements Initializable {
         actualizarTablaPagos(obtenerPagos(fecha, fecha), Comparator.comparing(PagoDetalle::getFecha).reversed());
         actualizarEgresos(fecha, fecha);
 
-        double total = calcularTotalIngresos();
+        double ingresos = calcularTotalIngresos();
+        double total = calcularResultadoNeto(ingresos);
         actualizarMetricas("Total del día", total, "Promedio diario", total, null, null);
     }
 
@@ -480,7 +484,8 @@ public class IngresosMensualesController implements Initializable {
         actualizarTablaPagos(obtenerPagos(inicioSemana, finSemana), Comparator.comparing(PagoDetalle::getFecha).reversed());
         actualizarEgresos(inicioSemana, finSemana);
 
-        double total = calcularTotalIngresos();
+        double ingresos = calcularTotalIngresos();
+        double total = calcularResultadoNeto(ingresos);
         double promedio = total / 7.0;
         actualizarMetricas("Total de la semana", total, "Promedio semanal", promedio, null, null);
     }
@@ -504,7 +509,8 @@ public class IngresosMensualesController implements Initializable {
         actualizarTablaPagos(obtenerPagos(inicio, fin), Comparator.comparing(PagoDetalle::getFecha).reversed());
         actualizarEgresos(inicio, fin);
 
-        double total = calcularTotalIngresos();
+        double ingresos = calcularTotalIngresos();
+        double total = calcularResultadoNeto(ingresos);
         double promedio = total / inicio.lengthOfMonth();
         actualizarMetricas("Total mensual", total, "Promedio mensual", promedio, null, null);
     }
@@ -527,9 +533,10 @@ public class IngresosMensualesController implements Initializable {
         actualizarTablaPagos(pagosAgrupados, Comparator.comparing(PagoDetalle::getFecha).reversed());
         actualizarEgresos(inicio, fin);
 
-        double total = pagosAnuales.stream().mapToDouble(PagoDetalle::getMonto).sum();
+        double totalIngresos = pagosAnuales.stream().mapToDouble(PagoDetalle::getMonto).sum();
+        double total = calcularResultadoNeto(totalIngresos);
         double promedio = total / 12.0;
-        String mejorMes = determinarMejorMes(año);
+        String mejorMes = determinarMejorMes(año, pagosAnuales, new ArrayList<>(detallesEgresos));
         actualizarMetricas("Total anual", total, "Promedio mensual", promedio, "Mejor mes", mejorMes);
     }
 
@@ -604,6 +611,14 @@ public class IngresosMensualesController implements Initializable {
         return detallesPagos.stream().mapToDouble(PagoDetalle::getMonto).sum();
     }
 
+    private double calcularTotalEgresos() {
+        return detallesEgresos.stream().mapToDouble(EgresoDetalle::getMonto).sum();
+    }
+
+    private double calcularResultadoNeto(double totalIngresos) {
+        return totalIngresos - calcularTotalEgresos();
+    }
+
     private void actualizarMetricas(String titulo1, double valor1,
                                     String titulo2, double valor2,
                                     String titulo3, String valor3) {
@@ -649,15 +664,30 @@ public class IngresosMensualesController implements Initializable {
         return resultado;
     }
 
-    private String determinarMejorMes(int año) {
+    private String determinarMejorMes(int año, List<PagoDetalle> pagos, List<EgresoDetalle> egresos) {
         try {
-            List<IngresoData> datos = DatabaseUtil.getIngresosPorAnio(año);
-            return datos.stream()
-                    .max(Comparator.comparingDouble(IngresoData::getTotal))
-                    .map(data -> formatearMesDesdeEtiqueta(data.getEtiqueta())
-                            + " (" + formatearMoneda(data.getTotal()) + ")")
+            Map<Month, Double> ingresosPorMes = pagos.stream()
+                    .collect(Collectors.groupingBy(pago -> pago.getFecha().getMonth(),
+                            () -> new EnumMap<>(Month.class),
+                            Collectors.summingDouble(PagoDetalle::getMonto)));
+
+            Map<Month, Double> egresosPorMes = egresos.stream()
+                    .collect(Collectors.groupingBy(egreso -> egreso.getFecha().getMonth(),
+                            () -> new EnumMap<>(Month.class),
+                            Collectors.summingDouble(EgresoDetalle::getMonto)));
+
+            EnumSet<Month> meses = EnumSet.noneOf(Month.class);
+            meses.addAll(ingresosPorMes.keySet());
+            meses.addAll(egresosPorMes.keySet());
+
+            return meses.stream()
+                    .map(mes -> new AbstractMap.SimpleEntry<>(mes,
+                            ingresosPorMes.getOrDefault(mes, 0.0)
+                                    - egresosPorMes.getOrDefault(mes, 0.0)))
+                    .max(Map.Entry.comparingByValue())
+                    .map(entry -> formatearMes(entry.getKey()) + " (" + formatearMoneda(entry.getValue()) + ")")
                     .orElse("N/A");
-        } catch (SQLException e) {
+        } catch (Exception e) {
             mostrarAlerta("Error", "No se pudieron calcular las métricas");
             e.printStackTrace();
             return "N/A";
