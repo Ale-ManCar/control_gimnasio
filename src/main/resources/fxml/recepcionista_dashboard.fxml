@@ -21,7 +21,7 @@
         <VBox alignment="CENTER" style="-fx-background-color: rgba(0,0,0,0.3); -fx-background-radius: 0 0 15 15; -fx-padding: 15;">
             <Label text="PANEL DE CONTROL"
                    style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #FFD700; -fx-padding: 0 0 5 0;"/>
-            <Label text="Dashboard"
+            <Label fx:id="lblRecepcionista" text="Dashboard"
                    style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: white; -fx-padding: 0 0 15 0;"/>
         </VBox>
     </top>

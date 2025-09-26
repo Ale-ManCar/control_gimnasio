@@ -14,6 +14,7 @@ import models.Role;
 import util.BackupUtil;
 import util.DashboardService;
 import util.SessionManager;
+import models.User;
 import util.UserService;
 
 import java.io.IOException;
@@ -31,6 +32,7 @@ public class AdminDashboardController implements Initializable {
     @FXML private AnchorPane cardIngresos;
     @FXML private AnchorPane cardCoaches;
     @FXML private Label lblMensaje;
+    @FXML private Label lblBienvenida;
 
     private MetricCardController ctrlClientesActivos;
     private MetricCardController ctrlIngresos;
@@ -42,11 +44,20 @@ public class AdminDashboardController implements Initializable {
             lblMensaje.setText("Acceso denegado");
             return;
         }
+
+        actualizarMensajeBienvenida();
         try {
             inicializarTarjetas();
             cargarDatos();
         } catch (IOException e) {
             lblMensaje.setText("Error al cargar tarjetas");
+        }
+    }
+
+    private void actualizarMensajeBienvenida() {
+        User currentUser = SessionManager.getCurrentUser();
+        if (currentUser != null && lblBienvenida != null) {
+            lblBienvenida.setText("¡Bienvenido, " + currentUser.getUsername() + "!");
         }
     }
 

@@ -28,6 +28,7 @@ import util.ReporteUtil;
 import models.Turno;
 import util.SessionManager;
 import models.Role;
+import models.User;
 
 import java.io.IOException;
 import java.net.URL;
@@ -49,6 +50,7 @@ public class RecepcionistaDashboardController implements Initializable {
     @FXML private AnchorPane cardVencimientos;
     @FXML private TableView<Cliente> tablaClientesProximosAVencer;
     @FXML private Label lblMensaje;
+    @FXML private Label lblRecepcionista;
 //  @FXML private Button btnVerTodos;
 
     @FXML private TableColumn<Cliente, String> colCliente;
@@ -71,6 +73,8 @@ public class RecepcionistaDashboardController implements Initializable {
             lblMensaje.setText("Acceso denegado");
             return;
         }
+
+        actualizarTituloRecepcionista();
         try {
 
             Platform.runLater(() -> {
@@ -203,6 +207,13 @@ public class RecepcionistaDashboardController implements Initializable {
 
         EventBus.registerListener(this::cargarDatosTarjetas);
         iniciarTurno();
+    }
+
+    private void actualizarTituloRecepcionista() {
+        User currentUser = SessionManager.getCurrentUser();
+        if (currentUser != null && lblRecepcionista != null) {
+            lblRecepcionista.setText(currentUser.getUsername());
+        }
     }
 
     private void configurarTablaSinScroll() {
