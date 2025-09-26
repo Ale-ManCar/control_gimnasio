@@ -12,7 +12,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import models.Role;
 import util.BackupUtil;
-import util.DatabaseUtil;
 import util.DashboardService;
 import util.SessionManager;
 import util.UserService;
@@ -63,7 +62,7 @@ public class AdminDashboardController implements Initializable {
             DashboardService.AdminMetrics metrics = DashboardService.obtenerMetricasAdmin();
             ctrlClientesActivos.setValor(String.valueOf(metrics.getClientesActivos()));
             ctrlIngresos.setValor(String.format("$ %.2f", metrics.getIngresos()));
-            ctrlCoaches.setValor(String.valueOf(DatabaseUtil.contarCoaches()));
+            ctrlCoaches.setValor(String.valueOf(metrics.getCoaches()));
         } catch (SQLException e) {
             lblMensaje.setText("No se pudieron cargar las estadísticas");
         }

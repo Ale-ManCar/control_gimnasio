@@ -2223,6 +2223,15 @@ public class DatabaseUtil {
         }
     }
 
+    public static int contarClientesActivos() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM clientes WHERE activo = 1";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : 0;
+        }
+    }
+
     public static int contarCoaches() throws SQLException {
         String sql = "SELECT COUNT(*) FROM coaches";
         try (Connection conn = getConnection();
