@@ -85,17 +85,28 @@ public class ProveedorDialogController {
                     } else if (newTab == tabInsumos) {
                         mostrarCatalogoModal("Insumos", insumosDisponibles, "INSUMO");
                     }
-                    Platform.runLater(() -> tabPaneCatalogos.getSelectionModel().clearSelection());
+                    Platform.runLater(() -> seleccionarTabSinEvento(newTab));
                 }
             });
             Platform.runLater(() -> {
-                tabPaneCatalogos.getSelectionModel().clearSelection();
+                Tab tabPorDefecto = tabEquipos != null ? tabEquipos
+                        : (tabPaneCatalogos.getTabs().isEmpty() ? null : tabPaneCatalogos.getTabs().get(0));
+                seleccionarTabSinEvento(tabPorDefecto);
                 inicializandoTabs = false;
             });
         } else {
             inicializandoTabs = false;
         }
         cargarCatalogos();
+    }
+
+    private void seleccionarTabSinEvento(Tab tab) {
+        if (tabPaneCatalogos == null || tab == null) {
+            return;
+        }
+        inicializandoTabs = true;
+        tabPaneCatalogos.getSelectionModel().select(tab);
+        inicializandoTabs = false;
     }
 
     private void configurarTabla(TableView<ProveedorProducto> tabla,
