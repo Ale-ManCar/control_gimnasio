@@ -15,6 +15,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 public class ProveedorDialogController {
@@ -61,6 +63,7 @@ public class ProveedorDialogController {
 
     @FXML
     public void initialize() {
+        configurarCamposDeTexto();
         inicializandoTabs = true;
         if (tabPaneCatalogos != null) {
             tabPaneCatalogos.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
@@ -86,6 +89,41 @@ public class ProveedorDialogController {
             inicializandoTabs = false;
         }
         cargarCatalogos();
+    }
+
+    private void configurarCamposDeTexto() {
+        configurarCampoMayusculas(txtNombre);
+        configurarCampoMayusculas(txtContacto);
+        if (txtTelefono != null) {
+            UnaryOperator<TextFormatter.Change> filtro = change -> {
+                if (change == null) {
+                    return null;
+                }
+                String nuevoTexto = change.getControlNewText();
+                if (nuevoTexto == null) {
+                    return change;
+                }
+                return nuevoTexto.matches("\\d{0,10}") ? change : null;
+            };
+            txtTelefono.setTextFormatter(new TextFormatter<>(filtro));
+        }
+    }
+
+    private void configurarCampoMayusculas(TextField campo) {
+        if (campo == null) {
+            return;
+        }
+        campo.textProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue == null) {
+                return;
+            }
+            String mayusculas = newValue.toUpperCase(Locale.ROOT);
+            if (!mayusculas.equals(newValue)) {
+                int posicion = campo.getCaretPosition();
+                campo.setText(mayusculas);
+                campo.positionCaret(Math.min(posicion, mayusculas.length()));
+            }
+        });
     }
 
     private void seleccionarTabSinEvento(Tab tab) {
@@ -137,9 +175,13 @@ public class ProveedorDialogController {
     }
 
     private void cargarProveedorEnFormulario(Proveedor proveedor) {
-        txtNombre.setText(Optional.ofNullable(proveedor.getNombre()).orElse(""));
-        txtContacto.setText(Optional.ofNullable(proveedor.getContacto()).orElse(""));
-        txtTelefono.setText(Optional.ofNullable(proveedor.getTelefono()).orElse(""));
+        txtNombre.setText(Optional.ofNullable(proveedor.getNombre())
+                .map(valor -> valor.toUpperCase(Locale.ROOT))
+                .orElse(""));
+        txtContacto.setText(Optional.ofNullable(proveedor.getContacto())
+                .map(valor -> valor.toUpperCase(Locale.ROOT))
+                .orElse(""));
+        txtTelefono.setText(sanitizarTelefono(proveedor.getTelefono()));
 
         try {
             ObservableList<ProveedorProducto> productos = DatabaseUtil.obtenerProductosProveedor(proveedor.getId());
@@ -181,9 +223,13 @@ public class ProveedorDialogController {
             return;
         }
         Proveedor proveedorAGuardar = proveedorEdicion != null ? proveedorEdicion : new Proveedor();
-        proveedorAGuardar.setNombre(txtNombre.getText());
-        proveedorAGuardar.setContacto(txtContacto.getText());
-        proveedorAGuardar.setTelefono(txtTelefono.getText());
+        proveedorAGuardar.setNombre(Optional.ofNullable(txtNombre.getText())
+                .map(valor -> valor.trim().toUpperCase(Locale.ROOT))
+                .orElse(""));
+        proveedorAGuardar.setContacto(Optional.ofNullable(txtContacto.getText())
+                .map(valor -> valor.trim().toUpperCase(Locale.ROOT))
+                .orElse(""));
+        proveedorAGuardar.setTelefono(sanitizarTelefono(txtTelefono.getText()));
 
         List<ProveedorProducto> productosSeleccionados = obtenerProductosSeleccionados();
         try {
@@ -356,6 +402,17 @@ public class ProveedorDialogController {
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
         alert.showAndWait();
+    }
+
+    private String sanitizarTelefono(String telefono) {
+        if (telefono == null) {
+            return "";
+        }
+        String soloDigitos = telefono.replaceAll("\\D", "");
+        if (soloDigitos.length() > 10) {
+            soloDigitos = soloDigitos.substring(0, 10);
+        }
+        return soloDigitos;
     }
 
     private static class PrecioTableCell extends TableCell<ProveedorProducto, Double> {
