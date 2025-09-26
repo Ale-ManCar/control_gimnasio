@@ -60,12 +60,12 @@
                     <Label fx:id="lblContactoDetalle" text="-" styleClass="detail-contact"/>
                     <Label fx:id="lblTelefonoDetalle" text="-" styleClass="detail-contact"/>
                     <Separator styleClass="detail-separator"/>
-                    <TitledPane text="Equipos suministrados" expanded="true" styleClass="detail-pane">
+                    <TitledPane text="Equipos suministrados" expanded="false" styleClass="detail-pane">
                         <content>
                             <ListView fx:id="listaEquipos" styleClass="detail-list"/>
                         </content>
                     </TitledPane>
-                    <TitledPane text="Insumos suministrados" expanded="true" styleClass="detail-pane">
+                    <TitledPane text="Insumos suministrados" expanded="false" styleClass="detail-pane">
                         <content>
                             <ListView fx:id="listaInsumos" styleClass="detail-list"/>
                         </content>
