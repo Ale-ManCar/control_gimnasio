@@ -21,16 +21,21 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.FileChooser;
 import javafx.util.Callback;
@@ -489,48 +494,112 @@ public class IngresosMensualesController implements Initializable {
         dialog.setTitle("Detalle del Egreso");
         dialog.initOwner(tablaEgresos.getScene().getWindow());
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.getDialogPane().setPrefWidth(440);
 
-        VBox contenido = new VBox(12);
-        contenido.setPadding(new Insets(20));
+        VBox wrapper = new VBox();
+        wrapper.setPadding(new Insets(20));
+        wrapper.setAlignment(Pos.TOP_CENTER);
+        wrapper.setStyle("-fx-background-color: linear-gradient(to bottom right, #f5f8ff, #eef2ff);");
 
-        Label lblMonto = new Label("Monto: " + formatearMoneda(egreso.getMonto()));
-        lblMonto.setStyle("-fx-font-weight: bold;");
+        VBox tarjeta = new VBox(20);
+        tarjeta.setPadding(new Insets(24));
+        tarjeta.setStyle("-fx-background-color: white; -fx-background-radius: 18; -fx-border-radius: 18; -fx-border-color: rgba(15,23,42,0.08); -fx-border-width: 1;");
 
-        Label lblProveedor = new Label("Proveedor: " + valorPorDefecto(egreso.getProveedor(), "No especificado"));
-        Label lblFecha = new Label("Fecha: " + egreso.getFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-        Label lblCategoria = new Label("Categoría: " + valorPorDefecto(egreso.getCategoria(), "No especificada"));
+        DropShadow sombra = new DropShadow();
+        sombra.setRadius(12);
+        sombra.setOffsetY(4);
+        sombra.setColor(Color.rgb(15, 23, 42, 0.25));
+        tarjeta.setEffect(sombra);
 
-        Label lblDescripcionTitulo = new Label("Descripción:");
-        lblDescripcionTitulo.setStyle("-fx-font-weight: bold;");
+        Label encabezado = new Label("Resumen del egreso");
+        encabezado.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1f2937;");
+
+        Label lblMontoTitulo = new Label("Monto");
+        lblMontoTitulo.setStyle("-fx-text-fill: #475569; -fx-font-size: 13px; -fx-font-weight: bold;");
+
+        Label lblMonto = new Label(formatearMoneda(egreso.getMonto()));
+        lblMonto.setStyle("-fx-font-size: 30px; -fx-font-weight: bold; -fx-text-fill: #2563eb;");
+
+        VBox seccionMonto = new VBox(6, lblMontoTitulo, lblMonto);
+
+        GridPane detallesGrid = new GridPane();
+        detallesGrid.setHgap(18);
+        detallesGrid.setVgap(12);
+
+        Label lblProveedorTitulo = new Label("Proveedor");
+        lblProveedorTitulo.setStyle("-fx-text-fill: #475569; -fx-font-size: 12px; -fx-font-weight: bold;");
+        Label lblProveedor = new Label(valorPorDefecto(egreso.getProveedor(), "No especificado"));
+        lblProveedor.setStyle("-fx-text-fill: #1f2937; -fx-font-size: 14px;");
+
+        Label lblFechaTitulo = new Label("Fecha");
+        lblFechaTitulo.setStyle("-fx-text-fill: #475569; -fx-font-size: 12px; -fx-font-weight: bold;");
+        Label lblFecha = new Label(egreso.getFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        lblFecha.setStyle("-fx-text-fill: #1f2937; -fx-font-size: 14px;");
+
+        Label lblCategoriaTitulo = new Label("Categoría");
+        lblCategoriaTitulo.setStyle("-fx-text-fill: #475569; -fx-font-size: 12px; -fx-font-weight: bold;");
+        Label lblCategoria = new Label(valorPorDefecto(egreso.getCategoria(), "No especificada"));
+        lblCategoria.setStyle("-fx-text-fill: #1f2937; -fx-font-size: 14px;");
+
+        detallesGrid.add(lblProveedorTitulo, 0, 0);
+        detallesGrid.add(lblProveedor, 1, 0);
+        detallesGrid.add(lblFechaTitulo, 0, 1);
+        detallesGrid.add(lblFecha, 1, 1);
+        detallesGrid.add(lblCategoriaTitulo, 0, 2);
+        detallesGrid.add(lblCategoria, 1, 2);
+
+        Separator separador = new Separator();
+
+        Label lblDescripcionTitulo = new Label("Descripción");
+        lblDescripcionTitulo.setStyle("-fx-text-fill: #475569; -fx-font-size: 12px; -fx-font-weight: bold;");
+
         Label lblDescripcion = new Label(valorPorDefecto(egreso.getDescripcion(), "Sin descripción"));
         lblDescripcion.setWrapText(true);
+        lblDescripcion.setStyle("-fx-text-fill: #1f2937; -fx-font-size: 14px;");
 
-        contenido.getChildren().addAll(lblMonto, lblProveedor, lblFecha, lblCategoria, lblDescripcionTitulo, lblDescripcion);
+        VBox seccionDescripcion = new VBox(6, lblDescripcionTitulo, lblDescripcion);
+
+        VBox seccionFactura = new VBox(8);
+        seccionFactura.setAlignment(Pos.CENTER_LEFT);
 
         if (egreso.getPdfPath() != null && !egreso.getPdfPath().isBlank()) {
             File pdf = new File(egreso.getPdfPath());
-            Label lblFactura = new Label("Factura PDF:");
-            lblFactura.setStyle("-fx-font-weight: bold;");
+            Label lblFactura = new Label("Factura PDF");
+            lblFactura.setStyle("-fx-text-fill: #475569; -fx-font-size: 12px; -fx-font-weight: bold;");
             if (pdf.exists()) {
-                Hyperlink enlaceVer = new Hyperlink("Ver factura");
+                Hyperlink enlaceVer = new Hyperlink("📄 Ver factura");
                 enlaceVer.setOnAction(e -> abrirPdf(pdf));
+                enlaceVer.setStyle("-fx-font-size: 14px; -fx-text-fill: #2563eb;");
 
-                Hyperlink enlaceDescargar = new Hyperlink("Descargar factura");
+                Hyperlink enlaceDescargar = new Hyperlink("⬇ Descargar");
                 enlaceDescargar.setOnAction(e -> descargarPdf(pdf));
+                enlaceDescargar.setStyle("-fx-font-size: 14px; -fx-text-fill: #2563eb;");
 
-                HBox accionesPdf = new HBox(15, enlaceVer, enlaceDescargar);
+                HBox accionesPdf = new HBox(18, enlaceVer, enlaceDescargar);
                 accionesPdf.setAlignment(Pos.CENTER_LEFT);
-                contenido.getChildren().addAll(lblFactura, accionesPdf);
+                seccionFactura.getChildren().addAll(lblFactura, accionesPdf);
             } else {
                 Label lblNoDisponible = new Label("Factura PDF: Archivo no encontrado.");
-                contenido.getChildren().add(lblNoDisponible);
+                lblNoDisponible.setStyle("-fx-text-fill: #dc2626; -fx-font-size: 13px;");
+                seccionFactura.getChildren().add(lblNoDisponible);
             }
         } else {
             Label lblSinFactura = new Label("Factura PDF: No se adjuntó");
-            contenido.getChildren().add(lblSinFactura);
+            lblSinFactura.setStyle("-fx-text-fill: #475569; -fx-font-size: 13px;");
+            seccionFactura.getChildren().add(lblSinFactura);
         }
 
-        dialog.getDialogPane().setContent(contenido);
+        tarjeta.getChildren().addAll(encabezado, seccionMonto, detallesGrid, separador, seccionDescripcion);
+        if (!seccionFactura.getChildren().isEmpty()) {
+            tarjeta.getChildren().add(seccionFactura);
+        }
+
+        wrapper.getChildren().add(tarjeta);
+
+        StackPane contenedor = new StackPane(wrapper);
+        contenedor.setPadding(new Insets(10));
+
+        dialog.getDialogPane().setContent(contenedor);
         dialog.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         dialog.showAndWait();
     }
