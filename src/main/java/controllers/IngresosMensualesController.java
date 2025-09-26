@@ -30,6 +30,7 @@ import models.IngresoData;
 import models.PagoDetalle;
 import util.DatabaseUtil;
 import util.EventBus;
+import util.ReporteUtil;
 
 import java.io.IOException;
 import java.net.URL;
@@ -692,23 +693,56 @@ public class IngresosMensualesController implements Initializable {
 
     @FXML
     private void handleExportarPDF(ActionEvent event) {
-        exportarReporte(true);
+        if (periodoInicio == null || periodoFin == null) {
+            mostrarAlerta("Periodo no válido", "Selecciona un rango de fechas antes de exportar.");
+            return;
+        }
+
+        String titulo;
+        String rango;
+        switch (reporteActual) {
+            case DIARIO -> {
+                titulo = "Reporte de ingresos diario";
+                rango = periodoInicio.format(fechaLarga);
+            }
+            case SEMANAL -> {
+                titulo = "Reporte de ingresos semanal";
+                rango = periodoInicio.format(fechaLarga) + " al " + periodoFin.format(fechaLarga);
+            }
+            case MENSUAL -> {
+                titulo = "Reporte de ingresos mensual";
+                rango = formatearMes(periodoInicio.getMonth()) + " " + periodoInicio.getYear();
+            }
+            case ANUAL -> {
+                titulo = "Reporte de ingresos anual";
+                rango = String.valueOf(periodoInicio.getYear());
+            }
+            default -> {
+                titulo = "Reporte de ingresos";
+                rango = periodoInicio.format(fechaLarga) + " - " + periodoFin.format(fechaLarga);
+            }
+        }
+
+        boolean generado = ReporteUtil.generarReporteIngresos(periodoInicio, periodoFin, titulo, rango);
+        if (!generado) {
+            mostrarAlerta("Sin datos", "No se encontraron movimientos para el periodo seleccionado.");
+        }
     }
 
     @FXML
     private void handleExportarExcel(ActionEvent event) {
-        exportarReporte(false);
+        exportarReporteCsv();
     }
 
-    private void exportarReporte(boolean pdf) {
-        String extension = pdf ? ".pdf" : ".csv";
-        String prefijo = pdf ? "reporte_ingresos" : "reporte_ingresos_excel";
+    private void exportarReporteCsv() {
+        String extension = ".csv";
+        String prefijo = "reporte_ingresos_excel";
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
         String nombreArchivo = prefijo + "_" + reporteActual.name().toLowerCase() + "_" + timestamp + extension;
         Path destino = Paths.get(nombreArchivo);
 
         try {
-            Files.writeString(destino, construirContenidoReporte(pdf));
+            Files.writeString(destino, construirContenidoReporteCsv());
             mostrarAlerta("Exportación exitosa", "Reporte exportado en: " + destino.toAbsolutePath());
         } catch (IOException e) {
             mostrarAlerta("Error", "No se pudo exportar el reporte");
@@ -716,10 +750,10 @@ public class IngresosMensualesController implements Initializable {
         }
     }
 
-    private String construirContenidoReporte(boolean pdf) {
-        String separador = pdf ? "\n" : ";";
+    private String construirContenidoReporteCsv() {
+        String separador = ";";
         StringBuilder builder = new StringBuilder();
-        builder.append("Tipo de reporte: ").append(reporteActual.toString()).append('\n');
+        builder.append("Tipo de reporte: ").append(reporteActual).append('\n');
         if (periodoInicio != null && periodoFin != null) {
             builder.append("Periodo: ")
                     .append(periodoInicio.format(fechaLarga))
@@ -727,10 +761,10 @@ public class IngresosMensualesController implements Initializable {
                     .append(periodoFin.format(fechaLarga))
                     .append('\n');
         }
-        builder.append(ultimoMetric1Title).append(':').append(pdf ? ' ' : separador).append(formatearMoneda(ultimoTotal)).append('\n');
-        builder.append(ultimoMetric2Title).append(':').append(pdf ? ' ' : separador).append(formatearMoneda(ultimoPromedio)).append('\n');
+        builder.append(ultimoMetric1Title).append(':').append(separador).append(formatearMoneda(ultimoTotal)).append('\n');
+        builder.append(ultimoMetric2Title).append(':').append(separador).append(formatearMoneda(ultimoPromedio)).append('\n');
         if (ultimoMetric3Title != null && ultimoMetric3Value != null && !ultimoMetric3Value.isBlank()) {
-            builder.append(ultimoMetric3Title).append(':').append(pdf ? ' ' : separador).append(ultimoMetric3Value).append('\n');
+            builder.append(ultimoMetric3Title).append(':').append(separador).append(ultimoMetric3Value).append('\n');
         }
         builder.append('\n');
         builder.append("Fecha").append(separador).append("Detalle").append(separador)

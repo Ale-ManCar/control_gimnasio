@@ -24,7 +24,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -33,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.regex.Matcher;
@@ -41,63 +44,18 @@ import java.util.regex.Pattern;
 public class ReporteUtil {
     private static final DateTimeFormatter RESUMEN_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final DateTimeFormatter SQLITE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter FILE_NAME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+    private static final DateTimeFormatter FECHA_CORTA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final Locale LOCALE_ES = new Locale("es", "ES");
     private static final Pattern PAGO_ID_PATTERN = Pattern.compile("Pago\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
     public static void generarReporteFinanciero(int mes, int anio) {
-        try {
-            InputStream reporteStream = ReporteUtil.class.getResourceAsStream("/reports/reporte_financiero.jrxml");
-            if (reporteStream == null) {
-                System.err.println("❌ No se encontró el archivo reporte_financiero.jrxml");
-                return;
-            }
-
-            // Obtener datos para el mes y año específico
-            double totalMembresias = DatabaseUtil.obtenerTotalPagosParaMes(mes, anio);
-            double totalVentas = DatabaseUtil.obtenerTotalVentasParaMes(mes, anio);
-            double totalEgresos = DatabaseUtil.obtenerTotalEgresosParaMes(mes, anio);
-            double resultadoNeto = (totalMembresias + totalVentas) - totalEgresos;
-
-            // Obtener egresos del mes específico
-            List<Egreso> egresos = DatabaseUtil.getEgresosParaMes(mes, anio).stream()
-                    .map(e -> {
-                        Egreso eg = new Egreso();
-                        eg.setId(e.getId());
-                        eg.setDescripcion(e.getDescripcion());
-                        eg.setMonto(e.getMonto());
-                        eg.setFecha(e.getFecha());
-                        eg.setCategoria(e.getCategoria());
-                        return eg;
-                    })
-                    .collect(Collectors.toList());
-
-            boolean mostrarDetalle = !egresos.isEmpty();
-
-            Map<String, Object> parametros = new HashMap<>();
-            parametros.put("totalMembresias", totalMembresias);
-            parametros.put("totalVentas", totalVentas);
-            parametros.put("totalEgresos", totalEgresos);
-            parametros.put("resultadoNeto", resultadoNeto);
-            parametros.put("mesReporte", mes);
-            parametros.put("anioReporte", anio);
-            parametros.put("mostrarDetalle", mostrarDetalle);
-
-            JRDataSource dataSourceEgresos = mostrarDetalle
-                    ? new JRBeanCollectionDataSource(egresos)
-                    : new JREmptyDataSource(1);
-
-            JasperReport jasperReport = JasperCompileManager.compileReport(reporteStream);
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, dataSourceEgresos);
-
-            if (jasperPrint.getPages() != null && !jasperPrint.getPages().isEmpty()) {
-                JasperViewer.viewReport(jasperPrint, false);
-                String nombreArchivo = String.format("reporte_financiero_%02d_%d.pdf", mes, anio);
-                String pdfPath = System.getProperty("user.dir") + File.separator + nombreArchivo;
-                JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
-                System.out.println("✅ Reporte financiero generado en: " + pdfPath);
-            }
-
-        } catch (Exception e) {
-            System.err.println("❌ Error generando reporte financiero: " + e.getMessage());
-            e.printStackTrace();
+        LocalDate inicio = LocalDate.of(anio, mes, 1);
+        LocalDate fin = inicio.withDayOfMonth(inicio.lengthOfMonth());
+        String titulo = "Reporte financiero mensual";
+        String rango = Month.of(mes).getDisplayName(TextStyle.FULL, LOCALE_ES).toUpperCase(LOCALE_ES)
+                + " " + anio;
+        if (!generarReporteIngresos(inicio, fin, titulo, rango)) {
+            System.out.println("ℹ️ No hay datos disponibles para el periodo indicado.");
         }
     }
 
@@ -105,6 +63,62 @@ public class ReporteUtil {
     public static void generarReporteFinanciero() {
         LocalDate hoy = LocalDate.now();
         generarReporteFinanciero(hoy.getMonthValue(), hoy.getYear());
+    }
+
+    public static boolean generarReporteIngresos(LocalDate fechaInicio, LocalDate fechaFin,
+                                                 String titulo, String rango) {
+        try (InputStream reporteStream = ReporteUtil.class.getResourceAsStream("/reports/reporte_financiero.jrxml")) {
+            if (reporteStream == null) {
+                System.err.println("❌ No se encontró el archivo reporte_financiero.jrxml");
+                return false;
+            }
+
+            Map<String, Double> totales = DatabaseUtil.obtenerIngresosVsEgresos(fechaInicio, fechaFin, null, null);
+            double totalMembresias = totales.getOrDefault("membresias", 0.0);
+            double totalVentas = totales.getOrDefault("ventas", 0.0);
+            double totalEgresos = totales.getOrDefault("egresos", 0.0);
+            double resultadoNeto = (totalMembresias + totalVentas) - totalEgresos;
+
+            ObservableList<Egreso> egresos = DatabaseUtil.filtrarEgresos(fechaInicio, fechaFin, null);
+            List<Egreso> detalleEgresos = new ArrayList<>(egresos);
+
+            boolean hayDetalle = !detalleEgresos.isEmpty();
+            boolean hayDatos = hayDetalle || totalMembresias > 0 || totalVentas > 0 || totalEgresos > 0;
+            if (!hayDatos) {
+                return false;
+            }
+
+            Map<String, Object> parametros = new HashMap<>();
+            parametros.put("totalMembresias", totalMembresias);
+            parametros.put("totalVentas", totalVentas);
+            parametros.put("totalEgresos", totalEgresos);
+            parametros.put("resultadoNeto", resultadoNeto);
+            parametros.put("mostrarDetalle", hayDetalle);
+            parametros.put("tituloReporte", titulo);
+            parametros.put("rangoReporte", rango);
+
+            JRDataSource dataSource = hayDetalle
+                    ? new JRBeanCollectionDataSource(detalleEgresos)
+                    : new JREmptyDataSource(1);
+
+            JasperReport jasperReport = JasperCompileManager.compileReport(reporteStream);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, dataSource);
+
+            if (jasperPrint.getPages() != null && !jasperPrint.getPages().isEmpty()) {
+                JasperViewer.viewReport(jasperPrint, false);
+                String nombreArchivo = String.format("reporte_ingresos_%s.pdf",
+                        FILE_NAME_FORMATTER.format(LocalDateTime.now()));
+                Path destino = Path.of(System.getProperty("user.dir"), nombreArchivo);
+                JasperExportManager.exportReportToPdfFile(jasperPrint, destino.toString());
+                System.out.println("✅ Reporte de ingresos generado en: " + destino);
+            }
+
+            return true;
+        } catch (Exception e) {
+            System.err.println("❌ Error generando reporte de ingresos: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public static void generarReporteFinanciero(LocalDate fechaInicio, LocalDate fechaFin, Integer clienteId, String tipoMembresia) {
@@ -133,6 +147,10 @@ public class ReporteUtil {
             parametros.put("fechaInicio", fechaInicio.toString());
             parametros.put("fechaFin", fechaFin.toString());
             parametros.put("mostrarDetalle", mostrarDetalle);
+            parametros.put("tituloReporte", "Reporte financiero");
+            parametros.put("rangoReporte",
+                    fechaInicio.format(FECHA_CORTA_FORMATTER) +
+                            " - " + fechaFin.format(FECHA_CORTA_FORMATTER));
 
             JRDataSource dataSourceEgresos = mostrarDetalle
                     ? new JRBeanCollectionDataSource(egresos)
@@ -173,6 +191,14 @@ public class ReporteUtil {
             Map<String, Object> parametros = new HashMap<>();
             parametros.put("fechaInicio", fechaInicio != null ? fechaInicio.toString() : "");
             parametros.put("fechaFin", fechaFin != null ? fechaFin.toString() : "");
+            parametros.put("tituloReporte", "Reporte de pagos");
+            if (fechaInicio != null && fechaFin != null) {
+                parametros.put("rangoReporte", fechaInicio.format(FECHA_CORTA_FORMATTER) +
+                        " - " + fechaFin.format(FECHA_CORTA_FORMATTER));
+            } else if (fechaInicio != null || fechaFin != null) {
+                LocalDate inicioRango = fechaInicio != null ? fechaInicio : fechaFin;
+                parametros.put("rangoReporte", inicioRango.format(FECHA_CORTA_FORMATTER));
+            }
 
             JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(pagos);
             JasperReport jasperReport = JasperCompileManager.compileReport(reporteStream);
