@@ -29,16 +29,12 @@ import java.util.ResourceBundle;
 public class AdminDashboardController implements Initializable {
 
     @FXML private AnchorPane cardClientesActivos;
-    @FXML private AnchorPane cardMorosos;
     @FXML private AnchorPane cardIngresos;
-    @FXML private AnchorPane cardPorVencer;
     @FXML private AnchorPane cardCoaches;
     @FXML private Label lblMensaje;
 
     private MetricCardController ctrlClientesActivos;
-    private MetricCardController ctrlMorosos;
     private MetricCardController ctrlIngresos;
-    private MetricCardController ctrlPorVencer;
     private MetricCardController ctrlCoaches;
 
     @Override
@@ -57,9 +53,7 @@ public class AdminDashboardController implements Initializable {
 
     private void inicializarTarjetas() throws IOException {
         ctrlClientesActivos = DashboardService.cargarTarjeta(cardClientesActivos, "Clientes Activos");
-        ctrlMorosos = DashboardService.cargarTarjeta(cardMorosos, "Morosos");
         ctrlIngresos = DashboardService.cargarTarjeta(cardIngresos, "Ingresos");
-        ctrlPorVencer = DashboardService.cargarTarjeta(cardPorVencer, "Membresías por Vencer");
         ctrlCoaches = DashboardService.cargarTarjeta(cardCoaches, "Coaches");
         cardCoaches.setOnMouseClicked(e -> abrirCoaches());
     }
@@ -68,9 +62,7 @@ public class AdminDashboardController implements Initializable {
         try {
             DashboardService.AdminMetrics metrics = DashboardService.obtenerMetricasAdmin();
             ctrlClientesActivos.setValor(String.valueOf(metrics.getClientesActivos()));
-            ctrlMorosos.setValor(String.valueOf(metrics.getMorosos()));
             ctrlIngresos.setValor(String.format("$ %.2f", metrics.getIngresos()));
-            ctrlPorVencer.setValor(String.valueOf(metrics.getPorVencer()));
             ctrlCoaches.setValor(String.valueOf(DatabaseUtil.contarCoaches()));
         } catch (SQLException e) {
             lblMensaje.setText("No se pudieron cargar las estadísticas");
