@@ -19,6 +19,7 @@ import models.ResumenTipo;
 import util.AuditoriaFileUtil;
 import util.AuditoriaUtil;
 import java.io.InputStream;
+import java.io.IOException;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -108,7 +109,7 @@ public class ReporteUtil {
                 JasperViewer.viewReport(jasperPrint, false);
                 String nombreArchivo = String.format("reporte_ingresos_%s.pdf",
                         FILE_NAME_FORMATTER.format(LocalDateTime.now()));
-                Path destino = Path.of(System.getProperty("user.dir"), nombreArchivo);
+                Path destino = obtenerCarpetaDescargas().resolve(nombreArchivo);
                 JasperExportManager.exportReportToPdfFile(jasperPrint, destino.toString());
                 System.out.println("✅ Reporte de ingresos generado en: " + destino);
             }
@@ -118,6 +119,28 @@ public class ReporteUtil {
             System.err.println("❌ Error generando reporte de ingresos: " + e.getMessage());
             e.printStackTrace();
             return false;
+        }
+    }
+
+    private static Path obtenerCarpetaDescargas() {
+        String userHome = System.getProperty("user.home");
+        Path downloads = Path.of(userHome, "Downloads");
+        Path descargas = Path.of(userHome, "Descargas");
+
+        try {
+            if (Files.exists(downloads)) {
+                return downloads;
+            }
+
+            if (Files.exists(descargas)) {
+                return descargas;
+            }
+
+            Files.createDirectories(downloads);
+            return downloads;
+        } catch (IOException e) {
+            System.err.println("⚠️ No se pudo acceder o crear la carpeta de descargas, se utilizará el directorio actual.");
+            return Path.of(System.getProperty("user.dir"));
         }
     }
 
