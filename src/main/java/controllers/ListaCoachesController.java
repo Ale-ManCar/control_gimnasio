@@ -315,7 +315,7 @@ public class ListaCoachesController {
                 "-fx-background-color: linear-gradient(to right, #4CAF50, #2E7D32);" +
                         "-fx-text-fill: white;" +
                         "-fx-font-weight: bold;" +
-                        "-fx-padding: 8px 18px;" +
+                        "-fx-padding: 15px 20px;" +
                         "-fx-background-radius: 20px;" +
                         "-fx-border-radius: 20px;" +
                         "-fx-cursor: hand;"
@@ -325,7 +325,7 @@ public class ListaCoachesController {
                         "-fx-background-color: linear-gradient(to right, #66BB6A, #388E3C);" +
                                 "-fx-text-fill: white;" +
                                 "-fx-font-weight: bold;" +
-                                "-fx-padding: 8px 18px;" +
+                                "-fx-padding: 15px 20px;" +
                                 "-fx-background-radius: 20px;" +
                                 "-fx-border-radius: 20px;" +
                                 "-fx-cursor: hand;"
@@ -336,7 +336,7 @@ public class ListaCoachesController {
                         "-fx-background-color: linear-gradient(to right, #4CAF50, #2E7D32);" +
                                 "-fx-text-fill: white;" +
                                 "-fx-font-weight: bold;" +
-                                "-fx-padding: 8px 18px;" +
+                                "-fx-padding: 15px 20px;" +
                                 "-fx-background-radius: 20px;" +
                                 "-fx-border-radius: 20px;" +
                                 "-fx-cursor: hand;"
