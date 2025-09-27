@@ -16,6 +16,7 @@ public class ProveedorProducto {
     private Proveedor proveedor;
 
     private final StringProperty nombreProducto = new SimpleStringProperty("");
+    private final StringProperty peso = new SimpleStringProperty("");
     private final DoubleProperty precio = new SimpleDoubleProperty(0.0);
     private final BooleanProperty seleccionado = new SimpleBooleanProperty(false);
 
@@ -69,6 +70,18 @@ public class ProveedorProducto {
 
     public StringProperty nombreProductoProperty() {
         return nombreProducto;
+    }
+
+    public String getPeso() {
+        return peso.get();
+    }
+
+    public void setPeso(String valor) {
+        this.peso.set(valor != null ? valor : "");
+    }
+
+    public StringProperty pesoProperty() {
+        return peso;
     }
 
     public double getPrecio() {

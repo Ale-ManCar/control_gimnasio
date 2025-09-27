@@ -1458,7 +1458,7 @@ public class DatabaseUtil {
     public static ObservableList<ProveedorProducto> obtenerProductosProveedor(int proveedorId) throws SQLException {
         ObservableList<ProveedorProducto> productos = FXCollections.observableArrayList();
         String sql = "SELECT pp.id, pp.tipo, pp.precio, pp.equipo_id, pp.producto_id, " +
-                "COALESCE(e.nombre, pr.nombre) AS nombre " +
+                "COALESCE(e.nombre, pr.nombre) AS nombre, e.peso AS peso_equipo " +
                 "FROM proveedor_productos pp " +
                 "LEFT JOIN equipos e ON pp.equipo_id = e.id " +
                 "LEFT JOIN productos pr ON pp.producto_id = pr.id " +
@@ -1482,6 +1482,16 @@ public class DatabaseUtil {
                         producto.setProductoId(insumoId);
                     }
                     producto.setNombreProducto(rs.getString("nombre"));
+                    if ("EQUIPO".equalsIgnoreCase(producto.getTipo())) {
+                        Object pesoObj = rs.getObject("peso_equipo");
+                        if (pesoObj instanceof Number number) {
+                            producto.setPeso(String.valueOf(number.intValue()));
+                        } else if (pesoObj != null) {
+                            producto.setPeso(String.valueOf(pesoObj));
+                        } else {
+                            producto.setPeso(null);
+                        }
+                    }
                     producto.setPrecio(rs.getDouble("precio"));
                     producto.setSeleccionado(true);
                     productos.add(producto);
@@ -1561,7 +1571,7 @@ public class DatabaseUtil {
         }
 
         String sql = "SELECT pp.id, pp.proveedor_id, pp.tipo, pp.precio, pp.equipo_id, pp.producto_id, " +
-                "COALESCE(e.nombre, pr.nombre) AS nombre " +
+                "COALESCE(e.nombre, pr.nombre) AS nombre, e.peso AS peso_equipo " +
                 "FROM proveedor_productos pp " +
                 "LEFT JOIN equipos e ON pp.equipo_id = e.id " +
                 "LEFT JOIN productos pr ON pp.producto_id = pr.id";
@@ -1587,6 +1597,16 @@ public class DatabaseUtil {
                     producto.setProductoId(insumoId);
                 }
                 producto.setNombreProducto(rs.getString("nombre"));
+                if ("EQUIPO".equalsIgnoreCase(producto.getTipo())) {
+                    Object pesoObj = rs.getObject("peso_equipo");
+                    if (pesoObj instanceof Number number) {
+                        producto.setPeso(String.valueOf(number.intValue()));
+                    } else if (pesoObj != null) {
+                        producto.setPeso(String.valueOf(pesoObj));
+                    } else {
+                        producto.setPeso(null);
+                    }
+                }
                 producto.setPrecio(rs.getDouble("precio"));
                 producto.setSeleccionado(true);
                 producto.setProveedor(proveedor);

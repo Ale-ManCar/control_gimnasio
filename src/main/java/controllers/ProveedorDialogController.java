@@ -143,6 +143,7 @@ public class ProveedorDialogController {
                 producto.setTipo("EQUIPO");
                 producto.setEquipoId(equipo.getId());
                 producto.setNombreProducto(equipo.getNombre());
+                producto.setPeso(equipo.getPeso());
                 equiposDisponibles.add(producto);
             });
 
@@ -257,6 +258,7 @@ public class ProveedorDialogController {
             item.setEquipoId(prod.getEquipoId());
             item.setNombreProducto(prod.getNombreProducto());
             item.setPrecio(prod.getPrecio());
+            item.setPeso(prod.getPeso());
             seleccionados.add(item);
         });
         insumosDisponibles.stream().filter(ProveedorProducto::isSeleccionado).forEach(prod -> {
@@ -349,7 +351,25 @@ public class ProveedorDialogController {
             }
         });
 
-        tabla.getColumns().addAll(colSeleccion, colNombre, colPrecio);
+        if ("EQUIPO".equalsIgnoreCase(tipo)) {
+            TableColumn<ProveedorProducto, String> colPeso = new TableColumn<>("Peso (KG)");
+            colPeso.setPrefWidth(140);
+            colPeso.setCellValueFactory(cell -> cell.getValue().pesoProperty());
+            colPeso.setCellFactory(column -> new TableCell<>() {
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty) {
+                        setText(null);
+                    } else {
+                        setText(item == null || item.isBlank() ? "-" : item);
+                    }
+                }
+            });
+            tabla.getColumns().addAll(colSeleccion, colNombre, colPeso, colPrecio);
+        } else {
+            tabla.getColumns().addAll(colSeleccion, colNombre, colPrecio);
+        }
         tabla.setPlaceholder(new Label("No hay productos disponibles"));
 
         Label descripcion = new Label(
