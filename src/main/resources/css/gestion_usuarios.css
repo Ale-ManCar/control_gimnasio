@@ -78,6 +78,7 @@
     -fx-border-color: transparent;
     -fx-text-fill: rgba(226, 232, 240, 0.92);
     -fx-font-size: 13px;
+    -fx-alignment: CENTER;
 }
 
 .user-table .placeholder {
@@ -100,51 +101,59 @@
 }
 
 .action-button {
-    -fx-background-radius: 14;
-    -fx-border-radius: 14;
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
     -fx-font-weight: 700;
+    -fx-letter-spacing: 0.4px;
     -fx-cursor: hand;
     -fx-background-insets: 0;
-    -fx-padding: 10 24;
-    -fx-effect: dropshadow(three-pass-box, rgba(15, 23, 42, 0.45), 14, 0.16, 0, 5);
+    -fx-padding: 12 28;
+    -fx-font-size: 13px;
+    -fx-effect: dropshadow(three-pass-box, rgba(15, 23, 42, 0.45), 18, 0.18, 0, 6);
 }
 
 .action-button--success {
-    -fx-background-color: #06d6a0;
-    -fx-text-fill: white;
+    -fx-background-color: linear-gradient(to right, #35e3b9, #05b588);
+    -fx-border-color: rgba(15, 118, 110, 0.35);
+    -fx-border-width: 1;
+    -fx-text-fill: #f8fafc;
 }
 
 .action-button--success:hover {
-    -fx-background-color: #05b588;
+    -fx-background-color: linear-gradient(to right, #2ed0a6, #049e75);
 }
 
 .action-button--warning {
-    -fx-background-color: #ffd166;
-    -fx-text-fill: #1f1f1f;
+    -fx-background-color: linear-gradient(to right, #ffcf6f, #f4b94b);
+    -fx-border-color: rgba(217, 119, 6, 0.35);
+    -fx-border-width: 1;
+    -fx-text-fill: #1f2937;
 }
 
 .action-button--warning:hover {
-    -fx-background-color: #f4b94b;
+    -fx-background-color: linear-gradient(to right, #f4b350, #e99c2f);
 }
 
 .action-button--danger {
-    -fx-background-color: #ef476f;
-    -fx-text-fill: white;
+    -fx-background-color: linear-gradient(to right, #f37290, #d93c61);
+    -fx-border-color: rgba(190, 24, 93, 0.4);
+    -fx-border-width: 1;
+    -fx-text-fill: #f8fafc;
 }
 
 .action-button--danger:hover {
-    -fx-background-color: #d93c61;
+    -fx-background-color: linear-gradient(to right, #e85d7d, #c43055);
 }
 
 .action-button--ghost {
-    -fx-background-color: rgba(7, 59, 76, 0.15);
-    -fx-border-color: rgba(148, 163, 184, 0.35);
+    -fx-background-color: rgba(7, 59, 76, 0.18);
+    -fx-border-color: rgba(148, 163, 184, 0.45);
     -fx-border-width: 1;
     -fx-text-fill: #f8fafc;
 }
 
 .action-button--ghost:hover {
-    -fx-background-color: rgba(7, 59, 76, 0.28);
+    -fx-background-color: rgba(15, 60, 99, 0.32);
 }
 
 .alert-label {
