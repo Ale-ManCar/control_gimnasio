@@ -170,25 +170,16 @@ public class EquiposAdminController implements Initializable {
 
     private void configurarCeldaEstado() {
         colEstado.setCellFactory(column -> new TableCell<>() {
-            private final Label badge = new Label();
-
-            {
-                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-            }
-
             @Override
             protected void updateItem(String estado, boolean empty) {
                 super.updateItem(estado, empty);
                 if (empty || estado == null || estado.isBlank()) {
-                    setGraphic(null);
                     setText(null);
+                    setGraphic(null);
                     return;
                 }
-                String normalizado = estado.trim().toUpperCase(Locale.ROOT);
-                badge.setText(normalizado);
-                badge.getStyleClass().setAll("label", "state-chip", obtenerClaseEstado(normalizado));
-                setGraphic(badge);
-                setText(null);
+                setText(estado.trim().toUpperCase(Locale.ROOT));
+                setGraphic(null);
             }
         });
     }
@@ -229,24 +220,16 @@ public class EquiposAdminController implements Initializable {
 
     private void configurarCeldaCantidad() {
         colCantidad.setCellFactory(column -> new TableCell<>() {
-            private final Label chip = new Label();
-
-            {
-                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-            }
-
             @Override
             protected void updateItem(Integer cantidad, boolean empty) {
                 super.updateItem(cantidad, empty);
                 if (empty || cantidad == null) {
-                    setGraphic(null);
                     setText(null);
+                    setGraphic(null);
                     return;
                 }
-                chip.setText(String.valueOf(cantidad));
-                chip.getStyleClass().setAll("label", "cantidad-chip");
-                setGraphic(chip);
-                setText(null);
+                setText(String.valueOf(cantidad));
+                setGraphic(null);
             }
         });
     }
@@ -268,24 +251,18 @@ public class EquiposAdminController implements Initializable {
 
     private void configurarCeldaMantenimiento(TableColumn<Equipo, String> columna, boolean esProximo) {
         columna.setCellFactory(column -> new TableCell<>() {
-            private final Label chip = new Label();
-
-            {
-                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-            }
-
             @Override
             protected void updateItem(String fechaTexto, boolean empty) {
                 super.updateItem(fechaTexto, empty);
                 if (empty) {
-                    setGraphic(null);
                     setText(null);
+                    setGraphic(null);
                     return;
                 }
                 Equipo equipo = obtenerEquipoFila(this);
                 if (equipo == null) {
-                    setGraphic(null);
                     setText(null);
+                    setGraphic(null);
                     return;
                 }
 
@@ -293,20 +270,8 @@ public class EquiposAdminController implements Initializable {
                         ? (esProximo ? "SIN PLAN" : "SIN REGISTRO")
                         : fechaTexto;
 
-                chip.setText(textoNormalizado);
-                String estilo;
-                if (esProximo) {
-                    estilo = "SIN PLAN".equals(textoNormalizado)
-                            ? "maintenance-chip--soon"
-                            : obtenerClaseMantenimiento(equipo);
-                } else {
-                    estilo = "SIN REGISTRO".equals(textoNormalizado)
-                            ? "maintenance-chip--soon"
-                            : "maintenance-chip--ok";
-                }
-                chip.getStyleClass().setAll("label", "maintenance-chip", estilo);
-                setGraphic(chip);
-                setText(null);
+                setText(textoNormalizado);
+                setGraphic(null);
             }
         });
     }
@@ -320,29 +285,6 @@ public class EquiposAdminController implements Initializable {
             return null;
         }
         return celda.getTableView().getItems().get(indice);
-    }
-
-    private String obtenerClaseEstado(String estadoNormalizado) {
-        if (estadoNormalizado.contains("FUERA")) {
-            return "state-chip--fuera-servicio";
-        }
-        if (estadoNormalizado.contains("CRIT")) {
-            return "state-chip--critico";
-        }
-        if (estadoNormalizado.contains("MANT")) {
-            return "state-chip--mantenimiento";
-        }
-        return "state-chip--operativo";
-    }
-
-    private String obtenerClaseMantenimiento(Equipo equipo) {
-        if (equipo.needsMaintenance(LocalDate.now())) {
-            return "maintenance-chip--overdue";
-        }
-        if (equipo.maintenanceDueSoon(LocalDate.now(), DIAS_AVISO_MANTENIMIENTO)) {
-            return "maintenance-chip--soon";
-        }
-        return "maintenance-chip--ok";
     }
 
     private void centrarColumnas(TableColumn<?, ?>... columnas) {

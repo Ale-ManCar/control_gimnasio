@@ -35,13 +35,13 @@
                        style="-fx-background-radius: 16; -fx-table-cell-border-color: transparent; -fx-padding: 0;"
                        styleClass="equipos-table">
                 <columns>
-                    <TableColumn fx:id="colNombre" text="EQUIPO" prefWidth="120" minWidth="135"/>
-                    <TableColumn fx:id="colEstado" text="ESTADO" prefWidth="120" minWidth="120"/>
-                    <TableColumn fx:id="colMarca" text="MARCA / MODELO" prefWidth="150" minWidth="135"/>
-                    <TableColumn fx:id="colCantidad" text="CANTIDAD" prefWidth="120" minWidth="120"/>
-                    <TableColumn fx:id="colPeso" text="PESO (KG)" prefWidth="120" minWidth="120"/>
-                    <TableColumn fx:id="colUltimoMantenimiento" text="ÚLTIMO MTTO" prefWidth="120" minWidth="120"/>
-                    <TableColumn fx:id="colProximoMantenimiento" text="PRÓXIMO MTTO" prefWidth="120" minWidth="120"/>
+                    <TableColumn fx:id="colNombre" text="EQUIPO" prefWidth="110" minWidth="120"/>
+                    <TableColumn fx:id="colEstado" text="ESTADO" prefWidth="110" minWidth="120"/>
+                    <TableColumn fx:id="colMarca" text="MARCA / MODELO" prefWidth="110" minWidth="120"/>
+                    <TableColumn fx:id="colCantidad" text="CANTIDAD" prefWidth="100" minWidth="110"/>
+                    <TableColumn fx:id="colPeso" text="PESO (KG)" prefWidth="100" minWidth="110"/>
+                    <TableColumn fx:id="colUltimoMantenimiento" text="ÚLTIMO MTTO" prefWidth="115" minWidth="120"/>
+                    <TableColumn fx:id="colProximoMantenimiento" text="PRÓXIMO MTTO" prefWidth="115" minWidth="120"/>
                 </columns>
             </TableView>
             <HBox spacing="10" alignment="CENTER_RIGHT">
