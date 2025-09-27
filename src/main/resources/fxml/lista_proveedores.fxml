@@ -2,6 +2,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -62,12 +63,36 @@
                     <Separator styleClass="detail-separator"/>
                     <TitledPane text="Equipos suministrados" expanded="false" styleClass="detail-pane">
                         <content>
-                            <ListView fx:id="listaEquipos" styleClass="detail-list"/>
+                            <HBox alignment="CENTER_LEFT" spacing="12" styleClass="detail-pane-actions">
+                                <Label text="Consulta el listado completo de equipos asociados." styleClass="detail-pane-description"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button fx:id="btnVerEquipos" text="Ver" contentDisplay="LEFT"
+                                        onAction="#verEquiposProveedor" styleClass="detail-view-button">
+                                    <tooltip>
+                                        <Tooltip text="Ver equipos suministrados"/>
+                                    </tooltip>
+                                    <graphic>
+                                        <FontIcon iconLiteral="fas-eye"/>
+                                    </graphic>
+                                </Button>
+                            </HBox>
                         </content>
                     </TitledPane>
                     <TitledPane text="Insumos suministrados" expanded="false" styleClass="detail-pane">
                         <content>
-                            <ListView fx:id="listaInsumos" styleClass="detail-list"/>
+                            <HBox alignment="CENTER_LEFT" spacing="12" styleClass="detail-pane-actions">
+                                <Label text="Revisa los insumos relacionados al proveedor." styleClass="detail-pane-description"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button fx:id="btnVerInsumos" text="Ver" contentDisplay="LEFT"
+                                        onAction="#verInsumosProveedor" styleClass="detail-view-button">
+                                    <tooltip>
+                                        <Tooltip text="Ver insumos suministrados"/>
+                                    </tooltip>
+                                    <graphic>
+                                        <FontIcon iconLiteral="fas-eye"/>
+                                    </graphic>
+                                </Button>
+                            </HBox>
                         </content>
                     </TitledPane>
                 </VBox>

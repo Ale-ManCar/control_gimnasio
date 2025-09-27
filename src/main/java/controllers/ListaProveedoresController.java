@@ -8,6 +8,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -18,6 +19,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import models.CatalogoItem;
@@ -45,13 +47,13 @@ public class ListaProveedoresController {
     @FXML private ComboBox<String> cmbCategoriaProducto;
     @FXML private ComboBox<CatalogoItem> cmbProductoFiltro;
 
-    @FXML private ListView<String> listaEquipos;
-    @FXML private ListView<String> listaInsumos;
-
     @FXML private Button btnEditar;
     @FXML private Button btnEliminar;
 
     @FXML private Button btnComparador;
+
+    @FXML private Button btnVerEquipos;
+    @FXML private Button btnVerInsumos;
 
     @FXML private javafx.scene.control.Label lblNombreDetalle;
     @FXML private javafx.scene.control.Label lblContactoDetalle;
@@ -62,6 +64,9 @@ public class ListaProveedoresController {
     private FilteredList<Proveedor> proveedoresFiltrados;
     private CatalogoItem productoSeleccionado;
     private String categoriaSeleccionada;
+    private final ObservableList<String> equiposDetalle = FXCollections.observableArrayList();
+    private final ObservableList<String> insumosDetalle = FXCollections.observableArrayList();
+    private Proveedor proveedorSeleccionado;
 
     @FXML
     public void initialize() {
@@ -85,6 +90,8 @@ public class ListaProveedoresController {
 
         btnEditar.disableProperty().bind(Bindings.isNull(tablaProveedores.getSelectionModel().selectedItemProperty()));
         btnEliminar.disableProperty().bind(Bindings.isNull(tablaProveedores.getSelectionModel().selectedItemProperty()));
+        btnVerEquipos.disableProperty().bind(Bindings.isNull(tablaProveedores.getSelectionModel().selectedItemProperty()));
+        btnVerInsumos.disableProperty().bind(Bindings.isNull(tablaProveedores.getSelectionModel().selectedItemProperty()));
     }
 
     private void configurarFiltros() {
@@ -181,12 +188,14 @@ public class ListaProveedoresController {
     }
 
     private void mostrarDetalleProveedor(Proveedor proveedor) {
+        proveedorSeleccionado = proveedor;
+
         if (proveedor == null) {
             lblNombreDetalle.setText("Selecciona un proveedor");
             lblContactoDetalle.setText("-");
             lblTelefonoDetalle.setText("-");
-            listaEquipos.setItems(FXCollections.observableArrayList());
-            listaInsumos.setItems(FXCollections.observableArrayList());
+            equiposDetalle.clear();
+            insumosDetalle.clear();
             return;
         }
         lblNombreDetalle.setText(Optional.ofNullable(proveedor.getNombre()).orElse("Sin nombre"));
@@ -199,8 +208,78 @@ public class ListaProveedoresController {
         List<String> insumos = proveedor.getInsumosSuministrados().stream()
                 .map(prod -> formatearProducto(prod, "INSUMO"))
                 .collect(Collectors.toList());
-        listaEquipos.setItems(FXCollections.observableArrayList(equipos));
-        listaInsumos.setItems(FXCollections.observableArrayList(insumos));
+        equiposDetalle.setAll(equipos);
+        insumosDetalle.setAll(insumos);
+    }
+
+    @FXML
+    private void verEquiposProveedor() {
+        if (proveedorSeleccionado == null) {
+            mostrarInformacion("Selecciona un proveedor", "Debes seleccionar un proveedor para consultar sus equipos.");
+            return;
+        }
+        String nombreProveedor = Optional.ofNullable(proveedorSeleccionado.getNombre()).orElse("este proveedor");
+        mostrarVentanaSuministros(
+                "Equipos suministrados por " + nombreProveedor,
+                equiposDetalle,
+                "Este proveedor no tiene equipos registrados."
+        );
+    }
+
+    @FXML
+    private void verInsumosProveedor() {
+        if (proveedorSeleccionado == null) {
+            mostrarInformacion("Selecciona un proveedor", "Debes seleccionar un proveedor para consultar sus insumos.");
+            return;
+        }
+        String nombreProveedor = Optional.ofNullable(proveedorSeleccionado.getNombre()).orElse("este proveedor");
+        mostrarVentanaSuministros(
+                "Insumos suministrados por " + nombreProveedor,
+                insumosDetalle,
+                "Este proveedor no tiene insumos registrados."
+        );
+    }
+
+    private void mostrarVentanaSuministros(String tituloVentana, ObservableList<String> items, String mensajeVacio) {
+        Stage stage = new Stage();
+        Stage owner = (Stage) tablaProveedores.getScene().getWindow();
+        if (owner != null) {
+            stage.initOwner(owner);
+        }
+        stage.initModality(Modality.WINDOW_MODAL);
+        stage.setTitle(tituloVentana);
+
+        VBox root = new VBox(12);
+        root.setPadding(new Insets(20));
+        root.getStyleClass().add("detail-dialog");
+
+        javafx.scene.control.Label tituloLabel = new javafx.scene.control.Label(tituloVentana);
+        tituloLabel.getStyleClass().add("detail-dialog-title");
+        root.getChildren().add(tituloLabel);
+
+        if (items.isEmpty()) {
+            javafx.scene.control.Label vacioLabel = new javafx.scene.control.Label(mensajeVacio);
+            vacioLabel.getStyleClass().add("detail-dialog-empty");
+            root.getChildren().add(vacioLabel);
+        } else {
+            ListView<String> lista = new ListView<>();
+            lista.setItems(FXCollections.observableArrayList(items));
+            lista.getStyleClass().add("detail-dialog-list");
+            root.getChildren().add(lista);
+        }
+
+        Scene scene = new Scene(root, 460, 360);
+        scene.getStylesheets().add(getClass().getResource("/css/proveedores.css").toExternalForm());
+        stage.setScene(scene);
+        stage.showAndWait();
+    }
+
+    private void mostrarInformacion(String titulo, String mensaje) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(titulo);
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
     }
 
     private String formatearProducto(ProveedorProducto producto, String tipo) {
