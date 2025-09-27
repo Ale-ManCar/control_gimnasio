@@ -24,6 +24,7 @@
                 <AnchorPane fx:id="cardClientesActivos" prefWidth="200" prefHeight="120"/>
                 <AnchorPane fx:id="cardIngresos" prefWidth="200" prefHeight="120"/>
                 <AnchorPane fx:id="cardCoaches" prefWidth="200" prefHeight="120"/>
+                <AnchorPane fx:id="cardCerrarSesion" prefWidth="200" prefHeight="120"/>
             </HBox>
 
             <FlowPane hgap="20" vgap="20" prefWrapLength="620" alignment="CENTER">

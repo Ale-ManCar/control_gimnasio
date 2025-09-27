@@ -31,12 +31,14 @@ public class AdminDashboardController implements Initializable {
     @FXML private AnchorPane cardClientesActivos;
     @FXML private AnchorPane cardIngresos;
     @FXML private AnchorPane cardCoaches;
+    @FXML private AnchorPane cardCerrarSesion;
     @FXML private Label lblMensaje;
     @FXML private Label lblBienvenida;
 
     private MetricCardController ctrlClientesActivos;
     private MetricCardController ctrlIngresos;
     private MetricCardController ctrlCoaches;
+    private MetricCardController ctrlCerrarSesion;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -75,6 +77,12 @@ public class AdminDashboardController implements Initializable {
         ctrlCoaches.setIconLiteral("fas-chalkboard-teacher");
         ctrlCoaches.setAccent("metric-card--purple");
         ctrlCoaches.setOnClick(e -> abrirCoaches());
+
+        ctrlCerrarSesion = DashboardService.cargarTarjeta(cardCerrarSesion, "Cerrar sesión");
+        ctrlCerrarSesion.setIconLiteral("fas-sign-out-alt");
+        ctrlCerrarSesion.setAccent("metric-card--danger");
+        ctrlCerrarSesion.setValor("Salir");
+        ctrlCerrarSesion.setOnClick(this::handleCerrarSesion);
     }
 
     private void cargarDatos() {
@@ -105,6 +113,37 @@ public class AdminDashboardController implements Initializable {
             UserService.registrarActividad(SessionManager.getCurrentUser(), "Ver ingresos mensuales");
         } catch (IOException | SQLException e) {
             lblMensaje.setText("Error al abrir ingresos mensuales");
+        }
+    }
+
+    @FXML
+    private void handleCerrarSesion(MouseEvent event) {
+        User usuarioActual = SessionManager.getCurrentUser();
+        try {
+            if (usuarioActual != null) {
+                UserService.registrarActividad(usuarioActual, "Cerrar sesión");
+            }
+        } catch (SQLException e) {
+            lblMensaje.setText("No se pudo registrar la actividad de cierre de sesión");
+        }
+
+        SessionManager.clear();
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/selector_perfiles.fxml"));
+            Parent root = loader.load();
+            SelectorPerfilesController controller = loader.getController();
+            Stage nuevaVentana = new Stage();
+            nuevaVentana.setScene(new Scene(root, 700, 420));
+            nuevaVentana.setTitle("Seleccionar perfil");
+            nuevaVentana.setResizable(false);
+            controller.setStage(nuevaVentana);
+            nuevaVentana.show();
+
+            Stage ventanaActual = (Stage) lblBienvenida.getScene().getWindow();
+            ventanaActual.close();
+        } catch (IOException e) {
+            lblMensaje.setText("No se pudo volver al selector de perfiles");
         }
     }
 
