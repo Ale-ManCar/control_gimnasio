@@ -12,6 +12,7 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -28,16 +29,22 @@ import util.ReporteUtil;
 import util.SessionManager;
 import util.UserService;
 
+import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.net.URL;
 import java.util.Set;
-import java.util.Locale;
 
 public class EquiposAdminController implements Initializable {
+
+    private static final Locale LOCALE_ES = new Locale("es", "ES");
+    private static final DateTimeFormatter FORMATO_FECHA =
+            DateTimeFormatter.ofPattern("dd MMM yyyy", LOCALE_ES);
+    private static final int DIAS_AVISO_MANTENIMIENTO = 7;
 
     @FXML private TableView<Equipo> tablaEquipos;
     @FXML private TableColumn<Equipo, String> colNombre;
@@ -75,6 +82,8 @@ public class EquiposAdminController implements Initializable {
     }
 
     private void configurarTabla() {
+        tablaEquipos.setPlaceholder(crearPlaceholderTabla());
+
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
         colMarca.setCellValueFactory(new PropertyValueFactory<>("marca"));
@@ -85,28 +94,255 @@ public class EquiposAdminController implements Initializable {
         colProximoMantenimiento.setCellValueFactory(cellData ->
                 new SimpleStringProperty(formatearFecha(cellData.getValue().getProximoMantenimiento())));
 
-        centrarColumnas(colNombre, colEstado, colMarca, colCantidad, colPeso,
-                colUltimoMantenimiento, colProximoMantenimiento);
+        centrarColumnas(colEstado, colCantidad, colPeso, colUltimoMantenimiento, colProximoMantenimiento);
+
+        configurarCeldaNombre();
+        configurarCeldaEstado();
+        configurarCeldaMarca();
+        configurarCeldaCantidad();
+        configurarCeldaPeso();
+        configurarCeldaMantenimiento(colUltimoMantenimiento, false);
+        configurarCeldaMantenimiento(colProximoMantenimiento, true);
 
         tablaEquipos.setRowFactory(tv -> new TableRow<>() {
             @Override
             protected void updateItem(Equipo equipo, boolean empty) {
                 super.updateItem(equipo, empty);
+                getStyleClass().removeAll("row-critical", "row-warning");
                 if (empty || equipo == null) {
-                    setStyle("");
                     setTooltip(null);
                 } else if (equipo.isEstadoCritico() || equipo.needsMaintenance(LocalDate.now())) {
-                    setStyle("-fx-background-color: rgba(244,67,54,0.25);");
+                    getStyleClass().add("row-critical");
                     setTooltip(new Tooltip("Mantenimiento vencido o estado crítico"));
-                } else if (equipo.maintenanceDueSoon(LocalDate.now(), 7)) {
-                    setStyle("-fx-background-color: rgba(255,193,7,0.2);");
+                } else if (equipo.maintenanceDueSoon(LocalDate.now(), DIAS_AVISO_MANTENIMIENTO)) {
+                    getStyleClass().add("row-warning");
                     setTooltip(new Tooltip("Mantenimiento próximo"));
                 } else {
-                    setStyle("");
                     setTooltip(null);
                 }
             }
         });
+    }
+
+    private Label crearPlaceholderTabla() {
+        Label placeholder = new Label("No se encontraron equipos con los filtros actuales");
+        placeholder.setWrapText(true);
+        placeholder.setAlignment(Pos.CENTER);
+        placeholder.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+        placeholder.setStyle("-fx-text-fill: rgba(148,163,184,0.75); -fx-font-size: 13px;");
+        placeholder.setMaxWidth(Double.MAX_VALUE);
+        return placeholder;
+    }
+
+    private void configurarCeldaNombre() {
+        colNombre.setCellFactory(column -> new TableCell<>() {
+            private final Label titulo = new Label();
+            private final Label subtitulo = new Label();
+            private final VBox contenedor = new VBox(titulo, subtitulo);
+
+            {
+                contenedor.getStyleClass().add("equipo-name-cell");
+                titulo.getStyleClass().setAll("label", "equipo-name-cell__titulo");
+                subtitulo.getStyleClass().setAll("label", "equipo-name-cell__subtitulo");
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            }
+
+            @Override
+            protected void updateItem(String nombre, boolean empty) {
+                super.updateItem(nombre, empty);
+                if (empty || nombre == null || nombre.isBlank()) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+                titulo.setText(nombre);
+                Equipo equipo = obtenerEquipoFila(this);
+                String tipo = equipo != null ? equipo.getTipo() : null;
+                boolean mostrarTipo = tipo != null && !tipo.isBlank();
+                subtitulo.setText(mostrarTipo ? tipo : "");
+                subtitulo.setVisible(mostrarTipo);
+                subtitulo.setManaged(mostrarTipo);
+                setGraphic(contenedor);
+                setText(null);
+            }
+        });
+    }
+
+    private void configurarCeldaEstado() {
+        colEstado.setCellFactory(column -> new TableCell<>() {
+            private final Label badge = new Label();
+
+            {
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            }
+
+            @Override
+            protected void updateItem(String estado, boolean empty) {
+                super.updateItem(estado, empty);
+                if (empty || estado == null || estado.isBlank()) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+                String normalizado = estado.trim().toUpperCase(Locale.ROOT);
+                badge.setText(normalizado);
+                badge.getStyleClass().setAll("label", "state-chip", obtenerClaseEstado(normalizado));
+                setGraphic(badge);
+                setText(null);
+            }
+        });
+    }
+
+    private void configurarCeldaMarca() {
+        colMarca.setCellFactory(column -> new TableCell<>() {
+            private final Label marca = new Label();
+            private final Label modelo = new Label();
+            private final VBox contenedor = new VBox(marca, modelo);
+
+            {
+                contenedor.getStyleClass().add("marca-modelo-cell");
+                marca.getStyleClass().setAll("label", "marca-modelo-cell__marca");
+                modelo.getStyleClass().setAll("label", "marca-modelo-cell__modelo");
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            }
+
+            @Override
+            protected void updateItem(String valorMarca, boolean empty) {
+                super.updateItem(valorMarca, empty);
+                if (empty) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+                marca.setText((valorMarca == null || valorMarca.isBlank()) ? "-" : valorMarca);
+                Equipo equipo = obtenerEquipoFila(this);
+                String valorModelo = equipo != null ? equipo.getModelo() : null;
+                boolean mostrarModelo = valorModelo != null && !valorModelo.isBlank();
+                modelo.setText(mostrarModelo ? valorModelo : "");
+                modelo.setVisible(mostrarModelo);
+                modelo.setManaged(mostrarModelo);
+                setGraphic(contenedor);
+                setText(null);
+            }
+        });
+    }
+
+    private void configurarCeldaCantidad() {
+        colCantidad.setCellFactory(column -> new TableCell<>() {
+            private final Label chip = new Label();
+
+            {
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            }
+
+            @Override
+            protected void updateItem(Integer cantidad, boolean empty) {
+                super.updateItem(cantidad, empty);
+                if (empty || cantidad == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+                chip.setText(String.valueOf(cantidad));
+                chip.getStyleClass().setAll("label", "cantidad-chip");
+                setGraphic(chip);
+                setText(null);
+            }
+        });
+    }
+
+    private void configurarCeldaPeso() {
+        colPeso.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(String peso, boolean empty) {
+                super.updateItem(peso, empty);
+                if (empty) {
+                    setText(null);
+                } else {
+                    setText(peso == null || peso.isBlank() ? "-" : peso + " kg");
+                }
+                setGraphic(null);
+            }
+        });
+    }
+
+    private void configurarCeldaMantenimiento(TableColumn<Equipo, String> columna, boolean esProximo) {
+        columna.setCellFactory(column -> new TableCell<>() {
+            private final Label chip = new Label();
+
+            {
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            }
+
+            @Override
+            protected void updateItem(String fechaTexto, boolean empty) {
+                super.updateItem(fechaTexto, empty);
+                if (empty) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+                Equipo equipo = obtenerEquipoFila(this);
+                if (equipo == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+
+                String textoNormalizado = (fechaTexto == null || fechaTexto.isBlank() || "-".equals(fechaTexto))
+                        ? (esProximo ? "SIN PLAN" : "SIN REGISTRO")
+                        : fechaTexto;
+
+                chip.setText(textoNormalizado);
+                String estilo;
+                if (esProximo) {
+                    estilo = "SIN PLAN".equals(textoNormalizado)
+                            ? "maintenance-chip--soon"
+                            : obtenerClaseMantenimiento(equipo);
+                } else {
+                    estilo = "SIN REGISTRO".equals(textoNormalizado)
+                            ? "maintenance-chip--soon"
+                            : "maintenance-chip--ok";
+                }
+                chip.getStyleClass().setAll("label", "maintenance-chip", estilo);
+                setGraphic(chip);
+                setText(null);
+            }
+        });
+    }
+
+    private Equipo obtenerEquipoFila(TableCell<Equipo, ?> celda) {
+        if (celda == null || celda.getTableView() == null) {
+            return null;
+        }
+        int indice = celda.getIndex();
+        if (indice < 0 || indice >= celda.getTableView().getItems().size()) {
+            return null;
+        }
+        return celda.getTableView().getItems().get(indice);
+    }
+
+    private String obtenerClaseEstado(String estadoNormalizado) {
+        if (estadoNormalizado.contains("FUERA")) {
+            return "state-chip--fuera-servicio";
+        }
+        if (estadoNormalizado.contains("CRIT")) {
+            return "state-chip--critico";
+        }
+        if (estadoNormalizado.contains("MANT")) {
+            return "state-chip--mantenimiento";
+        }
+        return "state-chip--operativo";
+    }
+
+    private String obtenerClaseMantenimiento(Equipo equipo) {
+        if (equipo.needsMaintenance(LocalDate.now())) {
+            return "maintenance-chip--overdue";
+        }
+        if (equipo.maintenanceDueSoon(LocalDate.now(), DIAS_AVISO_MANTENIMIENTO)) {
+            return "maintenance-chip--soon";
+        }
+        return "maintenance-chip--ok";
     }
 
     private void centrarColumnas(TableColumn<?, ?>... columnas) {
@@ -656,7 +892,10 @@ public class EquiposAdminController implements Initializable {
     }
 
     private String formatearFecha(LocalDate fecha) {
-        return fecha == null ? "-" : fecha.toString();
+        if (fecha == null) {
+            return "-";
+        }
+        return FORMATO_FECHA.format(fecha).toUpperCase(LOCALE_ES).replace(".", "");
     }
 
     private void mostrarInformacion(String titulo, String mensaje) {

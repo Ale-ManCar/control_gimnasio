@@ -83,6 +83,173 @@
     -fx-background-color: #dc2626;
 }
 
+.equipos-table {
+    -fx-background-color: rgba(15, 23, 42, 0.55);
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-border-width: 1.2;
+    -fx-border-color: rgba(59, 130, 246, 0.28);
+    -fx-padding: 4;
+    -fx-effect: dropshadow(three-pass-box, rgba(15, 23, 42, 0.45), 20, 0.18, 0, 6);
+}
+
+.equipos-table .column-header-background {
+    -fx-background-color: linear-gradient(to right, rgba(30, 64, 175, 0.65), rgba(37, 99, 235, 0.75));
+    -fx-background-radius: 14 14 0 0;
+    -fx-border-radius: 14 14 0 0;
+    -fx-padding: 0 0 2 0;
+}
+
+.equipos-table .column-header, .equipos-table .filler {
+    -fx-background-color: transparent;
+}
+
+.equipos-table .column-header .label {
+    -fx-text-fill: #f8fafc;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-padding: 12 6;
+    -fx-opacity: 0.95;
+    -fx-letter-spacing: 0.4px;
+}
+
+.equipos-table .table-row-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(148, 163, 184, 0.12);
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 6 10;
+}
+
+.equipos-table .table-row-cell:odd {
+    -fx-background-color: rgba(15, 23, 42, 0.35);
+}
+
+.equipos-table .table-row-cell:even {
+    -fx-background-color: rgba(15, 23, 42, 0.25);
+}
+
+.equipos-table .table-row-cell.row-critical {
+    -fx-background-color: rgba(248, 113, 113, 0.22);
+}
+
+.equipos-table .table-row-cell.row-warning {
+    -fx-background-color: rgba(250, 204, 21, 0.18);
+}
+
+.equipos-table .table-row-cell:filled:selected {
+    -fx-background-color: linear-gradient(to right, rgba(59, 130, 246, 0.45), rgba(37, 99, 235, 0.55));
+    -fx-text-fill: white;
+}
+
+.equipos-table .table-cell {
+    -fx-border-color: transparent;
+    -fx-text-fill: rgba(226, 232, 240, 0.92);
+    -fx-font-size: 13px;
+}
+
+.equipos-table .placeholder {
+    -fx-background-color: transparent;
+}
+
+.equipos-table .placeholder .label {
+    -fx-text-fill: rgba(226, 232, 240, 0.55);
+}
+
+.equipo-name-cell {
+    -fx-spacing: 3;
+}
+
+.equipo-name-cell__titulo {
+    -fx-text-fill: #f8fafc;
+    -fx-font-size: 13.5px;
+    -fx-font-weight: 700;
+    -fx-letter-spacing: 0.3px;
+}
+
+.equipo-name-cell__subtitulo {
+    -fx-text-fill: rgba(148, 163, 184, 0.88);
+    -fx-font-size: 11.2px;
+    -fx-font-weight: 600;
+    -fx-letter-spacing: 0.4px;
+}
+
+.marca-modelo-cell {
+    -fx-spacing: 4;
+}
+
+.marca-modelo-cell__marca {
+    -fx-text-fill: rgba(241, 245, 249, 0.96);
+    -fx-font-size: 12.8px;
+    -fx-font-weight: 600;
+}
+
+.marca-modelo-cell__modelo {
+    -fx-text-fill: rgba(148, 163, 184, 0.85);
+    -fx-font-size: 11.4px;
+    -fx-font-weight: 500;
+}
+
+.state-chip, .maintenance-chip {
+    -fx-background-radius: 999;
+    -fx-padding: 5 12;
+    -fx-font-size: 11.5px;
+    -fx-font-weight: 700;
+    -fx-letter-spacing: 0.5px;
+    -fx-text-fill: rgba(226, 232, 240, 0.95);
+    -fx-alignment: CENTER;
+    -fx-border-width: 1;
+    -fx-border-color: transparent;
+}
+
+.state-chip--operativo {
+    -fx-background-color: rgba(34, 197, 94, 0.25);
+    -fx-border-color: rgba(34, 197, 94, 0.65);
+}
+
+.state-chip--mantenimiento {
+    -fx-background-color: rgba(250, 204, 21, 0.25);
+    -fx-border-color: rgba(250, 204, 21, 0.65);
+    -fx-text-fill: #facc15;
+}
+
+.state-chip--critico {
+    -fx-background-color: rgba(248, 113, 113, 0.25);
+    -fx-border-color: rgba(248, 113, 113, 0.7);
+}
+
+.state-chip--fuera-servicio {
+    -fx-background-color: rgba(148, 163, 184, 0.2);
+    -fx-border-color: rgba(148, 163, 184, 0.55);
+}
+
+.maintenance-chip--ok {
+    -fx-background-color: rgba(14, 165, 233, 0.22);
+    -fx-border-color: rgba(14, 165, 233, 0.6);
+}
+
+.maintenance-chip--soon {
+    -fx-background-color: rgba(250, 204, 21, 0.2);
+    -fx-border-color: rgba(250, 204, 21, 0.55);
+    -fx-text-fill: #facc15;
+}
+
+.maintenance-chip--overdue {
+    -fx-background-color: rgba(248, 113, 113, 0.23);
+    -fx-border-color: rgba(248, 113, 113, 0.7);
+}
+
+.cantidad-chip {
+    -fx-background-color: rgba(59, 130, 246, 0.24);
+    -fx-border-color: rgba(59, 130, 246, 0.65);
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-padding: 5 10;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #bfdbfe;
+    -fx-alignment: CENTER;
+}
+
 .dashboard-root {
     -fx-background-color: linear-gradient(to bottom, #1e3c72, #2a5298);
 }
