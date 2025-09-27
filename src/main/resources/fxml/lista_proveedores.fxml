@@ -64,7 +64,7 @@
                     <TitledPane text="Equipos suministrados" expanded="false" styleClass="detail-pane">
                         <content>
                             <HBox alignment="CENTER_LEFT" spacing="12" styleClass="detail-pane-actions">
-                                <Label text="Consulta el listado completo de equipos asociados." styleClass="detail-pane-description"/>
+                                <Label text="Consulta los equipos asociados." styleClass="detail-pane-description"/>
                                 <Region HBox.hgrow="ALWAYS"/>
                                 <Button fx:id="btnVerEquipos" text="Ver" contentDisplay="LEFT"
                                         onAction="#verEquiposProveedor" styleClass="detail-view-button">
@@ -81,7 +81,7 @@
                     <TitledPane text="Insumos suministrados" expanded="false" styleClass="detail-pane">
                         <content>
                             <HBox alignment="CENTER_LEFT" spacing="12" styleClass="detail-pane-actions">
-                                <Label text="Revisa los insumos relacionados al proveedor." styleClass="detail-pane-description"/>
+                                <Label text="Revisa los insumos relacionados." styleClass="detail-pane-description"/>
                                 <Region HBox.hgrow="ALWAYS"/>
                                 <Button fx:id="btnVerInsumos" text="Ver" contentDisplay="LEFT"
                                         onAction="#verInsumosProveedor" styleClass="detail-view-button">
