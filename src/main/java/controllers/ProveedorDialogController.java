@@ -5,6 +5,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -17,6 +18,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.control.Labeled;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -24,6 +26,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.scene.input.MouseEvent;
 import javafx.util.StringConverter;
 import models.Proveedor;
 import models.ProveedorProducto;
@@ -66,17 +69,13 @@ public class ProveedorDialogController {
         configurarCamposDeTexto();
         inicializandoTabs = true;
         if (tabPaneCatalogos != null) {
+            configurarReaperturaDeCatalogos();
             tabPaneCatalogos.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
                 if (inicializandoTabs) {
                     return;
                 }
                 if (newTab != null) {
-                    if (newTab == tabEquipos) {
-                        mostrarCatalogoModal("Equipos", equiposDisponibles, "EQUIPO");
-                    } else if (newTab == tabInsumos) {
-                        mostrarCatalogoModal("Insumos", insumosDisponibles, "INSUMO");
-                    }
-                    Platform.runLater(() -> seleccionarTabSinEvento(newTab));
+                    abrirCatalogo(newTab);
                 }
             });
             Platform.runLater(() -> {
@@ -133,6 +132,46 @@ public class ProveedorDialogController {
         inicializandoTabs = true;
         tabPaneCatalogos.getSelectionModel().select(tab);
         inicializandoTabs = false;
+    }
+
+    private void configurarReaperturaDeCatalogos() {
+        tabPaneCatalogos.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+            Tab tabClic = obtenerTabDesdeNodo(event.getPickResult().getIntersectedNode());
+            if (tabClic != null && tabClic == tabPaneCatalogos.getSelectionModel().getSelectedItem()) {
+                event.consume();
+                abrirCatalogo(tabClic);
+            }
+        });
+    }
+
+    private Tab obtenerTabDesdeNodo(Node nodo) {
+        Node actual = nodo;
+        while (actual != null && actual != tabPaneCatalogos) {
+            if (actual instanceof Labeled labeled) {
+                String texto = labeled.getText();
+                if (texto != null) {
+                    for (Tab tab : tabPaneCatalogos.getTabs()) {
+                        if (texto.equals(tab.getText())) {
+                            return tab;
+                        }
+                    }
+                }
+            }
+            actual = actual.getParent();
+        }
+        return null;
+    }
+
+    private void abrirCatalogo(Tab tab) {
+        if (tab == null) {
+            return;
+        }
+        if (tab == tabEquipos) {
+            mostrarCatalogoModal("Equipos", equiposDisponibles, "EQUIPO");
+        } else if (tab == tabInsumos) {
+            mostrarCatalogoModal("Insumos", insumosDisponibles, "INSUMO");
+        }
+        Platform.runLater(() -> seleccionarTabSinEvento(tab));
     }
 
     private void cargarCatalogos() {
