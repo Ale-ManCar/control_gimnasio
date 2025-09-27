@@ -297,6 +297,7 @@ public class RecepcionistaDashboardController implements Initializable {
         Pane paneClientes = loaderClientes.load();
         ctrlClientes = loaderClientes.getController();
         ctrlClientes.setTitulo("Clientes Activos");
+        ctrlClientes.setIconLiteral("fas-users");
         paneClientes.prefWidthProperty().bind(cardClientes.widthProperty());
         paneClientes.prefHeightProperty().bind(cardClientes.heightProperty());
         cardClientes.getChildren().add(paneClientes);
@@ -306,6 +307,7 @@ public class RecepcionistaDashboardController implements Initializable {
         Pane panePagos = loaderPagos.load();
         ctrlPagos = loaderPagos.getController();
         ctrlPagos.setTitulo("Pagos Recibidos");
+        ctrlPagos.setIconLiteral("fas-hand-holding-usd");
         panePagos.prefWidthProperty().bind(cardPagos.widthProperty());
         panePagos.prefHeightProperty().bind(cardPagos.heightProperty());
         cardPagos.getChildren().add(panePagos);
@@ -315,6 +317,7 @@ public class RecepcionistaDashboardController implements Initializable {
         Pane paneVencimientos = loaderVencimientos.load();
         ctrlVencimientos = loaderVencimientos.getController();
         ctrlVencimientos.setTitulo("Próximos a Vencer");
+        ctrlVencimientos.setIconLiteral("fas-hourglass-half");
         paneVencimientos.prefWidthProperty().bind(cardVencimientos.widthProperty());
         paneVencimientos.prefHeightProperty().bind(cardVencimientos.heightProperty());
         cardVencimientos.getChildren().add(paneVencimientos);
