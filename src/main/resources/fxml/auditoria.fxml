@@ -49,7 +49,7 @@
             <VBox styleClass="card table-card">
                 <HBox alignment="CENTER_LEFT" spacing="16">
                     <children>
-                        <Label text="Eventos registrados" styleClass="card-title"/>
+                        <Label text="Eventos registrados" styleClass="card-title-light"/>
                         <Region HBox.hgrow="ALWAYS"/>
                         <Button fx:id="btnVer" text="Ver PDF" onAction="#verSeleccion" styleClass="primary-button"/>
                         <Button fx:id="btnDescargar" text="Descargar PDF" onAction="#descargarSeleccion" styleClass="primary-button"/>
@@ -63,7 +63,7 @@
                                 <Insets top="8" right="12" bottom="8" left="4"/>
                             </padding>
                             <children>
-                                <Label text="Resúmenes generados" styleClass="card-subtitle"/>
+                                <Label text="Resúmenes generados" styleClass="card-subtitle-light"/>
                                 <TreeView fx:id="treeResumenes" VBox.vgrow="ALWAYS"/>
                             </children>
                         </VBox>

@@ -29,10 +29,23 @@
     -fx-text-fill: #1e3c72;
 }
 
+.card-title-light {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
 .card-subtitle {
     -fx-font-size: 14px;
     -fx-font-weight: bold;
     -fx-text-fill: #2a5298;
+    -fx-opacity: 0.85;
+}
+
+.card-subtitle-light {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
     -fx-opacity: 0.85;
 }
 
