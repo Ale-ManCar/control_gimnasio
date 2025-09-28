@@ -11,6 +11,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -42,6 +43,8 @@ public class ListaCoachesController {
     @FXML private TextField txtBuscar;
     @FXML private Button btnLimpiar;
     @FXML private Button btnAgregar;
+    @FXML private Label lblTitulo;
+    @FXML private Label lblResumen;
 
     private final ObservableList<Coach> coaches = FXCollections.observableArrayList();
     private final ObservableList<Coach> coachesOriginales = FXCollections.observableArrayList();
@@ -58,6 +61,7 @@ public class ListaCoachesController {
         configurarBusqueda();
         ajustarColumnas();
         ocultarScrollBars();
+        actualizarResumen();
     }
 
     private void configurarColumnas() {
@@ -73,9 +77,9 @@ public class ListaCoachesController {
                     setGraphic(null);
                 } else {
                     setText(item);
-                    setStyle("-fx-alignment: CENTER; " +
+                    setStyle("-fx-alignment: CENTER_LEFT; " +
                             "-fx-font-weight: bold; " +
-                            "-fx-text-fill: black; " +
+                            "-fx-text-fill: #f0f4ff; " +
                             "-fx-background-color: transparent;");
                 }
             }
@@ -92,7 +96,7 @@ public class ListaCoachesController {
                     setText(item);
                     setStyle("-fx-alignment: CENTER; " +
                             "-fx-font-weight: bold; " +
-                            "-fx-text-fill: black; " +
+                            "-fx-text-fill: #f5f7ff; " +
                             "-fx-background-color: transparent;");
                 }
             }
@@ -177,13 +181,34 @@ public class ListaCoachesController {
     }
 
     private void configurarEstilosTabla() {
+        if (lblTitulo != null) {
+            lblTitulo.setStyle(
+                    "-fx-font-size: 26px;" +
+                            "-fx-font-weight: bold;" +
+                            "-fx-text-fill: #f5f7ff;"
+            );
+        }
+
+        if (lblResumen != null) {
+            lblResumen.setStyle(
+                    "-fx-text-fill: rgba(255,255,255,0.78);" +
+                            "-fx-font-size: 14px;" +
+                            "-fx-font-weight: semi-bold;"
+            );
+        }
+
         tablaCoaches.setStyle(
                 "-fx-font-size: 14px;" +
-                        "-fx-background-color: #ffffff;" +
-                        "-fx-border-radius: 10px;" +
-                        "-fx-background-radius: 10px;" +
-                        "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);"
+                        "-fx-background-color: rgba(255,255,255,0.12);" +
+                        "-fx-border-radius: 18px;" +
+                        "-fx-background-radius: 18px;" +
+                        "-fx-padding: 6px;" +
+                        "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 18, 0, 0, 0);"
         );
+
+        Label placeholder = new Label("No se encontraron coaches con los filtros aplicados.");
+        placeholder.setStyle("-fx-text-fill: rgba(255,255,255,0.7); -fx-font-size: 14px; -fx-padding: 20px;");
+        tablaCoaches.setPlaceholder(placeholder);
     }
 
     private void configurarFilas() {
@@ -197,16 +222,16 @@ public class ListaCoachesController {
                         setTooltip(null);
                     } else {
                         if (isSelected()) {
-                            setStyle("-fx-background-color: #e6f2ff; " +
-                                    "-fx-border-color: #e0e0e0; " +
+                            setStyle("-fx-background-color: rgba(46,139,255,0.25); " +
+                                    "-fx-border-color: transparent; " +
                                     "-fx-border-width: 0 0 1px 0;");
                         } else if (isHover()) {
-                            setStyle("-fx-background-color: #e6f2ff; " +
-                                    "-fx-border-color: #e0e0e0; " +
+                            setStyle("-fx-background-color: rgba(74,108,247,0.2); " +
+                                    "-fx-border-color: transparent; " +
                                     "-fx-border-width: 0 0 1px 0;");
                         } else {
-                            setStyle("-fx-background-color: #ffffff; " +
-                                    "-fx-border-color: #e0e0e0; " +
+                            setStyle("-fx-background-color: rgba(255,255,255,0.04); " +
+                                    "-fx-border-color: rgba(255,255,255,0.08); " +
                                     "-fx-border-width: 0 0 1px 0;");
                         }
                     }
@@ -215,17 +240,17 @@ public class ListaCoachesController {
 
             row.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
                 if (isNowSelected) {
-                    row.setStyle("-fx-background-color: #e6f2ff; " +
-                            "-fx-border-color: #e0e0e0; " +
+                    row.setStyle("-fx-background-color: rgba(46,139,255,0.25); " +
+                            "-fx-border-color: transparent; " +
                             "-fx-border-width: 0 0 1px 0;");
                 } else {
                     if (row.isHover()) {
-                        row.setStyle("-fx-background-color: #e6f2ff; " +
-                                "-fx-border-color: #e0e0e0; " +
+                        row.setStyle("-fx-background-color: rgba(74,108,247,0.2); " +
+                                "-fx-border-color: transparent; " +
                                 "-fx-border-width: 0 0 1px 0;");
                     } else {
-                        row.setStyle("-fx-background-color: #ffffff; " +
-                                "-fx-border-color: #e0e0e0; " +
+                        row.setStyle("-fx-background-color: rgba(255,255,255,0.04); " +
+                                "-fx-border-color: rgba(255,255,255,0.08); " +
                                 "-fx-border-width: 0 0 1px 0;");
                     }
                 }
@@ -233,12 +258,12 @@ public class ListaCoachesController {
 
             row.hoverProperty().addListener((obs, oldVal, isHovering) -> {
                 if (isHovering && !row.isSelected()) {
-                    row.setStyle("-fx-background-color: #e6f2ff; " +
-                            "-fx-border-color: #e0e0e0; " +
+                    row.setStyle("-fx-background-color: rgba(74,108,247,0.2); " +
+                            "-fx-border-color: transparent; " +
                             "-fx-border-width: 0 0 1px 0;");
                 } else if (!row.isSelected()) {
-                    row.setStyle("-fx-background-color: #ffffff; " +
-                            "-fx-border-color: #e0e0e0; " +
+                    row.setStyle("-fx-background-color: rgba(255,255,255,0.04); " +
+                            "-fx-border-color: rgba(255,255,255,0.08); " +
                             "-fx-border-width: 0 0 1px 0;");
                 }
             });
@@ -263,82 +288,93 @@ public class ListaCoachesController {
                         rs.getString("foto_path")
                 ));
             }
+            actualizarResumen();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
     private void configurarBusqueda() {
-        txtBuscar.setPromptText("Buscar coach...");
+        txtBuscar.setPromptText("Buscar por nombre o área");
         txtBuscar.setStyle(
                 "-fx-font-size: 14px;" +
-                        "-fx-padding: 8px 15px;" +
-                        "-fx-background-radius: 20px;" +
-                        "-fx-border-radius: 20px;" +
-                        "-fx-border-color: #ced4da;" +
-                        "-fx-background-color: #ffffff;"
+                        "-fx-padding: 10px 18px;" +
+                        "-fx-pref-width: 450px;" +
+                        "-fx-background-radius: 24px;" +
+                        "-fx-border-radius: 24px;" +
+                        "-fx-border-color: rgba(255,255,255,0.25);" +
+                        "-fx-border-width: 1px;" +
+                        "-fx-background-color: rgba(255,255,255,0.12);" +
+                        "-fx-text-fill: white;" +
+                        "-fx-prompt-text-fill: rgba(255,255,255,0.55);"
         );
 
         btnLimpiar.setStyle(
-                "-fx-background-color: #6C757D;" +
-                        "-fx-text-fill: white;" +
+                "-fx-background-color: rgba(255,255,255,0.14);" +
+                        "-fx-text-fill: #f5f7ff;" +
                         "-fx-font-weight: bold;" +
-                        "-fx-padding: 8px 15px;" +
-                        "-fx-background-radius: 20px;" +
-                        "-fx-border-radius: 20px;" +
+                        "-fx-padding: 8px 18px;" +
+                        "-fx-background-radius: 22px;" +
+                        "-fx-border-radius: 22px;" +
+                        "-fx-border-color: rgba(255,255,255,0.25);" +
+                        "-fx-border-width: 1px;" +
                         "-fx-cursor: hand;"
         );
         btnLimpiar.setOnMouseEntered(e ->
                 btnLimpiar.setStyle(
-                        "-fx-background-color: #5a6268;" +
-                                "-fx-text-fill: white;" +
+                        "-fx-background-color: rgba(255,255,255,0.28);" +
+                                "-fx-text-fill: #111320;" +
                                 "-fx-font-weight: bold;" +
-                                "-fx-padding: 8px 15px;" +
-                                "-fx-background-radius: 20px;" +
-                                "-fx-border-radius: 20px;" +
+                                "-fx-padding: 8px 18px;" +
+                                "-fx-background-radius: 22px;" +
+                                "-fx-border-radius: 22px;" +
+                                "-fx-border-color: rgba(255,255,255,0.35);" +
+                                "-fx-border-width: 1px;" +
                                 "-fx-cursor: hand;"
                 )
         );
         btnLimpiar.setOnMouseExited(e ->
                 btnLimpiar.setStyle(
-                        "-fx-background-color: #6C757D;" +
-                                "-fx-text-fill: white;" +
+                        "-fx-background-color: rgba(255,255,255,0.14);" +
+                                "-fx-text-fill: #f5f7ff;" +
                                 "-fx-font-weight: bold;" +
-                                "-fx-padding: 8px 15px;" +
-                                "-fx-background-radius: 20px;" +
-                                "-fx-border-radius: 20px;" +
+                                "-fx-padding: 8px 18px;" +
+                                "-fx-background-radius: 22px;" +
+                                "-fx-border-radius: 22px;" +
+                                "-fx-border-color: rgba(255,255,255,0.25);" +
+                                "-fx-border-width: 1px;" +
                                 "-fx-cursor: hand;"
                 )
         );
 
         btnAgregar.setStyle(
-                "-fx-background-color: linear-gradient(to right, #4CAF50, #2E7D32);" +
+                "-fx-background-color: linear-gradient(to right, #e67e22, #e74c3c);" +
                         "-fx-text-fill: white;" +
                         "-fx-font-weight: bold;" +
-                        "-fx-padding: 15px 20px;" +
-                        "-fx-background-radius: 20px;" +
-                        "-fx-border-radius: 20px;" +
+                        "-fx-padding: 12px 20px;" +
+                        "-fx-background-radius: 22px;" +
+                        "-fx-border-radius: 22px;" +
                         "-fx-cursor: hand;"
         );
         btnAgregar.setOnMouseEntered(e ->
                 btnAgregar.setStyle(
-                        "-fx-background-color: linear-gradient(to right, #66BB6A, #388E3C);" +
+                        "-fx-background-color: linear-gradient(to right, #ff944d, #ff5e57);" +
                                 "-fx-text-fill: white;" +
                                 "-fx-font-weight: bold;" +
-                                "-fx-padding: 15px 20px;" +
-                                "-fx-background-radius: 20px;" +
-                                "-fx-border-radius: 20px;" +
+                                "-fx-padding: 12px 20px;" +
+                                "-fx-background-radius: 22px;" +
+                                "-fx-border-radius: 22px;" +
                                 "-fx-cursor: hand;"
                 )
         );
         btnAgregar.setOnMouseExited(e ->
                 btnAgregar.setStyle(
-                        "-fx-background-color: linear-gradient(to right, #4CAF50, #2E7D32);" +
+                        "-fx-background-color: linear-gradient(to right, #e67e22, #e74c3c);" +
                                 "-fx-text-fill: white;" +
                                 "-fx-font-weight: bold;" +
-                                "-fx-padding: 15px 20px;" +
-                                "-fx-background-radius: 20px;" +
-                                "-fx-border-radius: 20px;" +
+                                "-fx-padding: 12px 20px;" +
+                                "-fx-background-radius: 22px;" +
+                                "-fx-border-radius: 22px;" +
                                 "-fx-cursor: hand;"
                 )
         );
@@ -365,6 +401,7 @@ public class ListaCoachesController {
         }
 
         tablaCoaches.refresh();
+        actualizarResumen();
     }
 
     @FXML
@@ -381,6 +418,20 @@ public class ListaCoachesController {
         tablaCoaches.scrollTo(scrollPosition);
 
         tablaCoaches.refresh();
+        actualizarResumen();
+    }
+
+    private void actualizarResumen() {
+        if (lblResumen != null) {
+            ObservableList<Coach> items = tablaCoaches.getItems();
+            int total = coachesOriginales.size();
+            int visibles = items != null ? items.size() : 0;
+            if (visibles == total) {
+                lblResumen.setText("Coaches registrados: " + total);
+            } else {
+                lblResumen.setText("Coaches encontrados: " + visibles + " de " + total);
+            }
+        }
     }
 
     private void verPerfil(Coach coach) {
