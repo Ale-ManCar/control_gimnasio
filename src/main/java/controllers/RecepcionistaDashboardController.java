@@ -184,21 +184,12 @@ public class RecepcionistaDashboardController implements Initializable {
 
     private void configurarTablaSinScroll() {
         tablaClientesProximosAVencer.setFixedCellSize(44);
-        tablaClientesProximosAVencer.setStyle(
-                "-fx-scroll-bar-policy-vertical: never;" +
-                        "-fx-scroll-bar-policy-horizontal: never;" +
-                        "-fx-padding: 0;"
-        );
-
-        tablaClientesProximosAVencer.skinProperty().addListener((obs, oldSkin, newSkin) -> {
-            if (newSkin != null) {
-                ScrollBar vbar = (ScrollBar) tablaClientesProximosAVencer.lookup(".scroll-bar:vertical");
-                ScrollBar hbar = (ScrollBar) tablaClientesProximosAVencer.lookup(".scroll-bar:horizontal");
-                if (vbar != null) vbar.setVisible(false);
-                if (hbar != null) hbar.setVisible(false);
-            }
-        });
         tablaClientesProximosAVencer.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        double alturaVisible = calcularAlturaTabla(0);
+        tablaClientesProximosAVencer.setPrefHeight(alturaVisible);
+        tablaClientesProximosAVencer.setMinHeight(alturaVisible);
+        tablaClientesProximosAVencer.setMaxHeight(alturaVisible);
     }
 
     private void iniciarTurno() {
@@ -682,17 +673,24 @@ public class RecepcionistaDashboardController implements Initializable {
     }
 
     private void ajustarAlturaTabla() {
-        int filas = tablaClientesProximosAVencer.getItems().size();
+        double alturaTotal = calcularAlturaTabla(tablaClientesProximosAVencer.getItems().size());
+        tablaClientesProximosAVencer.setPrefHeight(alturaTotal);
+        tablaClientesProximosAVencer.setMinHeight(alturaTotal);
+        tablaClientesProximosAVencer.setMaxHeight(alturaTotal);
+
+        Platform.runLater(() -> tablaClientesProximosAVencer.requestLayout());
+    }
+
+    private double calcularAlturaTabla(int cantidadFilas) {
         double alturaPorFila = tablaClientesProximosAVencer.getFixedCellSize();
         if (alturaPorFila <= 0) {
             alturaPorFila = 44;
         }
+
+        int filasVisibles = 4;
         double alturaCabecera = 48;
 
-        double alturaTotal = Math.max(200, (filas * alturaPorFila) + alturaCabecera);
-        tablaClientesProximosAVencer.setPrefHeight(alturaTotal);
-
-        Platform.runLater(() -> tablaClientesProximosAVencer.requestLayout());
+        return (filasVisibles * alturaPorFila) + alturaCabecera;
     }
 
     private void abrirPagos() {
