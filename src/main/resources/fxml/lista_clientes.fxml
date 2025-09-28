@@ -5,6 +5,7 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox xmlns="http://javafx.com/javafx/21"
@@ -19,26 +20,31 @@
         <Label fx:id="lblResumen" text="Clientes activos: 0"
                style="-fx-text-fill: rgba(255,255,255,0.78); -fx-font-size: 14px;"/>
     </VBox>
-    <HBox spacing="12" style="-fx-padding: 0 0 10 0;" alignment="CENTER">
-        <TextField fx:id="txtBuscar"
-                   style="-fx-pref-width: 450px; -fx-font-size: 14px; -fx-padding: 10px 18px;"
-                   promptText="Buscar por nombre, teléfono o membresía"/>
-        <Button fx:id="btnLimpiar" text="Limpiar" onAction="#limpiarFiltro"/>
-    </HBox>
-    <TableView fx:id="tablaClientes"
-               style="-fx-background-radius: 18px; -fx-background-insets: 0; -fx-padding: 6; -fx-alignment: CENTER;"
-               prefHeight="470">
-        <columns>
-            <TableColumn text="Cliente" fx:id="colNombreCompleto"
-                         style="-fx-alignment: CENTER_LEFT;" prefWidth="340"/>
-            <TableColumn text="Teléfono" fx:id="colTelefono"
-                         style="-fx-alignment: CENTER;" prefWidth="230"/>
-            <TableColumn text="Estado" fx:id="colEstado"
-                         style="-fx-alignment: CENTER;" prefWidth="150"/>
-            <TableColumn text="Acciones" fx:id="colAcciones"
-                         style="-fx-alignment: CENTER;" prefWidth="120"/>
-        </columns>
-    </TableView>
+    <StackPane style="-fx-background-color: rgba(255,255,255,0.08); -fx-background-radius: 28; -fx-padding: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.35), 18, 0, 0, 8);">
+        <VBox spacing="18">
+            <HBox spacing="12" alignment="CENTER">
+                <TextField fx:id="txtBuscar"
+                           promptText="Buscar por nombre, teléfono o membresía"
+                           style="-fx-pref-width: 460px; -fx-font-size: 14px; -fx-padding: 10px 18px; -fx-background-radius: 24px; -fx-border-radius: 24px; -fx-background-color: transparent; -fx-border-color: transparent;"/>
+                <Button fx:id="btnLimpiar" text="Limpiar" onAction="#limpiarFiltro"
+                        style="-fx-background-radius: 22px; -fx-padding: 8px 18px;"/>
+            </HBox>
+            <TableView fx:id="tablaClientes"
+                       prefHeight="440"
+                       style="-fx-background-radius: 20px; -fx-background-insets: 0; -fx-padding: 6; -fx-border-color: rgba(255,255,255,0.15); -fx-border-width: 1; -fx-background-color: rgba(255,255,255,0.1);">
+                <columns>
+                    <TableColumn text="Cliente" fx:id="colNombreCompleto"
+                                 style="-fx-alignment: CENTER_LEFT;" prefWidth="340"/>
+                    <TableColumn text="Teléfono" fx:id="colTelefono"
+                                 style="-fx-alignment: CENTER;" prefWidth="230"/>
+                    <TableColumn text="Estado" fx:id="colEstado"
+                                 style="-fx-alignment: CENTER;" prefWidth="150"/>
+                    <TableColumn text="Acciones" fx:id="colAcciones"
+                                 style="-fx-alignment: CENTER;" prefWidth="120"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </StackPane>
     <HBox spacing="20" alignment="CENTER" style="-fx-padding: 12 0 0 0;">
         <Button text="Volver al Dashboard" onAction="#handleVolver"
                 style="-fx-background-color: linear-gradient(to right, #4A6CF7, #2E8BFF); -fx-text-fill: white;"
