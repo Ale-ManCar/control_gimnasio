@@ -25,6 +25,7 @@ import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import models.Cliente;
+import util.AuditoriaScheduler;
 import util.DatabaseUtil;
 import util.EventBus;
 import util.ReporteUtil;
@@ -39,11 +40,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
@@ -202,6 +206,10 @@ public class RecepcionistaDashboardController implements Initializable {
             if (SessionManager.getCurrentUser() != null) {
                 int usuarioId = SessionManager.getCurrentUser().getId();
                 turnoActual = DatabaseUtil.obtenerTurnoActivo(usuarioId);
+                if (turnoActual != null && cerrarTurnoAnteriorSiCorresponde(turnoActual)) {
+                    SessionManager.setTurnoId(-1);
+                    turnoActual = DatabaseUtil.obtenerTurnoActivo(usuarioId);
+                }
                 if (turnoActual == null) {
                     boolean turnoReabierto = false;
                     Turno ultimoTurno = DatabaseUtil.obtenerUltimoTurnoFinalizado(usuarioId);
@@ -233,6 +241,69 @@ public class RecepcionistaDashboardController implements Initializable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean cerrarTurnoAnteriorSiCorresponde(Turno turno) {
+        LocalDateTime inicio = DatabaseUtil.parseDateTime(turno.getFecha_inicio());
+        if (inicio == null) {
+            return false;
+        }
+        LocalDate fechaInicio = inicio.toLocalDate();
+        LocalDate hoy = LocalDate.now();
+        if (!fechaInicio.isBefore(hoy)) {
+            return false;
+        }
+
+        LocalDateTime cierreEstimado = fechaInicio.plusDays(1).atStartOfDay().minusSeconds(1);
+        LocalDateTime ahora = LocalDateTime.now();
+        if (cierreEstimado.isAfter(ahora)) {
+            cierreEstimado = ahora;
+        }
+
+        double ingresosVentas = DatabaseUtil.obtenerTotalVentasDesde(inicio, cierreEstimado);
+        double ingresosClientes = 0.0;
+        try {
+            Map<String, Number> resumen = DatabaseUtil.obtenerIngresosPagos(turno.getUsuario_id(), inicio, cierreEstimado);
+            Number total = resumen.get("total");
+            if (total != null) {
+                ingresosClientes = total.doubleValue();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        String stockFinal = DatabaseUtil.obtenerStockJson();
+        DatabaseUtil.finalizarTurno(turno.getId(), stockFinal, ingresosVentas, ingresosClientes, cierreEstimado);
+
+        boolean cerrado = false;
+        try {
+            Turno turnoFinalizado = DatabaseUtil.obtenerTurnoPorId(turno.getId());
+            if (turnoFinalizado != null && turnoFinalizado.getFecha_fin() != null && !turnoFinalizado.getFecha_fin().isBlank()) {
+                turnoFinalizado.setStock_final(stockFinal);
+                Path rutaExistente = null;
+                if (turnoFinalizado.getResumenGenerado() != null && !turnoFinalizado.getResumenGenerado().isBlank()) {
+                    rutaExistente = Paths.get(turnoFinalizado.getResumenGenerado());
+                }
+                if (rutaExistente == null) {
+                    String rutaPrimerTurno = DatabaseUtil.obtenerResumenGeneradoPrimerTurnoDelDia(
+                            turnoFinalizado.getUsuario_id(),
+                            cierreEstimado
+                    );
+                    if (rutaPrimerTurno != null && !rutaPrimerTurno.isBlank()) {
+                        rutaExistente = Paths.get(rutaPrimerTurno);
+                    }
+                }
+                Path rutaGenerada = AuditoriaScheduler.generarResumenDiario(turnoFinalizado, rutaExistente);
+                if (rutaGenerada != null) {
+                    DatabaseUtil.marcarResumenGenerado(turnoFinalizado.getId(), rutaGenerada.toString());
+                }
+                cerrado = true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return cerrado;
     }
 
     @FXML

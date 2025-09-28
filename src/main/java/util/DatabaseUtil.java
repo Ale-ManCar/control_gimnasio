@@ -2277,9 +2277,14 @@ public class DatabaseUtil {
     }
 
     public static void finalizarTurno(int id, String stockFinal, double ingresosVentas, double ingresosClientes) {
+        finalizarTurno(id, stockFinal, ingresosVentas, ingresosClientes, LocalDateTime.now());
+    }
+
+    public static void finalizarTurno(int id, String stockFinal, double ingresosVentas, double ingresosClientes, LocalDateTime fechaFin) {
         String sql = "UPDATE turnos SET fecha_fin = ?, stock_final = ?, ingresos_ventas = ?, ingresos_clientes = ? WHERE id = ?";
+        LocalDateTime fin = fechaFin != null ? fechaFin : LocalDateTime.now();
         try {
-            executeUpdate(sql, LocalDateTime.now(), stockFinal, ingresosVentas, ingresosClientes, id);
+            executeUpdate(sql, fin, stockFinal, ingresosVentas, ingresosClientes, id);
         } catch (SQLException e) {
             e.printStackTrace();
         }
