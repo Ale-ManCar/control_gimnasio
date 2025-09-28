@@ -639,6 +639,7 @@ public class RecepcionistaDashboardController implements Initializable {
         String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
                 "FROM clientes " +
                 "WHERE activo = 1 " +
+                "AND (tipoMembresia IS NULL OR LOWER(tipoMembresia) <> 'diario') " +
                 "AND date(fecha_vencimiento) BETWEEN date('now') AND date('now', '+7 days') " +
                 "ORDER BY fecha_vencimiento";
 

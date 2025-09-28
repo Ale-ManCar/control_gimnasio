@@ -37,9 +37,13 @@
                                       -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10;"/>
                     <Label text="Teléfono:" GridPane.rowIndex="2" GridPane.columnIndex="0"
                            style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
-                    <TextField fx:id="txtTelefono" GridPane.rowIndex="2" GridPane.columnIndex="1"
-                               style="-fx-background-color: rgba(255,255,255,0.9); -fx-border-color: #ced4da;
-                                      -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10;"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT" GridPane.rowIndex="2" GridPane.columnIndex="1">
+                        <TextField fx:id="txtTelefono" HBox.hgrow="ALWAYS"
+                                   style="-fx-background-color: rgba(255,255,255,0.9); -fx-border-color: #ced4da;
+                                          -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10;"/>
+                        <CheckBox fx:id="chkSinTelefono" text="Sin teléfono"
+                                  style="-fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold;"/>
+                    </HBox>
                     <Label text="Fecha de Inicio:" GridPane.rowIndex="3" GridPane.columnIndex="0"
                            style="-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"/>
                     <DatePicker fx:id="dpFechaInicio" GridPane.rowIndex="3" GridPane.columnIndex="1"
@@ -90,7 +94,7 @@
                                    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
                 </HBox>
             </VBox>
-            <Label text="Todos los campos son obligatorios"
+            <Label text="Todos los campos son obligatorios. Puede marcar \"Sin teléfono\" si el cliente no tiene uno."
                    style="-fx-text-fill: #bdc3c7; -fx-font-size: 14px; -fx-font-style: italic;"/>
         </VBox>
     </center>

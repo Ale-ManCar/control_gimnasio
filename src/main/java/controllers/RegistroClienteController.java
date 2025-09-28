@@ -36,6 +36,7 @@ public class RegistroClienteController {
     @FXML private ComboBox<Coach> cbCoach;
     @FXML private Button btnSiguiente;
     @FXML private Button btnVolverAlDashboard;
+    @FXML private CheckBox chkSinTelefono;
 
     private final ObservableList<Coach> coaches = FXCollections.observableArrayList();
 
@@ -49,6 +50,17 @@ public class RegistroClienteController {
         }
 
         ajustarCamposPorMembresia(cbMembresia.getValue());
+
+        if (chkSinTelefono != null) {
+            chkSinTelefono.selectedProperty().addListener((obs, oldVal, newVal) -> {
+                if (!"Diario".equals(cbMembresia.getValue())) {
+                    actualizarEstadoTelefono(newVal);
+                }
+            });
+            if (!"Diario".equals(cbMembresia.getValue())) {
+                actualizarEstadoTelefono(chkSinTelefono.isSelected());
+            }
+        }
 
         if (cbArea != null) {
             cbArea.getItems().addAll("Maquinas", "Bailoterapia", "Crossfit");
@@ -114,9 +126,21 @@ public class RegistroClienteController {
             txtApellidos.setDisable(diario);
             if (diario) txtApellidos.clear();
         }
+        if (chkSinTelefono != null) {
+            chkSinTelefono.setDisable(diario);
+            if (diario) {
+                chkSinTelefono.setSelected(false);
+            }
+        }
         if (txtTelefono != null) {
-            txtTelefono.setDisable(diario);
-            if (diario) txtTelefono.clear();
+            if (diario) {
+                txtTelefono.clear();
+            }
+            boolean sinTelefono = diario || (chkSinTelefono != null && chkSinTelefono.isSelected());
+            actualizarEstadoTelefono(sinTelefono);
+            if (diario) {
+                txtTelefono.setPromptText(null);
+            }
         }
         if (dpFechaInicio != null) {
             dpFechaInicio.setDisable(diario);
@@ -142,6 +166,8 @@ public class RegistroClienteController {
         }
 
         boolean diario = "Diario".equals(cbMembresia.getValue());
+
+        boolean sinTelefono = chkSinTelefono != null && chkSinTelefono.isSelected();
 
         if (!diario && (dpFechaInicio.getValue() == null || cbArea.getValue() == null)) {
             mostrarAlerta("Error", "Debe completar todos los campos");
@@ -173,7 +199,11 @@ public class RegistroClienteController {
             } else {
                 stmtCliente.setString(1, validarCampo(txtNombres.getText(), "Nombres"));
                 stmtCliente.setString(2, validarCampo(txtApellidos.getText(), "Apellidos"));
-                stmtCliente.setString(3, validarCampo(txtTelefono.getText(), "Teléfono"));
+                if (sinTelefono) {
+                    stmtCliente.setString(3, generarTelefonoTemporal());
+                } else {
+                    stmtCliente.setString(3, validarCampo(txtTelefono.getText(), "Teléfono"));
+                }
             }
 
             stmtCliente.setString(4, cbMembresia.getValue());
@@ -238,7 +268,7 @@ public class RegistroClienteController {
             mostrarAlertaExito();
 
             // ✅ Enviar alerta de registro
-            if (!diario) {
+            if (!diario && !sinTelefono) {
                 Cliente nuevoCliente = new Cliente(
                         txtNombres.getText().trim(),
                         txtApellidos.getText().trim(),
@@ -282,6 +312,25 @@ public class RegistroClienteController {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    private void actualizarEstadoTelefono(boolean sinTelefono) {
+        if (txtTelefono != null) {
+            txtTelefono.setDisable(sinTelefono);
+            if (sinTelefono) {
+                txtTelefono.clear();
+                txtTelefono.setPromptText("Sin teléfono");
+            } else {
+                txtTelefono.setPromptText(null);
+            }
+        }
+        if (chkSinTelefono != null && chkSinTelefono.isDisabled() && chkSinTelefono.isSelected()) {
+            chkSinTelefono.setSelected(false);
+        }
+    }
+
+    private String generarTelefonoTemporal() {
+        return "SIN_TEL_" + System.currentTimeMillis();
     }
 
     private void programarRetornoAlDashboard() {
