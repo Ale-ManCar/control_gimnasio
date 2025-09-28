@@ -289,7 +289,7 @@ public class ListaClientesController implements Initializable {
             double anchoTotal = tablaClientes.getWidth();
             if (anchoTotal > 0) {
                 colNombreCompleto.setPrefWidth(anchoTotal * 0.45);
-                colTelefono.setPrefWidth(anchoTotal * 0.25);
+                colTelefono.setPrefWidth(anchoTotal * 0.20);
                 colEstado.setPrefWidth(anchoTotal * 0.18);
                 colAcciones.setPrefWidth(anchoTotal * 0.12);
                 tablaClientes.requestLayout();
