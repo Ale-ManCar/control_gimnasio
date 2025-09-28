@@ -44,15 +44,16 @@
                    style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white; -fx-padding: 10 0 5 0;"/>
 
             <TableView fx:id="tablaClientesProximosAVencer" prefHeight="400"
-                       style="-fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 15;
-                              -fx-border-radius: 15; -fx-border-color: rgba(255,255,255,0.2);">
+                       styleClass="expiring-table">
                 <columns>
-                    <TableColumn fx:id="colAlerta" prefWidth="50" sortable="false" resizable="false"
+                    <TableColumn fx:id="colAlerta" prefWidth="60" sortable="false" resizable="false"
                                  style="-fx-alignment: CENTER; -fx-text-fill: white;" text=" "/>
-                    <TableColumn text="Cliente" prefWidth="250" fx:id="colCliente"
+                    <TableColumn text="Cliente" prefWidth="230" fx:id="colCliente"
+                                 style="-fx-alignment: CENTER_LEFT; -fx-text-fill: white;"/>
+                    <TableColumn text="Membresía" prefWidth="160" fx:id="colMembresia"
                                  style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
-                    <TableColumn text="Teléfono" prefWidth="150" fx:id="colTelefono"
-                                 style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
+                    <TableColumn text="Teléfono" prefWidth="160" fx:id="colTelefono"
+                                 style="-fx-alignment: CENTER_LEFT; -fx-text-fill: white;"/>
                     <TableColumn text="Vencimiento" prefWidth="150" fx:id="colVencimiento"
                                  style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
                     <TableColumn text="Días Restantes" prefWidth="150" fx:id="colDiasRestantes"

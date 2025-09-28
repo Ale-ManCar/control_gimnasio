@@ -3,16 +3,19 @@ package controllers;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.scene.Node;
@@ -40,12 +43,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
 public class RecepcionistaDashboardController implements Initializable {
 
     @FXML private AnchorPane cardClientes;
+    @FXML private TableColumn<Cliente, String> colMembresia;
     @FXML private AnchorPane cardPagos;
     @FXML private AnchorPane cardVencimientos;
     @FXML private TableView<Cliente> tablaClientesProximosAVencer;
@@ -59,6 +64,9 @@ public class RecepcionistaDashboardController implements Initializable {
     @FXML private TableColumn<Cliente, Integer> colDiasRestantes;
     @FXML private TableColumn<Cliente, Void> colAlerta;
     @FXML private TableColumn<Cliente, Void> colAccion;
+
+    private static final DateTimeFormatter FORMATO_FECHA_AMIGABLE =
+            DateTimeFormatter.ofPattern("dd MMM yyyy", new Locale("es", "ES"));
 
     private MetricCardController ctrlClientes;
     private MetricCardController ctrlPagos;
@@ -101,110 +109,64 @@ public class RecepcionistaDashboardController implements Initializable {
             configurarTablaSinScroll();
 
             colCliente.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
+            colMembresia.setCellValueFactory(new PropertyValueFactory<>("tipoMembresia"));
             colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
             colVencimiento.setCellValueFactory(new PropertyValueFactory<>("fecha_vencimiento"));
             colDiasRestantes.setCellValueFactory(new PropertyValueFactory<>("diasRestantes"));
 
-            colAlerta.setCellFactory(column -> new TableCell<Cliente, Void>() {
-                private final Label warningIcon = new Label("⚠");
+            configurarColumnasPersonalizadas();
 
-                {
-                    warningIcon.setStyle("-fx-text-fill: #d32f2f; -fx-font-weight: bold;");
-                }
-
-                @Override
-                protected void updateItem(Void item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty) {
-                        setGraphic(null);
-                    } else {
-                        Cliente cliente = getTableView().getItems().get(getIndex());
-                        setGraphic(cliente.getDiasRestantes() <= 3 ? warningIcon : null);
-                    }
-                }
-            });
-
-            colAccion.setCellFactory(column -> new TableCell<Cliente, Void>() {
-                private final Button btnReactivar = new Button();
-
-                {
-                    FontIcon iconoReactivar = new FontIcon(FontAwesomeSolid.REDO);
-                    iconoReactivar.setIconColor(Color.web("#28a745"));
-                    iconoReactivar.setIconSize(18);
-                    btnReactivar.setGraphic(iconoReactivar);
-                    btnReactivar.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
-                    btnReactivar.setTooltip(new Tooltip("Reactivar cliente"));
-
-                    btnReactivar.setOnAction(event -> {
-                        Cliente cliente = getTableView().getItems().get(getIndex());
-                        abrirRenovacionConCliente(cliente);
-                    });
-                }
-
-                @Override
-                protected void updateItem(Void item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty) {
-                        setGraphic(null);
-                    } else {
-                        setGraphic(btnReactivar);
-                    }
-                }
-            });
-
-            centrarContenidoColumnas();
+            Label placeholder = new Label("No hay clientes próximos a vencer en los próximos 7 días.");
+            placeholder.getStyleClass().add("table-placeholder-label");
+            tablaClientesProximosAVencer.setPlaceholder(placeholder);
             inicializarTarjetasMetricas();
             cargarDatosTarjetas();
             cargarClientesProximosAVencer();
 
-            tablaClientesProximosAVencer.setRowFactory(tv -> {
-                TableRow<Cliente> row = new TableRow<Cliente>() {
-                    @Override
-                    protected void updateItem(Cliente cliente, boolean empty) {
-                        super.updateItem(cliente, empty);
-                        if (cliente == null || empty) {
-                            setStyle("");
+            final PseudoClass statusSafe = PseudoClass.getPseudoClass("status-safe");
+            final PseudoClass statusApproaching = PseudoClass.getPseudoClass("status-approaching");
+            final PseudoClass statusUrgent = PseudoClass.getPseudoClass("status-urgent");
+            final PseudoClass statusExpired = PseudoClass.getPseudoClass("status-expired");
+
+            tablaClientesProximosAVencer.setRowFactory(tv -> new TableRow<>() {
+                @Override
+                protected void updateItem(Cliente cliente, boolean empty) {
+                    super.updateItem(cliente, empty);
+
+                    pseudoClassStateChanged(statusSafe, false);
+                    pseudoClassStateChanged(statusApproaching, false);
+                    pseudoClassStateChanged(statusUrgent, false);
+                    pseudoClassStateChanged(statusExpired, false);
+
+                    if (empty || cliente == null) {
+                        setTooltip(null);
+                    } else {
+                        int dias = cliente.getDiasRestantes();
+
+                        if (dias >= 5) {
+                            pseudoClassStateChanged(statusSafe, true);
+                        } else if (dias >= 3) {
+                            pseudoClassStateChanged(statusApproaching, true);
+                        } else if (dias >= 1) {
+                            pseudoClassStateChanged(statusUrgent, true);
                         } else {
-                            int dias = cliente.getDiasRestantes();
-                            String baseStyle = "";
-
-                            if (dias >= 5 && dias <= 7) {
-                                baseStyle = "-fx-background-color: #e8f5e9;";
-                            } else if (dias >= 3 && dias <= 4) {
-                                baseStyle = "-fx-background-color: #fff3e0;";
-                            } else if (dias >= 0 && dias <= 3) {
-                                baseStyle = "-fx-background-color: #ffebee;";
-                            } else if (dias < 0) {
-                                baseStyle = "-fx-background-color: #ffcdd2;";
-                            }
-
-                            setStyle(baseStyle + (isSelected() ?
-                                    " -fx-font-weight: bold; -fx-text-fill: black;" :
-                                    " -fx-text-fill: black;"));
+                            pseudoClassStateChanged(statusExpired, true);
                         }
-                    }
-                };
 
-                row.setOnMouseEntered(event -> {
-                    if (!row.isEmpty()) {
-                        Tooltip tooltip = new Tooltip(row.getItem().getTooltipText());
-                        tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
-                        Tooltip.install(row, tooltip);
+                        Tooltip tooltip = new Tooltip(cliente.getTooltipText());
+                        tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: 600; " +
+                                "-fx-background-color: rgba(15,23,42,0.92); -fx-text-fill: #e2e8f0; " +
+                                "-fx-padding: 10 12; -fx-background-radius: 10; -fx-border-radius: 10; " +
+                                "-fx-border-color: rgba(148,163,184,0.45);");
+                        setTooltip(tooltip);
                     }
-                });
-                row.setOnMouseExited(event -> {
-                    if (!row.isEmpty()) {
-                        Tooltip.uninstall(row, null);
-                    }
-                });
-                return row;
+                }
             });
 
         } catch (Exception e) {
             e.printStackTrace();
             lblMensaje.setText("Error al inicializar el panel.");
         }
-
         EventBus.registerListener(this::cargarDatosTarjetas);
         iniciarTurno();
     }
@@ -217,7 +179,7 @@ public class RecepcionistaDashboardController implements Initializable {
     }
 
     private void configurarTablaSinScroll() {
-        tablaClientesProximosAVencer.setFixedCellSize(30);
+        tablaClientesProximosAVencer.setFixedCellSize(44);
         tablaClientesProximosAVencer.setStyle(
                 "-fx-scroll-bar-policy-vertical: never;" +
                         "-fx-scroll-bar-policy-horizontal: never;" +
@@ -232,7 +194,6 @@ public class RecepcionistaDashboardController implements Initializable {
                 if (hbar != null) hbar.setVisible(false);
             }
         });
-
         tablaClientesProximosAVencer.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
@@ -260,7 +221,6 @@ public class RecepcionistaDashboardController implements Initializable {
                             }
                         }
                     }
-
                     if (!turnoReabierto) {
                         int id = DatabaseUtil.iniciarTurno(usuarioId);
                         turnoActual = DatabaseUtil.obtenerTurnoPorId(id);
@@ -324,29 +284,211 @@ public class RecepcionistaDashboardController implements Initializable {
         paneVencimientos.setOnMouseClicked(e -> handleVerTodos(null));
     }
 
-    private void centrarContenidoColumnas() {
-        centrarColumna(colCliente);
-        centrarColumna(colTelefono);
-        centrarColumna(colVencimiento);
-        centrarColumna(colDiasRestantes);
-        colAlerta.setStyle("-fx-alignment: CENTER;");
-        colAccion.setStyle("-fx-alignment: CENTER;");
-    }
+    private void configurarColumnasPersonalizadas() {
+        colAlerta.setCellFactory(column -> new TableCell<Cliente, Void>() {
+            private final FontIcon statusIcon = new FontIcon();
 
-    private <T> void centrarColumna(TableColumn<Cliente, T> columna) {
-        columna.setStyle("-fx-alignment: CENTER;");
-        columna.setCellFactory(column -> new TableCell<Cliente, T>() {
+            {
+                statusIcon.setIconSize(16);
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+                setAlignment(Pos.CENTER);
+            }
+
             @Override
-            protected void updateItem(T item, boolean empty) {
+            protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
+                if (empty) {
                     setGraphic(null);
-                    setStyle("");
                 } else {
-                    setText(item.toString());
-                    setAlignment(Pos.CENTER);
-                    setStyle("-fx-text-fill: black;");
+                    Cliente cliente = getTableView().getItems().get(getIndex());
+                    int dias = cliente.getDiasRestantes();
+
+                    if (dias >= 5) {
+                        statusIcon.setIconCode(FontAwesomeSolid.CHECK_CIRCLE);
+                        statusIcon.setIconColor(Color.web("#22c55e"));
+                    } else if (dias >= 3) {
+                        statusIcon.setIconCode(FontAwesomeSolid.CLOCK);
+                        statusIcon.setIconColor(Color.web("#facc15"));
+                    } else if (dias >= 1) {
+                        statusIcon.setIconCode(FontAwesomeSolid.EXCLAMATION_CIRCLE);
+                        statusIcon.setIconColor(Color.web("#fb923c"));
+                    } else {
+                        statusIcon.setIconCode(FontAwesomeSolid.EXCLAMATION_TRIANGLE);
+                        statusIcon.setIconColor(Color.web("#f87171"));
+                    }
+
+                    setGraphic(statusIcon);
+                }
+            }
+        });
+
+        colCliente.setCellFactory(column -> new TableCell<Cliente, String>() {
+            private final Label lblNombre = new Label();
+
+            {
+                lblNombre.getStyleClass().add("client-name");
+                setAlignment(Pos.CENTER_LEFT);
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            }
+
+            @Override
+            protected void updateItem(String nombre, boolean empty) {
+                super.updateItem(nombre, empty);
+                if (empty || nombre == null) {
+                    setGraphic(null);
+                } else {
+                    lblNombre.setText(nombre);
+                    setGraphic(lblNombre);
+                }
+            }
+        });
+
+        colTelefono.setCellFactory(column -> new TableCell<Cliente, String>() {
+            private final FontIcon iconoTelefono = new FontIcon(FontAwesomeSolid.PHONE);
+            private final Label lblTelefono = new Label();
+            private final HBox contenedor = new HBox(8, iconoTelefono, lblTelefono);
+
+            {
+                iconoTelefono.setIconColor(Color.web("#38bdf8"));
+                iconoTelefono.setIconSize(13);
+                lblTelefono.getStyleClass().add("cell-primary-text");
+                contenedor.getStyleClass().add("phone-cell");
+                contenedor.setAlignment(Pos.CENTER_LEFT);
+                setAlignment(Pos.CENTER_LEFT);
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            }
+
+            @Override
+            protected void updateItem(String telefono, boolean empty) {
+                super.updateItem(telefono, empty);
+                if (empty || telefono == null || telefono.isBlank()) {
+                    setGraphic(null);
+                } else {
+                    lblTelefono.setText(telefono);
+                    setGraphic(contenedor);
+                }
+            }
+        });
+
+        colMembresia.setCellFactory(column -> new TableCell<Cliente, String>() {
+            private final Label etiquetaMembresia = new Label();
+
+            {
+                etiquetaMembresia.getStyleClass().add("membership-chip");
+                etiquetaMembresia.setPadding(new Insets(4, 12, 4, 12));
+                setAlignment(Pos.CENTER);
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            }
+
+            @Override
+            protected void updateItem(String membresia, boolean empty) {
+                super.updateItem(membresia, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    String texto = (membresia == null || membresia.isBlank()) ? "Sin definir" : membresia;
+                    etiquetaMembresia.setText(texto);
+                    setGraphic(etiquetaMembresia);
+                }
+            }
+        });
+
+        colVencimiento.setCellFactory(column -> new TableCell<Cliente, String>() {
+            private final Label lblFecha = new Label();
+
+            {
+                lblFecha.getStyleClass().add("cell-secondary-text");
+                setAlignment(Pos.CENTER);
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            }
+
+            @Override
+            protected void updateItem(String fecha, boolean empty) {
+                super.updateItem(fecha, empty);
+                if (empty || fecha == null || fecha.isBlank()) {
+                    setGraphic(null);
+                } else {
+                    try {
+                        LocalDate date = LocalDate.parse(fecha);
+                        lblFecha.setText(date.format(FORMATO_FECHA_AMIGABLE));
+                    } catch (DateTimeParseException e) {
+                        lblFecha.setText(fecha);
+                    }
+                    setGraphic(lblFecha);
+                }
+            }
+        });
+
+        colDiasRestantes.setCellFactory(column -> new TableCell<Cliente, Integer>() {
+            private final Label badgeDias = new Label();
+
+            {
+                badgeDias.getStyleClass().add("pill-badge");
+                badgeDias.setPadding(new Insets(4, 14, 4, 14));
+                setAlignment(Pos.CENTER);
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            }
+
+            @Override
+            protected void updateItem(Integer dias, boolean empty) {
+                super.updateItem(dias, empty);
+                if (empty || dias == null) {
+                    setGraphic(null);
+                } else {
+                    String texto;
+                    String estilo = "badge-safe";
+
+                    if (dias < 0) {
+                        texto = "Vencido";
+                        estilo = "badge-expired";
+                    } else if (dias == 0) {
+                        texto = "Vence hoy";
+                        estilo = "badge-urgent";
+                    } else if (dias <= 2) {
+                        texto = dias + (dias == 1 ? " día" : " días");
+                        estilo = "badge-urgent";
+                    } else if (dias <= 4) {
+                        texto = dias + " días";
+                        estilo = "badge-warning";
+                    } else {
+                        texto = dias + " días";
+                    }
+
+                    badgeDias.getStyleClass().setAll("pill-badge", estilo);
+                    badgeDias.setText(texto);
+                    setGraphic(badgeDias);
+                }
+            }
+        });
+
+        colAccion.setCellFactory(column -> new TableCell<Cliente, Void>() {
+            private final Button btnReactivar = new Button();
+            private final FontIcon iconoReactivar = new FontIcon(FontAwesomeSolid.REDO);
+
+            {
+                iconoReactivar.setIconColor(Color.web("#22c55e"));
+                iconoReactivar.setIconSize(16);
+                btnReactivar.setGraphic(iconoReactivar);
+                btnReactivar.getStyleClass().add("table-icon-button");
+                btnReactivar.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+                btnReactivar.setFocusTraversable(false);
+                btnReactivar.setTooltip(new Tooltip("Reactivar cliente"));
+
+                btnReactivar.setOnAction(event -> {
+                    Cliente cliente = getTableView().getItems().get(getIndex());
+                    abrirRenovacionConCliente(cliente);
+                });
+
+                setAlignment(Pos.CENTER);
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(btnReactivar);
                 }
             }
         });
@@ -470,10 +612,13 @@ public class RecepcionistaDashboardController implements Initializable {
 
     private void ajustarAlturaTabla() {
         int filas = tablaClientesProximosAVencer.getItems().size();
-        double alturaPorFila = 30;
-        double alturaCabecera = 35;
+        double alturaPorFila = tablaClientesProximosAVencer.getFixedCellSize();
+        if (alturaPorFila <= 0) {
+            alturaPorFila = 44;
+        }
+        double alturaCabecera = 48;
 
-        double alturaTotal = Math.max(150, (filas * alturaPorFila) + alturaCabecera);
+        double alturaTotal = Math.max(200, (filas * alturaPorFila) + alturaCabecera);
         tablaClientesProximosAVencer.setPrefHeight(alturaTotal);
 
         Platform.runLater(() -> tablaClientesProximosAVencer.requestLayout());

@@ -399,6 +399,169 @@
     -fx-effect: dropshadow(three-pass-box, rgba(46, 139, 255, 0.28), 12, 0, 0, 2);
 }
 
+.expiring-table {
+    -fx-background-color: rgba(15, 23, 42, 0.55);
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-border-color: rgba(148, 163, 184, 0.35);
+    -fx-border-width: 1.2;
+    -fx-padding: 6;
+    -fx-table-cell-border-color: transparent;
+}
+
+.expiring-table .column-header-background {
+    -fx-background-color: linear-gradient(to right, rgba(56, 189, 248, 0.35), rgba(37, 99, 235, 0.35));
+    -fx-background-radius: 12 12 0 0;
+    -fx-border-radius: 12 12 0 0;
+    -fx-padding: 0 0 4 0;
+}
+
+.expiring-table .column-header,
+.expiring-table .filler {
+    -fx-background-color: transparent;
+}
+
+.expiring-table .column-header .label {
+    -fx-text-fill: #e2e8f0;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-padding: 12 6;
+    -fx-opacity: 0.95;
+    -fx-letter-spacing: 0.3px;
+}
+
+.expiring-table .table-row-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(148, 163, 184, 0.15);
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 6 12;
+}
+
+.expiring-table .table-row-cell:filled:hover {
+    -fx-background-color: rgba(59, 130, 246, 0.15);
+}
+
+.expiring-table .table-row-cell:filled:selected {
+    -fx-background-color: linear-gradient(to right, rgba(37, 99, 235, 0.45), rgba(14, 116, 144, 0.55));
+    -fx-text-fill: #f8fafc;
+}
+
+.expiring-table .table-row-cell:status-safe {
+    -fx-background-color: rgba(34, 197, 94, 0.14);
+}
+
+.expiring-table .table-row-cell:status-approaching {
+    -fx-background-color: rgba(250, 204, 21, 0.16);
+}
+
+.expiring-table .table-row-cell:status-urgent {
+    -fx-background-color: rgba(251, 146, 60, 0.18);
+}
+
+.expiring-table .table-row-cell:status-expired {
+    -fx-background-color: rgba(248, 113, 113, 0.2);
+}
+
+.expiring-table .table-cell {
+    -fx-text-fill: rgba(226, 232, 240, 0.95);
+    -fx-font-size: 13.2px;
+    -fx-border-color: transparent;
+}
+
+.client-name {
+    -fx-font-size: 14.6px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #f8fafc;
+    -fx-letter-spacing: 0.2px;
+}
+
+.cell-primary-text {
+    -fx-text-fill: #f8fafc;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+}
+
+.cell-secondary-text {
+    -fx-text-fill: rgba(226, 232, 240, 0.85);
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+}
+
+.phone-cell {
+    -fx-alignment: CENTER_LEFT;
+}
+
+.phone-cell .ikonli-font-icon {
+    -fx-icon-color: #38bdf8;
+}
+
+.membership-chip {
+    -fx-background-color: rgba(37, 99, 235, 0.18);
+    -fx-text-fill: #bfdbfe;
+    -fx-font-size: 12.5px;
+    -fx-font-weight: 700;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+}
+
+.pill-badge {
+    -fx-background-color: rgba(37, 99, 235, 0.25);
+    -fx-text-fill: #f8fafc;
+    -fx-font-size: 12.8px;
+    -fx-font-weight: 700;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+}
+
+.badge-safe {
+    -fx-background-color: rgba(34, 197, 94, 0.25);
+    -fx-text-fill: #bbf7d0;
+}
+
+.badge-warning {
+    -fx-background-color: rgba(250, 204, 21, 0.28);
+    -fx-text-fill: #fef3c7;
+}
+
+.badge-urgent {
+    -fx-background-color: rgba(251, 146, 60, 0.3);
+    -fx-text-fill: #fff7ed;
+}
+
+.badge-expired {
+    -fx-background-color: rgba(248, 113, 113, 0.32);
+    -fx-text-fill: #fee2e2;
+}
+
+.table-icon-button {
+    -fx-background-color: rgba(15, 23, 42, 0.45);
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-padding: 6;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(three-pass-box, rgba(15, 23, 42, 0.35), 10, 0, 0, 3);
+}
+
+.table-icon-button:hover {
+    -fx-background-color: rgba(34, 197, 94, 0.2);
+}
+
+.table-icon-button:pressed {
+    -fx-background-color: rgba(34, 197, 94, 0.32);
+}
+
+.table-placeholder-label {
+    -fx-text-fill: rgba(226, 232, 240, 0.7);
+    -fx-font-size: 13px;
+    -fx-font-style: italic;
+}
+
+.expiring-table .placeholder .label {
+    -fx-text-fill: rgba(226, 232, 240, 0.55);
+    -fx-font-size: 13px;
+}
+
 .dialog-section {
     -fx-background-color: linear-gradient(to bottom, rgba(32, 64, 120, 0.9), rgba(16, 36, 70, 0.94));
         -fx-background-radius: 16;
