@@ -114,7 +114,7 @@ public class RecepcionistaDashboardController implements Initializable {
 
             colCliente.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
             colMembresia.setCellValueFactory(new PropertyValueFactory<>("tipoMembresia"));
-            colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
+            colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefonoVisible"));
             colVencimiento.setCellValueFactory(new PropertyValueFactory<>("fecha_vencimiento"));
             colDiasRestantes.setCellValueFactory(new PropertyValueFactory<>("diasRestantes"));
 
@@ -582,6 +582,7 @@ public class RecepcionistaDashboardController implements Initializable {
 
             String sqlVencimientos = "SELECT COUNT(*) AS total FROM clientes " +
                     "WHERE activo = 1 " +
+                    "AND LOWER(tipoMembresia) <> 'diario' " +
                     "AND date(fecha_vencimiento) BETWEEN date('now') AND date('now', '+7 days')";
             try (PreparedStatement ps = conn.prepareStatement(sqlVencimientos);
                  ResultSet rs = ps.executeQuery()) {
@@ -636,9 +637,10 @@ public class RecepcionistaDashboardController implements Initializable {
 
     private void cargarClientesProximosAVencer() {
         ObservableList<Cliente> clientes = FXCollections.observableArrayList();
-        String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
+        String sql = "SELECT nombres, apellidos, telefono, telefono_visible, tipoMembresia, fecha_vencimiento " +
                 "FROM clientes " +
                 "WHERE activo = 1 " +
+                "AND LOWER(tipoMembresia) <> 'diario' " +
                 "AND date(fecha_vencimiento) BETWEEN date('now') AND date('now', '+7 days') " +
                 "ORDER BY fecha_vencimiento";
 
@@ -653,6 +655,7 @@ public class RecepcionistaDashboardController implements Initializable {
                         rs.getString("nombres"),
                         rs.getString("apellidos"),
                         rs.getString("telefono"),
+                        rs.getString("telefono_visible"),
                         rs.getString("tipoMembresia"),
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 );

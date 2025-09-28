@@ -31,8 +31,9 @@ public class EstadoClienteService {
 
     public static List<Cliente> obtenerClientesPorVencerEn(int dias) {
         List<Cliente> clientes = new ArrayList<>();
-        String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
+        String sql = "SELECT nombres, apellidos, telefono, telefono_visible, tipoMembresia, fecha_vencimiento " +
                 "FROM clientes WHERE fecha_vencimiento = ? AND activo = 1 " +
+                "AND LOWER(tipoMembresia) <> 'diario' " +
                 "AND telefono NOT IN (SELECT telefono_cliente FROM alertas_enviadas WHERE fecha_envio = CURRENT_DATE AND tipo_alerta = 'Vencimiento')";
         LocalDate objetivo = LocalDate.now().plusDays(dias);
         try (Connection conn = DatabaseUtil.getConnection();
@@ -44,6 +45,7 @@ public class EstadoClienteService {
                             rs.getString("nombres"),
                             rs.getString("apellidos"),
                             rs.getString("telefono"),
+                            rs.getString("telefono_visible"),
                             LocalDate.parse(rs.getString("fecha_vencimiento"))
                     );
                     c.setTipoMembresia(rs.getString("tipoMembresia"));

@@ -110,7 +110,7 @@ public class ListaClientesController implements Initializable {
 
     private void configurarColumnas() {
         colNombreCompleto.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
-        colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
+        colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefonoVisible"));
         colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
 
         colNombreCompleto.setCellFactory(column -> new TableCell<>() {
@@ -611,7 +611,7 @@ public class ListaClientesController implements Initializable {
             ObservableList<Cliente> filtrados = FXCollections.observableArrayList();
             for (Cliente cliente : clientesOriginales) {
                 String nombre = cliente.getNombreCompleto().toLowerCase();
-                String telefono = cliente.getTelefono() != null ? cliente.getTelefono().toLowerCase() : "";
+                String telefono = cliente.getTelefonoVisible() != null ? cliente.getTelefonoVisible().toLowerCase() : "";
                 String telefonoNumerico = telefono.replaceAll("[^0-9]", "");
                 String membresia = cliente.getTipoMembresia() != null ? cliente.getTipoMembresia().toLowerCase() : "";
 
@@ -758,7 +758,8 @@ public class ListaClientesController implements Initializable {
     }
 
     private void cargarClientes() {
-        String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento FROM clientes WHERE activo = 1";
+        String sql = "SELECT nombres, apellidos, telefono, telefono_visible, tipoMembresia, fecha_vencimiento " +
+                "FROM clientes WHERE activo = 1";
 
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -771,6 +772,7 @@ public class ListaClientesController implements Initializable {
                         rs.getString("nombres"),
                         rs.getString("apellidos"),
                         rs.getString("telefono"),
+                        rs.getString("telefono_visible"),
                         rs.getString("tipoMembresia"),
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 );

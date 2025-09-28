@@ -530,8 +530,9 @@ public class ReporteUtil {
                 return;
             }
 
-            String sql = "SELECT nombres, apellidos, telefono, fecha_vencimiento AS fechaVencimiento " +
+            String sql = "SELECT nombres, apellidos, telefono_visible AS telefono, fecha_vencimiento AS fechaVencimiento " +
                     "FROM clientes WHERE activo = 1 " +
+                    "AND LOWER(tipoMembresia) <> 'diario' " +
                     "AND date(fecha_vencimiento) BETWEEN date('now') AND date('now','+7 day') " +
                     "ORDER BY fecha_vencimiento";
 

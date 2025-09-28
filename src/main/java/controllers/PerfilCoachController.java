@@ -53,7 +53,7 @@ public class PerfilCoachController {
 
     private void configurarColumnas() {
         colCliente.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
-        colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
+        colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefonoVisible"));
 
         colCliente.setCellFactory(column -> new TableCell<Cliente, String>() {
             @Override
@@ -237,7 +237,7 @@ public class PerfilCoachController {
             ObservableList<Cliente> filtrados = FXCollections.observableArrayList();
             for (Cliente cliente : clientesOriginales) {
                 if (cliente.getNombreCompleto().toLowerCase().contains(filtro) ||
-                        cliente.getTelefono().contains(filtro)) {
+                        cliente.getTelefonoVisible().contains(filtro)) {
                     filtrados.add(cliente);
                 }
             }
@@ -276,7 +276,7 @@ public class PerfilCoachController {
 
     private void cargarClientes(int coachId) {
         tablaClientes.getItems().clear();
-        String sql = "SELECT nombres, apellidos, telefono, fecha_vencimiento FROM clientes WHERE coach_id = ?";
+        String sql = "SELECT nombres, apellidos, telefono, telefono_visible, fecha_vencimiento FROM clientes WHERE coach_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, coachId);
@@ -286,6 +286,7 @@ public class PerfilCoachController {
                         rs.getString("nombres"),
                         rs.getString("apellidos"),
                         rs.getString("telefono"),
+                        rs.getString("telefono_visible"),
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 ));
             }

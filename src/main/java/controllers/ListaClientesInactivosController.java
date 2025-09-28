@@ -103,7 +103,7 @@ public class ListaClientesInactivosController {
 
     private void configurarColumnas() {
         colNombreCompleto.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
-        colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
+        colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefonoVisible"));
         colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
 
         colNombreCompleto.setCellFactory(column -> new TableCell<>() {
@@ -287,7 +287,8 @@ public class ListaClientesInactivosController {
     }
 
     private void cargarClientes() {
-        String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento FROM clientes WHERE activo = 0";
+        String sql = "SELECT nombres, apellidos, telefono, telefono_visible, tipoMembresia, fecha_vencimiento " +
+                "FROM clientes WHERE activo = 0";
 
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -300,6 +301,7 @@ public class ListaClientesInactivosController {
                         rs.getString("nombres"),
                         rs.getString("apellidos"),
                         rs.getString("telefono"),
+                        rs.getString("telefono_visible"),
                         rs.getString("tipoMembresia"),
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 );
@@ -476,7 +478,7 @@ public class ListaClientesInactivosController {
         } else {
             ObservableList<Cliente> filtrados = FXCollections.observableArrayList();
             for (Cliente cliente : clientesOriginales) {
-                if (cliente.getNombreCompleto().toLowerCase().contains(filtro) || cliente.getTelefono().contains(filtro)) {
+                if (cliente.getNombreCompleto().toLowerCase().contains(filtro) || cliente.getTelefonoVisible().contains(filtro)) {
                     filtrados.add(cliente);
                 }
             }

@@ -56,6 +56,11 @@ public class WhatsAppService {
                         return;
                 }
 
+                if (cliente.getTelefonoVisible() == null || cliente.getTelefonoVisible().isBlank() || cliente.getTelefonoVisible().matches("0{10}")) {
+                        System.out.println(LocalDateTime.now() + " - Cliente sin número válido, se omite envío.");
+                        return;
+                }
+
                 try {
                         if (driver == null || !esDriverActivo()) {
                                 iniciarDriver();

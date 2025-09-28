@@ -151,7 +151,7 @@ public class RegistroClienteController {
         try (Connection conn = DatabaseUtil.getConnection()) {
             conn.setAutoCommit(false);
 
-            String sqlCliente = "INSERT INTO clientes (nombres, apellidos, telefono, tipoMembresia, fechaInicio, fecha_vencimiento, monto_pago, area, coach_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sqlCliente = "INSERT INTO clientes (nombres, apellidos, telefono, telefono_visible, tipoMembresia, fechaInicio, fecha_vencimiento, monto_pago, area, coach_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement stmtCliente = conn.prepareStatement(sqlCliente, PreparedStatement.RETURN_GENERATED_KEYS);
 
             String montoStr = validarCampo(txtMontoPago.getText(), "Monto de Pago");
@@ -164,32 +164,39 @@ public class RegistroClienteController {
             LocalDate fechaInicio = diario ? LocalDate.now() : dpFechaInicio.getValue();
             LocalDate fechaVencimiento = diario ? fechaInicio : calcularVencimiento(fechaInicio, cbMembresia.getValue());
 
+            String telefonoInterno;
+            String telefonoVisible;
             if (diario) {
                 stmtCliente.setString(1, "CLIENTE");
                 stmtCliente.setString(2, "DIARIO");
                 String telefono = String.valueOf(System.currentTimeMillis());
                 telefono = telefono.substring(telefono.length() - 10);
-                stmtCliente.setString(3, telefono);
+                telefonoInterno = telefono;
+                telefonoVisible = telefono;
             } else {
                 stmtCliente.setString(1, validarCampo(txtNombres.getText(), "Nombres"));
                 stmtCliente.setString(2, validarCampo(txtApellidos.getText(), "Apellidos"));
-                stmtCliente.setString(3, validarCampo(txtTelefono.getText(), "Teléfono"));
+                telefonoVisible = validarCampo(txtTelefono.getText(), "Teléfono");
+                telefonoInterno = generarTelefonoInterno(telefonoVisible, null);
             }
 
-            stmtCliente.setString(4, cbMembresia.getValue());
-            stmtCliente.setString(5, fechaInicio.toString());
-            stmtCliente.setString(6, fechaVencimiento.toString());
-            stmtCliente.setDouble(7, monto);
+            stmtCliente.setString(3, telefonoInterno);
+            stmtCliente.setString(4, telefonoVisible);
+
+            stmtCliente.setString(5, cbMembresia.getValue());
+            stmtCliente.setString(6, fechaInicio.toString());
+            stmtCliente.setString(7, fechaVencimiento.toString());
+            stmtCliente.setDouble(8, monto);
 
             if (diario) {
-                stmtCliente.setNull(8, java.sql.Types.VARCHAR);
-                stmtCliente.setNull(9, java.sql.Types.INTEGER);
+                stmtCliente.setNull(9, java.sql.Types.VARCHAR);
+                stmtCliente.setNull(10, java.sql.Types.INTEGER);
             } else {
-                stmtCliente.setString(8, cbArea.getValue());
+                stmtCliente.setString(9, cbArea.getValue());
                 if (cbCoach.getValue() != null) {
-                    stmtCliente.setInt(9, cbCoach.getValue().getId());
+                    stmtCliente.setInt(10, cbCoach.getValue().getId());
                 } else {
-                    stmtCliente.setNull(9, java.sql.Types.INTEGER);
+                    stmtCliente.setNull(10, java.sql.Types.INTEGER);
                 }
             }
 
@@ -242,7 +249,8 @@ public class RegistroClienteController {
                 Cliente nuevoCliente = new Cliente(
                         txtNombres.getText().trim(),
                         txtApellidos.getText().trim(),
-                        txtTelefono.getText().trim(),
+                        telefonoInterno,
+                        telefonoVisible,
                         cbMembresia.getValue(),
                         fechaVencimiento
                 );
@@ -329,6 +337,17 @@ public class RegistroClienteController {
             case "1 Año" -> fechaInicio.plusYears(1);
             default -> fechaInicio;
         };
+    }
+
+    private String generarTelefonoInterno(String telefonoVisible, String telefonoActual) {
+        String valor = telefonoVisible != null ? telefonoVisible.trim() : "";
+        if (valor.equals("0000000000")) {
+            if (telefonoActual != null && telefonoActual.startsWith("AUTO-")) {
+                return telefonoActual;
+            }
+            return "AUTO-" + System.currentTimeMillis();
+        }
+        return valor;
     }
 
     private String validarCampo(String valor, String nombreCampo) {

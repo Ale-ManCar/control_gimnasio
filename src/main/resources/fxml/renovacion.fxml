@@ -47,7 +47,7 @@
                             <cellValueFactory><PropertyValueFactory property="nombreCompleto"/></cellValueFactory>
                         </TableColumn>
                         <TableColumn text="Teléfono" prefWidth="100" style="-fx-text-fill: #2c3e50; -fx-border-width: 0;">
-                            <cellValueFactory><PropertyValueFactory property="telefono"/></cellValueFactory>
+                            <cellValueFactory><PropertyValueFactory property="telefonoVisible"/></cellValueFactory>
                         </TableColumn>
                         <TableColumn text="Vence" prefWidth="80" style="-fx-text-fill: #2c3e50; -fx-border-width: 0;">
                             <cellValueFactory><PropertyValueFactory property="fecha_vencimiento"/></cellValueFactory>

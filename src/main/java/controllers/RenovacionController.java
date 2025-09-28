@@ -160,9 +160,10 @@ public class RenovacionController {
     }
 
     private void cargarClientesProximos() {
-        String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
+        String sql = "SELECT nombres, apellidos, telefono, telefono_visible, tipoMembresia, fecha_vencimiento " +
                 "FROM clientes " +
                 "WHERE activo = 1 " +
+                "AND LOWER(tipoMembresia) <> 'diario' " +
                 "AND date(fecha_vencimiento) >= date('now', '-15 days') " +  // Incluye período de gracia
                 "AND date(fecha_vencimiento) <= date('now', '+7 days') " +   // Hasta 7 días en futuro
                 "ORDER BY fecha_vencimiento ASC";
@@ -171,7 +172,7 @@ public class RenovacionController {
     }
 
     private void cargarTodosClientesActivos() {
-        String sql = "SELECT nombres, apellidos, telefono, tipoMembresia, fecha_vencimiento " +
+        String sql = "SELECT nombres, apellidos, telefono, telefono_visible, tipoMembresia, fecha_vencimiento " +
                 "FROM clientes WHERE activo = 1";
 
         cargarClientesDesdeSQL(sql, todosClientes);
@@ -191,6 +192,7 @@ public class RenovacionController {
                         rs.getString("nombres"),
                         rs.getString("apellidos"),
                         rs.getString("telefono"),
+                        rs.getString("telefono_visible"),
                         rs.getString("tipoMembresia"),
                         fechaVencimiento
                 );
@@ -226,7 +228,7 @@ public class RenovacionController {
         List<Cliente> filtrados = todosClientes.stream()
                 .filter(cliente ->
                         (cliente.getNombres() + " " + cliente.getApellidos()).toLowerCase().contains(filtro) ||
-                                cliente.getTelefono().contains(filtro)
+                                cliente.getTelefonoVisible().contains(filtro)
                 )
                 .collect(Collectors.toList());
 
@@ -409,6 +411,7 @@ public class RenovacionController {
                         seleccionado.getNombres(),
                         seleccionado.getApellidos(),
                         seleccionado.getTelefono(),
+                        seleccionado.getTelefonoVisible(),
                         cbNuevaMembresia.getValue(),
                         nuevaFecha
                 );
