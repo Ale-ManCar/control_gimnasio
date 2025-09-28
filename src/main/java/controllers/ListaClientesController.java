@@ -35,8 +35,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -48,7 +46,6 @@ public class ListaClientesController implements Initializable {
     @FXML private TableView<Cliente> tablaClientes;
     @FXML private TableColumn<Cliente, String> colNombreCompleto;
     @FXML private TableColumn<Cliente, String> colTelefono;
-    @FXML private TableColumn<Cliente, String> colVencimiento;
     @FXML private TableColumn<Cliente, String> colEstado;
     @FXML private TableColumn<Cliente, Void> colAcciones;
     @FXML private TextField txtBuscar;
@@ -60,9 +57,6 @@ public class ListaClientesController implements Initializable {
             "#5B8DEF", "#FF8C42", "#34C759", "#FF6B6B", "#A55EEA", "#20CFC3"
     };
     private static final Locale LOCALE_ES = new Locale("es", "ES");
-    private static final DateTimeFormatter FORMATO_VENCIMIENTO =
-            DateTimeFormatter.ofPattern("dd MMM yyyy", LOCALE_ES);
-
     private final ObservableList<Cliente> clientesOriginales = FXCollections.observableArrayList();
     private Cliente clienteEditado;
     private String estiloOriginalTabla;
@@ -112,7 +106,6 @@ public class ListaClientesController implements Initializable {
     private void configurarColumnas() {
         colNombreCompleto.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
         colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
-        colVencimiento.setCellValueFactory(new PropertyValueFactory<>("fecha_vencimiento"));
         colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
 
         colNombreCompleto.setCellFactory(column -> new TableCell<>() {
@@ -195,56 +188,6 @@ public class ListaClientesController implements Initializable {
                     setGraphic(content);
                     setText(null);
                     setStyle("-fx-alignment: CENTER_LEFT;");
-                }
-            }
-        });
-
-        colVencimiento.setCellFactory(column -> new TableCell<>() {
-            private final Label fechaLabel = new Label();
-            private final Label estadoDias = new Label();
-            private final VBox container = new VBox(4, fechaLabel, estadoDias);
-
-            {
-                container.setAlignment(Pos.CENTER);
-                fechaLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #f5f7ff;");
-                estadoDias.setStyle("-fx-background-radius: 999; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 3px 12px;");
-            }
-
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setGraphic(null);
-                    setText(null);
-                } else {
-                    Cliente cliente = getTableRow().getItem();
-                    if (cliente == null) {
-                        setGraphic(null);
-                        return;
-                    }
-
-                    LocalDate fechaVencimiento = cliente.getFecha_vencimientoDate();
-                    long dias = ChronoUnit.DAYS.between(LocalDate.now(), fechaVencimiento);
-
-                    String fechaFormateada = fechaVencimiento.format(FORMATO_VENCIMIENTO).toUpperCase(LOCALE_ES);
-                    fechaLabel.setText(fechaFormateada);
-
-                    if (dias > 15) {
-                        estadoDias.setText(dias + (dias == 1 ? " día" : " días"));
-                        estadoDias.setStyle("-fx-background-color: rgba(46,204,113,0.18); -fx-text-fill: #2ecc71; -fx-background-radius: 999; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 3px 12px;");
-                    } else if (dias >= 0) {
-                        String texto = dias == 0 ? "Vence hoy" : dias + (dias == 1 ? " día" : " días");
-                        estadoDias.setText(texto);
-                        estadoDias.setStyle("-fx-background-color: rgba(255,193,7,0.22); -fx-text-fill: #f5a623; -fx-background-radius: 999; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 3px 12px;");
-                    } else {
-                        long diasVencido = Math.abs(dias);
-                        estadoDias.setText("Vencido hace " + diasVencido + (diasVencido == 1 ? " día" : " días"));
-                        estadoDias.setStyle("-fx-background-color: rgba(220,53,69,0.22); -fx-text-fill: #ff6b6b; -fx-background-radius: 999; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 3px 12px;");
-                    }
-
-                    setGraphic(container);
-                    setText(null);
-                    setStyle("-fx-alignment: CENTER;");
                 }
             }
         });
@@ -345,11 +288,10 @@ public class ListaClientesController implements Initializable {
         Platform.runLater(() -> {
             double anchoTotal = tablaClientes.getWidth();
             if (anchoTotal > 0) {
-                colNombreCompleto.setPrefWidth(anchoTotal * 0.35);
-                colTelefono.setPrefWidth(anchoTotal * 0.20);
-                colVencimiento.setPrefWidth(anchoTotal * 0.22);
-                colEstado.setPrefWidth(anchoTotal * 0.13);
-                colAcciones.setPrefWidth(anchoTotal * 0.10);
+                colNombreCompleto.setPrefWidth(anchoTotal * 0.45);
+                colTelefono.setPrefWidth(anchoTotal * 0.25);
+                colEstado.setPrefWidth(anchoTotal * 0.18);
+                colAcciones.setPrefWidth(anchoTotal * 0.12);
                 tablaClientes.requestLayout();
             }
         });
@@ -357,11 +299,10 @@ public class ListaClientesController implements Initializable {
         tablaClientes.widthProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal.doubleValue() > 0) {
                 double anchoTotal = newVal.doubleValue();
-                colNombreCompleto.setPrefWidth(anchoTotal * 0.35);
-                colTelefono.setPrefWidth(anchoTotal * 0.20);
-                colVencimiento.setPrefWidth(anchoTotal * 0.22);
-                colEstado.setPrefWidth(anchoTotal * 0.13);
-                colAcciones.setPrefWidth(anchoTotal * 0.10);
+                colNombreCompleto.setPrefWidth(anchoTotal * 0.45);
+                colTelefono.setPrefWidth(anchoTotal * 0.25);
+                colEstado.setPrefWidth(anchoTotal * 0.18);
+                colAcciones.setPrefWidth(anchoTotal * 0.12);
                 tablaClientes.requestLayout();
             }
         });
@@ -517,19 +458,10 @@ public class ListaClientesController implements Initializable {
         }
 
         String soloDigitos = telefono.replaceAll("[^0-9]", "");
-        if (soloDigitos.length() == 10) {
-            return String.format("(%s) %s-%s",
-                    soloDigitos.substring(0, 3),
-                    soloDigitos.substring(3, 6),
-                    soloDigitos.substring(6));
+        if (!soloDigitos.isEmpty()) {
+            return soloDigitos;
         }
-        if (soloDigitos.length() == 9) {
-            return String.format("%s %s %s",
-                    soloDigitos.substring(0, 3),
-                    soloDigitos.substring(3, 6),
-                    soloDigitos.substring(6));
-        }
-        return telefono;
+        return telefono.trim();
     }
 
     private void actualizarResumen() {

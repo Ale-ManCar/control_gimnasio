@@ -32,9 +32,7 @@
             <TableColumn text="Cliente" fx:id="colNombreCompleto"
                          style="-fx-alignment: CENTER_LEFT;" prefWidth="340"/>
             <TableColumn text="Teléfono" fx:id="colTelefono"
-                         style="-fx-alignment: CENTER_LEFT;" prefWidth="190"/>
-            <TableColumn text="Vencimiento" fx:id="colVencimiento"
-                         style="-fx-alignment: CENTER;" prefWidth="200"/>
+                         style="-fx-alignment: CENTER_LEFT;" prefWidth="230"/>
             <TableColumn text="Estado" fx:id="colEstado"
                          style="-fx-alignment: CENTER;" prefWidth="150"/>
             <TableColumn text="Acciones" fx:id="colAcciones"
