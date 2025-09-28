@@ -572,7 +572,8 @@ public class RecepcionistaDashboardController implements Initializable {
 
     private void cargarDatosTarjetas() {
         try (Connection conn = DatabaseUtil.getConnection()) {
-            String sqlClientes = "SELECT COUNT(*) AS total FROM clientes WHERE activo = 1";
+            String sqlClientes = "SELECT COUNT(*) AS total FROM clientes WHERE activo = 1 " +
+                    "AND (tipoMembresia IS NULL OR LOWER(tipoMembresia) <> 'diario')";
             try (PreparedStatement ps = conn.prepareStatement(sqlClientes);
                  ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
