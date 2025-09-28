@@ -1,6 +1,8 @@
 package models;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -15,6 +17,7 @@ public class Cliente {
     private final StringProperty fecha_vencimiento;
     private final StringProperty tipoMembresia;
     private final IntegerProperty diasRestantes = new SimpleIntegerProperty(0);
+    private final BooleanProperty presenteHoy = new SimpleBooleanProperty(false);
 
     public Cliente(String nombres, String apellidos, String telefono, String tipoMembresia, LocalDate fecha_vencimiento) {
         this.nombres = new SimpleStringProperty(nombres);
@@ -39,6 +42,7 @@ public class Cliente {
     public StringProperty fechaVencimientoProperty() { return fecha_vencimiento; }
     public StringProperty tipoMembresiaProperty() { return tipoMembresia; }
     public IntegerProperty diasRestantesProperty() { return diasRestantes; }
+    public BooleanProperty presenteHoyProperty() { return presenteHoy; }
 
     public String getNombres() { return nombres.get(); }
     public String getApellidos() { return apellidos.get(); }
@@ -46,6 +50,7 @@ public class Cliente {
     public String getTipoMembresia() { return tipoMembresia.get(); }
     public String getFecha_vencimiento() { return fecha_vencimiento.get(); }
     public int getDiasRestantes() { return diasRestantes.get(); }
+    public boolean isPresenteHoy() { return presenteHoy.get(); }
 
     public String getEstado() {
         if (fecha_vencimiento.get() == null || fecha_vencimiento.get().isEmpty())
@@ -88,6 +93,10 @@ public class Cliente {
 
     public void setDiasRestantes(int dias) {
         this.diasRestantes.set(dias);
+    }
+
+    public void setPresenteHoy(boolean presente) {
+        this.presenteHoy.set(presente);
     }
 
     public void setTipoMembresia(String tipo) {

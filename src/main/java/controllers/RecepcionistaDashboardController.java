@@ -45,6 +45,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class RecepcionistaDashboardController implements Initializable {
@@ -82,6 +83,7 @@ public class RecepcionistaDashboardController implements Initializable {
             return;
         }
 
+        DatabaseUtil.inicializarTablaCheckIns();
         actualizarTituloRecepcionista();
         try {
 
@@ -338,6 +340,16 @@ public class RecepcionistaDashboardController implements Initializable {
                     setGraphic(null);
                 } else {
                     lblNombre.setText(nombre);
+                    Cliente clienteAsociado = null;
+                    if (getIndex() >= 0 && getIndex() < getTableView().getItems().size()) {
+                        clienteAsociado = getTableView().getItems().get(getIndex());
+                    }
+                    lblNombre.getStyleClass().remove("client-present");
+                    if (clienteAsociado != null && clienteAsociado.isPresenteHoy()) {
+                        if (!lblNombre.getStyleClass().contains("client-present")) {
+                            lblNombre.getStyleClass().add("client-present");
+                        }
+                    }
                     setGraphic(lblNombre);
                 }
             }
@@ -353,8 +365,9 @@ public class RecepcionistaDashboardController implements Initializable {
                 iconoTelefono.setIconSize(13);
                 lblTelefono.getStyleClass().add("cell-primary-text");
                 contenedor.getStyleClass().add("phone-cell");
-                contenedor.setAlignment(Pos.CENTER_LEFT);
-                setAlignment(Pos.CENTER_LEFT);
+                contenedor.setAlignment(Pos.CENTER);
+                lblTelefono.setAlignment(Pos.CENTER);
+                setAlignment(Pos.CENTER);
                 setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
             }
 
@@ -464,6 +477,10 @@ public class RecepcionistaDashboardController implements Initializable {
         colAccion.setCellFactory(column -> new TableCell<Cliente, Void>() {
             private final Button btnReactivar = new Button();
             private final FontIcon iconoReactivar = new FontIcon(FontAwesomeSolid.REDO);
+            private final Button btnCheckIn = new Button();
+            private final FontIcon iconoCheckIn = new FontIcon(FontAwesomeSolid.CHECK);
+            private final Tooltip tooltipCheckIn = new Tooltip("Registrar ingreso");
+            private final HBox contenedor = new HBox(8, btnCheckIn, btnReactivar);
 
             {
                 iconoReactivar.setIconColor(Color.web("#22c55e"));
@@ -475,20 +492,56 @@ public class RecepcionistaDashboardController implements Initializable {
                 btnReactivar.setTooltip(new Tooltip("Reactivar cliente"));
 
                 btnReactivar.setOnAction(event -> {
-                    Cliente cliente = getTableView().getItems().get(getIndex());
+                    int index = getIndex();
+                    if (index < 0 || index >= getTableView().getItems().size()) {
+                        return;
+                    }
+                    Cliente cliente = getTableView().getItems().get(index);
                     abrirRenovacionConCliente(cliente);
                 });
 
+                iconoCheckIn.setIconSize(16);
+                iconoCheckIn.setIconColor(Color.web("#22c55e"));
+                btnCheckIn.setGraphic(iconoCheckIn);
+                btnCheckIn.getStyleClass().add("table-icon-button");
+                btnCheckIn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+                btnCheckIn.setFocusTraversable(false);
+                btnCheckIn.setTooltip(tooltipCheckIn);
+                btnCheckIn.setOnAction(event -> {
+                    int index = getIndex();
+                    if (index < 0 || index >= getTableView().getItems().size()) {
+                        return;
+                    }
+                    Cliente cliente = getTableView().getItems().get(index);
+                    if (cliente == null || cliente.isPresenteHoy()) {
+                        return;
+                    }
+                    DatabaseUtil.registrarCheckInCliente(cliente.getTelefono());
+                    cliente.setPresenteHoy(true);
+                    getTableView().refresh();
+                });
+
+                contenedor.setAlignment(Pos.CENTER);
                 setAlignment(Pos.CENTER);
+            }
+
+            private void actualizarEstadoCheckIn(Cliente cliente) {
+                boolean presente = cliente != null && cliente.isPresenteHoy();
+                btnCheckIn.setDisable(presente);
+                iconoCheckIn.setIconColor(presente ? Color.web("#16a34a") : Color.web("#22c55e"));
+                btnCheckIn.setOpacity(presente ? 0.7 : 1.0);
+                tooltipCheckIn.setText(presente ? "Ingreso registrado hoy" : "Registrar ingreso");
             }
 
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty) {
+                if (empty || getIndex() < 0 || getIndex() >= getTableView().getItems().size()) {
                     setGraphic(null);
                 } else {
-                    setGraphic(btnReactivar);
+                    Cliente cliente = getTableView().getItems().get(getIndex());
+                    actualizarEstadoCheckIn(cliente);
+                    setGraphic(contenedor);
                 }
             }
         });
@@ -580,6 +633,8 @@ public class RecepcionistaDashboardController implements Initializable {
                 "AND date(fecha_vencimiento) BETWEEN date('now') AND date('now', '+7 days') " +
                 "ORDER BY fecha_vencimiento";
 
+        Set<String> clientesPresentesHoy = DatabaseUtil.obtenerClientesCheckInHoy();
+
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -587,15 +642,20 @@ public class RecepcionistaDashboardController implements Initializable {
             boolean hayClientes = false;
             while (rs.next()) {
                 hayClientes = true;
+                String telefono = rs.getString("telefono");
+                String telefonoNormalizado = telefono != null ? telefono.trim() : null;
                 Cliente cliente = new Cliente(
                         rs.getString("nombres"),
                         rs.getString("apellidos"),
-                        rs.getString("telefono"),
+                        telefonoNormalizado,
                         rs.getString("tipoMembresia"),
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 );
 
                 cliente.setDiasRestantes();
+                if (telefonoNormalizado != null && clientesPresentesHoy.contains(telefonoNormalizado)) {
+                    cliente.setPresenteHoy(true);
+                }
 
                 clientes.add(cliente);
             }

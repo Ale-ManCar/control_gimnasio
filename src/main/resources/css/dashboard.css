@@ -475,6 +475,10 @@
     -fx-letter-spacing: 0.2px;
 }
 
+.client-present {
+    -fx-text-fill: #4ade80;
+}
+
 .cell-primary-text {
     -fx-text-fill: #f8fafc;
     -fx-font-size: 13px;
@@ -488,7 +492,7 @@
 }
 
 .phone-cell {
-    -fx-alignment: CENTER_LEFT;
+    -fx-alignment: CENTER;
 }
 
 .phone-cell .ikonli-font-icon {

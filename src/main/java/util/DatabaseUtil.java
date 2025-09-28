@@ -2439,4 +2439,71 @@ public class DatabaseUtil {
             return null;
         }
     }
+
+    public static void inicializarTablaCheckIns() {
+        String sql = "CREATE TABLE IF NOT EXISTS cliente_checkin (" +
+                "telefono TEXT PRIMARY KEY," +
+                "fecha TEXT NOT NULL)";
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        limpiarCheckInsAntiguos();
+    }
+
+    public static void registrarCheckInCliente(String telefono) {
+        if (telefono == null || telefono.isBlank()) {
+            return;
+        }
+
+        inicializarTablaCheckIns();
+
+        String sql = "INSERT INTO cliente_checkin (telefono, fecha) VALUES (?, date('now')) " +
+                "ON CONFLICT(telefono) DO UPDATE SET fecha = excluded.fecha";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, telefono.trim());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static Set<String> obtenerClientesCheckInHoy() {
+        inicializarTablaCheckIns();
+
+        Set<String> clientes = new HashSet<>();
+        String sql = "SELECT telefono FROM cliente_checkin WHERE fecha = date('now')";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                String telefono = rs.getString("telefono");
+                if (telefono != null && !telefono.isBlank()) {
+                    clientes.add(telefono.trim());
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return clientes;
+    }
+
+    public static void limpiarCheckInsAntiguos() {
+        String sql = "DELETE FROM cliente_checkin WHERE fecha < date('now')";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }
