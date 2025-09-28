@@ -3,6 +3,7 @@ package controllers;
 import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -35,9 +36,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.Comparator;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.prefs.Preferences;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -57,9 +60,11 @@ public class ListaClientesController implements Initializable {
             "#5B8DEF", "#FF8C42", "#34C759", "#FF6B6B", "#A55EEA", "#20CFC3"
     };
     private static final Locale LOCALE_ES = new Locale("es", "ES");
+    private static final String PREFIJO_ASISTENCIA = "asistencia_";
     private final ObservableList<Cliente> clientesOriginales = FXCollections.observableArrayList();
     private Cliente clienteEditado;
     private String estiloOriginalTabla;
+    private final Preferences preferencias = Preferences.userNodeForPackage(ListaClientesController.class);
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -116,6 +121,8 @@ public class ListaClientesController implements Initializable {
             private final Label detalle = new Label();
             private final VBox textContainer = new VBox(nombre, detalle);
             private final HBox content = new HBox(12, avatar, textContainer);
+            private Cliente clienteActual;
+            private final ChangeListener<Boolean> asistenciaListener = (obs, oldVal, newVal) -> aplicarEstiloAsistencia(newVal);
 
             {
                 avatar.getChildren().addAll(avatarCircle, iniciales);
@@ -127,16 +134,29 @@ public class ListaClientesController implements Initializable {
                 textContainer.setAlignment(Pos.CENTER_LEFT);
                 textContainer.setSpacing(2);
 
-                nombre.setStyle("-fx-font-weight: bold; -fx-text-fill: #f0f4ff; -fx-font-size: 15px;");
                 detalle.setStyle("-fx-text-fill: rgba(255,255,255,0.7); -fx-font-size: 12px;");
 
                 content.setAlignment(Pos.CENTER_LEFT);
                 content.setPadding(new Insets(4, 0, 4, 0));
             }
 
+            private void aplicarEstiloAsistencia(boolean asistio) {
+                if (asistio) {
+                    nombre.setStyle("-fx-font-weight: bold; -fx-text-fill: #34C759; -fx-font-size: 15px;");
+                } else {
+                    nombre.setStyle("-fx-font-weight: bold; -fx-text-fill: #f0f4ff; -fx-font-size: 15px;");
+                }
+            }
+
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
+
+                if (clienteActual != null) {
+                    clienteActual.asistioHoyProperty().removeListener(asistenciaListener);
+                    clienteActual = null;
+                }
+
                 if (empty || item == null) {
                     setGraphic(null);
                     setText(null);
@@ -158,6 +178,14 @@ public class ListaClientesController implements Initializable {
                     iniciales.setText(inicial);
                     avatarCircle.setFill(Color.web(obtenerColorAvatar(nombreCompleto)));
 
+                    if (cliente != null) {
+                        aplicarEstiloAsistencia(cliente.isAsistioHoy());
+                        cliente.asistioHoyProperty().addListener(asistenciaListener);
+                        clienteActual = cliente;
+                    } else {
+                        aplicarEstiloAsistencia(false);
+                    }
+
                     setGraphic(content);
                     setText(null);
                     setStyle("-fx-alignment: CENTER_LEFT;");
@@ -174,7 +202,7 @@ public class ListaClientesController implements Initializable {
                 iconoTelefono.setIconColor(Color.web("#70a1ff"));
                 iconoTelefono.setIconSize(16);
                 telefono.setStyle("-fx-text-fill: #f8f9ff; -fx-font-weight: semi-bold;");
-                content.setAlignment(Pos.CENTER_LEFT);
+                content.setAlignment(Pos.CENTER);
             }
 
             @Override
@@ -187,7 +215,7 @@ public class ListaClientesController implements Initializable {
                     telefono.setText(formatearTelefono(item));
                     setGraphic(content);
                     setText(null);
-                    setStyle("-fx-alignment: CENTER_LEFT;");
+                    setStyle("-fx-alignment: CENTER;");
                 }
             }
         });
@@ -224,9 +252,12 @@ public class ListaClientesController implements Initializable {
 
         colAcciones.setCellFactory(param -> new TableCell<>() {
             private final Button btnEditar = new Button();
+            private final Button btnCheck = new Button();
+            private final FontIcon iconoEditar = new FontIcon(FontAwesomeSolid.EDIT);
+            private final FontIcon iconoCheck = new FontIcon(FontAwesomeSolid.CHECK);
+            private final HBox contenedor = new HBox(8, btnCheck, btnEditar);
 
             {
-                FontIcon iconoEditar = new FontIcon(FontAwesomeSolid.EDIT);
                 iconoEditar.setIconColor(Color.web("#4a6cf7"));
                 iconoEditar.setIconSize(18);
                 btnEditar.setGraphic(iconoEditar);
@@ -243,8 +274,44 @@ public class ListaClientesController implements Initializable {
 
                 btnEditar.setOnAction(event -> {
                     Cliente cliente = getTableView().getItems().get(getIndex());
-                    mostrarDialogoEdicion(cliente);
+                    if (cliente != null) {
+                        mostrarDialogoEdicion(cliente);
+                    }
                 });
+
+                iconoCheck.setIconSize(18);
+                btnCheck.setGraphic(iconoCheck);
+                btnCheck.setPadding(new Insets(6));
+                btnCheck.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-background-radius: 10px;");
+                btnCheck.setTooltip(new Tooltip("Registrar asistencia diaria"));
+
+                btnCheck.setOnMouseEntered(e ->
+                        btnCheck.setStyle("-fx-background-color: rgba(52,199,89,0.18); -fx-cursor: hand; -fx-background-radius: 10px;")
+                );
+                btnCheck.setOnMouseExited(e ->
+                        btnCheck.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-background-radius: 10px;")
+                );
+
+                btnCheck.setOnAction(event -> {
+                    Cliente cliente = getTableView().getItems().get(getIndex());
+                    if (cliente != null) {
+                        boolean nuevoEstado = !cliente.isAsistioHoy();
+                        cliente.setAsistioHoy(nuevoEstado);
+                        actualizarRegistroAsistencia(cliente);
+                        actualizarIconoAsistencia(cliente);
+                        getTableView().refresh();
+                    }
+                });
+
+                contenedor.setAlignment(Pos.CENTER);
+            }
+
+            private void actualizarIconoAsistencia(Cliente cliente) {
+                if (cliente != null && cliente.isAsistioHoy()) {
+                    iconoCheck.setIconColor(Color.web("#34C759"));
+                } else {
+                    iconoCheck.setIconColor(Color.web("#a5b1c2"));
+                }
             }
 
             @Override
@@ -253,7 +320,9 @@ public class ListaClientesController implements Initializable {
                 if (empty) {
                     setGraphic(null);
                 } else {
-                    setGraphic(btnEditar);
+                    Cliente cliente = getTableView().getItems().get(getIndex());
+                    actualizarIconoAsistencia(cliente);
+                    setGraphic(contenedor);
                 }
             }
         });
@@ -464,6 +533,58 @@ public class ListaClientesController implements Initializable {
         return telefono.trim();
     }
 
+    private boolean tieneAsistenciaRegistradaHoy(Cliente cliente) {
+        if (cliente == null) {
+            return false;
+        }
+
+        String clave = generarClaveAsistencia(cliente);
+        String fechaGuardada = preferencias.get(clave, null);
+
+        if (fechaGuardada == null) {
+            return false;
+        }
+
+        try {
+            LocalDate fecha = LocalDate.parse(fechaGuardada);
+            if (fecha.isEqual(LocalDate.now())) {
+                return true;
+            } else {
+                preferencias.remove(clave);
+            }
+        } catch (DateTimeParseException ex) {
+            preferencias.remove(clave);
+        }
+
+        return false;
+    }
+
+    private void actualizarRegistroAsistencia(Cliente cliente) {
+        if (cliente == null) {
+            return;
+        }
+
+        String clave = generarClaveAsistencia(cliente);
+        if (cliente.isAsistioHoy()) {
+            preferencias.put(clave, LocalDate.now().toString());
+        } else {
+            preferencias.remove(clave);
+        }
+    }
+
+    private String generarClaveAsistencia(Cliente cliente) {
+        String identificador = cliente.getTelefono();
+        if (identificador == null || identificador.isBlank()) {
+            identificador = cliente.getNombreCompleto();
+        }
+        if (identificador == null || identificador.isBlank()) {
+            identificador = "sin_datos";
+        }
+
+        String limpio = identificador.toLowerCase(LOCALE_ES).replaceAll("[^a-z0-9]", "_");
+        return PREFIJO_ASISTENCIA + limpio;
+    }
+
     private void actualizarResumen() {
         if (lblResumen == null) {
             return;
@@ -653,6 +774,7 @@ public class ListaClientesController implements Initializable {
                         rs.getString("tipoMembresia"),
                         LocalDate.parse(rs.getString("fecha_vencimiento"))
                 );
+                cliente.setAsistioHoy(tieneAsistenciaRegistradaHoy(cliente));
                 clientesTemp.add(cliente);
             }
 
