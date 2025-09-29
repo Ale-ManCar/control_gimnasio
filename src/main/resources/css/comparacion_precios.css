@@ -53,8 +53,21 @@
     -fx-padding: 6 10 6 10;
 }
 
+.filtro-combo .list-view {
+    -fx-background-color: rgba(15, 23, 42, 0.92);
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(148, 163, 184, 0.3);
+    -fx-border-radius: 12;
+}
+
 .filtro-combo .list-cell {
+    -fx-background-color: transparent;
     -fx-text-fill: #ffffff;
+}
+
+.filtro-combo .list-cell:filled:selected,
+.filtro-combo .list-cell:filled:hover {
+    -fx-background-color: rgba(56, 189, 248, 0.25);
 }
 
 .filtro-combo:focused {
