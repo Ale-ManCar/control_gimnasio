@@ -917,6 +917,33 @@ public class DatabaseUtil {
         return datos;
     }
 
+    public static List<IngresoData> getIngresosPorAnios(int añoInicio, int añoFin) throws SQLException {
+        if (añoFin < añoInicio) {
+            int temp = añoFin;
+            añoFin = añoInicio;
+            añoInicio = temp;
+        }
+
+        String sql = "SELECT anio, SUM(total) AS total FROM ("
+                + "SELECT strftime('%Y', fecha_pago) AS anio, monto AS total FROM pagos WHERE estado = 'ACTIVO' "
+                + "UNION ALL "
+                + "SELECT strftime('%Y', fecha) AS anio, total FROM ventas"
+                + ") WHERE anio BETWEEN ? AND ? GROUP BY anio ORDER BY anio";
+
+        List<IngresoData> datos = new ArrayList<>();
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, String.valueOf(añoInicio));
+            stmt.setString(2, String.valueOf(añoFin));
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                datos.add(new IngresoData(rs.getString("anio"), rs.getDouble("total")));
+            }
+        }
+        return datos;
+    }
+
     private static List<IngresoData> obtenerIngresosAgrupados(String sql, Object... params) throws SQLException {
         List<IngresoData> datos = new ArrayList<>();
         try (Connection conn = getConnection();
@@ -1887,6 +1914,23 @@ public class DatabaseUtil {
             }
         }
         return detalles;
+    }
+
+    public static Set<LocalDate> getFechasConEgresos() throws SQLException {
+        Set<LocalDate> fechas = new HashSet<>();
+        String sql = "SELECT DISTINCT date(fecha) AS fecha FROM egresos";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                String fecha = rs.getString("fecha");
+                if (fecha != null && !fecha.isBlank()) {
+                    fechas.add(LocalDate.parse(fecha));
+                }
+            }
+        }
+        return fechas;
     }
 
     public static User obtenerUsuario(String username, String password) {

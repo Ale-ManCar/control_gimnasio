@@ -17,6 +17,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Hyperlink;
@@ -68,6 +69,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -136,6 +138,7 @@ public class IngresosMensualesController implements Initializable {
     private final DateTimeFormatter fechaCorta = DateTimeFormatter.ofPattern("dd/MM");
     private int anioActual = Year.now().getValue();
     private Consumer<EventBus.EventType> eventConsumer;
+    private Set<LocalDate> fechasConEgresos = new java.util.HashSet<>();
 
     private ReportType reporteActual = ReportType.DIARIO;
     private LocalDate periodoInicio;
@@ -162,7 +165,10 @@ public class IngresosMensualesController implements Initializable {
 
         eventConsumer = eventType -> {
             if (eventType == EventBus.EventType.EGRESO_REGISTRADO) {
-                Platform.runLater(this::actualizarReporte);
+                Platform.runLater(() -> {
+                    actualizarFechasEgresos();
+                    actualizarReporte();
+                });
             }
         };
         EventBus.registerListener(EventBus.EventType.EGRESO_REGISTRADO, eventConsumer);
@@ -175,6 +181,7 @@ public class IngresosMensualesController implements Initializable {
             }
         });
 
+        actualizarFechasEgresos();
         actualizarControlesVisibles();
         actualizarPosicionBotones(reporteActual);
         actualizarReporte();
@@ -297,6 +304,8 @@ public class IngresosMensualesController implements Initializable {
                 actualizarReporte();
             }
         });
+
+        refrescarDatePickers();
     }
 
     private void actualizarControlesVisibles() {
@@ -666,8 +675,7 @@ public class IngresosMensualesController implements Initializable {
 
         lblTituloGrafico.setText("Ingresos del " + fecha.format(fechaLarga));
         lblTituloMetricas.setText("Métricas del día");
-        actualizarBarChart(() -> DatabaseUtil.getIngresosPorDia(fecha),
-                "Ingresos por tipo", Function.identity());
+        actualizarBarChartDiario(fecha);
         actualizarPieChart(fecha, fecha);
         actualizarTablaPagos(obtenerPagos(fecha, fecha), Comparator.comparing(PagoDetalle::getFecha).reversed());
         actualizarEgresos(fecha, fecha);
@@ -695,8 +703,7 @@ public class IngresosMensualesController implements Initializable {
 
         lblTituloGrafico.setText("Ingresos del " + inicioSemana.format(fechaLarga) + " al " + finSemana.format(fechaLarga));
         lblTituloMetricas.setText("Métricas de la semana");
-        actualizarBarChart(() -> DatabaseUtil.getIngresosPorSemana(inicioSemana, finSemana),
-                "Ingresos diarios", etiqueta -> LocalDate.parse(etiqueta).format(fechaCorta));
+        actualizarBarChartSemanal(inicioSemana, finSemana);
         actualizarPieChart(inicioSemana, finSemana);
         actualizarTablaPagos(obtenerPagos(inicioSemana, finSemana), Comparator.comparing(PagoDetalle::getFecha).reversed());
         actualizarEgresos(inicioSemana, finSemana);
@@ -720,8 +727,7 @@ public class IngresosMensualesController implements Initializable {
 
         lblTituloGrafico.setText("Ingresos de " + formatearMes(mes) + " " + año);
         lblTituloMetricas.setText("Métricas del mes");
-        actualizarBarChart(() -> DatabaseUtil.getIngresosPorMes(año, mes.getValue()),
-                "Ingresos diarios", etiqueta -> LocalDate.parse(etiqueta).format(fechaCorta));
+        actualizarBarChartMensual(año);
         actualizarPieChart(inicio, fin);
         actualizarTablaPagos(obtenerPagos(inicio, fin), Comparator.comparing(PagoDetalle::getFecha).reversed());
         actualizarEgresos(inicio, fin);
@@ -742,8 +748,7 @@ public class IngresosMensualesController implements Initializable {
 
         lblTituloGrafico.setText("Ingresos del año " + año);
         lblTituloMetricas.setText("Métricas anuales");
-        actualizarBarChart(() -> DatabaseUtil.getIngresosPorAnio(año),
-                "Ingresos mensuales", this::formatearMesDesdeEtiqueta);
+        actualizarBarChartAnual();
         actualizarPieChart(inicio, fin);
         List<PagoDetalle> pagosAnuales = obtenerPagos(inicio, fin);
         List<PagoDetalle> pagosAgrupados = agruparPagosPorMes(pagosAnuales, año);
@@ -811,6 +816,175 @@ public class IngresosMensualesController implements Initializable {
             mostrarAlerta("Error", "No se pudo cargar la distribución de membresías");
             e.printStackTrace();
         }
+    }
+
+    private void actualizarBarChartDiario(LocalDate fecha) {
+        LocalDate inicioSemana = fecha.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate finSemana = inicioSemana.plusDays(6);
+        try {
+            Map<DayOfWeek, Double> totales = new EnumMap<>(DayOfWeek.class);
+            for (DayOfWeek dia : DayOfWeek.values()) {
+                totales.put(dia, 0.0);
+            }
+            List<IngresoData> datosSemana = DatabaseUtil.getIngresosPorSemana(inicioSemana, finSemana);
+            for (IngresoData ingreso : datosSemana) {
+                LocalDate dia = LocalDate.parse(ingreso.getEtiqueta());
+                DayOfWeek diaSemana = dia.getDayOfWeek();
+                totales.merge(diaSemana, ingreso.getTotal(), Double::sum);
+            }
+
+            XYChart.Series<String, Number> serie = new XYChart.Series<>();
+            serie.setName("Ingresos semanales");
+            DayOfWeek[] orden = {
+                    DayOfWeek.MONDAY,
+                    DayOfWeek.TUESDAY,
+                    DayOfWeek.WEDNESDAY,
+                    DayOfWeek.THURSDAY,
+                    DayOfWeek.FRIDAY,
+                    DayOfWeek.SATURDAY,
+                    DayOfWeek.SUNDAY
+            };
+            for (DayOfWeek dia : orden) {
+                serie.getData().add(new XYChart.Data<>(formatearDiaSemana(dia), totales.getOrDefault(dia, 0.0)));
+            }
+            actualizarBarChartConSerie(serie, "Día de la semana");
+        } catch (SQLException e) {
+            mostrarAlerta("Error", "No se pudieron cargar los ingresos diarios");
+            e.printStackTrace();
+        }
+    }
+
+    private void actualizarBarChartSemanal(LocalDate inicio, LocalDate fin) {
+        try {
+            List<IngresoData> datos = DatabaseUtil.getIngresosPorSemana(inicio, fin);
+            double totalSemana = datos.stream().mapToDouble(IngresoData::getTotal).sum();
+            XYChart.Series<String, Number> serie = new XYChart.Series<>();
+            serie.setName("Ingresos de la semana");
+            String etiqueta = inicio.format(fechaCorta) + " // " + fin.format(fechaCorta);
+            serie.getData().add(new XYChart.Data<>(etiqueta, totalSemana));
+            actualizarBarChartConSerie(serie, "Semana");
+        } catch (SQLException e) {
+            mostrarAlerta("Error", "No se pudieron cargar los ingresos semanales");
+            e.printStackTrace();
+        }
+    }
+
+    private void actualizarBarChartMensual(int año) {
+        try {
+            Map<Month, Double> totales = new EnumMap<>(Month.class);
+            for (Month mes : Month.values()) {
+                totales.put(mes, 0.0);
+            }
+
+            DatabaseUtil.getIngresosMensuales(año).forEach(mensual -> {
+                try {
+                    LocalDate fechaMes = LocalDate.parse(mensual.getMes() + "-01");
+                    Month mes = fechaMes.getMonth();
+                    totales.merge(mes, mensual.getTotal(), Double::sum);
+                } catch (Exception ignored) {
+                }
+            });
+
+            XYChart.Series<String, Number> serie = new XYChart.Series<>();
+            serie.setName("Ingresos mensuales");
+            for (Month mes : Month.values()) {
+                serie.getData().add(new XYChart.Data<>(formatearMesCapitalizado(mes), totales.getOrDefault(mes, 0.0)));
+            }
+            actualizarBarChartConSerie(serie, "Mes");
+        } catch (SQLException e) {
+            mostrarAlerta("Error", "No se pudieron cargar los ingresos mensuales");
+            e.printStackTrace();
+        }
+    }
+
+    private void actualizarBarChartAnual() {
+        try {
+            List<Integer> años = new ArrayList<>(cbAnio.getItems());
+            if (años.isEmpty()) {
+                años.add(anioActual);
+            }
+            años.sort(Integer::compareTo);
+
+            Map<Integer, Double> totales = new LinkedHashMap<>();
+            for (Integer año : años) {
+                totales.put(año, 0.0);
+            }
+
+            int añoInicio = años.get(0);
+            int añoFin = años.get(años.size() - 1);
+            DatabaseUtil.getIngresosPorAnios(añoInicio, añoFin).forEach(data -> {
+                try {
+                    int año = Integer.parseInt(data.getEtiqueta());
+                    totales.merge(año, data.getTotal(), Double::sum);
+                } catch (NumberFormatException ignored) {
+                }
+            });
+
+            XYChart.Series<String, Number> serie = new XYChart.Series<>();
+            serie.setName("Ingresos anuales");
+            for (Integer año : años) {
+                serie.getData().add(new XYChart.Data<>(String.valueOf(año), totales.getOrDefault(año, 0.0)));
+            }
+            actualizarBarChartConSerie(serie, "Año");
+        } catch (SQLException e) {
+            mostrarAlerta("Error", "No se pudieron cargar los ingresos anuales");
+            e.printStackTrace();
+        }
+    }
+
+    private void actualizarBarChartConSerie(XYChart.Series<String, Number> serie, String etiquetaEje) {
+        barChart.getData().setAll(serie);
+        CategoryAxis xAxis = (CategoryAxis) barChart.getXAxis();
+        xAxis.setLabel(etiquetaEje);
+    }
+
+    private String formatearDiaSemana(DayOfWeek dia) {
+        String nombre = dia.getDisplayName(TextStyle.FULL, localeEs);
+        if (nombre.isEmpty()) {
+            return nombre;
+        }
+        return nombre.substring(0, 1).toUpperCase(localeEs) + nombre.substring(1).toLowerCase(localeEs);
+    }
+
+    private String formatearMesCapitalizado(Month mes) {
+        String nombre = mes.getDisplayName(TextStyle.FULL, localeEs);
+        if (nombre.isEmpty()) {
+            return nombre;
+        }
+        return nombre.substring(0, 1).toUpperCase(localeEs) + nombre.substring(1).toLowerCase(localeEs);
+    }
+
+    private void actualizarFechasEgresos() {
+        try {
+            fechasConEgresos = DatabaseUtil.getFechasConEgresos();
+        } catch (SQLException e) {
+            fechasConEgresos = new java.util.HashSet<>();
+            e.printStackTrace();
+        }
+        refrescarDatePickers();
+    }
+
+    private void refrescarDatePickers() {
+        Callback<DatePicker, DateCell> factory = crearDayCellFactory();
+        dpFecha.setDayCellFactory(factory);
+        dpSemanaInicio.setDayCellFactory(factory);
+        dpSemanaFin.setDayCellFactory(factory);
+    }
+
+    private Callback<DatePicker, DateCell> crearDayCellFactory() {
+        return picker -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setStyle("");
+                } else if (fechasConEgresos.contains(item)) {
+                    setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
+                } else {
+                    setStyle("");
+                }
+            }
+        };
     }
 
     private void actualizarTablaPagos(List<PagoDetalle> pagos, Comparator<PagoDetalle> comparator) {
