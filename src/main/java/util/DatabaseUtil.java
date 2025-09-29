@@ -1208,25 +1208,41 @@ public class DatabaseUtil {
         LocalDateTime inicio = fechaInicio != null ? fechaInicio.atStartOfDay() : LocalDate.of(1970, 1, 1).atStartOfDay();
         LocalDateTime fin = fechaFin != null ? fechaFin.atTime(23, 59, 59) : LocalDateTime.now();
 
-        String sql = "SELECT e.id, e.nombre, e.tipo, " +
-                "COALESCE((SELECT eh.cantidad_nueva FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) <= datetime(?) ORDER BY datetime(eh.fecha) DESC, eh.id DESC LIMIT 1), " +
-                "        (SELECT eh.cantidad_nueva FROM equipos_historial eh WHERE eh.equipo_id = e.id ORDER BY datetime(eh.fecha) ASC, eh.id ASC LIMIT 1), " +
-                "        e.cantidad) AS cantidad_inicial, " +
-                "COALESCE((SELECT SUM(CASE WHEN eh.diferencia > 0 THEN eh.diferencia ELSE 0 END) FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) >= datetime(?) AND datetime(eh.fecha) <= datetime(?)), 0) AS altas, " +
-                "COALESCE((SELECT SUM(CASE WHEN eh.diferencia < 0 THEN -eh.diferencia ELSE 0 END) FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) >= datetime(?) AND datetime(eh.fecha) <= datetime(?)), 0) AS bajas, " +
-                "COALESCE((SELECT eh.cantidad_nueva FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) <= datetime(?) ORDER BY datetime(eh.fecha) DESC, eh.id DESC LIMIT 1), " +
-                "        (SELECT eh.cantidad_nueva FROM equipos_historial eh WHERE eh.equipo_id = e.id ORDER BY datetime(eh.fecha) DESC, eh.id DESC LIMIT 1), " +
-                "        e.cantidad) AS cantidad_final " +
-                "FROM equipos e ORDER BY e.nombre";
+        String sql = "WITH movimientos AS (" +
+                "    SELECT e.id AS equipo_id, " +
+                "           SUM(CASE WHEN datetime(eh.fecha) >= datetime(?) AND datetime(eh.fecha) <= datetime(?) AND eh.diferencia > 0 THEN eh.diferencia ELSE 0 END) AS altas, " +
+                "           SUM(CASE WHEN datetime(eh.fecha) >= datetime(?) AND datetime(eh.fecha) <= datetime(?) AND eh.diferencia < 0 THEN -eh.diferencia ELSE 0 END) AS bajas, " +
+                "           MAX(CASE WHEN datetime(eh.fecha) >= datetime(?) AND datetime(eh.fecha) <= datetime(?) THEN datetime(eh.fecha) END) AS ultima_actualizacion " +
+                "    FROM equipos e " +
+                "    LEFT JOIN equipos_historial eh ON eh.equipo_id = e.id " +
+                "    GROUP BY e.id" +
+                "), iniciales AS (" +
+                "    SELECT e.id AS equipo_id, " +
+                "           COALESCE((SELECT eh.cantidad_nueva FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) <= datetime(?) ORDER BY datetime(eh.fecha) DESC, eh.id DESC LIMIT 1), " +
+                "                   (SELECT eh.cantidad_nueva FROM equipos_historial eh WHERE eh.equipo_id = e.id ORDER BY datetime(eh.fecha) ASC, eh.id ASC LIMIT 1), " +
+                "                   e.cantidad) AS cantidad_inicial " +
+                "    FROM equipos e" +
+                ") " +
+                "SELECT e.id, e.nombre, e.tipo, " +
+                "       i.cantidad_inicial AS cantidad_inicial, " +
+                "       COALESCE(m.altas, 0) AS altas, " +
+                "       COALESCE(m.bajas, 0) AS bajas, " +
+                "       (i.cantidad_inicial + COALESCE(m.altas, 0) - COALESCE(m.bajas, 0)) AS cantidad_final, " +
+                "       COALESCE(strftime('%d/%m/%Y %H:%M', m.ultima_actualizacion), 'Sin movimientos') AS ultima_actualizacion " +
+                "FROM equipos e " +
+                "JOIN iniciales i ON i.equipo_id = e.id " +
+                "LEFT JOIN movimientos m ON m.equipo_id = e.id " +
+                "ORDER BY e.nombre";
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, formatDateTime(inicio));
-            stmt.setString(2, formatDateTime(inicio));
-            stmt.setString(3, formatDateTime(fin));
-            stmt.setString(4, formatDateTime(inicio));
-            stmt.setString(5, formatDateTime(fin));
+            stmt.setString(2, formatDateTime(fin));
+            stmt.setString(3, formatDateTime(inicio));
+            stmt.setString(4, formatDateTime(fin));
+            stmt.setString(5, formatDateTime(inicio));
             stmt.setString(6, formatDateTime(fin));
+            stmt.setString(7, formatDateTime(inicio));
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -1238,6 +1254,7 @@ public class DatabaseUtil {
                     equipo.setAltas(rs.getInt("altas"));
                     equipo.setBajas(rs.getInt("bajas"));
                     equipo.setCantidadFinal(rs.getInt("cantidad_final"));
+                    equipo.setFechaUltimoMovimiento(rs.getString("ultima_actualizacion"));
                     resumen.add(equipo);
                 }
             }

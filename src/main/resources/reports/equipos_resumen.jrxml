@@ -4,6 +4,28 @@
               xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
               name="equipos_resumen" pageWidth="595" pageHeight="842" columnWidth="515"
               leftMargin="40" rightMargin="40" topMargin="30" bottomMargin="30">
+    <property name="net.sf.jasperreports.print.keep.full.text" value="true"/>
+    <style name="Base" fontName="SansSerif" pdfFontName="Helvetica" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
+    <style name="Title" style="Base" forecolor="#FFFFFF" backcolor="#1B3C87" mode="Opaque">
+        <font size="22" isBold="true"/>
+    </style>
+    <style name="Subtitle" style="Base" forecolor="#FFFFFF"/>
+    <style name="SectionHeader" style="Base" backcolor="#F0F4FF" mode="Opaque">
+        <font size="11" isBold="true"/>
+        <paragraph spacingBefore="2" spacingAfter="2"/>
+    </style>
+    <style name="TableHeader" style="Base" forecolor="#FFFFFF" backcolor="#23395B" mode="Opaque">
+        <font size="11" isBold="true"/>
+        <paragraph spacingBefore="2" spacingAfter="2"/>
+    </style>
+    <style name="TableDetail" style="Base">
+        <font size="10"/>
+        <paragraph spacingBefore="2" spacingAfter="2"/>
+    </style>
+    <style name="TableDetailAlt" style="TableDetail" backcolor="#F6F8FC" mode="Opaque"/>
+    <style name="SummaryLabel" style="Base">
+        <font size="11" isBold="true"/>
+    </style>
     <parameter name="periodo" class="java.lang.String"/>
     <parameter name="generadoEn" class="java.lang.String"/>
     <field name="nombre" class="java.lang.String"/>
@@ -12,6 +34,10 @@
     <field name="altas" class="java.lang.Integer"/>
     <field name="bajas" class="java.lang.Integer"/>
     <field name="cantidadFinal" class="java.lang.Integer"/>
+    <field name="fechaUltimoMovimiento" class="java.lang.String"/>
+    <variable name="totalInicial" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{cantidadInicial}]]></variableExpression>
+    </variable>
     <variable name="totalAltas" class="java.lang.Integer" calculation="Sum">
         <variableExpression><![CDATA[$F{altas}]]></variableExpression>
     </variable>
@@ -22,134 +48,160 @@
         <variableExpression><![CDATA[$F{cantidadFinal}]]></variableExpression>
     </variable>
     <title>
-        <band height="70">
+        <band height="140">
+            <rectangle>
+                <reportElement x="0" y="0" width="515" height="140" backcolor="#1B3C87" mode="Opaque"/>
+            </rectangle>
             <staticText>
-                <reportElement x="0" y="0" width="515" height="30"/>
-                <textElement textAlignment="Center">
-                    <font size="18" isBold="true"/>
-                </textElement>
+                <reportElement style="Title" x="20" y="15" width="475" height="32"/>
                 <text><![CDATA[Informe histórico de equipos]]></text>
             </staticText>
             <textField>
-                <reportElement x="0" y="35" width="515" height="18"/>
-                <textElement textAlignment="Center">
-                    <font size="12"/>
-                </textElement>
+                <reportElement style="Subtitle" x="20" y="55" width="475" height="18"/>
                 <textFieldExpression><![CDATA[$P{periodo}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="0" y="53" width="515" height="14"/>
-                <textElement textAlignment="Center">
-                    <font size="9"/>
-                </textElement>
+                <reportElement style="Subtitle" x="20" y="75" width="475" height="16" forecolor="#AFC5FF"/>
                 <textFieldExpression><![CDATA["Generado: " + $P{generadoEn}]]></textFieldExpression>
             </textField>
+            <frame>
+                <reportElement x="20" y="100" width="475" height="30" backcolor="#152C58" mode="Opaque"/>
+                <staticText>
+                    <reportElement style="SectionHeader" x="10" y="5" width="455" height="20" forecolor="#FFFFFF" backcolor="transparent"/>
+                    <text><![CDATA[Resumen de disponibilidad y movimientos]]></text>
+                </staticText>
+            </frame>
         </band>
     </title>
     <columnHeader>
-        <band height="22">
+        <band height="28">
+            <rectangle>
+                <reportElement x="0" y="0" width="515" height="28" backcolor="#23395B" mode="Opaque"/>
+            </rectangle>
             <staticText>
-                <reportElement x="0" y="0" width="160" height="22"/>
-                <textElement textAlignment="Left" verticalAlignment="Middle">
-                    <font isBold="true"/>
-                </textElement>
+                <reportElement style="TableHeader" x="0" y="4" width="140" height="20"/>
                 <text><![CDATA[Equipo]]></text>
             </staticText>
             <staticText>
-                <reportElement x="160" y="0" width="70" height="22"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font isBold="true"/>
-                </textElement>
+                <reportElement style="TableHeader" x="140" y="4" width="75" height="20"/>
                 <text><![CDATA[Tipo]]></text>
             </staticText>
             <staticText>
-                <reportElement x="230" y="0" width="75" height="22"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font isBold="true"/>
-                </textElement>
+                <reportElement style="TableHeader" x="215" y="4" width="55" height="20"/>
                 <text><![CDATA[Inicio]]></text>
             </staticText>
             <staticText>
-                <reportElement x="305" y="0" width="70" height="22"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font isBold="true"/>
-                </textElement>
+                <reportElement style="TableHeader" x="270" y="4" width="55" height="20"/>
                 <text><![CDATA[Altas]]></text>
             </staticText>
             <staticText>
-                <reportElement x="375" y="0" width="70" height="22"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font isBold="true"/>
-                </textElement>
+                <reportElement style="TableHeader" x="325" y="4" width="55" height="20"/>
                 <text><![CDATA[Bajas]]></text>
             </staticText>
             <staticText>
-                <reportElement x="445" y="0" width="70" height="22"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font isBold="true"/>
-                </textElement>
+                <reportElement style="TableHeader" x="380" y="4" width="55" height="20"/>
                 <text><![CDATA[Final]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="TableHeader" x="435" y="4" width="80" height="20"/>
+                <text><![CDATA[Último cambio]]></text>
             </staticText>
         </band>
     </columnHeader>
     <detail>
-        <band height="20">
-            <textField>
-                <reportElement x="0" y="0" width="160" height="20"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{nombre}]]></textFieldExpression>
-            </textField>
-            <textField>
-                <reportElement x="160" y="0" width="70" height="20"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{tipo}]]></textFieldExpression>
-            </textField>
-            <textField pattern="###">
-                <reportElement x="230" y="0" width="75" height="20"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{cantidadInicial}]]></textFieldExpression>
-            </textField>
-            <textField pattern="###">
-                <reportElement x="305" y="0" width="70" height="20"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{altas}]]></textFieldExpression>
-            </textField>
-            <textField pattern="###">
-                <reportElement x="375" y="0" width="70" height="20"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{bajas}]]></textFieldExpression>
-            </textField>
-            <textField pattern="###">
-                <reportElement x="445" y="0" width="70" height="20"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{cantidadFinal}]]></textFieldExpression>
-            </textField>
+        <band height="22">
+            <frame>
+                <reportElement x="0" y="0" width="515" height="22" uuid="rowFrame"/>
+                <textField isStretchWithOverflow="true">
+                    <reportElement style="TableDetail" x="0" y="2" width="140" height="18"/>
+                    <textFieldExpression><![CDATA[$F{nombre}]]></textFieldExpression>
+                </textField>
+                <textField>
+                    <reportElement style="TableDetail" x="140" y="2" width="75" height="18"/>
+                    <textElement textAlignment="Center"/>
+                    <textFieldExpression><![CDATA[$F{tipo}]]></textFieldExpression>
+                </textField>
+                <textField pattern="###">
+                    <reportElement style="TableDetail" x="215" y="2" width="55" height="18"/>
+                    <textElement textAlignment="Center"/>
+                    <textFieldExpression><![CDATA[$F{cantidadInicial}]]></textFieldExpression>
+                </textField>
+                <textField pattern="###">
+                    <reportElement style="TableDetail" x="270" y="2" width="55" height="18"/>
+                    <textElement textAlignment="Center"/>
+                    <textFieldExpression><![CDATA[$F{altas}]]></textFieldExpression>
+                </textField>
+                <textField pattern="###">
+                    <reportElement style="TableDetail" x="325" y="2" width="55" height="18"/>
+                    <textElement textAlignment="Center"/>
+                    <textFieldExpression><![CDATA[$F{bajas}]]></textFieldExpression>
+                </textField>
+                <textField pattern="###">
+                    <reportElement style="TableDetail" x="380" y="2" width="55" height="18"/>
+                    <textElement textAlignment="Center"/>
+                    <textFieldExpression><![CDATA[$F{cantidadFinal}]]></textFieldExpression>
+                </textField>
+                <textField>
+                    <reportElement style="TableDetail" x="435" y="2" width="80" height="18"/>
+                    <textElement textAlignment="Center"/>
+                    <textFieldExpression><![CDATA[$F{fechaUltimoMovimiento}]]></textFieldExpression>
+                </textField>
+            </frame>
+            <line>
+                <reportElement x="0" y="21" width="515" height="1" forecolor="#E0E6F8"/>
+            </line>
         </band>
     </detail>
     <summary>
-        <band height="40">
-            <textField>
-                <reportElement x="0" y="10" width="515" height="16"/>
-                <textElement textAlignment="Center">
-                    <font size="11" isBold="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA["Total de equipos listados: " + $V{REPORT_COUNT}]]></textFieldExpression>
-            </textField>
-            <textField pattern="###">
-                <reportElement x="305" y="22" width="70" height="16"/>
-                <textElement textAlignment="Center"/>
-                <textFieldExpression><![CDATA[$V{totalAltas}]]></textFieldExpression>
-            </textField>
-            <textField pattern="###">
-                <reportElement x="375" y="22" width="70" height="16"/>
-                <textElement textAlignment="Center"/>
-                <textFieldExpression><![CDATA[$V{totalBajas}]]></textFieldExpression>
-            </textField>
-            <textField pattern="###">
-                <reportElement x="445" y="22" width="70" height="16"/>
-                <textElement textAlignment="Center"/>
-                <textFieldExpression><![CDATA[$V{totalFinal}]]></textFieldExpression>
-            </textField>
+        <band height="120">
+            <frame>
+                <reportElement x="0" y="0" width="515" height="110" backcolor="#F0F4FF" mode="Opaque"/>
+                <staticText>
+                    <reportElement style="SummaryLabel" x="20" y="15" width="200" height="20"/>
+                    <text><![CDATA[Resumen general]]></text>
+                </staticText>
+                <textField pattern="###">
+                    <reportElement style="TableDetail" x="20" y="45" width="80" height="18"/>
+                    <textElement textAlignment="Center"/>
+                    <textFieldExpression><![CDATA[$V{totalInicial}]]></textFieldExpression>
+                </textField>
+                <textField pattern="###">
+                    <reportElement style="TableDetail" x="110" y="45" width="80" height="18"/>
+                    <textElement textAlignment="Center"/>
+                    <textFieldExpression><![CDATA[$V{totalAltas}]]></textFieldExpression>
+                </textField>
+                <textField pattern="###">
+                    <reportElement style="TableDetail" x="200" y="45" width="80" height="18"/>
+                    <textElement textAlignment="Center"/>
+                    <textFieldExpression><![CDATA[$V{totalBajas}]]></textFieldExpression>
+                </textField>
+                <textField pattern="###">
+                    <reportElement style="TableDetail" x="290" y="45" width="80" height="18"/>
+                    <textElement textAlignment="Center"/>
+                    <textFieldExpression><![CDATA[$V{totalFinal}]]></textFieldExpression>
+                </textField>
+                <textField>
+                    <reportElement style="TableDetail" x="380" y="45" width="115" height="18"/>
+                    <textElement textAlignment="Right"/>
+                    <textFieldExpression><![CDATA["Equipos listados: " + $V{REPORT_COUNT}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement style="TableHeader" x="20" y="70" width="80" height="18" backcolor="#23395B" forecolor="#FFFFFF"/>
+                    <text><![CDATA[Inicio]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement style="TableHeader" x="110" y="70" width="80" height="18" backcolor="#23395B" forecolor="#FFFFFF"/>
+                    <text><![CDATA[Altas]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement style="TableHeader" x="200" y="70" width="80" height="18" backcolor="#23395B" forecolor="#FFFFFF"/>
+                    <text><![CDATA[Bajas]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement style="TableHeader" x="290" y="70" width="80" height="18" backcolor="#23395B" forecolor="#FFFFFF"/>
+                    <text><![CDATA[Final]]></text>
+                </staticText>
+            </frame>
         </band>
     </summary>
 </jasperReport>
