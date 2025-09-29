@@ -35,6 +35,7 @@ public class DatabaseUtil {
     private static final String URL = "jdbc:sqlite:database/gimnasio.db";
     private static final int BUSY_TIMEOUT_MS = 60000;
     private static final DateTimeFormatter SQLITE_DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter INFORME_FECHA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final Pattern PAGO_ID_PATTERN = Pattern.compile("Pago\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
 
     public static Connection getConnection() throws SQLException {
@@ -1214,9 +1215,12 @@ public class DatabaseUtil {
                 "        e.cantidad) AS cantidad_inicial, " +
                 "COALESCE((SELECT SUM(CASE WHEN eh.diferencia > 0 THEN eh.diferencia ELSE 0 END) FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) >= datetime(?) AND datetime(eh.fecha) <= datetime(?)), 0) AS altas, " +
                 "COALESCE((SELECT SUM(CASE WHEN eh.diferencia < 0 THEN -eh.diferencia ELSE 0 END) FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) >= datetime(?) AND datetime(eh.fecha) <= datetime(?)), 0) AS bajas, " +
+                "COALESCE((SELECT SUM(eh.diferencia) FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) >= datetime(?) AND datetime(eh.fecha) <= datetime(?)), 0) AS variacion, " +
                 "COALESCE((SELECT eh.cantidad_nueva FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) <= datetime(?) ORDER BY datetime(eh.fecha) DESC, eh.id DESC LIMIT 1), " +
                 "        (SELECT eh.cantidad_nueva FROM equipos_historial eh WHERE eh.equipo_id = e.id ORDER BY datetime(eh.fecha) DESC, eh.id DESC LIMIT 1), " +
-                "        e.cantidad) AS cantidad_final " +
+                "        e.cantidad) AS cantidad_final, " +
+                "COALESCE((SELECT MAX(datetime(eh.fecha)) FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) >= datetime(?) AND datetime(eh.fecha) <= datetime(?)), " +
+                "        (SELECT MAX(datetime(eh.fecha)) FROM equipos_historial eh WHERE eh.equipo_id = e.id)) AS fecha_ultimo_cambio " +
                 "FROM equipos e ORDER BY e.nombre";
 
         try (Connection conn = getConnection();
@@ -1226,7 +1230,11 @@ public class DatabaseUtil {
             stmt.setString(3, formatDateTime(fin));
             stmt.setString(4, formatDateTime(inicio));
             stmt.setString(5, formatDateTime(fin));
-            stmt.setString(6, formatDateTime(fin));
+            stmt.setString(6, formatDateTime(inicio));
+            stmt.setString(7, formatDateTime(fin));
+            stmt.setString(8, formatDateTime(fin));
+            stmt.setString(9, formatDateTime(inicio));
+            stmt.setString(10, formatDateTime(fin));
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -1237,7 +1245,13 @@ public class DatabaseUtil {
                     equipo.setCantidadInicial(rs.getInt("cantidad_inicial"));
                     equipo.setAltas(rs.getInt("altas"));
                     equipo.setBajas(rs.getInt("bajas"));
+                    equipo.setVariacion(rs.getInt("variacion"));
                     equipo.setCantidadFinal(rs.getInt("cantidad_final"));
+                    String fechaUltimoCambio = rs.getString("fecha_ultimo_cambio");
+                    LocalDateTime fechaMovimiento = parseDateTime(fechaUltimoCambio);
+                    if (fechaMovimiento != null) {
+                        equipo.setFechaUltimoCambio(INFORME_FECHA_FORMATTER.format(fechaMovimiento));
+                    }
                     resumen.add(equipo);
                 }
             }
