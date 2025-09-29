@@ -21,6 +21,8 @@
                 <ComboBox fx:id="cmbCategoria" prefWidth="180"/>
                 <Label text="Producto" style="-fx-text-fill: #cbd5f5;"/>
                 <ComboBox fx:id="cmbProducto" prefWidth="220"/>
+                <Label fx:id="lblVariante" text="Variante" style="-fx-text-fill: #cbd5f5;"/>
+                <ComboBox fx:id="cmbVariante" prefWidth="200"/>
                 <Label text="Ordenar" style="-fx-text-fill: #cbd5f5;"/>
                 <ComboBox fx:id="cmbOrden" prefWidth="180"/>
             </HBox>
