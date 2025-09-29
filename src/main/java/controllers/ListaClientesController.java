@@ -759,7 +759,8 @@ public class ListaClientesController implements Initializable {
 
     private void cargarClientes() {
         String sql = "SELECT nombres, apellidos, telefono, telefono_visible, tipoMembresia, fecha_vencimiento " +
-                "FROM clientes WHERE activo = 1";
+                "FROM clientes WHERE activo = 1 " +
+                "AND COALESCE(LOWER(tipoMembresia), '') <> 'diario'";
 
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);

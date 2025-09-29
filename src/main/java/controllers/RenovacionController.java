@@ -173,7 +173,8 @@ public class RenovacionController {
 
     private void cargarTodosClientesActivos() {
         String sql = "SELECT nombres, apellidos, telefono, telefono_visible, tipoMembresia, fecha_vencimiento " +
-                "FROM clientes WHERE activo = 1";
+                "FROM clientes WHERE activo = 1 " +
+                "AND COALESCE(LOWER(tipoMembresia), '') <> 'diario'";
 
         cargarClientesDesdeSQL(sql, todosClientes);
     }
