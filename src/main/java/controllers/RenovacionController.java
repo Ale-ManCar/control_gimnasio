@@ -144,7 +144,9 @@ public class RenovacionController {
 
         int filasHistorial = tablaHistorial.getItems().size();
         double alturaHistorial = ALTURA_CABECERA + (filasHistorial * ALTURA_FILA);
-        tablaHistorial.setPrefHeight(Math.max(ALTURA_CABECERA + ALTURA_FILA, alturaHistorial));
+        int filasMinimasHistorial = Math.max(2, filasHistorial);
+        double alturaMinimaHistorial = ALTURA_CABECERA + (filasMinimasHistorial * ALTURA_FILA);
+        tablaHistorial.setPrefHeight(Math.max(alturaMinimaHistorial, alturaHistorial));
 
         Platform.runLater(() -> {
             tablaClientes.requestLayout();
