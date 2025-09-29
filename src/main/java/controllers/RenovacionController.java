@@ -45,6 +45,7 @@ public class RenovacionController {
     private int totalPaginas = 1;
     private final double ALTURA_FILA = 30.0;
     private final double ALTURA_CABECERA = 30.0;
+    private boolean modoTodosClientes = false;
 
     @FXML
     public void initialize() {
@@ -98,6 +99,8 @@ public class RenovacionController {
 
             tablaClientes.getItems().addListener((ListChangeListener<Cliente>) c -> ajustarAlturaTablas());
             tablaHistorial.getItems().addListener((ListChangeListener<PagoHistorial>) c -> ajustarAlturaTablas());
+
+            txtBuscar.textProperty().addListener((obs, oldValue, newValue) -> aplicarFiltro(newValue));
 
         } catch (Exception e) {
             mostrarAlerta("Error Crítico", "No se pudo cargar la pantalla: " + e.getMessage());
@@ -213,22 +216,46 @@ public class RenovacionController {
 
     @FXML
     private void filtrarClientes() {
-        String filtro = txtBuscar.getText().trim().toLowerCase();
+        aplicarFiltro(txtBuscar.getText());
+    }
+
+    @FXML
+    private void limpiarFiltro() {
+        txtBuscar.clear();
+    }
+
+    private void aplicarFiltro(String textoFiltro) {
+        String filtro = textoFiltro == null ? "" : textoFiltro.trim().toLowerCase();
 
         if (filtro.isEmpty()) {
             paginaActual = 1;
-            cargarClientesProximos();
+
+            if (modoTodosClientes) {
+                if (todosClientes.isEmpty()) {
+                    cargarTodosClientesActivos();
+                }
+                clientesProximos.setAll(todosClientes);
+            } else {
+                cargarClientesProximos();
+            }
+
             actualizarTablaClientes();
             actualizarControlesPaginacion();
             ajustarAlturaTablas();
             return;
         }
 
-        if (todosClientes.isEmpty()) {
-            cargarTodosClientesActivos();
+        ObservableList<Cliente> fuente;
+        if (modoTodosClientes) {
+            if (todosClientes.isEmpty()) {
+                cargarTodosClientesActivos();
+            }
+            fuente = todosClientes;
+        } else {
+            fuente = FXCollections.observableArrayList(clientesProximos);
         }
 
-        List<Cliente> filtrados = todosClientes.stream()
+        List<Cliente> filtrados = fuente.stream()
                 .filter(cliente ->
                         (cliente.getNombres() + " " + cliente.getApellidos()).toLowerCase().contains(filtro) ||
                                 cliente.getTelefonoVisible().contains(filtro)
@@ -236,16 +263,9 @@ public class RenovacionController {
                 .collect(Collectors.toList());
 
         tablaClientes.setItems(FXCollections.observableArrayList(filtrados));
-        ajustarAlturaTablas();
-    }
-
-    @FXML
-    private void limpiarFiltro() {
-        txtBuscar.clear();
-        paginaActual = 1;
-        cargarClientesProximos();
-        actualizarTablaClientes();
-        actualizarControlesPaginacion();
+        lblPagina.setText("Resultados: " + filtrados.size());
+        btnAnterior.setDisable(true);
+        btnSiguiente.setDisable(true);
         ajustarAlturaTablas();
     }
 
@@ -481,13 +501,8 @@ public class RenovacionController {
     }
 
     public void setModoTodosClientes(boolean modo) {
-        if (modo) {
-            cargarTodosClientesActivos();
-        } else {
-            cargarClientesProximos();
-        }
-        actualizarTablaClientes();
-        actualizarControlesPaginacion();
-        ajustarAlturaTablas();
+        modoTodosClientes = modo;
+        paginaActual = 1;
+        aplicarFiltro(txtBuscar.getText());
     }
 }
