@@ -18,6 +18,7 @@ import util.SessionManager;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,6 +37,14 @@ public class RenovacionController {
     @FXML private TextField txtBuscar;
     @FXML private VBox panelDerecho;
     @FXML private Label lblInfoCliente;
+    @FXML private Label lblTotalClientes;
+    @FXML private Label lblClientesVencidos;
+    @FXML private Label lblClientesHoy;
+    @FXML private Label lblClientesProximos;
+    @FXML private Label lblTipoMembresiaActual;
+    @FXML private Label lblFechaVencimiento;
+    @FXML private Label lblDiasRestantes;
+    @FXML private Label lblEstadoChip;
 
     private final ObservableList<Cliente> clientesProximos = FXCollections.observableArrayList();
     private final ObservableList<Cliente> todosClientes = FXCollections.observableArrayList();
@@ -45,6 +54,8 @@ public class RenovacionController {
     private int totalPaginas = 1;
     private final double ALTURA_FILA = 30.0;
     private final double ALTURA_CABECERA = 30.0;
+    private static final String CHIP_BASE_STYLE = "-fx-padding: 4 12; -fx-background-radius: 12; -fx-text-fill: white; -fx-font-weight: bold;";
+    private static final DateTimeFormatter FECHA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @FXML
     public void initialize() {
@@ -66,6 +77,7 @@ public class RenovacionController {
             actualizarControlesPaginacion();
             ajustarAlturaTablas();
             centrarContenidoTablas();
+            actualizarResumen(tablaClientes.getItems());
 
             panelDerecho.setVisible(false);
 
@@ -79,24 +91,27 @@ public class RenovacionController {
                 }
             });
 
-            tablaClientes.setRowFactory(tv -> {
-                TableRow<Cliente> row = new TableRow<>();
-                row.setOnMouseEntered(event -> {
-                    if (!row.isEmpty()) {
-                        Tooltip tooltip = new Tooltip(row.getItem().getTooltipText());
+            tablaClientes.setRowFactory(tv -> new TableRow<>() {
+                @Override
+                protected void updateItem(Cliente item, boolean empty) {
+                    super.updateItem(item, empty);
+
+                    if (empty || item == null) {
+                        setTooltip(null);
+                        setStyle("");
+                    } else {
+                        Tooltip tooltip = new Tooltip(item.getTooltipText());
                         tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
-                        Tooltip.install(row, tooltip);
+                        setTooltip(tooltip);
+                        setStyle(obtenerEstiloFila(item));
                     }
-                });
-                row.setOnMouseExited(event -> {
-                    if (!row.isEmpty()) {
-                        Tooltip.uninstall(row, null);
-                    }
-                });
-                return row;
+                }
             });
 
-            tablaClientes.getItems().addListener((ListChangeListener<Cliente>) c -> ajustarAlturaTablas());
+            tablaClientes.getItems().addListener((ListChangeListener<Cliente>) c -> {
+                ajustarAlturaTablas();
+                actualizarResumen(tablaClientes.getItems());
+            });
             tablaHistorial.getItems().addListener((ListChangeListener<PagoHistorial>) c -> ajustarAlturaTablas());
 
         } catch (Exception e) {
@@ -126,8 +141,9 @@ public class RenovacionController {
         btnAnterior.setStyle(botonStyle);
         btnSiguiente.setStyle(botonStyle);
 
-        panelDerecho.setStyle("-fx-background-color: #f5f5f5; -fx-padding: 15px; -fx-border-color: #e0e0e0; "
-                + "-fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-radius: 5px;");
+        panelDerecho.setStyle("-fx-background-color: rgba(255,255,255,0.93); -fx-padding: 18px; -fx-background-radius: 15px; "
+                + "-fx-border-radius: 15px; -fx-border-color: rgba(255,255,255,0.2); "
+                + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 3);");
 
         cbNuevaMembresia.setStyle("-fx-font-size: 12px;");
         dpFechaRenovacion.setStyle("-fx-font-size: 12px;");
@@ -152,10 +168,68 @@ public class RenovacionController {
         });
     }
 
+    private void actualizarResumen(ObservableList<Cliente> clientes) {
+        if (lblTotalClientes == null) {
+            return;
+        }
+
+        int total = clientes != null ? clientes.size() : 0;
+        long vencidos = clientes != null ? clientes.stream().filter(c -> c.getDiasRestantes() < 0).count() : 0;
+        long vencenHoy = clientes != null ? clientes.stream().filter(c -> c.getDiasRestantes() == 0).count() : 0;
+        long proximos = clientes != null ? clientes.stream().filter(c -> c.getDiasRestantes() > 0).count() : 0;
+
+        Platform.runLater(() -> {
+            lblTotalClientes.setText(String.valueOf(total));
+            lblClientesVencidos.setText(String.valueOf(vencidos));
+            lblClientesHoy.setText(String.valueOf(vencenHoy));
+            lblClientesProximos.setText(String.valueOf(proximos));
+        });
+    }
+
+    private String obtenerEstiloFila(Cliente cliente) {
+        int dias = cliente.getDiasRestantes();
+        if (dias < 0) {
+            return "-fx-background-color: rgba(231,76,60,0.25); -fx-border-color: transparent;";
+        } else if (dias == 0) {
+            return "-fx-background-color: rgba(243,156,18,0.25); -fx-border-color: transparent;";
+        } else if (dias <= 3) {
+            return "-fx-background-color: rgba(52,152,219,0.18); -fx-border-color: transparent;";
+        } else {
+            return "-fx-background-color: transparent; -fx-border-color: transparent;";
+        }
+    }
+
     private void mostrarInformacionCliente(Cliente cliente) {
         Platform.runLater(() -> {
-            lblInfoCliente.setText("Cliente seleccionado:\n" +
-                    cliente.getNombres() + " " + cliente.getApellidos());
+            lblInfoCliente.setText(cliente.getNombres() + " " + cliente.getApellidos());
+
+            String tipoMembresia = cliente.getTipoMembresia() != null && !cliente.getTipoMembresia().isBlank()
+                    ? cliente.getTipoMembresia()
+                    : "Sin definir";
+            lblTipoMembresiaActual.setText("Membresía actual: " + tipoMembresia);
+
+            LocalDate fechaVencimiento = cliente.getFecha_vencimientoDate();
+            lblFechaVencimiento.setText("Vence el: " + FECHA_FORMATTER.format(fechaVencimiento));
+
+            int dias = cliente.getDiasRestantes();
+            String mensajeDias;
+            String chipColor;
+            if (dias < 0) {
+                mensajeDias = "Vencido hace " + Math.abs(dias) + " día(s)";
+                lblEstadoChip.setText("Vencido");
+                chipColor = "#E74C3C";
+            } else if (dias == 0) {
+                mensajeDias = "Vence hoy";
+                lblEstadoChip.setText("Vence hoy");
+                chipColor = "#F39C12";
+            } else {
+                mensajeDias = "Restan " + dias + " día(s)";
+                lblEstadoChip.setText("Activo");
+                chipColor = "#27AE60";
+            }
+
+            lblDiasRestantes.setText(mensajeDias);
+            lblEstadoChip.setStyle(CHIP_BASE_STYLE + " -fx-background-color: " + chipColor + ";");
         });
     }
 
@@ -234,6 +308,7 @@ public class RenovacionController {
                 .collect(Collectors.toList());
 
         tablaClientes.setItems(FXCollections.observableArrayList(filtrados));
+        actualizarResumen(tablaClientes.getItems());
         ajustarAlturaTablas();
     }
 
@@ -261,6 +336,7 @@ public class RenovacionController {
         totalPaginas = (int) Math.ceil((double) clientesProximos.size() / clientesPorPagina);
         if (totalPaginas == 0) totalPaginas = 1;
 
+        actualizarResumen(tablaClientes.getItems());
         ajustarAlturaTablas();
     }
 
