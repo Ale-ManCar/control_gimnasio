@@ -11,7 +11,7 @@
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controllers.ComparacionPreciosController"
-            prefWidth="900" prefHeight="600"
+            prefWidth="900" prefHeight="775"
             styleClass="comparacion-root">
     <stylesheets>
         <URL value="@/css/comparacion_precios.css"/>
