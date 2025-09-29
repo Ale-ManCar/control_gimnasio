@@ -68,7 +68,7 @@
 
             <!-- PANEL DERECHO -->
             <VBox fx:id="panelDerecho" GridPane.columnIndex="1" spacing="15"
-                  style="-fx-background-color: rgba(255,255,255,0.9); -fx-padding: 15; -fx-background-radius: 15;"
+                  style="-fx-background-color: rgba(255,255,255,0.9); -fx-padding: 15; -fx-background-radius: 15;
                          -fx-border-radius: 15; -fx-border-color: rgba(255,255,255,0.2);">
                 <VBox spacing="8">
                     <Label fx:id="lblInfoCliente" style="-fx-font-weight: bold; -fx-wrap-text: true; -fx-min-height: 35;
@@ -95,7 +95,7 @@
                 </GridPane>
                 <HBox alignment="CENTER_RIGHT">
                     <Button text="Renovar" onAction="#handleRenovar"
-                            style="-fx-background-color: linear-gradient(to right, #4CAF50, #2ECC71); -fx-text-fill: white;"
+                            style="-fx-background-color: linear-gradient(to right, #4CAF50, #2ECC71); -fx-text-fill: white;
                                    -fx-font-weight: bold; -fx-padding: 8 20; -fx-background-radius: 25;"/>
                 </HBox>
                 <Region VBox.vgrow="ALWAYS"/>
