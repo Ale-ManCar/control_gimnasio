@@ -18,6 +18,7 @@ import util.SessionManager;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,6 +37,10 @@ public class RenovacionController {
     @FXML private TextField txtBuscar;
     @FXML private VBox panelDerecho;
     @FXML private Label lblInfoCliente;
+    @FXML private Label lblMembresiaActual;
+    @FXML private Label lblFechaVencimiento;
+    @FXML private Label lblDiasRestantes;
+    @FXML private Label lblUltimoPago;
 
     private final ObservableList<Cliente> clientesProximos = FXCollections.observableArrayList();
     private final ObservableList<Cliente> todosClientes = FXCollections.observableArrayList();
@@ -45,6 +50,7 @@ public class RenovacionController {
     private int totalPaginas = 1;
     private final double ALTURA_FILA = 30.0;
     private final double ALTURA_CABECERA = 30.0;
+    private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @FXML
     public void initialize() {
@@ -53,6 +59,8 @@ public class RenovacionController {
 
             tablaClientes.setFixedCellSize(ALTURA_FILA);
             tablaHistorial.setFixedCellSize(ALTURA_FILA);
+
+            tablaHistorial.setPlaceholder(new Label("Sin pagos registrados"));
 
             tablaClientes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
             tablaHistorial.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -71,8 +79,8 @@ public class RenovacionController {
 
             tablaClientes.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal != null) {
-                    cargarHistorialPagos(newVal.getTelefono());
                     mostrarInformacionCliente(newVal);
+                    cargarHistorialPagos(newVal.getTelefono());
                     panelDerecho.setVisible(true);
                 } else {
                     panelDerecho.setVisible(false);
@@ -156,6 +164,11 @@ public class RenovacionController {
         Platform.runLater(() -> {
             lblInfoCliente.setText("Cliente seleccionado:\n" +
                     cliente.getNombres() + " " + cliente.getApellidos());
+            lblMembresiaActual.setText(formatearTexto(cliente.getTipoMembresia()));
+            lblFechaVencimiento.setText(formatearFecha(cliente.getFecha_vencimiento()));
+            lblDiasRestantes.setText(calcularMensajeDias(cliente.getFecha_vencimientoDate()));
+            actualizarColorEstado(cliente.getFecha_vencimientoDate());
+            lblUltimoPago.setText("Buscando pagos recientes...");
         });
     }
 
@@ -298,8 +311,8 @@ public class RenovacionController {
         tablaClientes.getSelectionModel().selectFirst();
         tablaClientes.scrollTo(0);
 
-        cargarHistorialPagos(cliente.getTelefono());
         mostrarInformacionCliente(cliente);
+        cargarHistorialPagos(cliente.getTelefono());
         panelDerecho.setVisible(true);
     }
 
@@ -457,7 +470,11 @@ public class RenovacionController {
 
     private void cargarHistorialPagos(String telefono) {
         ObservableList<PagoHistorial> historial = FXCollections.observableArrayList();
-        String sql = "SELECT pagos.fecha_pago, clientes.tipoMembresia, pagos.monto FROM pagos JOIN clientes ON pagos.cliente_id = clientes.id WHERE clientes.telefono = ? AND pagos.estado = 'ACTIVO' ORDER BY pagos.fecha_pago DESC";
+        String sql = "SELECT pagos.fecha_pago, pagos.tipo_membresia, pagos.monto " +
+                "FROM pagos " +
+                "JOIN clientes ON pagos.cliente_id = clientes.id " +
+                "WHERE clientes.telefono = ? " +
+                "ORDER BY pagos.fecha_pago DESC LIMIT 10";
 
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -466,16 +483,97 @@ public class RenovacionController {
             while (rs.next()) {
                 historial.add(new PagoHistorial(
                         LocalDate.parse(rs.getString("fecha_pago")),
-                        rs.getString("tipoMembresia"),
+                        rs.getString("tipo_membresia"),
                         rs.getDouble("monto")
                 ));
             }
             tablaHistorial.setItems(historial);
+            actualizarUltimoPago(historial);
             ajustarAlturaTablas();
         } catch (SQLException e) {
             mostrarAlerta("Error", "No se pudo cargar historial: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void actualizarUltimoPago(List<PagoHistorial> historial) {
+        if (historial == null || historial.isEmpty()) {
+            lblUltimoPago.setText("Sin pagos registrados");
+            return;
+        }
+
+        PagoHistorial ultimoPago = historial.get(0);
+        String texto = formatearFecha(ultimoPago.getFechaPago()) +
+                " · " + formatearTexto(ultimoPago.getTipoMembresia()) +
+                " · $" + String.format("%.2f", ultimoPago.getMonto());
+        lblUltimoPago.setText(texto);
+    }
+
+    private String formatearTexto(String valor) {
+        if (valor == null || valor.isBlank()) {
+            return "No registrado";
+        }
+        return valor;
+    }
+
+    private String formatearFecha(String fechaIso) {
+        if (fechaIso == null || fechaIso.isBlank()) {
+            return "Sin fecha";
+        }
+        LocalDate fecha = LocalDate.parse(fechaIso);
+        return formatearFecha(fecha);
+    }
+
+    private String formatearFecha(LocalDate fecha) {
+        if (fecha == null) {
+            return "Sin fecha";
+        }
+        return fecha.format(FORMATO_FECHA);
+    }
+
+    private String calcularMensajeDias(LocalDate fechaVencimiento) {
+        if (fechaVencimiento == null) {
+            return "Fecha no disponible";
+        }
+
+        long diasRestantes = ChronoUnit.DAYS.between(LocalDate.now(), fechaVencimiento);
+
+        if (diasRestantes > 1) {
+            return diasRestantes + " días restantes";
+        } else if (diasRestantes == 1) {
+            return "1 día restante";
+        } else if (diasRestantes == 0) {
+            return "Vence hoy";
+        }
+
+        long diasTranscurridos = Math.abs(diasRestantes);
+        if (diasTranscurridos <= 15) {
+            return "En período de gracia (" + diasTranscurridos + " días)";
+        }
+
+        return "Vencido hace " + diasTranscurridos + " días";
+    }
+
+    private void actualizarColorEstado(LocalDate fechaVencimiento) {
+        if (fechaVencimiento == null) {
+            lblDiasRestantes.setStyle("-fx-text-fill: #2c3e50; -fx-font-weight: bold;");
+            return;
+        }
+
+        long diasRestantes = ChronoUnit.DAYS.between(LocalDate.now(), fechaVencimiento);
+        String color;
+
+        if (diasRestantes >= 3) {
+            color = "#27ae60";
+        } else if (diasRestantes >= 0) {
+            color = "#f1c40f";
+        } else if (Math.abs(diasRestantes) <= 15) {
+            color = "#e67e22";
+        } else {
+            color = "#c0392b";
+        }
+
+        lblDiasRestantes.setStyle("-fx-text-fill: " + color + "; -fx-font-weight: bold;");
     }
 
     public void setModoTodosClientes(boolean modo) {

@@ -72,6 +72,29 @@
                          -fx-border-radius: 15; -fx-border-color: rgba(255,255,255,0.2);">
                 <Label fx:id="lblInfoCliente" style="-fx-font-weight: bold; -fx-wrap-text: true; -fx-min-height: 35;
                          -fx-padding: 0 5 0; -fx-text-fill: #2c3e50;"/>
+                <VBox spacing="8" style="-fx-background-color: rgba(236, 240, 241, 0.85); -fx-padding: 12; -fx-background-radius: 10;">
+                    <Label text="Resumen de Membresía" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                    <GridPane hgap="10" vgap="6">
+                        <columnConstraints>
+                            <ColumnConstraints halignment="RIGHT" minWidth="120"/>
+                            <ColumnConstraints hgrow="ALWAYS"/>
+                        </columnConstraints>
+                        <children>
+                            <Label text="Membresía actual:" style="-fx-text-fill: #34495e;"/>
+                            <Label fx:id="lblMembresiaActual" GridPane.columnIndex="1" style="-fx-text-fill: #2c3e50; -fx-font-weight: bold;"/>
+
+                            <Label text="Fecha de vencimiento:" GridPane.rowIndex="1" style="-fx-text-fill: #34495e;"/>
+                            <Label fx:id="lblFechaVencimiento" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-text-fill: #2c3e50;"/>
+
+                            <Label text="Estado:" GridPane.rowIndex="2" style="-fx-text-fill: #34495e;"/>
+                            <Label fx:id="lblDiasRestantes" GridPane.columnIndex="1" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
+
+                            <Label text="Último pago:" GridPane.rowIndex="3" style="-fx-text-fill: #34495e;"/>
+                            <Label fx:id="lblUltimoPago" GridPane.columnIndex="1" GridPane.rowIndex="3" wrapText="true"
+                                   style="-fx-text-fill: #2c3e50;"/>
+                        </children>
+                    </GridPane>
+                </VBox>
                 <Separator style="-fx-padding: 5 0; -fx-background-color: rgba(0,0,0,0.2);"/>
                 <Label text="Nueva Membresía:" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
                 <ComboBox fx:id="cbNuevaMembresia" prefWidth="150" style="-fx-background-color: rgba(255,255,255,0.9);"/>
