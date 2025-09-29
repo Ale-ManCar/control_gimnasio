@@ -42,6 +42,37 @@
     -fx-font-weight: bold;
 }
 
+.icono-usuario {
+    -fx-min-width: 110px;
+    -fx-min-height: 110px;
+    -fx-pref-width: 110px;
+    -fx-pref-height: 110px;
+    -fx-max-width: 110px;
+    -fx-max-height: 110px;
+    -fx-background-radius: 55px;
+    -fx-alignment: center;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 12, 0.25, 0, 6);
+}
+
+.icono-admin {
+    -fx-background-color: linear-gradient(to bottom, #f8b500, #f7a100, #f38b00);
+    -fx-border-color: rgba(255, 255, 255, 0.35);
+    -fx-border-width: 2px;
+    -fx-border-radius: 55px;
+}
+
+.icono-recepcionista {
+    -fx-background-color: linear-gradient(to bottom, #2d9cdb, #2571c0, #1b4f99);
+    -fx-border-color: rgba(255, 255, 255, 0.35);
+    -fx-border-width: 2px;
+    -fx-border-radius: 55px;
+}
+
+.emoji-icono {
+    -fx-font-size: 52px;
+    -fx-text-fill: white;
+}
+
 .tarjeta-agregar {
     -fx-background-color: rgba(255, 255, 255, 0.08);
     -fx-background-radius: 18;

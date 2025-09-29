@@ -10,8 +10,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
@@ -208,15 +206,11 @@ public class SelectorPerfilesController {
     }
 
     private VBox crearTarjetaUsuario(User user) {
-        ImageView imageView = new ImageView(new Image(getClass().getResourceAsStream("/images/gym.png")));
-        imageView.setFitWidth(100);
-        imageView.setFitHeight(100);
-        imageView.setPreserveRatio(true);
-
+        StackPane icono = crearIconoRol(user.getRole());
         Label nombre = new Label(user.getUsername());
         nombre.getStyleClass().add("nombre-usuario");
 
-        VBox tarjeta = new VBox(10, imageView, nombre);
+        VBox tarjeta = new VBox(12, icono, nombre);
         tarjeta.setAlignment(Pos.CENTER);
         tarjeta.setMinSize(140, 160);
         tarjeta.setPrefSize(140, 160);
@@ -225,6 +219,28 @@ public class SelectorPerfilesController {
         tarjeta.getStyleClass().add("tarjeta-usuario");
         tarjeta.setOnMouseClicked(e -> abrirLogin(user));
         return tarjeta;
+    }
+
+    private StackPane crearIconoRol(Role role) {
+        StackPane icono = new StackPane();
+        icono.getStyleClass().add("icono-usuario");
+
+        String estiloRol;
+        String simbolo;
+        if (role == Role.ADMIN) {
+            estiloRol = "icono-admin";
+            simbolo = "\uD83D\uDC51"; // 👑
+        } else {
+            estiloRol = "icono-recepcionista";
+            simbolo = "\uD83D\uDCBC"; // 💼
+        }
+        icono.getStyleClass().add(estiloRol);
+
+        Label etiqueta = new Label(simbolo);
+        etiqueta.getStyleClass().add("emoji-icono");
+        icono.getChildren().add(etiqueta);
+
+        return icono;
     }
 
     private StackPane crearTarjetaAgregar() {
