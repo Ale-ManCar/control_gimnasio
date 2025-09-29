@@ -5,12 +5,14 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.stage.Stage;
 import models.Role;
 import models.User;
 import util.UserService;
 
 import java.sql.SQLException;
+import java.util.function.UnaryOperator;
 
 public class RegistroRecepcionistaController {
     @FXML private TextField txtUsuario;
@@ -22,6 +24,11 @@ public class RegistroRecepcionistaController {
     private Stage stage;
     private User usuarioEditando;
     private Runnable onSave;
+
+    @FXML
+    private void initialize() {
+        configurarTextFieldMayusculas(txtUsuario);
+    }
 
     public void setStage(Stage stage) {
         this.stage = stage;
@@ -39,7 +46,7 @@ public class RegistroRecepcionistaController {
         if (lblTitulo != null) {
             lblTitulo.setText("Editar recepcionista");
         }
-        txtUsuario.setText(user.getUsername());
+        txtUsuario.setText(user.getUsername() != null ? user.getUsername().toUpperCase() : "");
         if (lblMensaje != null) {
             lblMensaje.setText("");
         }
@@ -110,5 +117,20 @@ public class RegistroRecepcionistaController {
             alert.setContentText(mensaje);
             alert.showAndWait();
         }
+    }
+
+    private void configurarTextFieldMayusculas(TextField textField) {
+        if (textField == null) {
+            return;
+        }
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String nuevoTexto = change.getText();
+            if (nuevoTexto != null) {
+                change.setText(nuevoTexto.toUpperCase());
+            }
+            return change;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        textField.setTextFormatter(textFormatter);
     }
 }

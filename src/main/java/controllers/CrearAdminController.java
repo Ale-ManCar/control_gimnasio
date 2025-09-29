@@ -8,6 +8,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.stage.Stage;
 import models.Role;
 import models.User;
@@ -15,6 +16,7 @@ import util.UserService;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.function.UnaryOperator;
 
 public class CrearAdminController {
     @FXML private TextField txtUsuario;
@@ -23,6 +25,11 @@ public class CrearAdminController {
     @FXML private Label lblMensaje;
 
     private Stage stage;
+
+    @FXML
+    private void initialize() {
+        configurarTextFieldMayusculas(txtUsuario);
+    }
 
     public void setStage(Stage stage) {
         this.stage = stage;
@@ -78,6 +85,21 @@ public class CrearAdminController {
     private void mostrarMensaje(String mensaje, boolean error) {
         lblMensaje.setText(mensaje);
         lblMensaje.setStyle(error ? "-fx-text-fill: #ff6b6b;" : "-fx-text-fill: #2ecc71;");
+    }
+
+    private void configurarTextFieldMayusculas(TextField textField) {
+        if (textField == null) {
+            return;
+        }
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String nuevoTexto = change.getText();
+            if (nuevoTexto != null) {
+                change.setText(nuevoTexto.toUpperCase());
+            }
+            return change;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        textField.setTextFormatter(textFormatter);
     }
 
     private void mostrarAlerta(String mensaje) {
