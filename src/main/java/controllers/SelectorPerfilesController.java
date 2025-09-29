@@ -76,9 +76,30 @@ public class SelectorPerfilesController {
 
             VBox disposicion = construirDisposicionPerfiles(administradorPrincipal, recepcionistas);
             contenedorPerfiles.getChildren().add(disposicion);
+            limpiarSeleccionInicial();
         } catch (SQLException e) {
             lblMensaje.setText("No se pudieron cargar los usuarios");
             lblMensaje.setStyle("-fx-text-fill: #ff6b6b;");
+        }
+    }
+
+    private void limpiarSeleccionInicial() {
+        if (contenedorPerfiles == null) {
+            return;
+        }
+
+        Scene escena = contenedorPerfiles.getScene();
+        if (escena == null) {
+            Platform.runLater(this::limpiarSeleccionInicial);
+            return;
+        }
+
+        Parent raiz = escena.getRoot();
+        if (raiz != null) {
+            if (!raiz.isFocusTraversable()) {
+                raiz.setFocusTraversable(true);
+            }
+            raiz.requestFocus();
         }
     }
 
