@@ -337,11 +337,12 @@ public class InsumosAdminController implements Initializable {
                 double gananciaUnidad;
                 if ("PACA".equals(tipo)) {
                     int unidadesPorPaca = Integer.parseInt(txtUnidadesPorPaca.getText());
+                    int stockInicial = Integer.parseInt(txtStockInicial.getText());
                     double costoPorUnidad = precioCompra / unidadesPorPaca;
                     gananciaUnidad = precioVenta - costoPorUnidad;
-                    stock = unidadesPorPaca;
-                    lblStockCalculado.setText(String.format("Unidades disponibles: %d | Costo/unidad: $%.2f",
-                            stock, costoPorUnidad));
+                    stock = stockInicial;
+                    lblStockCalculado.setText(String.format("Stock inicial: %d | Costo/unidad: $%.2f",
+                            stockInicial, costoPorUnidad));
                 } else if ("KG".equals(tipo) || "LB".equals(tipo)) {
                     double pesoTotal = Double.parseDouble(txtPesoTotal.getText());
                     double pesoScoop = Double.parseDouble(txtPesoScoop.getText());
@@ -382,6 +383,7 @@ public class InsumosAdminController implements Initializable {
         txtPesoTotal.textProperty().addListener(calculador);
         txtPesoScoop.textProperty().addListener(calculador);
         txtUnidadesPorPaca.textProperty().addListener(calculador);
+        txtStockInicial.textProperty().addListener(calculador);
         cbTipo.valueProperty().addListener((obs, oldVal, newVal) -> calculador.changed(null, null, null));
 
         lblStockCalculado.setText("Seleccione tipo de insumo y complete los campos");
