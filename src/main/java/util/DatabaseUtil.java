@@ -70,7 +70,7 @@ public class DatabaseUtil {
 
         String sqlConfig = "CREATE TABLE IF NOT EXISTS config (" +
                 "id INTEGER PRIMARY KEY," +
-                "nombre_gimnasio TEXT DEFAULT 'Mi Gimnasio'," +
+                "nombre_gimnasio TEXT DEFAULT 'ER GYM'," +
                 "mensaje_whatsapp TEXT DEFAULT '¡Hola *[NOMBRE] [APELLIDO]*! Tu membresía en *[GIMNASIO]* vence en *[DIAS]* días'," +
                 "mensaje_registro TEXT DEFAULT '¡Bienvenido *[NOMBRE] [APELLIDO]* a *[GIMNASIO]*! Tu membresía de *[MEMBRESIA]* es válida hasta *[FECHA].* ¡Gracias por unirte!'," +
                 "mensaje_renovacion TEXT DEFAULT '¡Hola *[NOMBRE] [APELLIDO]!* Tu membresía en *[GIMNASIO*] ha sido renovada por *[MEMBRESIA]*. Nueva fecha de vencimiento: *[FECHA].* ¡Disfruta de nuestros servicios!')";
