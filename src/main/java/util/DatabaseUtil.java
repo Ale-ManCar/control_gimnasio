@@ -36,6 +36,8 @@ public class DatabaseUtil {
     private static final int BUSY_TIMEOUT_MS = 60000;
     private static final DateTimeFormatter SQLITE_DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final Pattern PAGO_ID_PATTERN = Pattern.compile("Pago\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static final DateTimeFormatter REPORTE_FECHA_HORA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final String TEXTO_SIN_MOVIMIENTOS = "-";
 
     public static Connection getConnection() throws SQLException {
         Connection conn = DriverManager.getConnection(URL);
@@ -1216,7 +1218,9 @@ public class DatabaseUtil {
                 "COALESCE((SELECT SUM(CASE WHEN eh.diferencia < 0 THEN -eh.diferencia ELSE 0 END) FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) >= datetime(?) AND datetime(eh.fecha) <= datetime(?)), 0) AS bajas, " +
                 "COALESCE((SELECT eh.cantidad_nueva FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) <= datetime(?) ORDER BY datetime(eh.fecha) DESC, eh.id DESC LIMIT 1), " +
                 "        (SELECT eh.cantidad_nueva FROM equipos_historial eh WHERE eh.equipo_id = e.id ORDER BY datetime(eh.fecha) DESC, eh.id DESC LIMIT 1), " +
-                "        e.cantidad) AS cantidad_final " +
+                "        e.cantidad) AS cantidad_final, " +
+                "COALESCE((SELECT eh.fecha FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) >= datetime(?) AND datetime(eh.fecha) <= datetime(?) ORDER BY datetime(eh.fecha) DESC, eh.id DESC LIMIT 1), " +
+                "        (SELECT eh.fecha FROM equipos_historial eh WHERE eh.equipo_id = e.id ORDER BY datetime(eh.fecha) DESC, eh.id DESC LIMIT 1)) AS fecha_ultimo_cambio " +
                 "FROM equipos e ORDER BY e.nombre";
 
         try (Connection conn = getConnection();
@@ -1227,6 +1231,8 @@ public class DatabaseUtil {
             stmt.setString(4, formatDateTime(inicio));
             stmt.setString(5, formatDateTime(fin));
             stmt.setString(6, formatDateTime(fin));
+            stmt.setString(7, formatDateTime(inicio));
+            stmt.setString(8, formatDateTime(fin));
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -1238,6 +1244,7 @@ public class DatabaseUtil {
                     equipo.setAltas(rs.getInt("altas"));
                     equipo.setBajas(rs.getInt("bajas"));
                     equipo.setCantidadFinal(rs.getInt("cantidad_final"));
+                    equipo.setFechaUltimoCambio(formatDateTimeForReport(rs.getString("fecha_ultimo_cambio")));
                     resumen.add(equipo);
                 }
             }
@@ -2542,6 +2549,14 @@ public class DatabaseUtil {
                 return null;
             }
         }
+    }
+
+    private static String formatDateTimeForReport(String valor) {
+        LocalDateTime fecha = parseDateTime(valor);
+        if (fecha == null) {
+            return TEXTO_SIN_MOVIMIENTOS;
+        }
+        return fecha.format(REPORTE_FECHA_HORA_FORMATTER);
     }
 
     private static LocalDate parseFecha(String valor) {

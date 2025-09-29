@@ -8,11 +8,13 @@ public class EquipoResumen {
     private int altas;
     private int bajas;
     private int cantidadFinal;
+    private String fechaUltimoCambio;
 
     public EquipoResumen() {
     }
 
-    public EquipoResumen(int equipoId, String nombre, String tipo, int cantidadInicial, int altas, int bajas, int cantidadFinal) {
+    public EquipoResumen(int equipoId, String nombre, String tipo, int cantidadInicial, int altas, int bajas, int cantidadFinal,
+                         String fechaUltimoCambio) {
         this.equipoId = equipoId;
         this.nombre = nombre;
         this.tipo = tipo;
@@ -20,6 +22,7 @@ public class EquipoResumen {
         this.altas = altas;
         this.bajas = bajas;
         this.cantidadFinal = cantidadFinal;
+        this.fechaUltimoCambio = fechaUltimoCambio;
     }
 
     public int getEquipoId() {
@@ -76,5 +79,17 @@ public class EquipoResumen {
 
     public void setCantidadFinal(int cantidadFinal) {
         this.cantidadFinal = cantidadFinal;
+    }
+
+    public int getVariacion() {
+        return altas - bajas;
+    }
+
+    public String getFechaUltimoCambio() {
+        return fechaUltimoCambio;
+    }
+
+    public void setFechaUltimoCambio(String fechaUltimoCambio) {
+        this.fechaUltimoCambio = fechaUltimoCambio;
     }
 }
