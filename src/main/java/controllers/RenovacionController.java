@@ -18,6 +18,7 @@ import util.SessionManager;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,6 +37,12 @@ public class RenovacionController {
     @FXML private TextField txtBuscar;
     @FXML private VBox panelDerecho;
     @FXML private Label lblInfoCliente;
+    @FXML private Label lblNombreCliente;
+    @FXML private Label lblTelefonoCliente;
+    @FXML private Label lblMembresiaActual;
+    @FXML private Label lblFechaVencimiento;
+    @FXML private Label lblEstadoCuenta;
+    @FXML private Label lblDiasRestantes;
 
     private final ObservableList<Cliente> clientesProximos = FXCollections.observableArrayList();
     private final ObservableList<Cliente> todosClientes = FXCollections.observableArrayList();
@@ -45,6 +52,7 @@ public class RenovacionController {
     private int totalPaginas = 1;
     private final double ALTURA_FILA = 30.0;
     private final double ALTURA_CABECERA = 30.0;
+    private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @FXML
     public void initialize() {
@@ -68,14 +76,17 @@ public class RenovacionController {
             centrarContenidoTablas();
 
             panelDerecho.setVisible(false);
+            panelDerecho.setManaged(false);
+            limpiarDetalleCliente();
 
             tablaClientes.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal != null) {
                     cargarHistorialPagos(newVal.getTelefono());
                     mostrarInformacionCliente(newVal);
                     panelDerecho.setVisible(true);
+                    panelDerecho.setManaged(true);
                 } else {
-                    panelDerecho.setVisible(false);
+                    ocultarPanelCliente();
                 }
             });
 
@@ -126,9 +137,6 @@ public class RenovacionController {
         btnAnterior.setStyle(botonStyle);
         btnSiguiente.setStyle(botonStyle);
 
-        panelDerecho.setStyle("-fx-background-color: #f5f5f5; -fx-padding: 15px; -fx-border-color: #e0e0e0; "
-                + "-fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-radius: 5px;");
-
         cbNuevaMembresia.setStyle("-fx-font-size: 12px;");
         dpFechaRenovacion.setStyle("-fx-font-size: 12px;");
         txtMonto.setStyle("-fx-font-size: 12px;");
@@ -154,9 +162,80 @@ public class RenovacionController {
 
     private void mostrarInformacionCliente(Cliente cliente) {
         Platform.runLater(() -> {
-            lblInfoCliente.setText("Cliente seleccionado:\n" +
-                    cliente.getNombres() + " " + cliente.getApellidos());
+            lblInfoCliente.setText("Renovación de " + cliente.getNombreCompleto());
+            lblNombreCliente.setText(cliente.getNombreCompleto());
+            lblTelefonoCliente.setText(cliente.getTelefonoVisible());
+
+            String tipoMembresia = cliente.getTipoMembresia();
+            lblMembresiaActual.setText(tipoMembresia != null && !tipoMembresia.isBlank() ? tipoMembresia : "Sin definir");
+
+            LocalDate fechaVencimiento = cliente.getFecha_vencimientoDate();
+            lblFechaVencimiento.setText(fechaVencimiento.format(FORMATO_FECHA));
+
+            actualizarEstadoMembresia(fechaVencimiento);
         });
+    }
+
+    private void actualizarEstadoMembresia(LocalDate fechaVencimiento) {
+        LocalDate hoy = LocalDate.now();
+        long diasRestantesNaturales = ChronoUnit.DAYS.between(hoy, fechaVencimiento);
+
+        String estiloBase = "-fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 6 12; -fx-background-radius: 12;";
+        String estiloEstado;
+        String mensajeDias;
+
+        if (diasRestantesNaturales > 0) {
+            if (diasRestantesNaturales <= 3) {
+                lblEstadoCuenta.setText("Próximo a vencer");
+                estiloEstado = estiloBase + " -fx-background-color: rgba(255,193,7,0.25); -fx-text-fill: #ff8f00;";
+            } else {
+                lblEstadoCuenta.setText("Activa");
+                estiloEstado = estiloBase + " -fx-background-color: rgba(76,175,80,0.2); -fx-text-fill: #2e7d32;";
+            }
+
+            mensajeDias = diasRestantesNaturales == 1
+                    ? "Falta 1 día para el vencimiento."
+                    : "Faltan " + diasRestantesNaturales + " días para el vencimiento.";
+        } else if (diasRestantesNaturales == 0) {
+            lblEstadoCuenta.setText("Vence hoy");
+            estiloEstado = estiloBase + " -fx-background-color: rgba(255,152,0,0.25); -fx-text-fill: #e65100;";
+            mensajeDias = "Renueva hoy para evitar la suspensión.";
+        } else {
+            long diasTranscurridos = Math.abs(diasRestantesNaturales);
+            long diasGraciaRestantes = Math.max(0, 15 - diasTranscurridos);
+
+            if (diasGraciaRestantes > 0) {
+                lblEstadoCuenta.setText("En período de gracia");
+                estiloEstado = estiloBase + " -fx-background-color: rgba(244,67,54,0.18); -fx-text-fill: #c62828;";
+                mensajeDias = diasGraciaRestantes == 1
+                        ? "Queda 1 día de gracia antes de la suspensión."
+                        : "Quedan " + diasGraciaRestantes + " días de gracia antes de la suspensión.";
+            } else {
+                lblEstadoCuenta.setText("Membresía vencida");
+                estiloEstado = estiloBase + " -fx-background-color: rgba(158,158,158,0.3); -fx-text-fill: #424242;";
+                mensajeDias = "La membresía ha superado el período de gracia.";
+            }
+        }
+
+        lblEstadoCuenta.setStyle(estiloEstado);
+        lblDiasRestantes.setText(mensajeDias);
+    }
+
+    private void ocultarPanelCliente() {
+        panelDerecho.setVisible(false);
+        panelDerecho.setManaged(false);
+        limpiarDetalleCliente();
+    }
+
+    private void limpiarDetalleCliente() {
+        lblInfoCliente.setText("Selecciona un cliente para comenzar");
+        lblNombreCliente.setText("-");
+        lblTelefonoCliente.setText("-");
+        lblMembresiaActual.setText("-");
+        lblFechaVencimiento.setText("-");
+        lblEstadoCuenta.setText("Estado no disponible");
+        lblEstadoCuenta.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 6 12; -fx-background-radius: 12; -fx-background-color: rgba(158,158,158,0.3); -fx-text-fill: #424242;");
+        lblDiasRestantes.setText("");
     }
 
     private void cargarClientesProximos() {
@@ -301,6 +380,7 @@ public class RenovacionController {
         cargarHistorialPagos(cliente.getTelefono());
         mostrarInformacionCliente(cliente);
         panelDerecho.setVisible(true);
+        panelDerecho.setManaged(true);
     }
 
     @FXML
