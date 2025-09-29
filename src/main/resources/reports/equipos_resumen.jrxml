@@ -4,26 +4,15 @@
               xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
               name="equipos_resumen" pageWidth="595" pageHeight="842" columnWidth="515"
               leftMargin="40" rightMargin="40" topMargin="30" bottomMargin="30">
-    <style name="Base">
-        <font fontName="SansSerif" size="10"/>
-    </style>
-    <style name="TitleText" style="Base" forecolor="#FFFFFF">
-        <font size="20" isBold="true"/>
-    </style>
-    <style name="SubtitleText" style="Base" forecolor="#D7E3FF">
-        <font size="12"/>
-    </style>
-    <style name="InfoText" style="Base" forecolor="#E9EEFF">
-        <font size="9"/>
-    </style>
-    <style name="SectionCaption" style="Base" forecolor="#1F3F81">
-        <font size="11" isBold="true"/>
-    </style>
-    <style name="TableHeader" style="Base" mode="Opaque" backcolor="#274B8A" forecolor="#FFFFFF">
+    <style name="Base" fontName="SansSerif" fontSize="10" isDefault="true"/>
+    <style name="TitleText" style="Base" forecolor="#FFFFFF" fontSize="20" isBold="true"/>
+    <style name="SubtitleText" style="Base" forecolor="#D7E3FF" fontSize="12"/>
+    <style name="InfoText" style="Base" forecolor="#E9EEFF" fontSize="9"/>
+    <style name="SectionCaption" style="Base" forecolor="#1F3F81" fontSize="11" isBold="true"/>
+    <style name="TableHeader" style="Base" mode="Opaque" backcolor="#274B8A" forecolor="#FFFFFF" fontSize="10" isBold="true">
         <box>
             <pen lineWidth="0.5" lineColor="#1F3F81"/>
         </box>
-        <font size="10" isBold="true"/>
     </style>
     <style name="TableRow" style="Base" mode="Opaque" backcolor="#F4F7FF">
         <conditionalStyle>
@@ -39,12 +28,8 @@
             <pen lineWidth="0.75" lineColor="#274B8A"/>
         </box>
     </style>
-    <style name="SummaryLabel" style="Base" forecolor="#274B8A">
-        <font size="10" isBold="true"/>
-    </style>
-    <style name="SummaryValue" style="Base" forecolor="#1F3F81">
-        <font size="12" isBold="true"/>
-    </style>
+    <style name="SummaryLabel" style="Base" forecolor="#274B8A" fontSize="10" isBold="true"/>
+    <style name="SummaryValue" style="Base" forecolor="#1F3F81" fontSize="12" isBold="true"/>
     <parameter name="periodo" class="java.lang.String"/>
     <parameter name="generadoEn" class="java.lang.String"/>
     <field name="nombre" class="java.lang.String"/>
