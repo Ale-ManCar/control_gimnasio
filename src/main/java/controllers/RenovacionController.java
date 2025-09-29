@@ -16,11 +16,13 @@ import util.WhatsAppService;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Locale;
 
 public class RenovacionController {
     @FXML private TableView<Cliente> tablaClientes;
@@ -34,6 +36,12 @@ public class RenovacionController {
     @FXML private TextField txtBuscar;
     @FXML private VBox panelDerecho;
     @FXML private Label lblInfoCliente;
+    @FXML private Label lblTelefono;
+    @FXML private Label lblTipoMembresia;
+    @FXML private Label lblFechaVencimiento;
+    @FXML private Label lblDiasRestantes;
+    @FXML private Label lblBadgeEstado;
+    @FXML private Label lblRecordatorio;
 
     private final ObservableList<Cliente> clientesProximos = FXCollections.observableArrayList();
     private final ObservableList<Cliente> todosClientes = FXCollections.observableArrayList();
@@ -43,6 +51,9 @@ public class RenovacionController {
     private int totalPaginas = 1;
     private final double ALTURA_FILA = 30.0;
     private final double ALTURA_CABECERA = 30.0;
+    private static final Locale LOCALE_ES = new Locale("es", "ES");
+    private static final DateTimeFormatter FORMATO_FECHA_LARGO = DateTimeFormatter.ofPattern("dd 'de' MMMM yyyy", LOCALE_ES);
+    private static final DateTimeFormatter FORMATO_FECHA_CORTO = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @FXML
     public void initialize() {
@@ -66,6 +77,7 @@ public class RenovacionController {
             centrarContenidoTablas();
 
             panelDerecho.setVisible(false);
+            limpiarDetalleCliente();
 
             tablaClientes.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal != null) {
@@ -74,6 +86,7 @@ public class RenovacionController {
                     panelDerecho.setVisible(true);
                 } else {
                     panelDerecho.setVisible(false);
+                    limpiarDetalleCliente();
                 }
             });
 
@@ -124,8 +137,9 @@ public class RenovacionController {
         btnAnterior.setStyle(botonStyle);
         btnSiguiente.setStyle(botonStyle);
 
-        panelDerecho.setStyle("-fx-background-color: #f5f5f5; -fx-padding: 15px; -fx-border-color: #e0e0e0; "
-                + "-fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-radius: 5px;");
+        panelDerecho.setStyle("-fx-background-color: rgba(255,255,255,0.95); -fx-padding: 18px; "
+                + "-fx-background-radius: 18px; -fx-border-radius: 18px; -fx-border-color: rgba(255,255,255,0.25); "
+                + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 15, 0, 0, 6);");
 
         cbNuevaMembresia.setStyle("-fx-font-size: 12px;");
         dpFechaRenovacion.setStyle("-fx-font-size: 12px;");
@@ -151,10 +165,113 @@ public class RenovacionController {
     }
 
     private void mostrarInformacionCliente(Cliente cliente) {
-        Platform.runLater(() -> {
-            lblInfoCliente.setText("Cliente seleccionado:\n" +
-                    cliente.getNombres() + " " + cliente.getApellidos());
-        });
+        Platform.runLater(() -> actualizarDetalleCliente(cliente));
+    }
+
+    private void actualizarDetalleCliente(Cliente cliente) {
+        lblInfoCliente.setText(cliente.getNombreCompleto());
+        lblTelefono.setText(formatearValor(cliente.getTelefono()));
+        lblTipoMembresia.setText(formatearValor(cliente.getTipoMembresia()));
+
+        LocalDate fechaVencimiento = cliente.getFecha_vencimientoDate();
+        lblFechaVencimiento.setText(FORMATO_FECHA_LARGO.format(fechaVencimiento));
+
+        lblDiasRestantes.setText(construirTextoDiasRestantes(fechaVencimiento));
+        lblRecordatorio.setText(construirMensajeRecordatorio(fechaVencimiento));
+
+        actualizarBadgeEstado(fechaVencimiento);
+    }
+
+    private void actualizarBadgeEstado(LocalDate fechaVencimiento) {
+        long diasHastaVencimiento = ChronoUnit.DAYS.between(LocalDate.now(), fechaVencimiento);
+        long diasDesdeVencimiento = ChronoUnit.DAYS.between(fechaVencimiento, LocalDate.now());
+
+        String estiloBase = "-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: white; -fx-padding: 4 12; -fx-background-radius: 20;";
+        String texto;
+        String color;
+
+        if (diasHastaVencimiento > 3) {
+            texto = "ACTIVO";
+            color = "#27AE60";
+        } else if (diasHastaVencimiento >= 0) {
+            texto = "POR VENCER";
+            color = "#F39C12";
+        } else if (diasDesdeVencimiento <= 15) {
+            texto = "EN GRACIA";
+            color = "#E67E22";
+        } else {
+            texto = "INACTIVO";
+            color = "#E74C3C";
+        }
+
+        lblBadgeEstado.setText(texto);
+        lblBadgeEstado.setStyle(estiloBase + " -fx-background-color: " + color + ";");
+    }
+
+    private String construirTextoDiasRestantes(LocalDate fechaVencimiento) {
+        long diasHastaVencimiento = ChronoUnit.DAYS.between(LocalDate.now(), fechaVencimiento);
+
+        if (diasHastaVencimiento > 1) {
+            return diasHastaVencimiento + " días restantes";
+        } else if (diasHastaVencimiento == 1) {
+            return "Vence en 1 día";
+        } else if (diasHastaVencimiento == 0) {
+            return "Vence hoy";
+        }
+
+        long diasDesdeVencimiento = Math.abs(diasHastaVencimiento);
+        long diasGraciaRestantes = Math.max(0, 15 - diasDesdeVencimiento);
+
+        if (diasGraciaRestantes > 0) {
+            return String.format("En gracia (venció hace %d %s)",
+                    diasDesdeVencimiento,
+                    diasDesdeVencimiento == 1 ? "día" : "días");
+        }
+
+        return String.format("Atraso de %d %s",
+                diasDesdeVencimiento,
+                diasDesdeVencimiento == 1 ? "día" : "días");
+    }
+
+    private String construirMensajeRecordatorio(LocalDate fechaVencimiento) {
+        long diasHastaVencimiento = ChronoUnit.DAYS.between(LocalDate.now(), fechaVencimiento);
+
+        if (diasHastaVencimiento >= 7) {
+            return "Agenda un recordatorio para confirmar la renovación antes del " + FORMATO_FECHA_CORTO.format(fechaVencimiento) + ".";
+        } else if (diasHastaVencimiento >= 0) {
+            return "La membresía está por vencer. Ofrece opciones de pago rápidas y confirma la renovación.";
+        }
+
+        long diasDesdeVencimiento = Math.abs(diasHastaVencimiento);
+        long diasGraciaRestantes = 15 - diasDesdeVencimiento;
+
+        if (diasGraciaRestantes >= 0) {
+            return String.format("Venció hace %d %s, pero aún cuenta con %d %s de gracia.",
+                    diasDesdeVencimiento,
+                    diasDesdeVencimiento == 1 ? "día" : "días",
+                    diasGraciaRestantes,
+                    diasGraciaRestantes == 1 ? "día" : "días");
+        }
+
+        return String.format("La membresía está inactiva desde hace %d %s. Considera contactar al cliente para reactivarla.",
+                diasDesdeVencimiento,
+                diasDesdeVencimiento == 1 ? "día" : "días");
+    }
+
+    private String formatearValor(String valor) {
+        return (valor == null || valor.isBlank()) ? "-" : valor;
+    }
+
+    private void limpiarDetalleCliente() {
+        String estiloNeutro = "-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: white; -fx-padding: 4 12; -fx-background-radius: 20; -fx-background-color: #95A5A6;";
+        lblInfoCliente.setText("");
+        lblTelefono.setText("");
+        lblTipoMembresia.setText("");
+        lblFechaVencimiento.setText("");
+        lblDiasRestantes.setText("");
+        lblRecordatorio.setText("");
+        lblBadgeEstado.setText("SIN DATOS");
+        lblBadgeEstado.setStyle(estiloNeutro);
     }
 
     private void cargarClientesProximos() {
