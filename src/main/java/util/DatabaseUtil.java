@@ -244,7 +244,6 @@ public class DatabaseUtil {
             try { stmt.execute("ALTER TABLE equipos ADD COLUMN cantidad INTEGER NOT NULL DEFAULT 0"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE egresos ADD COLUMN proveedor TEXT"); } catch (SQLException ignored) {}
             try { stmt.execute("ALTER TABLE egresos ADD COLUMN pdf_path TEXT"); } catch (SQLException ignored) {}
-            stmt.execute("INSERT OR IGNORE INTO proveedores (id, nombre, contacto, telefono) VALUES (1, 'Proveedor 1', '', ''), (2, 'Proveedor 2', '', '')");
             try {
                 stmt.execute("UPDATE ventas SET fecha = COALESCE(strftime('%Y-%m-%d %H:%M:%S', fecha), fecha) WHERE fecha IS NOT NULL");
             } catch (SQLException ignored) {}
