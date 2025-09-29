@@ -2,6 +2,7 @@ package util;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -35,9 +36,17 @@ public class BackupUtil implements Runnable {
             if (!Files.exists(dir)) {
                 Files.createDirectories(dir);
             }
-            String timestamp = LocalDateTime.now()
-                    .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-            Path destino = dir.resolve("gimnasio_" + timestamp + ".db");
+            LocalDateTime ahora = LocalDateTime.now();
+            String nombreArchivo;
+            if ("diario".equalsIgnoreCase(tipo)) {
+                String fecha = LocalDate.now()
+                        .format(DateTimeFormatter.BASIC_ISO_DATE);
+                nombreArchivo = "gimnasio_" + fecha + ".db";
+            } else {
+                String timestamp = ahora.format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+                nombreArchivo = "gimnasio_" + timestamp + ".db";
+            }
+            Path destino = dir.resolve(nombreArchivo);
             Files.copy(DB_PATH, destino, StandardCopyOption.REPLACE_EXISTING);
             System.out.println("Backup " + tipo + " creado: " + destino);
         } catch (IOException e) {
