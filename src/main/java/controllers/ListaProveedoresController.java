@@ -286,7 +286,21 @@ public class ListaProveedoresController {
         String nombre = Optional.ofNullable(producto.getNombreProducto()).orElse("Producto sin nombre");
         String etiqueta = "EQUIPO".equals(tipo) ? "Equipo" : "Insumo";
         String precio = producto.getPrecio() > 0 ? String.format("$ %.2f", producto.getPrecio()) : "Sin precio";
-        return etiqueta + ": " + nombre + " - " + precio;
+
+        StringBuilder descripcion = new StringBuilder(etiqueta)
+                .append(": ")
+                .append(nombre)
+                .append(" - ")
+                .append(precio);
+
+        if ("EQUIPO".equals(tipo)) {
+            String peso = Optional.ofNullable(producto.getPeso()).map(String::trim).orElse("");
+            if (!peso.isEmpty()) {
+                descripcion.append(" - Peso: ").append(peso);
+            }
+        }
+
+        return descripcion.toString();
     }
 
     @FXML

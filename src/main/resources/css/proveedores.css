@@ -341,6 +341,20 @@
     -fx-text-fill: #e2e8f0;
 }
 
+.detail-dialog-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #e2e8f0;
+    -fx-alignment: CENTER;
+    -fx-text-alignment: center;
+    -fx-padding: 10 6 10 6;
+}
+
+.detail-dialog-list .list-cell:filled:selected,
+.detail-dialog-list .list-cell:filled:hover {
+    -fx-background-color: rgba(56, 189, 248, 0.25);
+    -fx-text-fill: white;
+}
+
 SplitPane .split-pane-divider {
     -fx-background-color: rgba(148, 163, 184, 0.2);
 }
