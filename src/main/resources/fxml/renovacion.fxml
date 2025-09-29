@@ -1,40 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.geometry.Insets?>
+<?import javafx.geometry.Pos?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.layout.*?>
+
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controllers.RenovacionController"
-            prefWidth="800" prefHeight="600" style="-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e); -fx-padding: 15;">
+            prefWidth="900" prefHeight="600"
+            style="-fx-background-color: linear-gradient(to bottom, #243447, #1a1a2e); -fx-padding: 20;">
     <top>
         <Label text="Renovación de Membresías"
-               style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white; -fx-padding: 0 0 10 0;"
+               style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: white; -fx-padding: 0 0 12 0;"
                alignment="CENTER" maxWidth="Infinity"/>
     </top>
     <center>
-        <GridPane hgap="15" vgap="15">
+        <GridPane hgap="18" vgap="18">
             <columnConstraints>
-                <ColumnConstraints percentWidth="60"/>
-                <ColumnConstraints percentWidth="40"/>
+                <ColumnConstraints percentWidth="58"/>
+                <ColumnConstraints percentWidth="42"/>
             </columnConstraints>
 
             <!-- TABLA CLIENTES -->
-            <VBox GridPane.columnIndex="0">
-                <HBox alignment="CENTER" spacing="10" style="-fx-padding: 0 0 10 0;">
+            <VBox GridPane.columnIndex="0" spacing="12">
+                <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 0 0 5 0;">
                     <TextField fx:id="txtBuscar" promptText="Buscar cliente..."
-                               style="-fx-pref-width: 250px; -fx-font-size: 12px; -fx-background-color: rgba(255,255,255,0.9);"/>
+                               style="-fx-pref-width: 260px; -fx-font-size: 12px; -fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 20;"/>
                     <Button text="Filtrar" onAction="#filtrarClientes"
                             style="-fx-background-color: linear-gradient(to right, #2196F3, #3498db); -fx-text-fill: white;
-                                   -fx-font-weight: bold; -fx-padding: 5 10; -fx-background-radius: 25;"/>
+                                   -fx-font-weight: bold; -fx-padding: 6 14; -fx-background-radius: 25;"/>
                     <Button text="Limpiar" onAction="#limpiarFiltro"
                             style="-fx-background-color: #6C757D; -fx-text-fill: white;
-                                   -fx-font-weight: bold; -fx-padding: 5 10; -fx-background-radius: 25;"/>
+                                   -fx-font-weight: bold; -fx-padding: 6 14; -fx-background-radius: 25;"/>
                 </HBox>
-                <TableView fx:id="tablaClientes" prefHeight="300"
+                <TableView fx:id="tablaClientes" prefHeight="360"
                            style="
                            -fx-text-background-color: #333333;
-                           -fx-control-inner-background: rgba(255,255,255,0.9);
+                           -fx-control-inner-background: rgba(255,255,255,0.95);
                            -fx-table-cell-border-color: transparent;
                            -fx-background-insets: 0;
                            -fx-padding: 0;
@@ -43,70 +45,100 @@
                            -fx-border-width: 0;
                            -fx-table-header-border-color: transparent;">
                     <columns>
-                        <TableColumn text="Nombre" prefWidth="150" style="-fx-text-fill: #2c3e50; -fx-border-width: 0;">
+                        <TableColumn text="Nombre" prefWidth="160" style="-fx-text-fill: #2c3e50; -fx-border-width: 0;">
                             <cellValueFactory><PropertyValueFactory property="nombreCompleto"/></cellValueFactory>
                         </TableColumn>
-                        <TableColumn text="Teléfono" prefWidth="100" style="-fx-text-fill: #2c3e50; -fx-border-width: 0;">
+                        <TableColumn text="Teléfono" prefWidth="120" style="-fx-text-fill: #2c3e50; -fx-border-width: 0;">
                             <cellValueFactory><PropertyValueFactory property="telefonoVisible"/></cellValueFactory>
                         </TableColumn>
-                        <TableColumn text="Vence" prefWidth="80" style="-fx-text-fill: #2c3e50; -fx-border-width: 0;">
+                        <TableColumn text="Vence" prefWidth="90" style="-fx-text-fill: #2c3e50; -fx-border-width: 0;">
                             <cellValueFactory><PropertyValueFactory property="fecha_vencimiento"/></cellValueFactory>
                         </TableColumn>
-                        <TableColumn text="Días" prefWidth="50" style="-fx-text-fill: #2c3e50; -fx-border-width: 0;">
+                        <TableColumn text="Días" prefWidth="60" style="-fx-text-fill: #2c3e50; -fx-border-width: 0;">
                             <cellValueFactory><PropertyValueFactory property="diasRestantes"/></cellValueFactory>
                         </TableColumn>
                     </columns>
                 </TableView>
-                <HBox alignment="CENTER" spacing="10" style="-fx-padding: 10 0;">
+                <HBox alignment="CENTER" spacing="12" style="-fx-padding: 6 0 0 0;">
                     <Button text="&lt; Anterior" fx:id="btnAnterior" onAction="#paginaAnterior"
-                            style="-fx-padding: 5 10; -fx-background-radius: 25; -fx-background-color: #6C757D; -fx-text-fill: white;"/>
+                            style="-fx-padding: 6 14; -fx-background-radius: 25; -fx-background-color: #6C757D; -fx-text-fill: white;"/>
                     <Label fx:id="lblPagina" text="Página 1 de 1" style="-fx-font-weight: bold; -fx-text-fill: white;"/>
                     <Button text="Siguiente &gt;" fx:id="btnSiguiente" onAction="#paginaSiguiente"
-                            style="-fx-padding: 5 10; -fx-background-radius: 25; -fx-background-color: #6C757D; -fx-text-fill: white;"/>
+                            style="-fx-padding: 6 14; -fx-background-radius: 25; -fx-background-color: #6C757D; -fx-text-fill: white;"/>
                 </HBox>
             </VBox>
 
             <!-- PANEL DERECHO -->
-            <VBox fx:id="panelDerecho" GridPane.columnIndex="1" spacing="15"
-                  style="-fx-background-color: rgba(255,255,255,0.9); -fx-padding: 15; -fx-background-radius: 15;
-                         -fx-border-radius: 15; -fx-border-color: rgba(255,255,255,0.2);">
-                <Label fx:id="lblInfoCliente" style="-fx-font-weight: bold; -fx-wrap-text: true; -fx-min-height: 35;
-                         -fx-padding: 0 5 0; -fx-text-fill: #2c3e50;"/>
-                <Separator style="-fx-padding: 5 0; -fx-background-color: rgba(0,0,0,0.2);"/>
-                <Label text="Nueva Membresía:" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
-                <ComboBox fx:id="cbNuevaMembresia" prefWidth="150" style="-fx-background-color: rgba(255,255,255,0.9);"/>
-                <Label text="Fecha de Renovación:" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
-                <DatePicker fx:id="dpFechaRenovacion" style="-fx-background-color: rgba(255,255,255,0.9);"/>
-                <Label text="Monto:" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
-                <TextField fx:id="txtMonto" promptText="Ingrese el monto" style="-fx-background-color: rgba(255,255,255,0.9);"/>
-                <Button text="Renovar" onAction="#handleRenovar"
-                        style="-fx-background-color: linear-gradient(to right, #4CAF50, #2ECC71); -fx-text-fill: white;
-                               -fx-font-weight: bold; -fx-padding: 8 15; -fx-background-radius: 25;"/>
-                <Separator style="-fx-padding: 10 0; -fx-background-color: rgba(0,0,0,0.2);"/>
-                <Label text="Historial de Pagos" style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #2c3e50;"/>
-                <TableView fx:id="tablaHistorial" prefHeight="150"
-                           style="
-                           -fx-text-background-color: #333333;
-                           -fx-control-inner-background: rgba(255,255,255,0.9);
-                           -fx-table-cell-border-color: transparent;
-                           -fx-background-insets: 0;
-                           -fx-padding: 0;
-                           -fx-background-radius: 15;
-                           -fx-border-radius: 15;
-                           -fx-border-width: 0;
-                           -fx-table-header-border-color: transparent;">
-                    <columns>
-                        <TableColumn text="Fecha" prefWidth="80" style="-fx-text-fill: #2c3e50; -fx-border-width: 0;">
-                            <cellValueFactory><PropertyValueFactory property="fechaPago"/></cellValueFactory>
-                        </TableColumn>
-                        <TableColumn text="Membresía" prefWidth="100" style="-fx-text-fill: #2c3e50; -fx-border-width: 0;">
-                            <cellValueFactory><PropertyValueFactory property="tipoMembresia"/></cellValueFactory>
-                        </TableColumn>
-                        <TableColumn text="Monto" prefWidth="70" style="-fx-text-fill: #2c3e50; -fx-border-width: 0;">
-                            <cellValueFactory><PropertyValueFactory property="monto"/></cellValueFactory>
-                        </TableColumn>
-                    </columns>
-                </TableView>
+            <VBox fx:id="panelDerecho" GridPane.columnIndex="1" spacing="18"
+                  style="-fx-background-color: transparent;">
+                <VBox spacing="6" style="-fx-background-color: rgba(255,255,255,0.92); -fx-background-radius: 15; -fx-padding: 14 18;">
+                    <Label text="Cliente seleccionado"
+                           style="-fx-text-fill: #6c757d; -fx-font-size: 11px; -fx-font-weight: bold; -fx-letter-spacing: 0.2px;"/>
+                    <Label fx:id="lblInfoCliente"
+                           style="-fx-font-weight: bold; -fx-wrap-text: true; -fx-min-height: 42; -fx-padding: 0 5 0; -fx-text-fill: #2c3e50; -fx-font-size: 14px;"/>
+                </VBox>
+
+                <VBox spacing="14" style="-fx-background-color: rgba(255,255,255,0.92); -fx-background-radius: 15; -fx-padding: 18 22;">
+                    <Label text="Renovación de Membresía" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50; -fx-font-size: 15px;"/>
+                    <GridPane hgap="12" vgap="12">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="45"/>
+                            <ColumnConstraints percentWidth="55"/>
+                        </columnConstraints>
+                        <Label text="Nueva Membresía:" GridPane.rowIndex="0" GridPane.columnIndex="0"
+                               style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                        <ComboBox fx:id="cbNuevaMembresia" GridPane.rowIndex="0" GridPane.columnIndex="1"
+                                  prefWidth="180" style="-fx-background-color: rgba(255,255,255,0.95); -fx-background-radius: 10;"/>
+                        <Label text="Fecha de Renovación:" GridPane.rowIndex="1" GridPane.columnIndex="0"
+                               style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                        <DatePicker fx:id="dpFechaRenovacion" GridPane.rowIndex="1" GridPane.columnIndex="1"
+                                    style="-fx-background-color: rgba(255,255,255,0.95); -fx-background-radius: 10;"/>
+                        <Label text="Monto:" GridPane.rowIndex="2" GridPane.columnIndex="0"
+                               style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                        <TextField fx:id="txtMonto" GridPane.rowIndex="2" GridPane.columnIndex="1" promptText="Ingrese el monto"
+                                   style="-fx-background-color: rgba(255,255,255,0.95); -fx-background-radius: 10;"/>
+                    </GridPane>
+                    <Button text="Renovar" onAction="#handleRenovar" alignment="CENTER"
+                            style="-fx-background-color: linear-gradient(to right, #4CAF50, #2ECC71); -fx-text-fill: white;
+                                   -fx-font-weight: bold; -fx-padding: 10 18; -fx-background-radius: 30; -fx-effect: dropshadow(gaussian, rgba(76, 175, 80, 0.35), 10, 0.45, 0, 3);">
+                        <VBox.margin>
+                            <Insets top="4"/>
+                        </VBox.margin>
+                    </Button>
+                </VBox>
+
+                <VBox spacing="10" style="-fx-background-color: rgba(255,255,255,0.92); -fx-background-radius: 15; -fx-padding: 16 20;">
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <Label text="Historial de Pagos" style="-fx-font-weight: bold; -fx-font-size: 15px; -fx-text-fill: #2c3e50;"/>
+                        <Label text="(Últimos movimientos)" style="-fx-text-fill: #9aa0a6; -fx-font-size: 11px;"/>
+                    </HBox>
+                    <TableView fx:id="tablaHistorial" prefHeight="240" minHeight="210" maxHeight="Infinity"
+                               style="
+                               -fx-text-background-color: #333333;
+                               -fx-control-inner-background: rgba(255,255,255,0.98);
+                               -fx-table-cell-border-color: transparent;
+                               -fx-background-insets: 0;
+                               -fx-padding: 0;
+                               -fx-background-radius: 12;
+                               -fx-border-radius: 12;
+                               -fx-border-width: 0;
+                               -fx-table-header-border-color: transparent;">
+                        <VBox.vgrow>
+                            <Priority>ALWAYS</Priority>
+                        </VBox.vgrow>
+                        <columns>
+                            <TableColumn text="Fecha" prefWidth="95" style="-fx-text-fill: #2c3e50; -fx-border-width: 0;">
+                                <cellValueFactory><PropertyValueFactory property="fechaPago"/></cellValueFactory>
+                            </TableColumn>
+                            <TableColumn text="Membresía" prefWidth="130" style="-fx-text-fill: #2c3e50; -fx-border-width: 0;">
+                                <cellValueFactory><PropertyValueFactory property="tipoMembresia"/></cellValueFactory>
+                            </TableColumn>
+                            <TableColumn text="Monto" prefWidth="85" style="-fx-text-fill: #2c3e50; -fx-border-width: 0;">
+                                <cellValueFactory><PropertyValueFactory property="monto"/></cellValueFactory>
+                            </TableColumn>
+                        </columns>
+                    </TableView>
+                </VBox>
             </VBox>
         </GridPane>
     </center>
