@@ -1,6 +1,9 @@
 package models;
 
 public class EquipoResumen {
+    private static final java.time.format.DateTimeFormatter FORMATO_REPORTE =
+            java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", new java.util.Locale("es", "ES"));
+
     private int equipoId;
     private String nombre;
     private String tipo;
@@ -8,6 +11,7 @@ public class EquipoResumen {
     private int altas;
     private int bajas;
     private int cantidadFinal;
+    private java.time.LocalDateTime ultimaActualizacion;
 
     public EquipoResumen() {
     }
@@ -76,5 +80,17 @@ public class EquipoResumen {
 
     public void setCantidadFinal(int cantidadFinal) {
         this.cantidadFinal = cantidadFinal;
+    }
+
+    public java.time.LocalDateTime getUltimaActualizacion() {
+        return ultimaActualizacion;
+    }
+
+    public void setUltimaActualizacion(java.time.LocalDateTime ultimaActualizacion) {
+        this.ultimaActualizacion = ultimaActualizacion;
+    }
+
+    public String getUltimaActualizacionFormateada() {
+        return ultimaActualizacion == null ? "-" : ultimaActualizacion.format(FORMATO_REPORTE);
     }
 }

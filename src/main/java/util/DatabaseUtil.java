@@ -1216,7 +1216,9 @@ public class DatabaseUtil {
                 "COALESCE((SELECT SUM(CASE WHEN eh.diferencia < 0 THEN -eh.diferencia ELSE 0 END) FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) >= datetime(?) AND datetime(eh.fecha) <= datetime(?)), 0) AS bajas, " +
                 "COALESCE((SELECT eh.cantidad_nueva FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) <= datetime(?) ORDER BY datetime(eh.fecha) DESC, eh.id DESC LIMIT 1), " +
                 "        (SELECT eh.cantidad_nueva FROM equipos_historial eh WHERE eh.equipo_id = e.id ORDER BY datetime(eh.fecha) DESC, eh.id DESC LIMIT 1), " +
-                "        e.cantidad) AS cantidad_final " +
+                "        e.cantidad) AS cantidad_final, " +
+                "(SELECT eh.fecha FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) >= datetime(?) AND datetime(eh.fecha) <= datetime(?) ORDER BY datetime(eh.fecha) DESC, eh.id DESC LIMIT 1) AS ultima_actualizacion_periodo, " +
+                "(SELECT eh.fecha FROM equipos_historial eh WHERE eh.equipo_id = e.id ORDER BY datetime(eh.fecha) DESC, eh.id DESC LIMIT 1) AS ultima_actualizacion_global " +
                 "FROM equipos e ORDER BY e.nombre";
 
         try (Connection conn = getConnection();
@@ -1227,6 +1229,8 @@ public class DatabaseUtil {
             stmt.setString(4, formatDateTime(inicio));
             stmt.setString(5, formatDateTime(fin));
             stmt.setString(6, formatDateTime(fin));
+            stmt.setString(7, formatDateTime(inicio));
+            stmt.setString(8, formatDateTime(fin));
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -1238,6 +1242,10 @@ public class DatabaseUtil {
                     equipo.setAltas(rs.getInt("altas"));
                     equipo.setBajas(rs.getInt("bajas"));
                     equipo.setCantidadFinal(rs.getInt("cantidad_final"));
+                    String ultimaPeriodo = rs.getString("ultima_actualizacion_periodo");
+                    String ultimaGlobal = rs.getString("ultima_actualizacion_global");
+                    LocalDateTime ultima = ultimaPeriodo != null ? parseDateTime(ultimaPeriodo) : parseDateTime(ultimaGlobal);
+                    equipo.setUltimaActualizacion(ultima);
                     resumen.add(equipo);
                 }
             }
