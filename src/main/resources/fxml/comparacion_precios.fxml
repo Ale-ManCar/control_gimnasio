@@ -21,6 +21,10 @@
                 <ComboBox fx:id="cmbCategoria" prefWidth="180"/>
                 <Label text="Producto" style="-fx-text-fill: #cbd5f5;"/>
                 <ComboBox fx:id="cmbProducto" prefWidth="220"/>
+                <Label fx:id="lblVariante" text="Peso" style="-fx-text-fill: #cbd5f5;"
+                       visible="false" managed="false"/>
+                <ComboBox fx:id="cmbVariante" prefWidth="160" promptText="Selecciona un peso"
+                          visible="false" managed="false"/>
                 <Label text="Ordenar" style="-fx-text-fill: #cbd5f5;"/>
                 <ComboBox fx:id="cmbOrden" prefWidth="180"/>
             </HBox>

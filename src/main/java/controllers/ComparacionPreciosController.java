@@ -17,9 +17,11 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.ListCell;
 import models.CatalogoItem;
 import models.Proveedor;
 import models.ProveedorProducto;
+import models.Equipo;
 import util.DatabaseUtil;
 
 import java.sql.SQLException;
@@ -27,12 +29,18 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class ComparacionPreciosController {
 
     @FXML private ComboBox<String> cmbCategoria;
     @FXML private ComboBox<CatalogoItem> cmbProducto;
+    @FXML private ComboBox<Equipo> cmbVariante;
     @FXML private ComboBox<String> cmbOrden;
+    @FXML private Label lblVariante;
 
     @FXML private TableView<ProveedorProducto> tablaComparacion;
     @FXML private TableColumn<ProveedorProducto, String> colProveedor;
@@ -51,6 +59,7 @@ public class ComparacionPreciosController {
     private final ObservableList<ProveedorProducto> comparaciones = FXCollections.observableArrayList();
     private SortedList<ProveedorProducto> comparacionesOrdenadas;
     private double mejorPrecio = Double.NaN;
+    private final Map<String, List<Equipo>> variantesPorEquipo = new HashMap<>();
 
     @FXML
     public void initialize() {
@@ -104,14 +113,35 @@ public class ComparacionPreciosController {
         cmbCategoria.setItems(FXCollections.observableArrayList("Equipos", "Insumos"));
         cmbCategoria.valueProperty().addListener((obs, old, nuevo) -> cargarProductos(nuevo));
 
+        configurarComboVariante();
+
         cmbProducto.valueProperty().addListener((obs, old, nuevo) -> {
-            if (nuevo != null) {
-                lblProductoSeleccionado.setText("Producto: " + nuevo.getNombre());
-                cargarComparacion();
+            if (nuevo == null) {
+                actualizarEtiquetaProducto(null, null);
+                mostrarSelectorVariante(false);
+                limpiarComparacion();
+                return;
+            }
+
+            if (esEquipo(nuevo)) {
+                prepararVariantesPara(nuevo);
             } else {
-                lblProductoSeleccionado.setText("Selecciona un producto para comparar");
-                comparaciones.clear();
-                actualizarGrafica();
+                mostrarSelectorVariante(false);
+                actualizarEtiquetaProducto(nuevo, null);
+                cargarComparacionInsumo(nuevo);
+            }
+        });
+
+        cmbVariante.valueProperty().addListener((obs, old, nuevo) -> {
+            CatalogoItem producto = cmbProducto.getSelectionModel().getSelectedItem();
+            if (producto == null || !esEquipo(producto)) {
+                return;
+            }
+            actualizarEtiquetaProducto(producto, nuevo);
+            if (nuevo != null) {
+                cargarComparacionEquipo(nuevo);
+            } else {
+                limpiarComparacion();
             }
         });
 
@@ -123,20 +153,33 @@ public class ComparacionPreciosController {
     }
 
     private void cargarProductos(String categoria) {
-        comparaciones.clear();
-        actualizarGrafica();
+        limpiarComparacion();
+        cmbProducto.getSelectionModel().clearSelection();
+        cmbProducto.setItems(FXCollections.emptyObservableList());
+        mostrarSelectorVariante(false);
         if (categoria == null) {
             cmbProducto.setItems(FXCollections.emptyObservableList());
             return;
         }
         try {
             if (categoria.equalsIgnoreCase("Equipos")) {
-                List<CatalogoItem> items = DatabaseUtil.listarEquipos().stream()
-                        .map(eq -> new CatalogoItem(eq.getId(), eq.getNombre(), "EQUIPO"))
-                        .sorted(Comparator.comparing(CatalogoItem::getNombre))
+                variantesPorEquipo.clear();
+                List<Equipo> equipos = DatabaseUtil.listarEquipos();
+                List<CatalogoItem> items = equipos.stream()
+                        .collect(Collectors.groupingBy(Equipo::getNombre))
+                        .entrySet()
+                        .stream()
+                        .sorted(Map.Entry.comparingByKey())
+                        .map(entry -> {
+                            List<Equipo> variantesOrdenadas = ordenarVariantes(entry.getValue());
+                            variantesPorEquipo.put(entry.getKey(), variantesOrdenadas);
+                            Equipo referencia = variantesOrdenadas.get(0);
+                            return new CatalogoItem(referencia.getId(), entry.getKey(), "EQUIPO");
+                        })
                         .toList();
                 cmbProducto.setItems(FXCollections.observableArrayList(items));
             } else {
+                variantesPorEquipo.clear();
                 List<CatalogoItem> items = DatabaseUtil.getProductos().stream()
                         .map(prod -> new CatalogoItem(prod.getId(), prod.getNombre(), "INSUMO"))
                         .sorted(Comparator.comparing(CatalogoItem::getNombre))
@@ -149,21 +192,53 @@ public class ComparacionPreciosController {
         }
     }
 
-    private void cargarComparacion() {
-        CatalogoItem itemSeleccionado = cmbProducto.getSelectionModel().getSelectedItem();
-        if (itemSeleccionado == null) {
-            comparaciones.clear();
-            actualizarGrafica();
+    private void cargarComparacionInsumo(CatalogoItem item) {
+        if (item == null) {
             return;
         }
-        String tipo = itemSeleccionado.getCategoria();
+        consultarComparacion("INSUMO", item.getId());
+    }
+
+    private void cargarComparacionEquipo(Equipo equipo) {
+        if (equipo == null) {
+            return;
+        }
+        consultarComparacion("EQUIPO", equipo.getId());
+    }
+
+    private void consultarComparacion(String tipo, int itemId) {
         try {
-            comparaciones.setAll(DatabaseUtil.obtenerComparativaProducto(tipo, itemSeleccionado.getId()));
+            comparaciones.setAll(DatabaseUtil.obtenerComparativaProducto(tipo, itemId));
             calcularMejorPrecio();
             aplicarOrden(cmbOrden.getValue());
             actualizarGrafica();
         } catch (SQLException e) {
             mostrarError("No se pudo cargar la información de comparación.");
+        }
+    }
+
+    private void prepararVariantesPara(CatalogoItem producto) {
+        List<Equipo> variantes = variantesPorEquipo.getOrDefault(producto.getNombre(), List.of());
+        if (variantes.isEmpty()) {
+            mostrarSelectorVariante(false);
+            actualizarEtiquetaProducto(producto, null);
+            limpiarComparacion();
+            return;
+        }
+
+        mostrarSelectorVariante(true);
+        ObservableList<Equipo> opciones = FXCollections.observableArrayList(variantes);
+        cmbVariante.setItems(opciones);
+
+        if (opciones.size() == 1) {
+            Equipo varianteUnica = opciones.get(0);
+            cmbVariante.getSelectionModel().selectFirst();
+            actualizarEtiquetaProducto(producto, varianteUnica);
+            cargarComparacionEquipo(varianteUnica);
+        } else {
+            cmbVariante.getSelectionModel().clearSelection();
+            actualizarEtiquetaProducto(producto, null);
+            limpiarComparacion();
         }
     }
 
@@ -200,6 +275,91 @@ public class ComparacionPreciosController {
             serie.getData().add(new XYChart.Data<>(nombreProveedor, producto.getPrecio()));
         }
         graficaPrecios.getData().add(serie);
+    }
+
+    private void limpiarComparacion() {
+        comparaciones.clear();
+        mejorPrecio = Double.NaN;
+        tablaComparacion.refresh();
+        actualizarGrafica();
+    }
+
+    private void configurarComboVariante() {
+        cmbVariante.setCellFactory(listView -> new ListCell<>() {
+            @Override
+            protected void updateItem(Equipo item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : descripcionVariante(item));
+            }
+        });
+        cmbVariante.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(Equipo item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : descripcionVariante(item));
+            }
+        });
+    }
+
+    private void mostrarSelectorVariante(boolean visible) {
+        lblVariante.setManaged(visible);
+        lblVariante.setVisible(visible);
+        cmbVariante.setManaged(visible);
+        cmbVariante.setVisible(visible);
+        if (!visible) {
+            cmbVariante.getSelectionModel().clearSelection();
+            cmbVariante.getItems().clear();
+        }
+    }
+
+    private List<Equipo> ordenarVariantes(List<Equipo> variantes) {
+        if (variantes == null) {
+            return List.of();
+        }
+        return variantes.stream()
+                .filter(Objects::nonNull)
+                .sorted(Comparator
+                        .comparingInt((Equipo eq) -> {
+                            Integer peso = eq.getPesoAsInteger();
+                            return peso != null ? peso : Integer.MAX_VALUE;
+                        })
+                        .thenComparingInt(Equipo::getId))
+                .toList();
+    }
+
+    private String descripcionVariante(Equipo equipo) {
+        if (equipo == null) {
+            return "";
+        }
+        Integer peso = equipo.getPesoAsInteger();
+        if (peso != null) {
+            return peso + " kg";
+        }
+        String pesoTexto = equipo.getPeso();
+        if (pesoTexto != null && !pesoTexto.isBlank()) {
+            return pesoTexto.trim();
+        }
+        return "Sin peso";
+    }
+
+    private void actualizarEtiquetaProducto(CatalogoItem producto, Equipo variante) {
+        if (producto == null) {
+            lblProductoSeleccionado.setText("Selecciona un producto para iniciar la comparación");
+            return;
+        }
+        if (esEquipo(producto)) {
+            if (variante != null) {
+                lblProductoSeleccionado.setText("Producto: " + producto.getNombre() + " (" + descripcionVariante(variante) + ")");
+            } else {
+                lblProductoSeleccionado.setText("Producto: " + producto.getNombre() + " - selecciona un peso");
+            }
+        } else {
+            lblProductoSeleccionado.setText("Producto: " + producto.getNombre());
+        }
+    }
+
+    private boolean esEquipo(CatalogoItem item) {
+        return item != null && "EQUIPO".equalsIgnoreCase(item.getCategoria());
     }
 
     @FXML
