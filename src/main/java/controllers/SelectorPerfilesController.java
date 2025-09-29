@@ -214,34 +214,29 @@ public class SelectorPerfilesController {
         imageView.setPreserveRatio(true);
 
         Label nombre = new Label(user.getUsername());
-        nombre.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
+        nombre.getStyleClass().add("nombre-usuario");
 
         VBox tarjeta = new VBox(10, imageView, nombre);
+        tarjeta.setAlignment(Pos.CENTER);
         tarjeta.setMinSize(140, 160);
         tarjeta.setPrefSize(140, 160);
         tarjeta.setMaxSize(140, 160);
-        tarjeta.setStyle("-fx-alignment: center; -fx-padding: 15; -fx-background-color: rgba(0,0,0,0.45);"
-                + " -fx-background-radius: 15; -fx-cursor: hand;");
+        tarjeta.setFocusTraversable(true);
+        tarjeta.getStyleClass().add("tarjeta-usuario");
         tarjeta.setOnMouseClicked(e -> abrirLogin(user));
-        tarjeta.setOnMouseEntered(e -> tarjeta.setStyle("-fx-alignment: center; -fx-padding: 15;"
-                + " -fx-background-color: rgba(255,255,255,0.2); -fx-background-radius: 15; -fx-cursor: hand;"));
-        tarjeta.setOnMouseExited(e -> tarjeta.setStyle("-fx-alignment: center; -fx-padding: 15;"
-                + " -fx-background-color: rgba(0,0,0,0.45); -fx-background-radius: 15; -fx-cursor: hand;"));
         return tarjeta;
     }
 
     private StackPane crearTarjetaAgregar() {
         Button boton = new Button("Añadir perfil");
-        boton.setStyle("-fx-background-color: #ffb703; -fx-text-fill: #1f1f1f; -fx-font-weight: bold;"
-                + " -fx-background-radius: 25; -fx-padding: 12 20; -fx-cursor: hand;");
+        boton.getStyleClass().add("boton-agregar");
         boton.setOnAction(e -> abrirRegistroRecepcionista());
 
         StackPane tarjeta = new StackPane(boton);
         tarjeta.setMinSize(140, 160);
         tarjeta.setPrefSize(140, 160);
         tarjeta.setMaxSize(140, 160);
-        tarjeta.setStyle("-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 15;"
-                + " -fx-padding: 15; -fx-cursor: hand;");
+        tarjeta.getStyleClass().add("tarjeta-agregar");
         return tarjeta;
     }
 

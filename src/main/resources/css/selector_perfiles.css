@@ -1,0 +1,74 @@
+.selector-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-border-color: transparent;
+}
+
+.selector-scroll .viewport {
+    -fx-background-color: transparent;
+}
+
+.selector-scroll .corner {
+    -fx-background-color: transparent;
+}
+
+.contenedor-perfiles {
+    -fx-padding: 20 10 40 10;
+}
+
+.tarjeta-usuario {
+    -fx-alignment: center;
+    -fx-padding: 15;
+    -fx-background-color: rgba(0, 0, 0, 0.45);
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-border-color: rgba(255, 255, 255, 0.25);
+    -fx-border-width: 1.2;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 12, 0.25, 0, 6);
+    -fx-cursor: hand;
+    -fx-spacing: 10;
+}
+
+.tarjeta-usuario:hover,
+.tarjeta-usuario:focused {
+    -fx-background-color: rgba(255, 255, 255, 0.18);
+    -fx-border-color: #ffb703;
+    -fx-effect: dropshadow(gaussian, rgba(255, 183, 3, 0.45), 16, 0.35, 0, 6);
+}
+
+.nombre-usuario {
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.tarjeta-agregar {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-border-color: rgba(255, 255, 255, 0.25);
+    -fx-border-width: 1.2;
+    -fx-padding: 15;
+    -fx-cursor: hand;
+    -fx-alignment: center;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 12, 0.25, 0, 6);
+}
+
+.tarjeta-agregar:hover {
+    -fx-border-color: #ffb703;
+    -fx-effect: dropshadow(gaussian, rgba(255, 183, 3, 0.45), 16, 0.35, 0, 6);
+}
+
+.boton-agregar {
+    -fx-background-color: #ffb703;
+    -fx-text-fill: #1f1f1f;
+    -fx-font-weight: bold;
+    -fx-background-radius: 25;
+    -fx-padding: 12 20;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+}
+
+.boton-agregar:hover {
+    -fx-background-color: #ffd166;
+}
