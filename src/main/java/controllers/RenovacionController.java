@@ -126,8 +126,7 @@ public class RenovacionController {
         btnAnterior.setStyle(botonStyle);
         btnSiguiente.setStyle(botonStyle);
 
-        panelDerecho.setStyle("-fx-background-color: #f5f5f5; -fx-padding: 15px; -fx-border-color: #e0e0e0; "
-                + "-fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-radius: 5px;");
+        panelDerecho.setStyle("-fx-background-color: transparent;");
 
         cbNuevaMembresia.setStyle("-fx-font-size: 12px;");
         dpFechaRenovacion.setStyle("-fx-font-size: 12px;");
@@ -143,8 +142,11 @@ public class RenovacionController {
         tablaClientes.setPrefHeight(Math.max(ALTURA_CABECERA + ALTURA_FILA, alturaClientes));
 
         int filasHistorial = tablaHistorial.getItems().size();
-        double alturaHistorial = ALTURA_CABECERA + (filasHistorial * ALTURA_FILA);
-        tablaHistorial.setPrefHeight(Math.max(ALTURA_CABECERA + ALTURA_FILA, alturaHistorial));
+        int filasVisiblesHistorial = Math.min(Math.max(filasHistorial, 2), 6);
+        double alturaMinimaHistorial = ALTURA_CABECERA + (2 * ALTURA_FILA);
+        double alturaPreferidaHistorial = ALTURA_CABECERA + (filasVisiblesHistorial * ALTURA_FILA);
+        tablaHistorial.setMinHeight(alturaMinimaHistorial);
+        tablaHistorial.setPrefHeight(alturaPreferidaHistorial);
 
         Platform.runLater(() -> {
             tablaClientes.requestLayout();
