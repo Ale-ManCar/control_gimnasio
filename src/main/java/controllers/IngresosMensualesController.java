@@ -798,6 +798,14 @@ public class IngresosMensualesController implements Initializable {
             ObservableList<PieChart.Data> datosPie = DatabaseUtil.getDistribucionMembresias(inicio, fin);
             pieChart.setData(datosPie);
             pieChart.setLabelLineLength(15);
+
+            Platform.runLater(() ->
+                    pieChart.lookupAll(".chart-pie-label").forEach(node -> {
+                        if (node instanceof javafx.scene.text.Text text) {
+                            text.setFill(Color.WHITE);
+                        }
+                    })
+            );
             pieChart.setLegendVisible(true);
         } catch (SQLException e) {
             mostrarAlerta("Error", "No se pudo cargar la distribución de membresías");
