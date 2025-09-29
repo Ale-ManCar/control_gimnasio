@@ -30,6 +30,8 @@
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button text="Generar reporte" onAction="#handleGenerarReporte"
                         styleClass="primary-button"/>
+                <Button text="Informe al momento" onAction="#handleGenerarInformeHistorico"
+                        styleClass="secondary-button"/>
             </HBox>
             <TableView fx:id="tablaEquipos" VBox.vgrow="ALWAYS"
                        style="-fx-background-radius: 16; -fx-table-cell-border-color: transparent; -fx-padding: 0;"

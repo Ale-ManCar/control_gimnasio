@@ -32,6 +32,7 @@ import util.UserService;
 import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Locale;
@@ -354,7 +355,10 @@ public class EquiposAdminController implements Initializable {
         Optional<Equipo> resultado = dialogo.showAndWait();
         resultado.ifPresent(equipo -> {
             try {
-                DatabaseUtil.insertarEquipo(equipo);
+                int equipoId = DatabaseUtil.insertarEquipo(equipo);
+                equipo.setId(equipoId);
+                registrarMovimientoCantidad(equipoId, null, equipo.getCantidad(), "INICIAL",
+                        equipo.getFechaAdquisicionDate(), "Registro inicial");
                 registrarAuditoria("REGISTRO_EQUIPO", "Se registró el equipo " + equipo.getNombre());
                 cargarEquipos();
                 mostrarInformacion("Éxito", "Equipo registrado correctamente.");
@@ -375,7 +379,23 @@ public class EquiposAdminController implements Initializable {
         Optional<Equipo> resultado = dialogo.showAndWait();
         resultado.ifPresent(equipoActualizado -> {
             try {
+                int cantidadAnterior = seleccionado.getCantidad();
+                boolean cambioCantidad = cantidadAnterior != equipoActualizado.getCantidad();
+                MovimientoMetadata metadata = null;
+                if (cambioCantidad) {
+                    Optional<MovimientoMetadata> metadatos = solicitarDetallesMovimiento(cantidadAnterior, equipoActualizado.getCantidad());
+                    if (metadatos.isEmpty()) {
+                        return;
+                    }
+                    metadata = metadatos.get();
+                }
+
                 DatabaseUtil.actualizarEquipo(equipoActualizado);
+                if (cambioCantidad) {
+                    registrarMovimientoCantidad(equipoActualizado.getId(), cantidadAnterior,
+                            equipoActualizado.getCantidad(), "AJUSTE",
+                            metadata.fechaMovimiento(), metadata.nota());
+                }
                 registrarAuditoria("ACTUALIZACION_EQUIPO", "Se actualizó el equipo " + equipoActualizado.getNombre());
                 cargarEquipos();
                 mostrarInformacion("Éxito", "Equipo actualizado correctamente.");
@@ -417,6 +437,22 @@ public class EquiposAdminController implements Initializable {
         } catch (Exception ex) {
             mostrarError("Error", "No se pudo generar el reporte.");
         }
+    }
+
+    @FXML
+    private void handleGenerarInformeHistorico() {
+        Optional<PeriodoReporte> periodo = solicitarPeriodoReporte();
+        periodo.ifPresent(rango -> {
+            try {
+                ReporteUtil.generarInformeEquiposPeriodo(rango.inicio(), rango.fin(), true);
+                registrarAuditoria("INFORME_EQUIPOS", String.format(
+                        "Informe histórico de equipos (%s - %s)",
+                        rango.inicio() != null ? rango.inicio() : "--",
+                        rango.fin() != null ? rango.fin() : "--"));
+            } catch (RuntimeException ex) {
+                mostrarError("Error", "No se pudo generar el informe histórico.");
+            }
+        });
     }
 
     private Dialog<Equipo> crearDialogoEquipo(Equipo equipoExistente) {
@@ -863,4 +899,120 @@ public class EquiposAdminController implements Initializable {
         alert.setContentText(mensaje);
         alert.showAndWait();
     }
+
+    private void registrarMovimientoCantidad(int equipoId, Integer cantidadAnterior, int cantidadNueva,
+                                             String tipoMovimiento, LocalDate fechaMovimiento, String nota) {
+        User usuario = SessionManager.getCurrentUser();
+        Integer usuarioId = usuario != null ? usuario.getId() : null;
+        LocalDateTime fecha = fechaMovimiento != null ? fechaMovimiento.atStartOfDay() : LocalDateTime.now();
+        try {
+            DatabaseUtil.registrarMovimientoEquipo(equipoId, cantidadAnterior, cantidadNueva,
+                    tipoMovimiento, fecha, usuarioId, nota);
+        } catch (SQLException e) {
+            System.err.println("No se pudo registrar el historial del equipo: " + e.getMessage());
+        }
+    }
+
+    private Optional<MovimientoMetadata> solicitarDetallesMovimiento(int cantidadAnterior, int cantidadNueva) {
+        Dialog<MovimientoMetadata> dialogo = new Dialog<>();
+        dialogo.setTitle("Registrar cambio de cantidad");
+        dialogo.setHeaderText(null);
+
+        ButtonType btnGuardar = new ButtonType("Registrar", ButtonBar.ButtonData.OK_DONE);
+        dialogo.getDialogPane().getButtonTypes().addAll(btnGuardar, ButtonType.CANCEL);
+        dialogo.getDialogPane().getStylesheets().add(getClass().getResource("/css/dashboard.css").toExternalForm());
+        dialogo.getDialogPane().getStyleClass().add("dialog-dark-pane");
+
+        Label lblResumen = new Label(String.format("Cantidad anterior: %d | Nueva cantidad: %d | Variación: %+d",
+                cantidadAnterior, cantidadNueva, cantidadNueva - cantidadAnterior));
+        lblResumen.getStyleClass().add("dialog-label");
+
+        DatePicker dpFecha = estilizarCampo(new DatePicker(LocalDate.now()));
+        dpFecha.setPromptText("Fecha del movimiento");
+
+        TextArea txtNota = estilizarCampo(new TextArea());
+        txtNota.setPromptText("Descripción del cambio (opcional)");
+        txtNota.setPrefRowCount(3);
+        txtNota.setWrapText(true);
+
+        VBox contenedor = new VBox(12, lblResumen, dpFecha, txtNota);
+        contenedor.setFillWidth(true);
+
+        dialogo.getDialogPane().setContent(contenedor);
+
+        Node btnGuardarNode = dialogo.getDialogPane().lookupButton(btnGuardar);
+        if (btnGuardarNode != null) {
+            btnGuardarNode.addEventFilter(ActionEvent.ACTION, event -> {
+                if (dpFecha.getValue() == null) {
+                    mostrarAdvertencia("Validación", "Debe seleccionar la fecha del movimiento.");
+                    event.consume();
+                }
+            });
+        }
+
+        dialogo.setResultConverter(button -> {
+            if (button == btnGuardar) {
+                return new MovimientoMetadata(dpFecha.getValue(), txtNota.getText());
+            }
+            return null;
+        });
+
+        return dialogo.showAndWait();
+    }
+
+    private Optional<PeriodoReporte> solicitarPeriodoReporte() {
+        Dialog<PeriodoReporte> dialogo = new Dialog<>();
+        dialogo.setTitle("Informe histórico de equipos");
+        dialogo.setHeaderText("Seleccione el rango de fechas para el informe");
+
+        ButtonType btnGenerar = new ButtonType("Generar", ButtonBar.ButtonData.OK_DONE);
+        dialogo.getDialogPane().getButtonTypes().addAll(btnGenerar, ButtonType.CANCEL);
+        dialogo.getDialogPane().getStylesheets().add(getClass().getResource("/css/dashboard.css").toExternalForm());
+        dialogo.getDialogPane().getStyleClass().add("dialog-dark-pane");
+
+        LocalDate hoy = LocalDate.now();
+        DatePicker dpInicio = estilizarCampo(new DatePicker(hoy.withDayOfYear(1)));
+        dpInicio.setPromptText("Fecha de inicio");
+
+        DatePicker dpFin = estilizarCampo(new DatePicker(hoy));
+        dpFin.setPromptText("Fecha de fin");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.add(crearEtiquetaCampo("Desde:"), 0, 0);
+        grid.add(dpInicio, 1, 0);
+        grid.add(crearEtiquetaCampo("Hasta:"), 0, 1);
+        grid.add(dpFin, 1, 1);
+
+        dialogo.getDialogPane().setContent(grid);
+
+        Node btnGenerarNode = dialogo.getDialogPane().lookupButton(btnGenerar);
+        if (btnGenerarNode != null) {
+            btnGenerarNode.addEventFilter(ActionEvent.ACTION, event -> {
+                LocalDate inicio = dpInicio.getValue();
+                LocalDate fin = dpFin.getValue();
+                if (inicio == null || fin == null) {
+                    mostrarAdvertencia("Validación", "Debe seleccionar ambas fechas para generar el informe.");
+                    event.consume();
+                } else if (fin.isBefore(inicio)) {
+                    mostrarAdvertencia("Validación", "La fecha de fin debe ser posterior a la fecha de inicio.");
+                    event.consume();
+                }
+            });
+        }
+
+        dialogo.setResultConverter(button -> {
+            if (button == btnGenerar) {
+                return new PeriodoReporte(dpInicio.getValue(), dpFin.getValue());
+            }
+            return null;
+        });
+
+        return dialogo.showAndWait();
+    }
+
+    private record MovimientoMetadata(LocalDate fechaMovimiento, String nota) {}
+
+    private record PeriodoReporte(LocalDate inicio, LocalDate fin) {}
 }

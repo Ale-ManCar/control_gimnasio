@@ -15,6 +15,7 @@ import models.PagoDetalle;
 import models.Auditoria;
 import models.Pago;
 import models.ResumenTipo;
+import models.EquipoResumen;
 import util.AuditoriaFileUtil;
 import util.AuditoriaUtil;
 import java.io.InputStream;
@@ -288,6 +289,48 @@ public class ReporteUtil {
         } catch (Exception e) {
             System.err.println("❌ Error generando reporte de equipos: " + e.getMessage());
             throw new RuntimeException("Error generando reporte de equipos", e);
+        }
+    }
+
+    public static Path generarInformeEquiposPeriodo(LocalDate fechaInicio, LocalDate fechaFin, boolean mostrar) {
+        try (InputStream reporteStream = ReporteUtil.class.getResourceAsStream("/reports/equipos_resumen.jrxml")) {
+            if (reporteStream == null) {
+                System.err.println("❌ No se encontró el archivo equipos_resumen.jrxml");
+                return null;
+            }
+
+            List<EquipoResumen> datos = DatabaseUtil.obtenerResumenEquipos(fechaInicio, fechaFin);
+            if (datos.isEmpty()) {
+                System.out.println("⚠️ No se encontraron movimientos de equipos para el periodo seleccionado.");
+                return null;
+            }
+
+            Map<String, Object> parametros = new HashMap<>();
+            String periodoTexto = String.format("%s - %s",
+                    fechaInicio != null ? fechaInicio.format(FECHA_CORTA_FORMATTER) : "Inicio",
+                    fechaFin != null ? fechaFin.format(FECHA_CORTA_FORMATTER) : LocalDate.now().format(FECHA_CORTA_FORMATTER));
+            parametros.put("periodo", periodoTexto);
+            parametros.put("generadoEn", LocalDateTime.now().format(RESUMEN_FORMATTER));
+
+            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(datos);
+            JasperReport jasperReport = JasperCompileManager.compileReport(reporteStream);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, dataSource);
+
+            if (mostrar) {
+                JasperViewer.viewReport(jasperPrint, false);
+            }
+
+            DateTimeFormatter formatterArchivo = DateTimeFormatter.BASIC_ISO_DATE;
+            String inicioArchivo = fechaInicio != null ? fechaInicio.format(formatterArchivo) : "INICIO";
+            String finArchivo = fechaFin != null ? fechaFin.format(formatterArchivo) : LocalDate.now().format(formatterArchivo);
+            String nombreArchivo = String.format("equipos_resumen_%s_%s.pdf", inicioArchivo, finArchivo);
+            Path destino = obtenerCarpetaDescargas().resolve(nombreArchivo);
+            JasperExportManager.exportReportToPdfFile(jasperPrint, destino.toString());
+            System.out.println("✅ Informe histórico de equipos generado en: " + destino);
+            return destino;
+        } catch (Exception e) {
+            System.err.println("❌ Error generando informe histórico de equipos: " + e.getMessage());
+            throw new RuntimeException("Error generando informe histórico de equipos", e);
         }
     }
 

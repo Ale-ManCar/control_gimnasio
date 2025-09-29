@@ -665,3 +665,21 @@
 .primary-button:hover {
     -fx-background-color: linear-gradient(to right, #2E8BFF, #4A6CF7);
 }
+
+.secondary-button {
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(148, 163, 184, 0.6);
+    -fx-border-radius: 25;
+    -fx-background-radius: 25;
+    -fx-text-fill: rgba(255, 255, 255, 0.9);
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-border-width: 1.4;
+}
+
+.secondary-button:hover {
+    -fx-border-color: rgba(78, 205, 196, 0.9);
+    -fx-text-fill: #4ECDC4;
+}

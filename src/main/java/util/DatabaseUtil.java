@@ -29,6 +29,7 @@ import models.ProveedorProducto;
 import models.CoachClientes;
 import models.Equipo;
 import models.IngresoData;
+import models.EquipoResumen;
 
 public class DatabaseUtil {
     private static final String URL = "jdbc:sqlite:database/gimnasio.db";
@@ -136,6 +137,19 @@ public class DatabaseUtil {
                 "fecha TEXT NOT NULL DEFAULT (datetime('now'))," +
                 "FOREIGN KEY (producto_id) REFERENCES productos(id))";
 
+        String sqlEquiposHistorial = "CREATE TABLE IF NOT EXISTS equipos_historial (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "equipo_id INTEGER NOT NULL," +
+                "usuario_id INTEGER," +
+                "fecha TEXT NOT NULL DEFAULT (datetime('now'))," +
+                "tipo TEXT NOT NULL," +
+                "cantidad_anterior INTEGER," +
+                "cantidad_nueva INTEGER NOT NULL," +
+                "diferencia INTEGER NOT NULL," +
+                "nota TEXT," +
+                "FOREIGN KEY (equipo_id) REFERENCES equipos(id) ON DELETE CASCADE," +
+                "FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL)";
+
         String sqlVentas = "CREATE TABLE IF NOT EXISTS ventas (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "fecha TEXT NOT NULL DEFAULT (datetime('now','localtime'))," +
@@ -206,6 +220,7 @@ public class DatabaseUtil {
             try { stmt.execute("UPDATE pagos SET estado = 'ACTIVO' WHERE estado IS NULL"); } catch (SQLException ignored) {}
             stmt.execute(sqlProductos);
             stmt.execute(sqlInventarioHistorial);
+            stmt.execute(sqlEquiposHistorial);
             stmt.execute(sqlVentas);
             stmt.execute(sqlEgresos);
             stmt.execute(sqlCoaches);
@@ -1099,21 +1114,41 @@ public class DatabaseUtil {
         }
     }
 
-    public static void insertarEquipo(Equipo equipo) throws SQLException {
+    public static int insertarEquipo(Equipo equipo) throws SQLException {
         String sql = "INSERT INTO equipos (nombre, tipo, estado, cantidad, marca, modelo, peso, fecha_adquisicion, frecuencia_mantenimiento, fecha_ultimo_mantenimiento, ubicacion, descripcion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        executeUpdate(sql,
-                equipo.getNombre(),
-                equipo.getTipo(),
-                equipo.getEstado(),
-                equipo.getCantidad(),
-                nullIfBlank(equipo.getMarca()),
-                nullIfBlank(equipo.getModelo()),
-                equipo.getPesoAsInteger(),
-                nullIfBlank(equipo.getFechaAdquisicion()),
-                nullIfBlank(equipo.getFrecuenciaMantenimiento()),
-                equipo.getFechaUltimoMantenimiento(),
-                equipo.getUbicacion(),
-                equipo.getDescripcion());
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, equipo.getNombre());
+            stmt.setString(2, equipo.getTipo());
+            stmt.setString(3, equipo.getEstado());
+            stmt.setInt(4, equipo.getCantidad());
+            stmt.setString(5, nullIfBlank(equipo.getMarca()));
+            stmt.setString(6, nullIfBlank(equipo.getModelo()));
+            Integer peso = equipo.getPesoAsInteger();
+            if (peso != null) {
+                stmt.setInt(7, peso);
+            } else {
+                stmt.setNull(7, Types.INTEGER);
+            }
+            stmt.setString(8, nullIfBlank(equipo.getFechaAdquisicion()));
+            stmt.setString(9, nullIfBlank(equipo.getFrecuenciaMantenimiento()));
+            if (equipo.getFechaUltimoMantenimiento() != null) {
+                stmt.setString(10, equipo.getFechaUltimoMantenimiento().toString());
+            } else {
+                stmt.setNull(10, Types.VARCHAR);
+            }
+            stmt.setString(11, equipo.getUbicacion());
+            stmt.setString(12, equipo.getDescripcion());
+            stmt.executeUpdate();
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        throw new SQLException("No se pudo obtener el identificador del equipo registrado");
     }
 
     public static void actualizarEquipo(Equipo equipo) throws SQLException {
@@ -1132,6 +1167,83 @@ public class DatabaseUtil {
                 equipo.getUbicacion(),
                 equipo.getDescripcion(),
                 equipo.getId());
+    }
+
+    public static void registrarMovimientoEquipo(int equipoId, Integer cantidadAnterior, int cantidadNueva,
+                                                 String tipoMovimiento, LocalDateTime fechaMovimiento,
+                                                 Integer usuarioId, String nota) throws SQLException {
+        String sql = "INSERT INTO equipos_historial (equipo_id, usuario_id, fecha, tipo, cantidad_anterior, cantidad_nueva, diferencia, nota) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        int anterior = cantidadAnterior != null ? cantidadAnterior : 0;
+        int diferencia = cantidadNueva - anterior;
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, equipoId);
+            if (usuarioId != null) {
+                stmt.setInt(2, usuarioId);
+            } else {
+                stmt.setNull(2, Types.INTEGER);
+            }
+            LocalDateTime fecha = fechaMovimiento != null ? fechaMovimiento : LocalDateTime.now();
+            stmt.setString(3, formatDateTime(fecha));
+            stmt.setString(4, tipoMovimiento != null && !tipoMovimiento.isBlank() ? tipoMovimiento.trim().toUpperCase(Locale.ROOT) : "AJUSTE");
+            if (cantidadAnterior != null) {
+                stmt.setInt(5, cantidadAnterior);
+            } else {
+                stmt.setNull(5, Types.INTEGER);
+            }
+            stmt.setInt(6, cantidadNueva);
+            stmt.setInt(7, diferencia);
+            if (nota != null && !nota.isBlank()) {
+                stmt.setString(8, nota.trim());
+            } else {
+                stmt.setNull(8, Types.VARCHAR);
+            }
+            stmt.executeUpdate();
+        }
+    }
+
+    public static List<EquipoResumen> obtenerResumenEquipos(LocalDate fechaInicio, LocalDate fechaFin) throws SQLException {
+        List<EquipoResumen> resumen = new ArrayList<>();
+        LocalDateTime inicio = fechaInicio != null ? fechaInicio.atStartOfDay() : LocalDate.of(1970, 1, 1).atStartOfDay();
+        LocalDateTime fin = fechaFin != null ? fechaFin.atTime(23, 59, 59) : LocalDateTime.now();
+
+        String sql = "SELECT e.id, e.nombre, e.tipo, " +
+                "COALESCE((SELECT eh.cantidad_nueva FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) <= datetime(?) ORDER BY datetime(eh.fecha) DESC, eh.id DESC LIMIT 1), " +
+                "        (SELECT eh.cantidad_nueva FROM equipos_historial eh WHERE eh.equipo_id = e.id ORDER BY datetime(eh.fecha) ASC, eh.id ASC LIMIT 1), " +
+                "        e.cantidad) AS cantidad_inicial, " +
+                "COALESCE((SELECT SUM(CASE WHEN eh.diferencia > 0 THEN eh.diferencia ELSE 0 END) FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) >= datetime(?) AND datetime(eh.fecha) <= datetime(?)), 0) AS altas, " +
+                "COALESCE((SELECT SUM(CASE WHEN eh.diferencia < 0 THEN -eh.diferencia ELSE 0 END) FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) >= datetime(?) AND datetime(eh.fecha) <= datetime(?)), 0) AS bajas, " +
+                "COALESCE((SELECT eh.cantidad_nueva FROM equipos_historial eh WHERE eh.equipo_id = e.id AND datetime(eh.fecha) <= datetime(?) ORDER BY datetime(eh.fecha) DESC, eh.id DESC LIMIT 1), " +
+                "        (SELECT eh.cantidad_nueva FROM equipos_historial eh WHERE eh.equipo_id = e.id ORDER BY datetime(eh.fecha) DESC, eh.id DESC LIMIT 1), " +
+                "        e.cantidad) AS cantidad_final " +
+                "FROM equipos e ORDER BY e.nombre";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, formatDateTime(inicio));
+            stmt.setString(2, formatDateTime(inicio));
+            stmt.setString(3, formatDateTime(fin));
+            stmt.setString(4, formatDateTime(inicio));
+            stmt.setString(5, formatDateTime(fin));
+            stmt.setString(6, formatDateTime(fin));
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    EquipoResumen equipo = new EquipoResumen();
+                    equipo.setEquipoId(rs.getInt("id"));
+                    equipo.setNombre(rs.getString("nombre"));
+                    equipo.setTipo(rs.getString("tipo"));
+                    equipo.setCantidadInicial(rs.getInt("cantidad_inicial"));
+                    equipo.setAltas(rs.getInt("altas"));
+                    equipo.setBajas(rs.getInt("bajas"));
+                    equipo.setCantidadFinal(rs.getInt("cantidad_final"));
+                    resumen.add(equipo);
+                }
+            }
+        }
+
+        return resumen;
     }
 
     public static void eliminarEquipo(int equipoId) throws SQLException {
