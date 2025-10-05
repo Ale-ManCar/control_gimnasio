@@ -13,6 +13,7 @@ if (-not $JdkPath) {
 
 $projectRoot = Resolve-Path "$PSScriptRoot/.."
 $targetDir = Join-Path $projectRoot "target"
+$resourceStagingDir = Join-Path $targetDir "jpackage-resources"
 
 $mvnCmd = if (Get-Command mvn -ErrorAction SilentlyContinue) { "mvn" } else { "mvn.cmd" }
 
@@ -61,6 +62,35 @@ if ($JavaFxModulePath) {
 } else {
     Write-Host "No se especificó JavaFxModulePath; se asume que las dependencias de JavaFX están incluidas en el JAR con dependencias."
 }
+
+if (Test-Path $resourceStagingDir) {
+    Remove-Item $resourceStagingDir -Recurse -Force
+}
+
+New-Item -ItemType Directory -Force -Path $resourceStagingDir | Out-Null
+
+$resourcesToBundle = @("database", "CONFIGURACION.txt")
+
+foreach ($resource in $resourcesToBundle) {
+    $sourcePath = Join-Path $projectRoot $resource
+    if (-not (Test-Path $sourcePath)) {
+        throw "No se encontró el recurso '$resource' en el proyecto."
+    }
+
+    $destinationPath = Join-Path $resourceStagingDir $resource
+    if ((Get-Item $sourcePath).PSIsContainer) {
+        Copy-Item $sourcePath -Destination $destinationPath -Recurse -Force
+    } else {
+        $destinationParent = Split-Path $destinationPath -Parent
+        if ($destinationParent) {
+            New-Item -ItemType Directory -Force -Path $destinationParent | Out-Null
+        }
+        Copy-Item $sourcePath -Destination $destinationPath -Force
+    }
+}
+
+$jpackageArgs += @("--resource-dir", (Resolve-Path $resourceStagingDir))
+$jpackageArgs += "--win-per-user-install"
 
 Write-Host "Ejecutando jpackage para generar el instalador .exe..."
 & $jpackage @jpackageArgs

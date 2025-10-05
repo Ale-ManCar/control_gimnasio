@@ -15,7 +15,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.text.ParseException;
 import org.quartz.CronExpression;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.io.IOException;
 
 public class AlertScheduler implements Runnable {
@@ -44,7 +45,7 @@ public class AlertScheduler implements Runnable {
      * Lee la configuración de frecuencia de respaldo desde CONFIGURACION.txt.
      */
     private static String obtenerFrecuenciaRespaldo() {
-        Path config = Paths.get("CONFIGURACION.txt");
+        Path config = AppPaths.getConfigFile();
         if (Files.exists(config)) {
             try {
                 return Files.lines(config)

@@ -11,6 +11,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import models.Role;
+import util.AppPaths;
 import util.BackupUtil;
 import util.DashboardService;
 import util.SessionManager;
@@ -235,7 +236,7 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private void abrirRespaldos() {
         try {
-            Path dir = Path.of("backups");
+            Path dir = AppPaths.getBackupsDir();
             if (!Files.exists(dir)) {
                 lblMensaje.setText("No hay respaldos disponibles");
                 return;

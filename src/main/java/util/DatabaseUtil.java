@@ -32,7 +32,7 @@ import models.IngresoData;
 import models.EquipoResumen;
 
 public class DatabaseUtil {
-    private static final String URL = "jdbc:sqlite:database/gimnasio.db";
+    private static final String URL = "jdbc:sqlite:" + AppPaths.getDatabasePath().toAbsolutePath();
     private static final int BUSY_TIMEOUT_MS = 60000;
     private static final DateTimeFormatter SQLITE_DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final Pattern PAGO_ID_PATTERN = Pattern.compile("Pago\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
