@@ -1,5 +1,6 @@
 param(
     [string]$JdkPath = $env:JAVA_HOME,
+    [string]$MavenExecutable,
     [string]$AppVersion = "1.1.0",
     [string]$OutputDir = "dist",
     [string]$JavaFxModulePath
@@ -7,15 +8,106 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-if (-not $JdkPath) {
-    throw "JAVA_HOME no está configurada. Define JAVA_HOME apuntando a un JDK que incluya jpackage (JDK 14+)."
+function Resolve-JdkPath {
+    param(
+        [string]$InitialPath
+    )
+
+    $candidates = @()
+
+    if ($InitialPath) {
+        $candidates += $InitialPath
+    }
+
+    if ($env:JAVA_HOME) {
+        $candidates += $env:JAVA_HOME
+    }
+
+    if ($env:JDK_HOME) {
+        $candidates += $env:JDK_HOME
+    }
+
+    $candidates += @(
+        'C:\\java\\jdk-21',
+        'C:\\Program Files\\Java\\jdk-21',
+        'C:\\Program Files\\Java\\jdk-21.0.1',
+        'C:\\Program Files\\Eclipse Adoptium\\jdk-21',
+        'C:\\Program Files (x86)\\Java\\jdk-21'
+    )
+
+    foreach ($candidate in $candidates | Where-Object { $_ }) {
+        try {
+            $resolved = (Resolve-Path $candidate -ErrorAction Stop).Path
+            $jpackage = Join-Path $resolved "bin/jpackage.exe"
+            if (Test-Path $jpackage) {
+                return $resolved
+            }
+        } catch {
+            continue
+        }
+    }
+
+    throw "No se pudo localizar un JDK con jpackage. Define JAVA_HOME o usa el parámetro -JdkPath apuntando al directorio del JDK (por ejemplo C:\\java\\jdk-21)."
 }
+
+function Resolve-MavenExecutable {
+    param(
+        [string]$ExplicitPath
+    )
+
+    if ($ExplicitPath) {
+        try {
+            return (Resolve-Path $ExplicitPath -ErrorAction Stop).Path
+        } catch {
+            throw "No se encontró Maven en '$ExplicitPath'. Verifica la ruta especificada en -MavenExecutable."
+        }
+    }
+
+    $command = Get-Command mvn -ErrorAction SilentlyContinue
+    if ($command) {
+        return $command.Source
+    }
+
+    $commandCmd = Get-Command mvn.cmd -ErrorAction SilentlyContinue
+    if ($commandCmd) {
+        return $commandCmd.Source
+    }
+
+    $candidates = @()
+
+    if ($env:MAVEN_HOME) {
+        $candidates += (Join-Path $env:MAVEN_HOME "bin/mvn.cmd")
+        $candidates += (Join-Path $env:MAVEN_HOME "bin/mvn")
+    }
+
+    if ($env:M2_HOME) {
+        $candidates += (Join-Path $env:M2_HOME "bin/mvn.cmd")
+        $candidates += (Join-Path $env:M2_HOME "bin/mvn")
+    }
+
+    $candidates += @(
+        'C:\\Maven\\apache-maven-3.9.11\\bin\\mvn.cmd',
+        'C:\\Program Files\\Apache\\maven\\bin\\mvn.cmd'
+    )
+
+    foreach ($candidate in $candidates | Where-Object { $_ }) {
+        if (Test-Path $candidate) {
+            return (Resolve-Path $candidate -ErrorAction Stop).Path
+        }
+    }
+
+    throw "No se pudo encontrar Maven en el PATH ni en ubicaciones comunes. Instálalo o indica la ruta con -MavenExecutable (por ejemplo C:\\Maven\\apache-maven-3.9.11\\bin\\mvn.cmd)."
+}
+
+$JdkPath = Resolve-JdkPath -InitialPath $JdkPath
+$mvnCmd = Resolve-MavenExecutable -ExplicitPath $MavenExecutable
+
+Write-Host "Usando JDK en" $JdkPath
+Write-Host "Usando Maven en" $mvnCmd
 
 $projectRoot = Resolve-Path "$PSScriptRoot/.."
 $targetDir = Join-Path $projectRoot "target"
 $resourceStagingDir = Join-Path $targetDir "jpackage-resources"
-
-$mvnCmd = if (Get-Command mvn -ErrorAction SilentlyContinue) { "mvn" } else { "mvn.cmd" }
 
 Write-Host "Compilando el proyecto y generando el JAR con dependencias..."
 & $mvnCmd clean package -DskipTests | Write-Output
@@ -54,13 +146,49 @@ $jpackageArgs = @(
     "--jlink-options", "--strip-debug --no-header-files --no-man-pages"
 )
 
+$resolvedJavaFxPath = $null
+
 if ($JavaFxModulePath) {
     $resolvedJavaFxPath = Resolve-Path $JavaFxModulePath -ErrorAction Stop
+} else {
+    $javaFxCandidates = @()
+
+    if ($env:JAVA_FX_MODULE_PATH) {
+        $javaFxCandidates += $env:JAVA_FX_MODULE_PATH
+    }
+
+    if ($env:JAVA_FX_SDK_LIB) {
+        $javaFxCandidates += $env:JAVA_FX_SDK_LIB
+    }
+
+    if ($env:JAVA_FX_SDK) {
+        $javaFxCandidates += (Join-Path $env:JAVA_FX_SDK "lib")
+    }
+
+    $javaFxCandidates += @(
+        'C:\\java\\javafx-sdk-21\\lib',
+        'C:\\javafx-sdk-21\\lib'
+    )
+
+    foreach ($candidate in $javaFxCandidates) {
+        if (-not $candidate) { continue }
+        if (Test-Path $candidate) {
+            try {
+                $resolvedJavaFxPath = Resolve-Path $candidate -ErrorAction Stop
+                break
+            } catch {
+                continue
+            }
+        }
+    }
+}
+
+if ($resolvedJavaFxPath) {
     $jpackageArgs += @("--module-path", $resolvedJavaFxPath)
     $jpackageArgs += @("--add-modules", "javafx.controls,javafx.fxml")
     Write-Host "Usando JavaFX module path" $resolvedJavaFxPath
 } else {
-    Write-Host "No se especificó JavaFxModulePath; se asume que las dependencias de JavaFX están incluidas en el JAR con dependencias."
+    Write-Host "No se especificó JavaFxModulePath ni se detectó automáticamente; se asume que las dependencias de JavaFX están incluidas en el JAR con dependencias."
 }
 
 if (Test-Path $resourceStagingDir) {
