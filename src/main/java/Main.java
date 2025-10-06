@@ -5,6 +5,8 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import util.AppPaths;
+
 public class Main extends Application {
 
     @Override
@@ -18,6 +20,7 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) {
+        AppPaths.initialize();
         launch(args);
     }
 }

@@ -1,7 +1,9 @@
 package util;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -10,8 +12,8 @@ import java.time.format.DateTimeFormatter;
  * Utilidad para crear respaldos de la base de datos.
  */
 public class BackupUtil implements Runnable {
-    private static final Path DB_PATH = Paths.get("database", "gimnasio.db");
-    private static final Path BACKUP_DIR = Paths.get("backups");
+    private static final Path DB_PATH = AppPaths.getDatabasePath();
+    private static final Path BACKUP_DIR = AppPaths.getBackupsDir();
 
     @Override
     public void run() {
