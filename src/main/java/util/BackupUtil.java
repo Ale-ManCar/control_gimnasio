@@ -10,8 +10,8 @@ import java.time.format.DateTimeFormatter;
  * Utilidad para crear respaldos de la base de datos.
  */
 public class BackupUtil implements Runnable {
-    private static final Path DB_PATH = Paths.get("database", "gimnasio.db");
-    private static final Path BACKUP_DIR = Paths.get("backups");
+    private static final Path DB_PATH = AppPaths.getDatabaseFile();
+    private static final Path BACKUP_DIR = AppPaths.getBackupDirectory();
 
     @Override
     public void run() {
@@ -35,6 +35,10 @@ public class BackupUtil implements Runnable {
             Path dir = BACKUP_DIR.resolve(tipo);
             if (!Files.exists(dir)) {
                 Files.createDirectories(dir);
+            }
+            if (!Files.exists(DB_PATH)) {
+                System.out.println("No se encontró la base de datos en " + DB_PATH + ". Se omite respaldo " + tipo + ".");
+                return;
             }
             LocalDateTime ahora = LocalDateTime.now();
             String nombreArchivo;
