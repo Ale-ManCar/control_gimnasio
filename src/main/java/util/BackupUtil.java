@@ -36,6 +36,10 @@ public class BackupUtil implements Runnable {
             if (!Files.exists(dir)) {
                 Files.createDirectories(dir);
             }
+            if (!Files.exists(DB_PATH)) {
+                System.out.println("No se encontró la base de datos en " + DB_PATH + ". Se omite respaldo " + tipo + ".");
+                return;
+            }
             LocalDateTime ahora = LocalDateTime.now();
             String nombreArchivo;
             if ("diario".equalsIgnoreCase(tipo)) {

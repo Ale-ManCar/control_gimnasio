@@ -1,5 +1,8 @@
 package util;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -32,12 +35,14 @@ import models.IngresoData;
 import models.EquipoResumen;
 
 public class DatabaseUtil {
+    private static final Path DB_DIRECTORY = Paths.get("database");
     private static final String URL = "jdbc:sqlite:database/gimnasio.db";
     private static final int BUSY_TIMEOUT_MS = 60000;
     private static final DateTimeFormatter SQLITE_DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final Pattern PAGO_ID_PATTERN = Pattern.compile("Pago\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
 
     public static Connection getConnection() throws SQLException {
+        ensureDatabaseDirectory();
         Connection conn = DriverManager.getConnection(URL);
         try (Statement stmt = conn.createStatement()) {
             stmt.execute("PRAGMA journal_mode = WAL");
@@ -46,6 +51,17 @@ public class DatabaseUtil {
             stmt.execute("PRAGMA foreign_keys = ON");
         }
         return conn;
+    }
+
+    private static void ensureDatabaseDirectory() throws SQLException {
+        if (Files.exists(DB_DIRECTORY)) {
+            return;
+        }
+        try {
+            Files.createDirectories(DB_DIRECTORY);
+        } catch (Exception e) {
+            throw new SQLException("No se pudo crear el directorio de la base de datos", e);
+        }
     }
 
     public static synchronized void initDatabase() {
