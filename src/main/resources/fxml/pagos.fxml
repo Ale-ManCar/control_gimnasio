@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.PagosController"
+            prefWidth="780" prefHeight="420"
+            style="-fx-background-color: linear-gradient(to bottom, #0f2027, #2c5364); -fx-padding: 20;">
+    <top>
+        <Label text="Pagos activos"
+               style="-fx-text-fill: white; -fx-font-size: 22; -fx-font-weight: bold;"/>
+    </top>
+    <center>
+        <TableView fx:id="tablaPagos" prefHeight="300"
+                   style="-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 12;">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+                <TableColumn fx:id="colCliente" text="Cliente" prefWidth="180"/>
+                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="120"/>
+                <TableColumn fx:id="colMembresia" text="Membresía" prefWidth="140"/>
+                <TableColumn fx:id="colMonto" text="Monto" prefWidth="100"/>
+                <TableColumn fx:id="colEstado" text="Estado" prefWidth="100"/>
+                <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="120"/>
+            </columns>
+        </TableView>
+    </center>
+    <bottom>
+        <VBox spacing="10">
+            <Label fx:id="lblMensaje" style="-fx-text-fill: #ff6b6b;"/>
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button text="Refrescar" onAction="#handleRefrescar"
+                        style="-fx-background-color: #118ab2; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button text="Cerrar" onAction="#handleCerrar"
+                        style="-fx-background-color: #073b4c; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            </HBox>
+        </VBox>
+    </bottom>
+</BorderPane>

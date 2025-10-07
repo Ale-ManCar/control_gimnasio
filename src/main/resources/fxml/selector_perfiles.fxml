@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.SelectorPerfilesController"
+            prefWidth="700" prefHeight="420"
+            style="-fx-background-color: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); -fx-padding: 20;"
+            stylesheets="@../css/selector_perfiles.css">
+    <top>
+        <VBox alignment="CENTER" spacing="8">
+            <Label text="Selecciona un perfil"
+                   style="-fx-text-fill: white; -fx-font-size: 24; -fx-font-weight: bold;"/>
+            <Label fx:id="lblMensaje" style="-fx-text-fill: white;"/>
+        </VBox>
+    </top>
+    <center>
+        <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+                    styleClass="selector-scroll">
+            <content>
+                <FlowPane fx:id="contenedorPerfiles" prefWidth="600" prefHeight="300"
+                          alignment="CENTER" hgap="20" vgap="20"
+                          styleClass="contenedor-perfiles"/>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>

@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import java.lang.String?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.ProveedorDialogController"
+            prefWidth="900" prefHeight="600"
+            stylesheets="@../css/proveedor_dialog.css">
+    <styleClass>
+        <String fx:value="proveedor-dialog-root"/>
+    </styleClass>
+    <top>
+        <VBox spacing="18" BorderPane.alignment="CENTER">
+            <StackPane>
+                <children>
+                    <Region StackPane.alignment="TOP_RIGHT" prefWidth="180" prefHeight="180">
+                        <styleClass>
+                            <String fx:value="header-glow"/>
+                        </styleClass>
+                    </Region>
+                    <Region StackPane.alignment="BOTTOM_LEFT" prefWidth="120" prefHeight="120">
+                        <styleClass>
+                            <String fx:value="header-glow-soft"/>
+                        </styleClass>
+                    </Region>
+                    <VBox spacing="18">
+                        <styleClass>
+                            <String fx:value="header-card"/>
+                        </styleClass>
+                        <children>
+                            <HBox spacing="16" alignment="CENTER_LEFT">
+                                <children>
+                                    <StackPane>
+                                        <styleClass>
+                                            <String fx:value="header-badge"/>
+                                        </styleClass>
+                                        <children>
+                                            <Label text="🛒">
+                                                <styleClass>
+                                                    <String fx:value="badge-emoji"/>
+                                                </styleClass>
+                                            </Label>
+                                        </children>
+                                    </StackPane>
+                                    <VBox spacing="4">
+                                        <children>
+                                            <Label text="Registro de proveedor">
+                                                <styleClass>
+                                                    <String fx:value="title-label"/>
+                                                </styleClass>
+                                            </Label>
+                                            <Label text="Agrega nuevos aliados comerciales y asigna los productos que pueden suministrar.">
+                                                <styleClass>
+                                                    <String fx:value="subtitle-label"/>
+                                                </styleClass>
+                                            </Label>
+                                        </children>
+                                    </VBox>
+                                </children>
+                            </HBox>
+                            <GridPane hgap="14" vgap="14">
+                                <styleClass>
+                                    <String fx:value="form-grid"/>
+                                </styleClass>
+                                <columnConstraints>
+                                    <ColumnConstraints percentWidth="30"/>
+                                    <ColumnConstraints percentWidth="70"/>
+                                </columnConstraints>
+                                <children>
+                                    <Label text="Nombre" GridPane.rowIndex="0" GridPane.columnIndex="0">
+                                        <styleClass>
+                                            <String fx:value="input-label"/>
+                                        </styleClass>
+                                    </Label>
+                                    <TextField fx:id="txtNombre" promptText="Nombre del proveedor" GridPane.rowIndex="0" GridPane.columnIndex="1">
+                                        <styleClass>
+                                            <String fx:value="modern-field"/>
+                                        </styleClass>
+                                    </TextField>
+                                    <Label text="Contacto" GridPane.rowIndex="1" GridPane.columnIndex="0">
+                                        <styleClass>
+                                            <String fx:value="input-label"/>
+                                        </styleClass>
+                                    </Label>
+                                    <TextField fx:id="txtContacto" promptText="Persona de contacto" GridPane.rowIndex="1" GridPane.columnIndex="1">
+                                        <styleClass>
+                                            <String fx:value="modern-field"/>
+                                        </styleClass>
+                                    </TextField>
+                                    <Label text="Teléfono" GridPane.rowIndex="2" GridPane.columnIndex="0">
+                                        <styleClass>
+                                            <String fx:value="input-label"/>
+                                        </styleClass>
+                                    </Label>
+                                    <TextField fx:id="txtTelefono" promptText="Número telefónico" GridPane.rowIndex="2" GridPane.columnIndex="1">
+                                        <styleClass>
+                                            <String fx:value="modern-field"/>
+                                        </styleClass>
+                                    </TextField>
+                                </children>
+                            </GridPane>
+                        </children>
+                    </VBox>
+                </children>
+            </StackPane>
+        </VBox>
+    </top>
+    <center>
+        <VBox spacing="18" BorderPane.alignment="CENTER">
+            <StackPane>
+                <styleClass>
+                    <String fx:value="content-card"/>
+                </styleClass>
+                <children>
+                    <TabPane fx:id="tabPaneCatalogos" tabClosingPolicy="UNAVAILABLE">
+                        <styleClass>
+                            <String fx:value="accent-tabpane"/>
+                        </styleClass>
+                        <tabs>
+                            <Tab fx:id="tabEquipos" text="Equipos">
+                                <content>
+                                    <StackPane/>
+                                </content>
+                            </Tab>
+                            <Tab fx:id="tabInsumos" text="Insumos">
+                                <content>
+                                    <StackPane/>
+                                </content>
+                            </Tab>
+                        </tabs>
+                    </TabPane>
+                </children>
+            </StackPane>
+        </VBox>
+    </center>
+    <bottom>
+        <HBox spacing="16" alignment="CENTER_LEFT" BorderPane.alignment="CENTER">
+            <styleClass>
+                <String fx:value="footer-actions"/>
+            </styleClass>
+            <children>
+                <Label text="Revisa la información antes de guardar los cambios." wrapText="true">
+                    <styleClass>
+                        <String fx:value="footer-note"/>
+                    </styleClass>
+                </Label>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnCancelar" text="Cancelar" onAction="#cancelar">
+                    <styleClass>
+                        <String fx:value="secondary-button"/>
+                    </styleClass>
+                </Button>
+                <Button fx:id="btnGuardar" text="Guardar" onAction="#guardar">
+                    <styleClass>
+                        <String fx:value="primary-button"/>
+                    </styleClass>
+                </Button>
+            </children>
+        </HBox>
+    </bottom>
+</BorderPane>

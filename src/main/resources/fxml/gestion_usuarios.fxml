@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.UsuariosController"
+            prefWidth="600" prefHeight="440"
+            stylesheets="@../css/gestion_usuarios.css"
+            styleClass="gestion-usuarios-root">
+    <top>
+        <VBox spacing="4" styleClass="gestion-usuarios-header">
+            <Label text="Gestión de recepcionistas"
+                   styleClass="gestion-usuarios-header-title"/>
+            <Label text="Administra los accesos del equipo de recepción y supervisa su actividad reciente."
+                   wrapText="true"
+                   styleClass="gestion-usuarios-header-subtitle"/>
+        </VBox>
+    </top>
+    <center>
+        <VBox spacing="10" styleClass="user-table-container">
+            <TableView fx:id="tablaUsuarios" prefHeight="300"
+                       styleClass="user-table">
+                <columns>
+                    <TableColumn fx:id="colUsuario" text="Usuario" prefWidth="200"/>
+                    <TableColumn fx:id="colUltimoAcceso" text="Último acceso" prefWidth="200"/>
+                    <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="120"/>
+                </columns>
+                <placeholder>
+                    <Label text="No hay recepcionistas registrados por el momento."/>
+                </placeholder>
+            </TableView>
+            <Label text="Selecciona un usuario para ver las acciones disponibles."
+                   styleClass="user-table-summary"/>
+        </VBox>
+    </center>
+    <bottom>
+        <VBox spacing="12">
+            <Label fx:id="lblMensaje" styleClass="alert-label"/>
+            <HBox spacing="12" alignment="CENTER_RIGHT" styleClass="action-bar">
+                <Button fx:id="btnNuevo" text="Nuevo" onAction="#handleNuevo"
+                        styleClass="action-button action-button--success"/>
+                <Button fx:id="btnEditar" text="Editar" onAction="#handleEditar"
+                        styleClass="action-button action-button--warning"/>
+                <Button fx:id="btnEliminar" text="Eliminar" onAction="#handleEliminar"
+                        styleClass="action-button action-button--danger"/>
+                <Button text="Cerrar" onAction="#handleCerrar"
+                        styleClass="action-button action-button--ghost"/>
+            </HBox>
+        </VBox>
+    </bottom>
+</BorderPane>

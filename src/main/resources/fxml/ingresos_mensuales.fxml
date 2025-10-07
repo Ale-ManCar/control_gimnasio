@@ -14,12 +14,30 @@
             style="-fx-background-color: linear-gradient(to bottom, #2c3e50, #1a1a2e);">
     <children>
         <VBox spacing="20" AnchorPane.topAnchor="20" AnchorPane.rightAnchor="20" AnchorPane.leftAnchor="20" AnchorPane.bottomAnchor="20">
-            <HBox spacing="20" alignment="CENTER_LEFT" style="-fx-padding: 0 0 15 0;">
-                <Label text="Análisis de Ingresos Mensuales"
+            <HBox fx:id="contenedorFiltros" spacing="15" alignment="CENTER_LEFT" style="-fx-padding: 0 0 15 0;">
+                <Label text="Análisis de Ingresos"
                        style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Label text="Seleccionar Año:" style="-fx-font-weight: bold; -fx-text-fill: white;"/>
-                <ComboBox fx:id="cbAnio" prefWidth="100" style="-fx-background-color: rgba(255,255,255,0.9);"/>
+                <Label text="Tipo de reporte:" style="-fx-font-weight: bold; -fx-text-fill: white;"/>
+                <ComboBox fx:id="cbTipoReporte" prefWidth="140" style="-fx-background-color: rgba(255,255,255,0.9);"/>
+                <HBox fx:id="contenedorAnio" spacing="5" alignment="CENTER_LEFT">
+                    <Label text="Año:" style="-fx-font-weight: bold; -fx-text-fill: white;"/>
+                    <ComboBox fx:id="cbAnio" prefWidth="110" style="-fx-background-color: rgba(255,255,255,0.9);"/>
+                </HBox>
+                <HBox fx:id="contenedorMes" spacing="5" alignment="CENTER_LEFT">
+                    <Label text="Mes:" style="-fx-font-weight: bold; -fx-text-fill: white;"/>
+                    <ComboBox fx:id="cbMes" prefWidth="140" style="-fx-background-color: rgba(255,255,255,0.9);"/>
+                </HBox>
+                <HBox fx:id="contenedorDia" spacing="5" alignment="CENTER_LEFT">
+                    <Label text="Fecha:" style="-fx-font-weight: bold; -fx-text-fill: white;"/>
+                    <DatePicker fx:id="dpFecha" style="-fx-background-color: rgba(255,255,255,0.9);"/>
+                </HBox>
+                <HBox fx:id="contenedorSemana" spacing="5" alignment="CENTER_LEFT">
+                    <Label text="Inicio:" style="-fx-font-weight: bold; -fx-text-fill: white;"/>
+                    <DatePicker fx:id="dpSemanaInicio" style="-fx-background-color: rgba(255,255,255,0.9);"/>
+                    <Label text="Fin:" style="-fx-font-weight: bold; -fx-text-fill: white;"/>
+                    <DatePicker fx:id="dpSemanaFin" style="-fx-background-color: rgba(255,255,255,0.9);"/>
+                </HBox>
                 <Button fx:id="btnExportarPDF" text="Exportar a PDF" onAction="#handleExportarPDF"
                         style="-fx-background-color: linear-gradient(to right, #4A6CF7, #2E8BFF); -fx-text-fill: white;
                                -fx-font-weight: bold; -fx-padding: 8 15; -fx-background-radius: 25; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
@@ -33,7 +51,7 @@
                     <ColumnConstraints percentWidth="40"/>
                 </columnConstraints>
                 <VBox GridPane.columnIndex="0" spacing="20">
-                    <Label text="Ingresos Mensuales" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                    <Label fx:id="lblTituloGrafico" text="Ingresos" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;"/>
                     <BarChart fx:id="barChart" title="" categoryGap="15" barGap="5" animated="false" prefHeight="250"
                               style="-fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 15; -fx-border-radius: 15; -fx-border-color: rgba(255,255,255,0.2);">
                         <xAxis>
@@ -58,9 +76,9 @@
                                style="-fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 15; -fx-border-radius: 15; -fx-border-color: rgba(255,255,255,0.2);">
                         <columns>
                             <TableColumn fx:id="colFechaEgreso" text="Fecha" prefWidth="100" style="-fx-text-fill: white;"/>
-                            <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="290" style="-fx-text-fill: white;"/>
                             <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="150" style="-fx-text-fill: white;"/>
                             <TableColumn fx:id="colMontoEgreso" text="Monto" prefWidth="120" style="-fx-text-fill: white;"/>
+                            <TableColumn fx:id="colAcciones" text="" prefWidth="80" style="-fx-text-fill: white;"/>
                         </columns>
                     </TableView>
                 </VBox>
@@ -69,15 +87,17 @@
                     <PieChart fx:id="pieChart" title="" prefHeight="250"
                               style="-fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 15; -fx-border-radius: 15; -fx-border-color: rgba(255,255,255,0.2);"/>
                     <VBox spacing="15" style="-fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 15; -fx-padding: 20; -fx-border-color: rgba(255,255,255,0.2);">
-                        <Label text="Métricas Clave" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white; -fx-padding: 0 0 10 0;"/>
+                        <Label fx:id="lblTituloMetricas" text="Métricas Clave" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white; -fx-padding: 0 0 10 0;"/>
                         <GridPane hgap="15" vgap="15">
-                            <Label text="Total Anual:" style="-fx-font-weight: bold; -fx-text-fill: white;" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                            <Label fx:id="lblTotalAnual" style="-fx-font-weight: bold; -fx-text-fill: #27ae60; -fx-font-size: 16px;" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-                            <Label text="Promedio Mensual:" style="-fx-font-weight: bold; -fx-text-fill: white;" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                            <Label fx:id="lblPromedioMensual" style="-fx-font-weight: bold; -fx-text-fill: #3498db; -fx-font-size: 16px;" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-                            <Label text="Mejor Mes:" style="-fx-font-weight: bold; -fx-text-fill: white;" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                            <Label fx:id="lblMejorMes" style="-fx-font-weight: bold; -fx-text-fill: #e74c3c; -fx-font-size: 16px;" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                            <Label fx:id="lblMetric1Title" text="Total" style="-fx-font-weight: bold; -fx-text-fill: white;" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <Label fx:id="lblMetric1Value" style="-fx-font-weight: bold; -fx-text-fill: #27ae60; -fx-font-size: 16px;" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                            <Label fx:id="lblMetric2Title" text="Promedio" style="-fx-font-weight: bold; -fx-text-fill: white;" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <Label fx:id="lblMetric2Value" style="-fx-font-weight: bold; -fx-text-fill: #3498db; -fx-font-size: 16px;" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                            <Label fx:id="lblMetric3Title" text="" style="-fx-font-weight: bold; -fx-text-fill: white;" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                            <Label fx:id="lblMetric3Value" style="-fx-font-weight: bold; -fx-text-fill: #e74c3c; -fx-font-size: 16px;" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
                         </GridPane>
+                        <HBox fx:id="contenedorBotonesMetricas" spacing="12" alignment="CENTER_RIGHT" visible="false" managed="false">
+                        </HBox>
                     </VBox>
                 </VBox>
             </GridPane>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<StackPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="controllers.FinalizarTurnoController" alignment="CENTER"
+           styleClass="summary-root" stylesheets="@../css/resumen_turno.css">
+    <children>
+        <VBox spacing="18" alignment="CENTER" styleClass="summary-card">
+            <padding>
+                <Insets top="28" right="36" bottom="28" left="36"/>
+            </padding>
+            <children>
+                <Label text="Resumen del Turno" styleClass="summary-title"/>
+                <GridPane hgap="20" vgap="14" alignment="CENTER_LEFT">
+                    <columnConstraints>
+                        <ColumnConstraints halignment="LEFT" minWidth="120"/>
+                        <ColumnConstraints halignment="RIGHT" minWidth="100"/>
+                    </columnConstraints>
+                    <children>
+                        <Label text="Ingresos ventas:" GridPane.columnIndex="0" GridPane.rowIndex="0"
+                               styleClass="summary-label"/>
+                        <Label fx:id="lblIngresosVentas" GridPane.columnIndex="1" GridPane.rowIndex="0"
+                               styleClass="summary-value"/>
+                        <Label text="Ingresos clientes:" GridPane.columnIndex="0" GridPane.rowIndex="1"
+                               styleClass="summary-label"/>
+                        <Label fx:id="lblIngresosClientes" GridPane.columnIndex="1" GridPane.rowIndex="1"
+                               styleClass="summary-value"/>
+                    </children>
+                </GridPane>
+                <HBox spacing="16" alignment="CENTER">
+                    <children>
+                        <Button text="Confirmar" onAction="#confirmar" styleClass="primary-button"/>
+                        <Button text="Cancelar" onAction="#cancelar" styleClass="ghost-button"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </children>
+</StackPane>

@@ -11,6 +11,8 @@ public class Producto {
     private int unidadesPorPaca; // Solo para tipo PACA
     private double pesoTotal; // Para KG/LB: peso total del envase en kg/lb
     private double pesoScoop; // Para KG/LB: peso por scoop en gramos
+    private int umbral;
+    private int stockInicial;
 
     public Producto() {}
 
@@ -25,6 +27,8 @@ public class Producto {
         this.unidadesPorPaca = unidadesPorPaca;
         this.pesoTotal = pesoTotal;
         this.pesoScoop = pesoScoop;
+        this.umbral = 0;
+        this.stockInicial = stock;
     }
 
     // Getters y Setters
@@ -48,6 +52,10 @@ public class Producto {
     public void setPesoTotal(double pesoTotal) { this.pesoTotal = pesoTotal; }
     public double getPesoScoop() { return pesoScoop; }
     public void setPesoScoop(double pesoScoop) { this.pesoScoop = pesoScoop; }
+    public int getUmbral() { return umbral; }
+    public void setUmbral(int umbral) { this.umbral = umbral; }
+    public int getStockInicial() { return stockInicial; }
+    public void setStockInicial(int stockInicial) { this.stockInicial = stockInicial; }
 
     // Método para calcular ganancia por unidad/scoop
     public double getGananciaPorUnidad() {
@@ -85,8 +93,8 @@ public class Producto {
     @Override
     public String toString() {
         return String.format(
-                "Producto [nombre=%s, tipo=%s, stock=%d, precioVenta=%.2f, precioCompra=%.2f]",
-                nombre, tipo, stock, precioVenta, precioCompra
+                "Producto [nombre=%s, tipo=%s, stock=%d, stockInicial=%d, precioVenta=%.2f, precioCompra=%.2f, umbral=%d]",
+                nombre, tipo, stock, stockInicial, precioVenta, precioCompra, umbral
         );
     }
 }

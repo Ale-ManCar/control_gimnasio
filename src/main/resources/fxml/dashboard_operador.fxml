@@ -12,17 +12,26 @@
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
+<<<<<<<< HEAD:src/main/resources/fxml/dashboard_operador.fxml
             fx:controller="controllers.OperadorDashboardController"
+========
+            fx:controller="controllers.RecepcionistaDashboardController"
+>>>>>>>> dev:src/main/resources/fxml/recepcionista_dashboard.fxml
             prefWidth="900" prefHeight="600"
-            style="-fx-background-color: linear-gradient(to bottom, #1e3c72, #2a5298);">
+            stylesheets="@../css/dashboard.css"
+            styleClass="dashboard-root">
 
     <top>
         <VBox alignment="CENTER" style="-fx-background-color: rgba(0,0,0,0.3); -fx-background-radius: 0 0 15 15; -fx-padding: 15;">
             <Label text="PANEL DE CONTROL"
                    style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #FFD700; -fx-padding: 0 0 5 0;"/>
+<<<<<<<< HEAD:src/main/resources/fxml/dashboard_operador.fxml
             <Label fx:id="lblUsuarioRol" text=""
                    style="-fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 0 0 5 0;"/>
             <Label text="Dashboard"
+========
+            <Label fx:id="lblRecepcionista" text="Dashboard"
+>>>>>>>> dev:src/main/resources/fxml/recepcionista_dashboard.fxml
                    style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: white; -fx-padding: 0 0 15 0;"/>
         </VBox>
     </top>
@@ -45,15 +54,16 @@
                    style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white; -fx-padding: 10 0 5 0;"/>
 
             <TableView fx:id="tablaClientesProximosAVencer" prefHeight="400"
-                       style="-fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 15;
-                              -fx-border-radius: 15; -fx-border-color: rgba(255,255,255,0.2);">
+                       styleClass="expiring-table">
                 <columns>
-                    <TableColumn fx:id="colAlerta" prefWidth="50" sortable="false" resizable="false"
+                    <TableColumn fx:id="colAlerta" prefWidth="60" sortable="false" resizable="false"
                                  style="-fx-alignment: CENTER; -fx-text-fill: white;" text=" "/>
-                    <TableColumn text="Cliente" prefWidth="250" fx:id="colCliente"
+                    <TableColumn text="Cliente" prefWidth="230" fx:id="colCliente"
+                                 style="-fx-alignment: CENTER_LEFT; -fx-text-fill: white;"/>
+                    <TableColumn text="Membresía" prefWidth="160" fx:id="colMembresia"
                                  style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
-                    <TableColumn text="Teléfono" prefWidth="150" fx:id="colTelefono"
-                                 style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
+                    <TableColumn text="Teléfono" prefWidth="160" fx:id="colTelefono"
+                                 style="-fx-alignment: CENTER_LEFT; -fx-text-fill: white;"/>
                     <TableColumn text="Vencimiento" prefWidth="150" fx:id="colVencimiento"
                                  style="-fx-alignment: CENTER; -fx-text-fill: white;"/>
                     <TableColumn text="Días Restantes" prefWidth="150" fx:id="colDiasRestantes"
@@ -69,16 +79,23 @@
                         style="-fx-background-color: linear-gradient(to right, #4A6CF7, #2E8BFF); -fx-text-fill: white; -fx-font-weight: bold;
                                -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;
                                -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
-                <Button text="Registrar Coach" onAction="#handleRegistroCoach"
+                <Button text="Coaches" onAction="#abrirCoaches"
                         style="-fx-background-color: linear-gradient(to right, #9b59b6, #8e44ad); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;
                 -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
                 <Button text="Inventario" onAction="#abrirInventario"
                         style="-fx-background-color: linear-gradient(to right, #e67e22, #e74c3c); -fx-text-fill: white; -fx-font-weight: bold;
                                -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;
                                -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
+<<<<<<<< HEAD:src/main/resources/fxml/dashboard_operador.fxml
                 <Button fx:id="btnLogout" text="Cerrar Sesión" onAction="#handleLogout"
                         style="-fx-background-color: linear-gradient(to right, #c0392b, #e74c3c); -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;
                 -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
+========
+                <Button text="Finalizar turno" onAction="#handleFinalizarTurno"
+                        style="-fx-background-color: linear-gradient(to right, #c0392b, #8e0e00); -fx-text-fill: white; -fx-font-weight: bold;
+                               -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;
+                               -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
+>>>>>>>> dev:src/main/resources/fxml/recepcionista_dashboard.fxml
                 <!--Button text="Ver Todos" fx:id="btnVerTodos" onAction="#handleVerTodos"
                         style="-fx-background-color: linear-gradient(to right, #9b59b6, #8e44ad); -fx-text-fill: white; -fx-font-weight: bold;
                                -fx-padding: 10 20; -fx-font-size: 14px; -fx-background-radius: 25; -fx-cursor: hand;

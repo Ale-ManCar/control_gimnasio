@@ -1,6 +1,8 @@
 package models;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -12,40 +14,53 @@ public class Cliente {
     private final StringProperty nombres;
     private final StringProperty apellidos;
     private final StringProperty telefono;
+    private final StringProperty telefonoVisible;
     private final StringProperty fecha_vencimiento;
     private final StringProperty tipoMembresia;
+    private final BooleanProperty asistioHoy = new SimpleBooleanProperty(false);
     private final IntegerProperty diasRestantes = new SimpleIntegerProperty(0);
 
-    public Cliente(String nombres, String apellidos, String telefono, String tipoMembresia, LocalDate fecha_vencimiento) {
+    public Cliente(String nombres, String apellidos, String telefono, String telefonoVisible, String tipoMembresia, LocalDate fecha_vencimiento) {
         this.nombres = new SimpleStringProperty(nombres);
         this.apellidos = new SimpleStringProperty(apellidos);
         this.telefono = new SimpleStringProperty(telefono);
+        this.telefonoVisible = new SimpleStringProperty(
+                telefonoVisible != null && !telefonoVisible.isBlank() ? telefonoVisible : telefono
+        );
         this.tipoMembresia = new SimpleStringProperty(tipoMembresia);
         this.fecha_vencimiento = new SimpleStringProperty(fecha_vencimiento.toString());
         setDiasRestantes();
     }
 
+    public Cliente(String nombres, String apellidos, String telefono, String telefonoVisible, LocalDate fecha_vencimiento) {
+        this(nombres, apellidos, telefono, telefonoVisible, "No definido", fecha_vencimiento);
+    }
+
     public Cliente(String nombres, String apellidos, String telefono, LocalDate fecha_vencimiento) {
-        this(nombres, apellidos, telefono, "No definido", fecha_vencimiento);
+        this(nombres, apellidos, telefono, telefono, "No definido", fecha_vencimiento);
     }
 
     public Cliente(String nombres, String telefono, LocalDate fecha_vencimiento) {
-        this(nombres, "", telefono, "No definido", fecha_vencimiento);
+        this(nombres, "", telefono, telefono, "No definido", fecha_vencimiento);
     }
 
     public StringProperty nombresProperty() { return nombres; }
     public StringProperty apellidosProperty() { return apellidos; }
     public StringProperty telefonoProperty() { return telefono; }
+    public StringProperty telefonoVisibleProperty() { return telefonoVisible; }
     public StringProperty fechaVencimientoProperty() { return fecha_vencimiento; }
     public StringProperty tipoMembresiaProperty() { return tipoMembresia; }
     public IntegerProperty diasRestantesProperty() { return diasRestantes; }
+    public BooleanProperty asistioHoyProperty() { return asistioHoy; }
 
     public String getNombres() { return nombres.get(); }
     public String getApellidos() { return apellidos.get(); }
     public String getTelefono() { return telefono.get(); }
+    public String getTelefonoVisible() { return telefonoVisible.get(); }
     public String getTipoMembresia() { return tipoMembresia.get(); }
     public String getFecha_vencimiento() { return fecha_vencimiento.get(); }
     public int getDiasRestantes() { return diasRestantes.get(); }
+    public boolean isAsistioHoy() { return asistioHoy.get(); }
 
     public String getEstado() {
         if (fecha_vencimiento.get() == null || fecha_vencimiento.get().isEmpty())
@@ -90,6 +105,10 @@ public class Cliente {
         this.diasRestantes.set(dias);
     }
 
+    public void setAsistioHoy(boolean asistio) {
+        this.asistioHoy.set(asistio);
+    }
+
     public void setTipoMembresia(String tipo) {
         this.tipoMembresia.set(tipo);
     }
@@ -118,9 +137,16 @@ public class Cliente {
         }
 
         return "Nombre: " + getNombres() + " " + getApellidos() + "\n" +
-                "Teléfono: " + getTelefono() + "\n" +
+                "Teléfono: " + getTelefonoVisible() + "\n" +
                 "Membresía: " + getTipoMembresia() + "\n" +
                 "Vence: " + getFecha_vencimiento() + "\n" +
                 infoDias;
     }
+
+    public void setTelefonoVisible(String telefonoVisible) {
+        this.telefonoVisible.set(
+                telefonoVisible != null && !telefonoVisible.isBlank() ? telefonoVisible : this.telefono.get()
+        );
+    }
 }
+

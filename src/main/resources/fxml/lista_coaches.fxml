@@ -37,7 +37,9 @@
         </columns>
     </TableView>
     <HBox spacing="20" alignment="CENTER" style="-fx-padding: 20 0 0 0;">
-        <Button text="Volver al Registro" onAction="#volverRegistro"
+        <Button text="Volver" onAction="#volverDashboard"
                 style="-fx-background-color: linear-gradient(to right, #4A6CF7, #2E8BFF); -fx-text-fill: white; -fx-font-weight: bold; -fx-min-width: 220; -fx-font-size: 16px; -fx-padding: 10px 25px; -fx-background-radius: 25px; -fx-border-radius: 25px; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);"/>
+        <Button fx:id="btnAgregar" text="Agregar Coach" onAction="#abrirRegistroCoach"
+                style="-fx-background-color: linear-gradient(to right, #4CAF50, #2E7D32); -fx-text-fill: white; -fx-font-weight: bold; -fx-min-width: 220; -fx-font-size: 16px; -fx-padding: 10px 25px; -fx-background-radius: 25px; -fx-border-radius: 25px; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 5, 0, 0, 2);"/>
     </HBox>
 </VBox>

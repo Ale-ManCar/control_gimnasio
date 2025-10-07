@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.ListaProveedoresController"
+            prefWidth="1000" prefHeight="650"
+            stylesheets="@../css/proveedores.css"
+            styleClass="proveedores-root">
+    <top>
+        <VBox spacing="18" styleClass="header-card">
+            <Label text="Gestión de Proveedores" styleClass="title-label"/>
+            <HBox spacing="12" alignment="CENTER_LEFT" styleClass="filter-box">
+                <Label text="Filtrar por categoría:" styleClass="subtitle-label"/>
+                <ComboBox fx:id="cmbCategoriaProducto" promptText="Selecciona categoría"
+                          prefWidth="200" styleClass="pill-combobox"/>
+                <ComboBox fx:id="cmbProductoFiltro" promptText="Selecciona producto"
+                          prefWidth="220" styleClass="pill-combobox"/>
+                <Button text="Limpiar" onAction="#limpiarFiltroProducto" styleClass="ghost-button"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnComparador" text="Comparar precios" onAction="#abrirComparador"
+                        styleClass="accent-button"/>
+            </HBox>
+            <HBox spacing="15" alignment="CENTER_LEFT" styleClass="secondary-filter-box">
+                <CheckBox fx:id="chkEquipos" text="Mostrar proveedores de equipos" styleClass="filter-check"/>
+                <CheckBox fx:id="chkInsumos" text="Mostrar proveedores de insumos" styleClass="filter-check"/>
+                <Label fx:id="lblProductoSeleccionado" text="Sin filtro de producto"
+                       styleClass="chip-label"/>
+            </HBox>
+        </VBox>
+    </top>
+    <center>
+        <SplitPane dividerPositions="0.58" styleClass="content-split">
+            <items>
+                <VBox spacing="15" styleClass="table-container">
+                    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="table-header">
+                        <Label text="Listado de proveedores" styleClass="section-title" style="-fx-text-fill: #000000;"/>
+                        <Label text="Actualiza, filtra y compara tus aliados estratégicos" styleClass="section-subtitle" style="-fx-text-fill: #000000;"/>
+                    </HBox>
+                    <TableView fx:id="tablaProveedores" VBox.vgrow="ALWAYS" styleClass="modern-table">
+                        <columns>
+                            <TableColumn fx:id="colNombre" text="Proveedor" prefWidth="130" style="-fx-alignment: CENTER;"/>
+                            <TableColumn fx:id="colContacto" text="Contacto" prefWidth="130" style="-fx-alignment: CENTER;"/>
+                            <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="120" style="-fx-alignment: CENTER;"/>
+                            <TableColumn fx:id="colCategorias" text="Categorías" prefWidth="120" style="-fx-alignment: CENTER;"/>
+                        </columns>
+                    </TableView>
+                    <HBox spacing="12" alignment="CENTER_RIGHT" styleClass="actions-bar">
+                        <Button text="Actualizar" onAction="#refrescarTabla" styleClass="ghost-button"/>
+                        <Button text="Agregar" onAction="#agregarProveedor" styleClass="primary-button"/>
+                        <Button fx:id="btnEditar" text="Editar" onAction="#editarProveedor" styleClass="secondary-button"/>
+                        <Button fx:id="btnEliminar" text="Eliminar" onAction="#eliminarProveedor" styleClass="danger-button"/>
+                    </HBox>
+                </VBox>
+                <VBox spacing="18" styleClass="detail-card">
+                    <Label text="Detalle del proveedor" styleClass="section-title"/>
+                    <Label fx:id="lblNombreDetalle" text="Selecciona un proveedor" styleClass="detail-name"/>
+                    <Label fx:id="lblContactoDetalle" text="-" styleClass="detail-contact"/>
+                    <Label fx:id="lblTelefonoDetalle" text="-" styleClass="detail-contact"/>
+                    <Separator styleClass="detail-separator"/>
+                    <TitledPane text="Equipos suministrados" expanded="false" styleClass="detail-pane">
+                        <content>
+                            <HBox alignment="CENTER_LEFT" spacing="12" styleClass="detail-pane-actions">
+                                <Label text="Consulta los equipos asociados." styleClass="detail-pane-description"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button fx:id="btnVerEquipos" text="Ver" contentDisplay="LEFT"
+                                        onAction="#verEquiposProveedor" styleClass="detail-view-button">
+                                    <tooltip>
+                                        <Tooltip text="Ver equipos suministrados"/>
+                                    </tooltip>
+                                    <graphic>
+                                        <FontIcon iconLiteral="fas-eye"/>
+                                    </graphic>
+                                </Button>
+                            </HBox>
+                        </content>
+                    </TitledPane>
+                    <TitledPane text="Insumos suministrados" expanded="false" styleClass="detail-pane">
+                        <content>
+                            <HBox alignment="CENTER_LEFT" spacing="12" styleClass="detail-pane-actions">
+                                <Label text="Revisa los insumos relacionados." styleClass="detail-pane-description"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button fx:id="btnVerInsumos" text="Ver" contentDisplay="LEFT"
+                                        onAction="#verInsumosProveedor" styleClass="detail-view-button">
+                                    <tooltip>
+                                        <Tooltip text="Ver insumos suministrados"/>
+                                    </tooltip>
+                                    <graphic>
+                                        <FontIcon iconLiteral="fas-eye"/>
+                                    </graphic>
+                                </Button>
+                            </HBox>
+                        </content>
+                    </TitledPane>
+                </VBox>
+            </items>
+        </SplitPane>
+    </center>
+</BorderPane>

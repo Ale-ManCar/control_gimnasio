@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="equipos_estado" language="java" pageWidth="595" pageHeight="842" columnWidth="515"
+              leftMargin="40" rightMargin="40" topMargin="30" bottomMargin="30">
+    <parameter name="diasAviso" class="java.lang.Integer"/>
+    <parameter name="totalProximos" class="java.lang.Integer"/>
+    <parameter name="totalVencidos" class="java.lang.Integer"/>
+    <parameter name="totalCriticos" class="java.lang.Integer"/>
+    <parameter name="totalMalEstado" class="java.lang.Integer"/>
+    <field name="nombre" class="java.lang.String"/>
+    <field name="tipo" class="java.lang.String"/>
+    <field name="estado" class="java.lang.String"/>
+    <field name="cantidad" class="java.lang.Integer"/>
+    <field name="ubicacion" class="java.lang.String"/>
+    <field name="fechaUltimoMantenimiento" class="java.time.LocalDate"/>
+    <field name="proximoMantenimiento" class="java.time.LocalDate"/>
+    <field name="frecuenciaMantenimiento" class="java.lang.Integer"/>
+    <title>
+        <band height="70">
+            <staticText>
+                <reportElement x="0" y="0" width="515" height="30"/>
+                <textElement textAlignment="Center">
+                    <font size="18" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Reporte de estado de equipos]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="0" y="35" width="515" height="20"/>
+                <textElement textAlignment="Center">
+                    <font size="12"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Rango de aviso: " + $P{diasAviso} + " días"]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+    <pageHeader>
+        <band height="40">
+            <textField>
+                <reportElement x="0" y="0" width="515" height="20"/>
+                <textElement textAlignment="Center">
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Equipos con mantenimiento vencido: " + $P{totalVencidos} +
+                        "  |  Próximo (<= " + $P{diasAviso} + " días): " + $P{totalProximos} +
+                        "  |  Críticos: " + $P{totalCriticos} +
+                        "  |  Mal estado: " + $P{totalMalEstado}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageHeader>
+    <columnHeader>
+        <band height="20">
+            <staticText>
+                <reportElement x="0" y="0" width="140" height="20"/>
+                <textElement textAlignment="Center"/>
+                <text><![CDATA[Equipo]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="140" y="0" width="80" height="20"/>
+                <textElement textAlignment="Center"/>
+                <text><![CDATA[Tipo]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="220" y="0" width="75" height="20"/>
+                <textElement textAlignment="Center"/>
+                <text><![CDATA[Estado]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="295" y="0" width="55" height="20"/>
+                <textElement textAlignment="Center"/>
+                <text><![CDATA[Cant.]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="350" y="0" width="80" height="20"/>
+                <textElement textAlignment="Center"/>
+                <text><![CDATA[Últ. Mtto]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="430" y="0" width="85" height="20"/>
+                <textElement textAlignment="Center"/>
+                <text><![CDATA[Próx. Mtto]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+    <detail>
+        <band height="18">
+            <textField>
+                <reportElement x="0" y="0" width="140" height="18"/>
+                <textElement textAlignment="Left"/>
+                <textFieldExpression><![CDATA[$F{nombre}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="140" y="0" width="80" height="18"/>
+                <textElement textAlignment="Center"/>
+                <textFieldExpression><![CDATA[$F{tipo}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="220" y="0" width="75" height="18"/>
+                <textElement textAlignment="Center"/>
+                <textFieldExpression><![CDATA[$F{estado}]]></textFieldExpression>
+            </textField>
+            <textField pattern="###">
+                <reportElement x="295" y="0" width="55" height="18"/>
+                <textElement textAlignment="Center"/>
+                <textFieldExpression><![CDATA[$F{cantidad}]]></textFieldExpression>
+            </textField>
+            <textField pattern="dd/MM/yyyy">
+                <reportElement x="350" y="0" width="80" height="18"/>
+                <textElement textAlignment="Center"/>
+                <textFieldExpression><![CDATA[$F{fechaUltimoMantenimiento}]]></textFieldExpression>
+            </textField>
+            <textField pattern="dd/MM/yyyy">
+                <reportElement x="430" y="0" width="85" height="18"/>
+                <textElement textAlignment="Center"/>
+                <textFieldExpression><![CDATA[$F{proximoMantenimiento}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+    <summary>
+        <band height="40">
+            <textField>
+                <reportElement x="0" y="10" width="515" height="20"/>
+                <textElement textAlignment="Center">
+                    <font size="11"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Total de registros listados: " + $V{REPORT_COUNT}]]></textFieldExpression>
+            </textField>
+        </band>
+    </summary>
+</jasperReport>

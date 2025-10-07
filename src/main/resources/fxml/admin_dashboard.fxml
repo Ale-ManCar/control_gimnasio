@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.AdminDashboardController"
+            prefWidth="900" prefHeight="600"
+            style="-fx-background-color: linear-gradient(to bottom, #1e3c72, #2a5298);"
+            stylesheets="@../css/dashboard.css">
+    <top>
+        <Label fx:id="lblBienvenida" text="ADMIN DASHBOARD"
+               style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white; -fx-padding:20;"/>
+    </top>
+    <center>
+        <VBox spacing="25" alignment="TOP_CENTER" style="-fx-padding: 20;">
+            <HBox spacing="20" alignment="CENTER">
+                <AnchorPane fx:id="cardClientesActivos" prefWidth="200" prefHeight="120"/>
+                <AnchorPane fx:id="cardIngresos" prefWidth="200" prefHeight="120"/>
+                <AnchorPane fx:id="cardCoaches" prefWidth="200" prefHeight="120"/>
+                <AnchorPane fx:id="cardCerrarSesion" prefWidth="200" prefHeight="120"/>
+            </HBox>
+
+            <FlowPane hgap="20" vgap="20" prefWrapLength="620" alignment="CENTER">
+                <AnchorPane prefWidth="200" prefHeight="140" styleClass="action-card" onMouseClicked="#abrirUsuarios">
+                    <children>
+                        <VBox alignment="CENTER" spacing="8"
+                              AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
+                              AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                            <FontIcon iconLiteral="fas-users" iconSize="36" iconColor="#60a5fa"/>
+                            <Label text="Usuarios" styleClass="action-card-title"/>
+                            <Label text="Gestiona cuentas y roles" styleClass="action-card-subtitle" wrapText="true"/>
+                        </VBox>
+                    </children>
+                </AnchorPane>
+
+                <AnchorPane prefWidth="200" prefHeight="140" styleClass="action-card" onMouseClicked="#abrirProveedores">
+                    <children>
+                        <VBox alignment="CENTER" spacing="8"
+                              AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
+                              AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                            <FontIcon iconLiteral="fas-handshake" iconSize="36" iconColor="#f97316"/>
+                            <Label text="Proveedores" styleClass="action-card-title"/>
+                            <Label text="Controla tus aliados" styleClass="action-card-subtitle" wrapText="true"/>
+                        </VBox>
+                    </children>
+                </AnchorPane>
+
+                <AnchorPane prefWidth="200" prefHeight="140" styleClass="action-card" onMouseClicked="#abrirInsumos">
+                    <children>
+                        <VBox alignment="CENTER" spacing="8"
+                              AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
+                              AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                            <FontIcon iconLiteral="fas-dumbbell" iconSize="36" iconColor="#34d399"/>
+                            <Label text="Insumos" styleClass="action-card-title"/>
+                            <Label text="Gestiona el inventario" styleClass="action-card-subtitle" wrapText="true"/>
+                        </VBox>
+                    </children>
+                </AnchorPane>
+
+                <AnchorPane prefWidth="200" prefHeight="140" styleClass="action-card" onMouseClicked="#abrirEquipos">
+                    <children>
+                        <VBox alignment="CENTER" spacing="8"
+                              AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
+                              AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                            <FontIcon iconLiteral="fas-tools" iconSize="36" iconColor="#a855f7"/>
+                            <Label text="Equipos" styleClass="action-card-title"/>
+                            <Label text="Supervisa el mantenimiento" styleClass="action-card-subtitle" wrapText="true"/>
+                        </VBox>
+                    </children>
+                </AnchorPane>
+
+                <AnchorPane prefWidth="200" prefHeight="140" styleClass="action-card" onMouseClicked="#abrirAuditoria">
+                    <children>
+                        <VBox alignment="CENTER" spacing="8"
+                              AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
+                              AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                            <FontIcon iconLiteral="fas-clipboard-list" iconSize="36" iconColor="#facc15"/>
+                            <Label text="Auditoría" styleClass="action-card-title"/>
+                            <Label text="Revisa la actividad" styleClass="action-card-subtitle" wrapText="true"/>
+                        </VBox>
+                    </children>
+                </AnchorPane>
+
+                <AnchorPane prefWidth="200" prefHeight="140" styleClass="action-card" onMouseClicked="#abrirRespaldos">
+                    <children>
+                        <VBox alignment="CENTER" spacing="8"
+                              AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
+                              AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                            <FontIcon iconLiteral="fas-database" iconSize="36" iconColor="#f87171"/>
+                            <Label text="Respaldos" styleClass="action-card-title"/>
+                            <Label text="Restaura información" styleClass="action-card-subtitle" wrapText="true"/>
+                        </VBox>
+                    </children>
+                </AnchorPane>
+            </FlowPane>
+        </VBox>
+    </center>
+    <bottom>
+        <Label fx:id="lblMensaje"
+               style="-fx-font-size: 14px; -fx-padding: 10; -fx-text-fill: white; -fx-alignment: CENTER; -fx-background-color: rgba(0,0,0,0.3); -fx-background-radius: 15 15 0 0;"/>
+    </bottom>
+</BorderPane>

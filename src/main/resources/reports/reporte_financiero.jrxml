@@ -13,6 +13,7 @@
 		rightMargin="20"
 		topMargin="20"
 		bottomMargin="20"
+		whenNoDataType="AllSectionsNoDetail"
 		uuid="e73b923e-d8e0-437a-9cc5-c43cc7a35117">
 
 	<!-- Parámetros para los totales -->
@@ -22,6 +23,11 @@
 	<parameter name="resultadoNeto" class="java.lang.Double"/>
 	<parameter name="mesReporte" class="java.lang.Integer"/>
 	<parameter name="anioReporte" class="java.lang.Integer"/>
+	<parameter name="tituloReporte" class="java.lang.String"/>
+	<parameter name="rangoReporte" class="java.lang.String"/>
+	<parameter name="mostrarDetalle" class="java.lang.Boolean">
+		<defaultValueExpression><![CDATA[Boolean.TRUE]]></defaultValueExpression>
+	</parameter>
 
 	<!-- Campos para el detalle de egresos -->
 	<field name="descripcion" class="java.lang.String"/>
@@ -34,23 +40,18 @@
 			<rectangle>
 				<reportElement x="0" y="0" width="555" height="80" backcolor="#3F51B5"/>
 			</rectangle>
-			<staticText>
+			<textField isBlankWhenNull="true">
 				<reportElement x="0" y="20" width="555" height="30" forecolor="#FFFFFF"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="22" isBold="true"/>
 				</textElement>
-				<text><![CDATA[REPORTE FINANCIERO MENSUAL]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA[$P{tituloReporte}]]></textFieldExpression>
+			</textField>
 
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement x="0" y="50" width="555" height="20" forecolor="#FFFFFF"/>
 				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA[
-                    java.time.Month.of($P{mesReporte}).getDisplayName(
-                        java.time.format.TextStyle.FULL,
-                        new java.util.Locale("es")
-                    ).toUpperCase() + " " + $P{anioReporte}
-                ]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$P{rangoReporte}]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
@@ -68,6 +69,7 @@
 
 	<columnHeader>
 		<band height="30">
+			<printWhenExpression><![CDATA[$P{mostrarDetalle}]]></printWhenExpression>
 			<staticText>
 				<reportElement x="0" y="0" width="200" height="30" backcolor="#3F51B5" mode="Opaque" forecolor="#FFFFFF"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
@@ -101,6 +103,7 @@
 
 	<detail>
 		<band height="25" splitType="Stretch">
+			<printWhenExpression><![CDATA[$P{mostrarDetalle}]]></printWhenExpression>
 			<textField textAdjust="StretchHeight">
 				<reportElement x="0" y="0" width="200" height="25" positionType="Float"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle"/>

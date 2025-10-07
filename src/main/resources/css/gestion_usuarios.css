@@ -1,0 +1,162 @@
+.gestion-usuarios-root {
+    -fx-background-color: linear-gradient(to bottom, #283048, #859398);
+    -fx-padding: 24;
+}
+
+.gestion-usuarios-header {
+    -fx-spacing: 6;
+}
+
+.gestion-usuarios-header-title {
+    -fx-text-fill: #f8fafc;
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+    -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.45), 18, 0.2, 0, 3);
+}
+
+.gestion-usuarios-header-subtitle {
+    -fx-text-fill: rgba(226, 232, 240, 0.75);
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-letter-spacing: 0.3px;
+}
+
+.user-table-container {
+    -fx-spacing: 12;
+}
+
+.user-table {
+    -fx-background-color: rgba(15, 23, 42, 0.65);
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-border-color: rgba(148, 163, 184, 0.32);
+    -fx-border-width: 1;
+    -fx-padding: 4;
+    -fx-effect: dropshadow(three-pass-box, rgba(15, 23, 42, 0.45), 20, 0.18, 0, 6);
+}
+
+.user-table .column-header-background {
+    -fx-background-color: linear-gradient(to right, rgba(55, 111, 189, 0.85), rgba(68, 180, 205, 0.75));
+    -fx-background-radius: 12 12 0 0;
+    -fx-border-radius: 12 12 0 0;
+    -fx-padding: 0 0 2 0;
+}
+
+.user-table .column-header, .user-table .filler {
+    -fx-background-color: transparent;
+}
+
+.user-table .column-header .label {
+    -fx-text-fill: #f8fafc;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-padding: 12 6;
+    -fx-letter-spacing: 0.4px;
+}
+
+.user-table .table-row-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(148, 163, 184, 0.12);
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 6 10;
+}
+
+.user-table .table-row-cell:odd {
+    -fx-background-color: rgba(15, 23, 42, 0.35);
+}
+
+.user-table .table-row-cell:even {
+    -fx-background-color: rgba(15, 23, 42, 0.25);
+}
+
+.user-table .table-row-cell:filled:selected {
+    -fx-background-color: linear-gradient(to right, rgba(59, 130, 246, 0.45), rgba(37, 99, 235, 0.55));
+    -fx-text-fill: white;
+}
+
+.user-table .table-cell {
+    -fx-border-color: transparent;
+    -fx-text-fill: rgba(226, 232, 240, 0.92);
+    -fx-font-size: 13px;
+    -fx-alignment: CENTER;
+}
+
+.user-table .placeholder {
+    -fx-background-color: transparent;
+}
+
+.user-table .placeholder .label {
+    -fx-text-fill: rgba(226, 232, 240, 0.55);
+    -fx-font-size: 13px;
+}
+
+.user-table-summary {
+    -fx-text-fill: rgba(226, 232, 240, 0.75);
+    -fx-font-size: 12.5px;
+    -fx-font-weight: 500;
+}
+
+.action-bar {
+    -fx-spacing: 10;
+}
+
+.action-button {
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-font-weight: 700;
+    -fx-letter-spacing: 0.4px;
+    -fx-cursor: hand;
+    -fx-background-insets: 0;
+    -fx-padding: 12 28;
+    -fx-font-size: 13px;
+    -fx-effect: dropshadow(three-pass-box, rgba(15, 23, 42, 0.45), 18, 0.18, 0, 6);
+}
+
+.action-button--success {
+    -fx-background-color: linear-gradient(to right, #35e3b9, #05b588);
+    -fx-border-color: rgba(15, 118, 110, 0.35);
+    -fx-border-width: 1;
+    -fx-text-fill: #f8fafc;
+}
+
+.action-button--success:hover {
+    -fx-background-color: linear-gradient(to right, #2ed0a6, #049e75);
+}
+
+.action-button--warning {
+    -fx-background-color: linear-gradient(to right, #ffcf6f, #f4b94b);
+    -fx-border-color: rgba(217, 119, 6, 0.35);
+    -fx-border-width: 1;
+    -fx-text-fill: #1f2937;
+}
+
+.action-button--warning:hover {
+    -fx-background-color: linear-gradient(to right, #f4b350, #e99c2f);
+}
+
+.action-button--danger {
+    -fx-background-color: linear-gradient(to right, #f37290, #d93c61);
+    -fx-border-color: rgba(190, 24, 93, 0.4);
+    -fx-border-width: 1;
+    -fx-text-fill: #f8fafc;
+}
+
+.action-button--danger:hover {
+    -fx-background-color: linear-gradient(to right, #e85d7d, #c43055);
+}
+
+.action-button--ghost {
+    -fx-background-color: rgba(7, 59, 76, 0.18);
+    -fx-border-color: rgba(148, 163, 184, 0.45);
+    -fx-border-width: 1;
+    -fx-text-fill: #f8fafc;
+}
+
+.action-button--ghost:hover {
+    -fx-background-color: rgba(15, 60, 99, 0.32);
+}
+
+.alert-label {
+    -fx-text-fill: #ff6b6b;
+    -fx-font-weight: 600;
+}

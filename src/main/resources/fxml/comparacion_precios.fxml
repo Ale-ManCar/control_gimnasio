@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.XYChart?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import java.net.URL?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.ComparacionPreciosController"
+            prefWidth="900" prefHeight="775"
+            styleClass="comparacion-root">
+    <stylesheets>
+        <URL value="@/css/comparacion_precios.css"/>
+    </stylesheets>
+    <top>
+        <VBox spacing="18" styleClass="header-section">
+            <VBox spacing="6">
+                <Label text="Comparación de precios entre proveedores" styleClass="titulo-principal"/>
+                <Label text="Visualiza rápidamente qué proveedor ofrece la mejor oferta y filtra por categoría, producto y variante."
+                       wrapText="true"
+                       styleClass="descripcion"/>
+            </VBox>
+            <HBox spacing="16" alignment="CENTER_LEFT" styleClass="filtros-card">
+                <VBox spacing="4" styleClass="grupo-filtro">
+                    <Label text="Categoría" styleClass="filtro-label"/>
+                    <ComboBox fx:id="cmbCategoria" prefWidth="180" promptText="Selecciona" styleClass="filtro-combo"/>
+                </VBox>
+                <VBox spacing="4" styleClass="grupo-filtro" VBox.vgrow="ALWAYS">
+                    <Label text="Producto" styleClass="filtro-label"/>
+                    <ComboBox fx:id="cmbProducto" prefWidth="240" promptText="Buscar producto" styleClass="filtro-combo"/>
+                </VBox>
+                <VBox spacing="4" styleClass="grupo-filtro">
+                    <Label fx:id="lblVariante" text="Variante" styleClass="filtro-label"/>
+                    <ComboBox fx:id="cmbVariante" prefWidth="220" promptText="Selecciona" styleClass="filtro-combo"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <VBox spacing="4" styleClass="grupo-filtro">
+                    <Label text="Ordenar" styleClass="filtro-label"/>
+                    <ComboBox fx:id="cmbOrden" prefWidth="200" promptText="Orden" styleClass="filtro-combo"/>
+                </VBox>
+            </HBox>
+            <Label fx:id="lblProductoSeleccionado"
+                   text="Selecciona un producto para iniciar la comparación"
+                   styleClass="leyenda-producto"/>
+        </VBox>
+    </top>
+    <center>
+        <VBox spacing="18">
+            <TableView fx:id="tablaComparacion" prefHeight="280" styleClass="tabla-comparacion">
+                <columns>
+                    <TableColumn fx:id="colProveedor" text="Proveedor" prefWidth="200"/>
+                    <TableColumn fx:id="colContacto" text="Contacto" prefWidth="160"/>
+                    <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="140"/>
+                    <TableColumn fx:id="colPrecio" text="Precio" prefWidth="140"/>
+                </columns>
+                <placeholder>
+                    <VBox alignment="CENTER" spacing="6">
+                        <Label text="Sin información disponible" styleClass="placeholder-title"/>
+                        <Label text="Selecciona un producto y una variante para visualizar la comparación de precios."
+                               wrapText="true"
+                               maxWidth="320"
+                               styleClass="placeholder-subtitle"/>
+                    </VBox>
+                </placeholder>
+            </TableView>
+            <VBox spacing="10" styleClass="chart-card" prefHeight="240">
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Label text="Comparativa visual" styleClass="chart-title"/>
+                    <Label text="Identifica rápidamente las diferencias de precio entre proveedores."
+                           styleClass="chart-subtitle"/>
+                </HBox>
+                <BarChart fx:id="graficaPrecios" animated="false" legendVisible="false" verticalGridLinesVisible="false">
+                    <xAxis>
+                        <CategoryAxis fx:id="ejeProveedores" label="Proveedores"/>
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis fx:id="ejePrecios" label="Precio"/>
+                    </yAxis>
+                </BarChart>
+            </VBox>
+        </VBox>
+    </center>
+    <bottom>
+        <HBox spacing="14" alignment="CENTER_RIGHT" styleClass="acciones">
+            <Button fx:id="btnVerDetalles" text="Ver detalles" onAction="#verDetallesProveedor" styleClass="boton-secundario"/>
+            <Button fx:id="btnAgregarPedido" text="Agregar a pedido" onAction="#agregarAPedido" styleClass="boton-principal"/>
+        </HBox>
+    </bottom>
+</BorderPane>

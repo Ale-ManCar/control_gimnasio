@@ -77,7 +77,7 @@ public class EditarClienteController {
         this.cliente = cliente;
         txtNombres.setText(cliente.getNombres());
         txtApellidos.setText(cliente.getApellidos());
-        txtTelefono.setText(cliente.getTelefono());
+        txtTelefono.setText(cliente.getTelefonoVisible());
         configurarValidaciones();
     }
 
@@ -146,23 +146,28 @@ public class EditarClienteController {
 
         if (!valido) return;
 
+        String telefonoVisible = txtTelefono.getText().trim();
+        String telefonoInterno = generarTelefonoInterno(telefonoVisible, cliente.getTelefono());
+
         actualizarClienteEnBD(
                 txtNombres.getText().trim(),
                 txtApellidos.getText().trim(),
-                txtTelefono.getText().trim()
+                telefonoInterno,
+                telefonoVisible
         );
     }
 
-    private void actualizarClienteEnBD(String nombres, String apellidos, String telefono) {
-        String sql = "UPDATE clientes SET nombres = ?, apellidos = ?, telefono = ? WHERE telefono = ?";
+    private void actualizarClienteEnBD(String nombres, String apellidos, String telefonoInterno, String telefonoVisible) {
+        String sql = "UPDATE clientes SET nombres = ?, apellidos = ?, telefono = ?, telefono_visible = ? WHERE telefono = ?";
 
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, nombres);
             stmt.setString(2, apellidos);
-            stmt.setString(3, telefono);
-            stmt.setString(4, cliente.getTelefono());
+            stmt.setString(3, telefonoInterno);
+            stmt.setString(4, telefonoVisible);
+            stmt.setString(5, cliente.getTelefono());
 
             int filasAfectadas = stmt.executeUpdate();
             System.out.println("Filas afectadas: " + filasAfectadas); // Para depuración
@@ -207,4 +212,16 @@ public class EditarClienteController {
         Stage stage = (Stage) btnGuardar.getScene().getWindow();
         stage.close();
     }
+
+    private String generarTelefonoInterno(String telefonoVisible, String telefonoActual) {
+        String valor = telefonoVisible != null ? telefonoVisible.trim() : "";
+        if (valor.equals("0000000000")) {
+            if (telefonoActual != null && telefonoActual.startsWith("AUTO-")) {
+                return telefonoActual;
+            }
+            return "AUTO-" + System.currentTimeMillis();
+        }
+        return valor;
+    }
 }
+
