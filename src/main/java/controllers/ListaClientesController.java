@@ -91,7 +91,7 @@ public class ListaClientesController implements Initializable {
         lblResumen.setStyle(
                 "-fx-text-fill: rgba(255,255,255,0.78);" +
                         "-fx-font-size: 14px;" +
-                        "-fx-font-weight: semi-bold;"
+                        "-fx-font-weight: 600;"
         );
 
         tablaClientes.setStyle(
@@ -201,7 +201,7 @@ public class ListaClientesController implements Initializable {
             {
                 iconoTelefono.setIconColor(Color.web("#70a1ff"));
                 iconoTelefono.setIconSize(16);
-                telefono.setStyle("-fx-text-fill: #f8f9ff; -fx-font-weight: semi-bold;");
+                telefono.setStyle("-fx-text-fill: #f8f9ff; -fx-font-weight: 600;");
                 content.setAlignment(Pos.CENTER);
             }
 

@@ -58,6 +58,7 @@ public class ListaCoachesController {
         configurarBusqueda();
         ajustarColumnas();
         ocultarScrollBars();
+        actualizarPermisosRecepcionista();
     }
 
     private void configurarColumnas() {
@@ -107,6 +108,7 @@ public class ListaCoachesController {
         if (tablaCoaches != null) {
             tablaCoaches.refresh();
         }
+        actualizarPermisosRecepcionista();
     }
 
     private void configurarColAcciones() {
@@ -158,6 +160,15 @@ public class ListaCoachesController {
                 setGraphic(empty ? null : contenedor);
             }
         });
+    }
+
+    private void actualizarPermisosRecepcionista() {
+        if (btnAgregar != null) {
+            boolean esRecepcionista = modoRecepcionista;
+            btnAgregar.setVisible(!esRecepcionista);
+            btnAgregar.setManaged(!esRecepcionista);
+            btnAgregar.setDisable(esRecepcionista);
+        }
     }
 
     private void ajustarColumnas() {
@@ -450,6 +461,9 @@ public class ListaCoachesController {
 
     @FXML
     private void abrirRegistroCoach() {
+        if (modoRecepcionista) {
+            return;
+        }
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/registro_coach.fxml"));
             Parent root = loader.load();
