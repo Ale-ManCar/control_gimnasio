@@ -38,14 +38,12 @@ public class RenovacionController {
     @FXML private Label lblInfoCliente;
 
     private final ObservableList<Cliente> clientesProximos = FXCollections.observableArrayList();
-    private final ObservableList<Cliente> todosClientes = FXCollections.observableArrayList();
     private List<Cliente> clientesPaginados = new ArrayList<>();
     private int paginaActual = 1;
     private int clientesPorPagina = 12;
     private int totalPaginas = 1;
     private final double ALTURA_FILA = 30.0;
     private final double ALTURA_CABECERA = 30.0;
-    private boolean modoTodosClientes = false;
 
     @FXML
     public void initialize() {
@@ -169,19 +167,10 @@ public class RenovacionController {
                 "FROM clientes " +
                 "WHERE activo = 1 " +
                 "AND LOWER(tipoMembresia) <> 'diario' " +
-                "AND date(fecha_vencimiento) >= date('now', '-15 days') " +  // Incluye período de gracia
-                "AND date(fecha_vencimiento) <= date('now', '+7 days') " +   // Hasta 7 días en futuro
+                "AND date(fecha_vencimiento) BETWEEN date('now') AND date('now', '+7 days') " +
                 "ORDER BY fecha_vencimiento ASC";
 
         cargarClientesDesdeSQL(sql, clientesProximos);
-    }
-
-    private void cargarTodosClientesActivos() {
-        String sql = "SELECT nombres, apellidos, telefono, telefono_visible, tipoMembresia, fecha_vencimiento " +
-                "FROM clientes WHERE activo = 1 " +
-                "AND COALESCE(LOWER(tipoMembresia), '') <> 'diario'";
-
-        cargarClientesDesdeSQL(sql, todosClientes);
     }
 
     private void cargarClientesDesdeSQL(String sql, ObservableList<Cliente> destino) {
@@ -194,6 +183,10 @@ public class RenovacionController {
                 LocalDate fechaVencimiento = LocalDate.parse(rs.getString("fecha_vencimiento"));
                 long diasRestantes = ChronoUnit.DAYS.between(LocalDate.now(), fechaVencimiento);
 
+                if (diasRestantes < 0 || diasRestantes > 7) {
+                    continue;
+                }
+
                 Cliente cliente = new Cliente(
                         rs.getString("nombres"),
                         rs.getString("apellidos"),
@@ -202,7 +195,7 @@ public class RenovacionController {
                         rs.getString("tipoMembresia"),
                         fechaVencimiento
                 );
-                cliente.setDiasRestantes((int) diasRestantes);
+                cliente.setDiasRestantes((int) Math.max(0, diasRestantes));
                 destino.add(cliente);
             }
 
@@ -229,31 +222,18 @@ public class RenovacionController {
 
         if (filtro.isEmpty()) {
             paginaActual = 1;
-
-            if (modoTodosClientes) {
-                if (todosClientes.isEmpty()) {
-                    cargarTodosClientesActivos();
-                }
-                clientesProximos.setAll(todosClientes);
-            } else {
-                cargarClientesProximos();
-            }
-
+            cargarClientesProximos();
             actualizarTablaClientes();
             actualizarControlesPaginacion();
             ajustarAlturaTablas();
             return;
         }
 
-        ObservableList<Cliente> fuente;
-        if (modoTodosClientes) {
-            if (todosClientes.isEmpty()) {
-                cargarTodosClientesActivos();
-            }
-            fuente = todosClientes;
-        } else {
-            fuente = FXCollections.observableArrayList(clientesProximos);
+        if (clientesProximos.isEmpty()) {
+            cargarClientesProximos();
         }
+
+        ObservableList<Cliente> fuente = FXCollections.observableArrayList(clientesProximos);
 
         List<Cliente> filtrados = fuente.stream()
                 .filter(cliente ->
@@ -501,8 +481,10 @@ public class RenovacionController {
     }
 
     public void setModoTodosClientes(boolean modo) {
-        modoTodosClientes = modo;
         paginaActual = 1;
-        aplicarFiltro(txtBuscar.getText());
+        cargarClientesProximos();
+        actualizarTablaClientes();
+        actualizarControlesPaginacion();
+        ajustarAlturaTablas();
     }
 }
