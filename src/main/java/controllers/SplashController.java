@@ -14,6 +14,8 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import util.AlertScheduler;
+import util.AppLogger;
+import util.AppPaths;
 import util.AuditoriaScheduler;
 import util.BackupUtil;
 import util.DatabaseUtil;
@@ -44,6 +46,7 @@ public class SplashController {
         Task<Void> task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
+                AppLogger.logInfo("Iniciando procesos de arranque desde el splash");
                 // Paso 1: Actualizar progreso inicial (0-30%)
                 for (int i = 0; i < 30; i++) {
                     updateProgress(i, 100);
@@ -72,6 +75,7 @@ public class SplashController {
                     Thread.sleep(20);
                 }
 
+                AppLogger.logInfo("Splash completado correctamente");
                 return null;
             }
         };
@@ -82,7 +86,12 @@ public class SplashController {
         // Manejar eventos de la tarea
         task.setOnSucceeded(e -> abrirEntrada());
         task.setOnFailed(e -> {
-            System.err.println("Error en splash screen: " + task.getException().getMessage());
+            Throwable error = task.getException();
+            String message = error != null ? error.getMessage() : "desconocido";
+            System.err.println("Error en splash screen: " + message);
+            AppLogger.logError("Fallo durante el splash", error);
+            mostrarError("La aplicación encontró un problema al iniciar. Revisa el archivo de registro en "
+                    + AppPaths.getLogFile());
             abrirEntrada(); // Intentar abrir flujo de autenticación de todas formas
         });
 
@@ -93,10 +102,6 @@ public class SplashController {
     private void abrirEntrada() {
         Platform.runLater(() -> {
             try {
-                // Cerrar splash
-                Stage splashStage = (Stage) rootPane.getScene().getWindow();
-                splashStage.close();
-
                 // Abrir login
                 int totalUsuarios = DatabaseUtil.getTotalUsuarios();
                 String vista = totalUsuarios == 0 ? "/fxml/crear_admin.fxml" : "/fxml/selector_perfiles.fxml";
@@ -116,10 +121,24 @@ public class SplashController {
                     stage.setTitle("Seleccionar perfil");
                 }
                 stage.setResizable(false);
+                Stage splashStage = (Stage) rootPane.getScene().getWindow();
+                splashStage.close();
                 stage.show();
+                AppLogger.logInfo("Ventana de autenticación mostrada");
             } catch (Exception e) {
                 System.err.println("Error abriendo login: " + e.getMessage());
+                AppLogger.logError("No se pudo abrir la ventana de inicio de sesión", e);
+                mostrarError("No se pudo abrir la ventana de inicio de sesión. Revisa el log para más detalles.");
             }
+        });
+    }
+
+    private void mostrarError(String mensaje) {
+        Platform.runLater(() -> {
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+            alert.setHeaderText(null);
+            alert.setContentText(mensaje);
+            alert.showAndWait();
         });
     }
 }
