@@ -14,6 +14,8 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import util.AlertScheduler;
+import util.AppLogger;
+import util.AppPaths;
 import util.AuditoriaScheduler;
 import util.BackupUtil;
 import util.DatabaseUtil;
@@ -44,35 +46,46 @@ public class SplashController {
         Task<Void> task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                // Paso 1: Actualizar progreso inicial (0-30%)
-                for (int i = 0; i < 30; i++) {
-                    updateProgress(i, 100);
-                    Thread.sleep(40);
+                try {
+                    AppLogger.logInfo("Iniciando procesos de arranque desde el splash");
+                    // Paso 1: Actualizar progreso inicial (0-30%)
+                    for (int i = 0; i < 30; i++) {
+                        updateProgress(i, 100);
+                        Thread.sleep(40);
+                    }
+
+                    // Paso 2: Inicializar base de datos
+                    DatabaseUtil.initDatabase();
+                    updateProgress(50, 100);
+
+                    // Paso 3: Iniciar servicios
+                    EstadoClienteService.iniciarActualizacionDiaria();
+                    MantenimientoEquipoScheduler.iniciar();
+                    updateProgress(70, 100);
+
+                    // Paso 4: Programar tareas en segundo plano
+                    AlertScheduler.iniciar();
+                    AuditoriaScheduler.iniciar();
+                    ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+                    scheduler.scheduleAtFixedRate(new BackupUtil(), 0, 1, TimeUnit.DAYS);
+                    updateProgress(90, 100);
+
+                    // Paso 5: Finalizar carga
+                    for (int i = 90; i <= 100; i++) {
+                        updateProgress(i, 100);
+                        Thread.sleep(20);
+                    }
+
+                    AppLogger.logInfo("Splash completado correctamente");
+                    return null;
+                } catch (NoClassDefFoundError error) {
+                    if ("java/sql/SQLException".equals(error.getMessage())) {
+                        throw new IllegalStateException(
+                                "El runtime empacado no incluye el módulo java.sql. Vuelve a generar el instalador con el script " +
+                                        "actualizado para añadir java.sql al runtime.", error);
+                    }
+                    throw error;
                 }
-
-                // Paso 2: Inicializar base de datos
-                DatabaseUtil.initDatabase();
-                updateProgress(50, 100);
-
-                // Paso 3: Iniciar servicios
-                EstadoClienteService.iniciarActualizacionDiaria();
-                MantenimientoEquipoScheduler.iniciar();
-                updateProgress(70, 100);
-
-                // Paso 4: Programar tareas en segundo plano
-                AlertScheduler.iniciar();
-                AuditoriaScheduler.iniciar();
-                ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-                scheduler.scheduleAtFixedRate(new BackupUtil(), 0, 1, TimeUnit.DAYS);
-                updateProgress(90, 100);
-
-                // Paso 5: Finalizar carga
-                for (int i = 90; i <= 100; i++) {
-                    updateProgress(i, 100);
-                    Thread.sleep(20);
-                }
-
-                return null;
             }
         };
 
@@ -82,8 +95,19 @@ public class SplashController {
         // Manejar eventos de la tarea
         task.setOnSucceeded(e -> abrirEntrada());
         task.setOnFailed(e -> {
-            System.err.println("Error en splash screen: " + task.getException().getMessage());
-            abrirEntrada(); // Intentar abrir flujo de autenticación de todas formas
+            Throwable error = task.getException();
+            String message = error != null ? error.getMessage() : "desconocido";
+            System.err.println("Error en splash screen: " + message);
+            AppLogger.logError("Fallo durante el splash", error);
+
+            if (error instanceof IllegalStateException && error.getCause() instanceof NoClassDefFoundError
+                    && "java/sql/SQLException".equals(error.getCause().getMessage())) {
+                mostrarError("El runtime incluido en el instalador no tiene el módulo java.sql. "
+                        + "Vuelve a generar el instalador con el script oficial para incluir java.sql.", true);
+            } else {
+                mostrarError("La aplicación encontró un problema al iniciar. Revisa el archivo de registro en "
+                        + AppPaths.getLogFile(), true);
+            }
         });
 
         // Iniciar tarea en segundo plano
@@ -93,10 +117,6 @@ public class SplashController {
     private void abrirEntrada() {
         Platform.runLater(() -> {
             try {
-                // Cerrar splash
-                Stage splashStage = (Stage) rootPane.getScene().getWindow();
-                splashStage.close();
-
                 // Abrir login
                 int totalUsuarios = DatabaseUtil.getTotalUsuarios();
                 String vista = totalUsuarios == 0 ? "/fxml/crear_admin.fxml" : "/fxml/selector_perfiles.fxml";
@@ -116,9 +136,32 @@ public class SplashController {
                     stage.setTitle("Seleccionar perfil");
                 }
                 stage.setResizable(false);
+                Stage splashStage = (Stage) rootPane.getScene().getWindow();
+                splashStage.close();
                 stage.show();
+                AppLogger.logInfo("Ventana de autenticación mostrada");
             } catch (Exception e) {
                 System.err.println("Error abriendo login: " + e.getMessage());
+                AppLogger.logError("No se pudo abrir la ventana de inicio de sesión", e);
+                mostrarError("No se pudo abrir la ventana de inicio de sesión. Revisa el log para más detalles.");
+            }
+        });
+    }
+
+    private void mostrarError(String mensaje) {
+        mostrarError(mensaje, false);
+    }
+
+    private void mostrarError(String mensaje, boolean cerrarAplicacion) {
+        Platform.runLater(() -> {
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+            alert.setHeaderText(null);
+            alert.setContentText(mensaje);
+            alert.showAndWait();
+            if (cerrarAplicacion) {
+                Stage splashStage = (Stage) rootPane.getScene().getWindow();
+                splashStage.close();
+                Platform.exit();
             }
         });
     }
