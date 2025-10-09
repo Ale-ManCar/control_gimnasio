@@ -7,26 +7,46 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.io.File;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 public class WhatsAppService {
-        private static final String RUTA_CHROME_DRIVER = "C:/driver/chromedriver.exe";
-        private static final String USER_DATA_DIR = "C:/whatsapp_session";
+        private static final String DRIVER_PROPERTY = "control_gimnasio.chromedriver";
+        private static final String DRIVER_ENV = "CONTROL_GIMNASIO_CHROMEDRIVER";
+        private static final String SESSION_PROPERTY = "control_gimnasio.whatsappSession";
+        private static final String SESSION_ENV = "CONTROL_GIMNASIO_WHATSAPP_SESSION";
+        private static final String DRIVER_FOLDER = "driver";
+        private static final String SESSION_FOLDER = "whatsapp_session";
         private static final int LIMITE_DIARIO = 80;
+        private static final int DIRECTORIO_BUSQUEDA_MAX = 4;
         private static final LocalTime HORARIO_INICIO = LocalTime.of(9, 0);
-        private static final LocalTime HORARIO_FIN = LocalTime.of(21, 0);
+        private static final LocalTime HORARIO_FIN = LocalTime.of(23, 0);
         private static final Object DB_LOCK = new Object();
+        private static final String CHROMEDRIVER_NOMBRE = System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win")
+                ? "chromedriver.exe"
+                : "chromedriver";
+        private static final Path CHROMEDRIVER_PATH = resolveChromeDriverPath();
+        private static final Path SESSION_DIRECTORY = resolveSessionDirectory();
+
         private static WebDriver driver = null;
+        private static boolean driverAdvertido;
 
         static {
-                // Configuración inicial al cargar la clase
-                System.setProperty("webdriver.chrome.driver", RUTA_CHROME_DRIVER);
+                if (CHROMEDRIVER_PATH != null) {
+                        System.setProperty("webdriver.chrome.driver", CHROMEDRIVER_PATH.toString());
+                } else {
+                        driverAdvertido = true;
+                        System.err.println("⚠️ No se encontró chromedriver. Coloca el ejecutable en una carpeta '" + DRIVER_FOLDER +
+                                "' junto a la aplicación o define la variable CONTROL_GIMNASIO_CHROMEDRIVER.");
+                }
                 System.setProperty("webdriver.http.factory", "jdk-http-client");
                 crearDirectorioSesion();
         }
@@ -52,6 +72,9 @@ public class WhatsAppService {
         }
 
         private static void enviarAlertaPersonalizada(Cliente cliente, String tipoAlerta) {
+                if (!chromedriverDisponible()) {
+                        return;
+                }
                 if (!validarCondicionesEnvio()) {
                         return;
                 }
@@ -103,13 +126,13 @@ public class WhatsAppService {
         }
 
         private static void crearDirectorioSesion() {
-                File directorio = new File(USER_DATA_DIR);
-                if (!directorio.exists()) {
-                        if (directorio.mkdirs()) {
-                                System.out.println("Directorio de sesión creado: " + USER_DATA_DIR);
-                        } else {
-                                System.err.println("Error al crear directorio de sesión");
-                        }
+                if (SESSION_DIRECTORY == null) {
+                        return;
+                }
+                try {
+                        Files.createDirectories(SESSION_DIRECTORY);
+                } catch (Exception e) {
+                        System.err.println("Error al preparar la sesión de WhatsApp en " + SESSION_DIRECTORY + ": " + e.getMessage());
                 }
         }
 
@@ -162,8 +185,13 @@ public class WhatsAppService {
         }
 
         private static void iniciarDriver() {
+                if (!chromedriverDisponible()) {
+                        return;
+                }
                 ChromeOptions options = new ChromeOptions();
-                options.addArguments("--user-data-dir=" + USER_DATA_DIR);
+                if (SESSION_DIRECTORY != null) {
+                        options.addArguments("--user-data-dir=" + SESSION_DIRECTORY.toString());
+                }
                 options.addArguments("--no-sandbox");
                 options.addArguments("--disable-dev-shm-usage");
                 options.addArguments("--window-size=1920,1080");
@@ -335,6 +363,130 @@ public class WhatsAppService {
                                 System.err.println("Error al cerrar el driver: " + e.getMessage());
                         }
                         driver = null;
+                }
+        }
+
+        private static boolean chromedriverDisponible() {
+                if (CHROMEDRIVER_PATH != null && Files.exists(CHROMEDRIVER_PATH)) {
+                        return true;
+                }
+                if (!driverAdvertido) {
+                        driverAdvertido = true;
+                        System.err.println("⚠️ ChromeDriver no está configurado. Asegúrate de colocar el ejecutable en '" + DRIVER_FOLDER +
+                                "' o define CONTROL_GIMNASIO_CHROMEDRIVER/" + DRIVER_PROPERTY + ".");
+                }
+                return false;
+        }
+
+        private static Path resolveChromeDriverPath() {
+                Path propertyPath = getExistingPath(System.getProperty(DRIVER_PROPERTY));
+                if (propertyPath != null) {
+                        return propertyPath;
+                }
+                Path envPath = getExistingPath(System.getenv(DRIVER_ENV));
+                if (envPath != null) {
+                        return envPath;
+                }
+                Path webdriverProperty = getExistingPath(System.getProperty("webdriver.chrome.driver"));
+                if (webdriverProperty != null) {
+                        return webdriverProperty;
+                }
+
+                Path workingDir = buscarDriverEnDirectorios(Paths.get(""));
+                if (workingDir != null) {
+                        return workingDir;
+                }
+
+                Path appDir = buscarDriverEnDirectorios(obtenerDirectorioAplicacion());
+                if (appDir != null) {
+                        return appDir;
+                }
+
+                Path homeDir = buscarDriverEnDirectorios(Paths.get(System.getProperty("user.home", "")));
+                if (homeDir != null) {
+                        return homeDir;
+                }
+
+                Path homeControl = getExistingPath(Paths.get(System.getProperty("user.home", ""), "ControlGimnasio", DRIVER_FOLDER, CHROMEDRIVER_NOMBRE).toString());
+                if (homeControl != null) {
+                        return homeControl;
+                }
+
+                if (!System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win")) {
+                        Path linuxDefault = getExistingPath("/usr/bin/" + CHROMEDRIVER_NOMBRE);
+                        if (linuxDefault != null) {
+                                return linuxDefault;
+                        }
+                }
+
+                Path fallback = getExistingPath(Paths.get("C:/driver", CHROMEDRIVER_NOMBRE).toString());
+                return fallback;
+        }
+
+        private static Path resolveSessionDirectory() {
+                Path customProperty = getPath(System.getProperty(SESSION_PROPERTY));
+                if (customProperty != null) {
+                        return customProperty;
+                }
+                Path envPath = getPath(System.getenv(SESSION_ENV));
+                if (envPath != null) {
+                        return envPath;
+                }
+
+                String osName = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+                if (osName.contains("win")) {
+                        String localAppData = System.getenv("LOCALAPPDATA");
+                        if (localAppData != null && !localAppData.isBlank()) {
+                                return Paths.get(localAppData, "ControlGimnasio", SESSION_FOLDER);
+                        }
+                        return Paths.get(System.getProperty("user.home", ""), "AppData", "Local", "ControlGimnasio", SESSION_FOLDER);
+                }
+                return Paths.get(System.getProperty("user.home", ""), ".control_gimnasio", SESSION_FOLDER);
+        }
+
+        private static Path getExistingPath(String value) {
+                Path path = getPath(value);
+                if (path != null && Files.exists(path)) {
+                        return path.toAbsolutePath().normalize();
+                }
+                return null;
+        }
+
+        private static Path getPath(String value) {
+                if (value == null || value.isBlank()) {
+                        return null;
+                }
+                try {
+                        return Paths.get(value.trim()).toAbsolutePath().normalize();
+                } catch (Exception e) {
+                        return null;
+                }
+        }
+
+        private static Path buscarDriverEnDirectorios(Path inicio) {
+                if (inicio == null) {
+                        return null;
+                }
+                Path current = inicio.toAbsolutePath().normalize();
+                for (int i = 0; i < DIRECTORIO_BUSQUEDA_MAX && current != null; i++) {
+                        Path candidate = current.resolve(DRIVER_FOLDER).resolve(CHROMEDRIVER_NOMBRE);
+                        if (Files.exists(candidate)) {
+                                return candidate.toAbsolutePath().normalize();
+                        }
+                        current = current.getParent();
+                }
+                return null;
+        }
+
+        private static Path obtenerDirectorioAplicacion() {
+                try {
+                        Path location = Paths.get(WhatsAppService.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+                        if (Files.isRegularFile(location)) {
+                                return location.getParent();
+                        }
+                        return location;
+                } catch (Exception e) {
+                        return null;
                 }
         }
 }

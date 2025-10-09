@@ -1,11 +1,11 @@
 1. DESCARGAR ChromeDriver:
    - Ve a https://chromedriver.chromium.org/
-   - Guarda en: C:/driver/chromedriver.exe
+   - Copia el ejecutable en una carpeta `driver` junto al programa instalado (por ejemplo `C:/Program Files/Control Gimnasio/driver/chromedriver.exe`).
+   - También puedes definir la variable de entorno `CONTROL_GIMNASIO_CHROMEDRIVER` con la ruta completa del archivo.
 
-2. CONFIGURAR WhatsAppService.java:
-   - Línea 18: Ruta exacta de chromedriver
-   - Línea 9: Número de WhatsApp del gimnasio
-   - Línea 11-13: Personaliza el mensaje base
+2. CONFIGURAR WhatsAppService:
+   - Desde la aplicación, inicia sesión en WhatsApp Web cuando se abra ChromeDriver.
+   - Opcional: define `CONTROL_GIMNASIO_WHATSAPP_SESSION` para cambiar la carpeta donde se guarda la sesión.
 
 3. INICIAR SESIÓN:
    - Abre WhatsApp Web en tu navegador

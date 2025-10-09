@@ -10,6 +10,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
@@ -148,6 +149,7 @@ public class AuditoriaController implements Initializable {
             archivoSeleccionado = registro != null ? registro.getArchivo() : null;
             actualizarBotones();
         });
+        tablaAuditoria.addEventFilter(MouseEvent.MOUSE_CLICKED, event -> actualizarBotones());
     }
 
     private void configurarArbol() {
@@ -167,6 +169,7 @@ public class AuditoriaController implements Initializable {
             }
             actualizarBotones();
         });
+        treeResumenes.addEventFilter(MouseEvent.MOUSE_CLICKED, event -> actualizarBotones());
     }
 
     private void configurarCombos() {
