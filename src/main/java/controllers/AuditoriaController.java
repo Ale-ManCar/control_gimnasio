@@ -45,12 +45,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 public class AuditoriaController implements Initializable {
 
     private static final DateTimeFormatter FECHA_MOSTRAR = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final List<ResumenTipo> TIPOS_HIERARCHY = List.of(
             ResumenTipo.DIARIO, ResumenTipo.SEMANAL, ResumenTipo.MENSUAL, ResumenTipo.ANUAL);
+    private static final String OPCION_TODAS = "Todos";
 
     @FXML private TreeView<ResumenTreeData> treeResumenes;
     @FXML private TableView<Auditoria> tablaAuditoria;
@@ -63,7 +65,7 @@ public class AuditoriaController implements Initializable {
     @FXML private ComboBox<User> cbUsuarios;
     @FXML private ComboBox<Integer> cbAnio;
     @FXML private ComboBox<Month> cbMes;
-    @FXML private ComboBox<ResumenTipo> cbTipo;
+    @FXML private ComboBox<String> cbTipo;
     @FXML private Button btnVer;
     @FXML private Button btnDescargar;
 
@@ -171,19 +173,6 @@ public class AuditoriaController implements Initializable {
 
     private void configurarCombos() {
         if (cbTipo != null) {
-            cbTipo.setItems(FXCollections.observableArrayList(ResumenTipo.values()));
-            cbTipo.setConverter(new StringConverter<>() {
-                @Override
-                public String toString(ResumenTipo object) {
-                    return object != null ? object.getDisplayName() : "";
-                }
-
-                @Override
-                public ResumenTipo fromString(String string) {
-                    return null;
-                }
-            });
-            cbTipo.getSelectionModel().select(ResumenTipo.TODOS);
             cbTipo.valueProperty().addListener((obs, old, value) -> {
                 if (!suspendFiltroEventos) {
                     aplicarFiltros();
@@ -266,11 +255,13 @@ public class AuditoriaController implements Initializable {
             cbUsuarios.getSelectionModel().selectFirst();
             cbUsuarios.valueProperty().addListener((obs, old, value) -> {
                 actualizarAniosDisponibles();
+                actualizarAccionesDisponibles();
                 if (!suspendFiltroEventos) {
                     aplicarFiltros();
                 }
             });
             actualizarAniosDisponibles();
+            actualizarAccionesDisponibles();
         } catch (Exception e) {
             mostrarAlerta("No se pudieron cargar los recepcionistas: " + e.getMessage());
         }
@@ -281,7 +272,7 @@ public class AuditoriaController implements Initializable {
             return;
         }
         Integer usuarioId = getUsuarioSeleccionadoId();
-        ObservableList<Integer> anios = AuditoriaUtil.listarAniosResumenes(usuarioId);
+        ObservableList<Integer> anios = AuditoriaUtil.listarAniosAuditoria(usuarioId);
         cbAnio.setItems(anios);
         cbAnio.getSelectionModel().clearSelection();
         actualizarMesesDisponibles(null);
@@ -298,9 +289,24 @@ public class AuditoriaController implements Initializable {
             return;
         }
         Integer usuarioId = getUsuarioSeleccionadoId();
-        ObservableList<Month> meses = AuditoriaUtil.listarMesesResumenes(usuarioId, anio);
+        ObservableList<Month> meses = AuditoriaUtil.listarMesesAuditoria(usuarioId, anio);
         cbMes.setItems(meses);
         cbMes.setDisable(meses.isEmpty());
+    }
+
+    private void actualizarAccionesDisponibles() {
+        if (cbTipo == null) {
+            return;
+        }
+        Integer usuarioId = getUsuarioSeleccionadoId();
+        ObservableList<String> acciones = AuditoriaUtil.listarAccionesDisponibles(usuarioId);
+        suspendFiltroEventos = true;
+        ObservableList<String> opciones = FXCollections.observableArrayList();
+        opciones.add(OPCION_TODAS);
+        opciones.addAll(acciones);
+        cbTipo.setItems(opciones);
+        cbTipo.getSelectionModel().selectFirst();
+        suspendFiltroEventos = false;
     }
 
     @FXML
@@ -311,7 +317,10 @@ public class AuditoriaController implements Initializable {
         Integer usuarioId = getUsuarioSeleccionadoId();
         Integer anio = cbAnio != null ? cbAnio.getValue() : null;
         Month mes = cbMes != null ? cbMes.getValue() : null;
-        ResumenTipo tipo = cbTipo != null ? cbTipo.getValue() : ResumenTipo.TODOS;
+        String accionSeleccionada = cbTipo != null ? cbTipo.getValue() : null;
+        if (accionSeleccionada != null && OPCION_TODAS.equalsIgnoreCase(accionSeleccionada)) {
+            accionSeleccionada = null;
+        }
 
         LocalDate inicio = null;
         LocalDate fin = null;
@@ -326,14 +335,17 @@ public class AuditoriaController implements Initializable {
             }
         }
 
-        ObservableList<Auditoria> registros = AuditoriaUtil.filtrarResumenes(usuarioId, inicio, fin, tipo);
+        ObservableList<Auditoria> registros = AuditoriaUtil.filtrarAcciones(usuarioId, inicio, fin, accionSeleccionada);
         auditorias.setAll(registros);
         tablaAuditoria.getSelectionModel().clearSelection();
         archivoSeleccionado = null;
         if (treeResumenes != null) {
             treeResumenes.getSelectionModel().clearSelection();
         }
-        reconstruirArbol(registros);
+        List<Auditoria> resumenes = registros.stream()
+                .filter(registro -> registro.getResumenTipo() != null)
+                .collect(Collectors.toList());
+        reconstruirArbol(resumenes);
         if (colFecha != null) {
             tablaAuditoria.getSortOrder().setAll(colFecha);
             tablaAuditoria.sort();
@@ -360,7 +372,7 @@ public class AuditoriaController implements Initializable {
             cbMes.getItems().clear();
         }
         if (cbTipo != null) {
-            cbTipo.getSelectionModel().select(ResumenTipo.TODOS);
+            cbTipo.getSelectionModel().select(OPCION_TODAS);
         }
         suspendFiltroEventos = false;
         aplicarFiltros();
@@ -659,7 +671,29 @@ public class AuditoriaController implements Initializable {
             return "";
         }
         ResumenTipo tipo = registro.getResumenTipo();
-        return tipo != null ? tipo.getDisplayName() : registro.getAccion();
+        if (tipo != null) {
+            return tipo.getDisplayName();
+        }
+        String accion = registro.getAccion();
+        if (accion == null || accion.isBlank()) {
+            return "";
+        }
+        if (accion.contains("_")) {
+            String lower = accion.toLowerCase(Locale.getDefault()).replace('_', ' ');
+            String[] palabras = lower.split("\\s+");
+            StringBuilder builder = new StringBuilder();
+            for (String palabra : palabras) {
+                if (palabra.isBlank()) {
+                    continue;
+                }
+                if (builder.length() > 0) {
+                    builder.append(' ');
+                }
+                builder.append(Character.toUpperCase(palabra.charAt(0))).append(palabra.substring(1));
+            }
+            return builder.toString();
+        }
+        return accion;
     }
 
     private String formatearDetalle(Auditoria registro) {

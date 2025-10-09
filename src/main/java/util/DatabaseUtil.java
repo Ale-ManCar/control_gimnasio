@@ -1,5 +1,11 @@
 package util;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -32,7 +38,8 @@ import models.IngresoData;
 import models.EquipoResumen;
 
 public class DatabaseUtil {
-    private static final String URL = "jdbc:sqlite:database/gimnasio.db";
+    private static final Path DATABASE_PATH = initializeDatabasePath();
+    private static final String URL = "jdbc:sqlite:" + DATABASE_PATH.toString().replace("\\", "/");
     private static final int BUSY_TIMEOUT_MS = 60000;
     private static final DateTimeFormatter SQLITE_DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final Pattern PAGO_ID_PATTERN = Pattern.compile("Pago\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
@@ -49,6 +56,7 @@ public class DatabaseUtil {
     }
 
     public static synchronized void initDatabase() {
+        ensureDatabaseExists();
         String sqlClientes = "CREATE TABLE IF NOT EXISTS clientes (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "nombres TEXT NOT NULL," +
@@ -2608,6 +2616,88 @@ public class DatabaseUtil {
             return LocalDate.parse(normalizado);
         } catch (DateTimeParseException e) {
             return null;
+        }
+    }
+
+    private static Path initializeDatabasePath() {
+        Path dataDir = resolveDataDirectory();
+        try {
+            Files.createDirectories(dataDir);
+        } catch (IOException e) {
+            System.err.println("No se pudo crear el directorio de datos en " + dataDir + ": " + e.getMessage());
+            dataDir = Paths.get(System.getProperty("user.home"), "ControlGimnasio");
+            try {
+                Files.createDirectories(dataDir);
+            } catch (IOException ex) {
+                throw new IllegalStateException("No se pudo preparar el directorio de base de datos", ex);
+            }
+        }
+
+        return dataDir.resolve("gimnasio.db");
+    }
+
+    private static Path resolveDataDirectory() {
+        String propertyDir = System.getProperty("control_gimnasio.dataDir");
+        if (propertyDir != null && !propertyDir.isBlank()) {
+            return Paths.get(propertyDir.trim());
+        }
+
+        String envDir = System.getenv("CONTROL_GIMNASIO_DATA");
+        if (envDir != null && !envDir.isBlank()) {
+            return Paths.get(envDir.trim());
+        }
+
+        String osName = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+        if (osName.contains("win")) {
+            String localAppData = System.getenv("LOCALAPPDATA");
+            if (localAppData != null && !localAppData.isBlank()) {
+                return Paths.get(localAppData, "ControlGimnasio");
+            }
+            return Paths.get(System.getProperty("user.home"), "AppData", "Local", "ControlGimnasio");
+        }
+
+        return Paths.get(System.getProperty("user.home"), ".control_gimnasio");
+    }
+
+    private static void ensureDatabaseExists() {
+        if (Files.exists(DATABASE_PATH)) {
+            return;
+        }
+
+        List<Path> candidates = List.of(
+                Paths.get("database", "gimnasio.db"),
+                Paths.get("app", "database", "gimnasio.db"),
+                Paths.get("..", "database", "gimnasio.db")
+        );
+
+        for (Path candidate : candidates) {
+            Path absoluteCandidate = candidate.isAbsolute() ? candidate : candidate.toAbsolutePath().normalize();
+            if (Files.exists(absoluteCandidate)) {
+                try {
+                    Files.createDirectories(DATABASE_PATH.getParent());
+                    Files.copy(absoluteCandidate, DATABASE_PATH, StandardCopyOption.REPLACE_EXISTING);
+                    return;
+                } catch (IOException e) {
+                    System.err.println("No se pudo copiar la base de datos empaquetada desde " + absoluteCandidate + ": " + e.getMessage());
+                }
+            }
+        }
+
+        try (InputStream stream = DatabaseUtil.class.getResourceAsStream("/database/gimnasio.db")) {
+            if (stream != null) {
+                Files.createDirectories(DATABASE_PATH.getParent());
+                Files.copy(stream, DATABASE_PATH, StandardCopyOption.REPLACE_EXISTING);
+                return;
+            }
+        } catch (IOException e) {
+            System.err.println("No se pudo extraer la base de datos de los recursos: " + e.getMessage());
+        }
+
+        try {
+            Files.createDirectories(DATABASE_PATH.getParent());
+            Files.createFile(DATABASE_PATH);
+        } catch (IOException e) {
+            throw new IllegalStateException("No se pudo crear el archivo de base de datos en " + DATABASE_PATH, e);
         }
     }
 }

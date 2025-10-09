@@ -227,6 +227,93 @@ public class AuditoriaUtil {
         return meses;
     }
 
+    public static ObservableList<Integer> listarAniosAuditoria(Integer usuarioId) {
+        ObservableList<Integer> anios = FXCollections.observableArrayList();
+        StringBuilder sql = new StringBuilder("SELECT DISTINCT strftime('%Y', timestamp) AS anio FROM auditoria WHERE timestamp IS NOT NULL");
+        if (usuarioId != null && usuarioId > 0) {
+            sql.append(" AND usuario_id = ?");
+        }
+        sql.append(" ORDER BY anio DESC");
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            if (usuarioId != null && usuarioId > 0) {
+                stmt.setInt(1, usuarioId);
+            }
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                String anio = rs.getString("anio");
+                if (anio != null && !anio.isBlank()) {
+                    try {
+                        anios.add(Integer.parseInt(anio));
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return anios;
+    }
+
+    public static ObservableList<Month> listarMesesAuditoria(Integer usuarioId, int anio) {
+        ObservableList<Month> meses = FXCollections.observableArrayList();
+        StringBuilder sql = new StringBuilder("SELECT DISTINCT strftime('%m', timestamp) AS mes FROM auditoria " +
+                "WHERE timestamp IS NOT NULL AND strftime('%Y', timestamp) = ?");
+        if (usuarioId != null && usuarioId > 0) {
+            sql.append(" AND usuario_id = ?");
+        }
+        sql.append(" ORDER BY mes DESC");
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            stmt.setString(1, String.format("%04d", anio));
+            if (usuarioId != null && usuarioId > 0) {
+                stmt.setInt(2, usuarioId);
+            }
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                String mes = rs.getString("mes");
+                if (mes != null && !mes.isBlank()) {
+                    try {
+                        meses.add(Month.of(Integer.parseInt(mes)));
+                    } catch (IllegalArgumentException ignored) {
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        meses.sort(Comparator.reverseOrder());
+        return meses;
+    }
+
+    public static ObservableList<String> listarAccionesDisponibles(Integer usuarioId) {
+        ObservableList<String> acciones = FXCollections.observableArrayList();
+        StringBuilder sql = new StringBuilder("SELECT DISTINCT accion FROM auditoria WHERE accion IS NOT NULL AND accion <> ''");
+        if (usuarioId != null && usuarioId > 0) {
+            sql.append(" AND usuario_id = ?");
+        }
+        sql.append(" ORDER BY accion COLLATE NOCASE");
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            if (usuarioId != null && usuarioId > 0) {
+                stmt.setInt(1, usuarioId);
+            }
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                String accion = rs.getString("accion");
+                if (accion != null && !accion.isBlank()) {
+                    acciones.add(accion);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return acciones;
+    }
+
     private static List<String> obtenerAccionesParaFiltro(ResumenTipo tipo) {
         if (tipo == null || tipo == ResumenTipo.TODOS) {
             return ACCIONES_RESUMEN;
