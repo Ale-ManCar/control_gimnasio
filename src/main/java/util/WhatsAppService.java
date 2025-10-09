@@ -20,7 +20,7 @@ public class WhatsAppService {
         private static final String USER_DATA_DIR = "C:/whatsapp_session";
         private static final int LIMITE_DIARIO = 80;
         private static final LocalTime HORARIO_INICIO = LocalTime.of(9, 0);
-        private static final LocalTime HORARIO_FIN = LocalTime.of(21, 0);
+        private static final LocalTime HORARIO_FIN = LocalTime.of(23, 0);
         private static final Object DB_LOCK = new Object();
         private static WebDriver driver = null;
 
