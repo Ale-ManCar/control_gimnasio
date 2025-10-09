@@ -7,6 +7,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -92,12 +93,9 @@ public class SplashController {
 
     private void abrirEntrada() {
         Platform.runLater(() -> {
+            Stage splashStage = (Stage) rootPane.getScene().getWindow();
             try {
-                // Cerrar splash
-                Stage splashStage = (Stage) rootPane.getScene().getWindow();
-                splashStage.close();
-
-                // Abrir login
+                // Determinar vista inicial
                 int totalUsuarios = DatabaseUtil.getTotalUsuarios();
                 String vista = totalUsuarios == 0 ? "/fxml/crear_admin.fxml" : "/fxml/selector_perfiles.fxml";
 
@@ -117,9 +115,28 @@ public class SplashController {
                 }
                 stage.setResizable(false);
                 stage.show();
+                if (splashStage != null) {
+                    splashStage.close();
+                }
             } catch (Exception e) {
                 System.err.println("Error abriendo login: " + e.getMessage());
+                e.printStackTrace();
+                mostrarErrorInicio(e);
+                if (splashStage != null && !splashStage.isShowing()) {
+                    splashStage.show();
+                }
             }
         });
+    }
+
+    private void mostrarErrorInicio(Exception e) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error al iniciar");
+        alert.setHeaderText("No se pudo abrir la ventana principal");
+        String mensaje = e.getMessage();
+        alert.setContentText((mensaje != null && !mensaje.isBlank())
+                ? mensaje
+                : "Revisa la consola para más detalles del error.");
+        alert.showAndWait();
     }
 }
