@@ -1,5 +1,8 @@
 package util;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -32,12 +35,14 @@ import models.IngresoData;
 import models.EquipoResumen;
 
 public class DatabaseUtil {
-    private static final String URL = "jdbc:sqlite:database/gimnasio.db";
+    private static final Path DB_PATH = Paths.get("database", "gimnasio.db");
+    private static final String URL = "jdbc:sqlite:" + DB_PATH.toString().replace('\\', '/');
     private static final int BUSY_TIMEOUT_MS = 60000;
     private static final DateTimeFormatter SQLITE_DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final Pattern PAGO_ID_PATTERN = Pattern.compile("Pago\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
 
     public static Connection getConnection() throws SQLException {
+        ensureDatabaseDirectory();
         Connection conn = DriverManager.getConnection(URL);
         try (Statement stmt = conn.createStatement()) {
             stmt.execute("PRAGMA journal_mode = WAL");
@@ -48,7 +53,24 @@ public class DatabaseUtil {
         return conn;
     }
 
+    private static void ensureDatabaseDirectory() throws SQLException {
+        Path parent = DB_PATH.getParent();
+        if (parent == null) {
+            return;
+        }
+        try {
+            Files.createDirectories(parent);
+        } catch (Exception e) {
+            throw new SQLException("No se pudo preparar el directorio de la base de datos", e);
+        }
+    }
+
     public static synchronized void initDatabase() {
+        try {
+            ensureDatabaseDirectory();
+        } catch (SQLException e) {
+            throw new IllegalStateException("No se pudo preparar el directorio de la base de datos", e);
+        }
         String sqlClientes = "CREATE TABLE IF NOT EXISTS clientes (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "nombres TEXT NOT NULL," +
