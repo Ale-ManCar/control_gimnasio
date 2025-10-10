@@ -13,7 +13,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <app.release.version>1.0.0</app.release.version>
+        <app.release.version>1.1.0</app.release.version>
     </properties>
 
     <dependencies>
@@ -122,7 +122,8 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>Main</mainClass>
+                            <!-- Aquí asegúrate de tener la clase principal correcta -->
+                            <mainClass>Main</mainClass> <!-- Cambia esto si tu clase principal es diferente -->
                         </manifest>
                     </archive>
                 </configuration>
@@ -147,4 +148,6 @@
             </plugin>
         </plugins>
     </build>
+
 </project>
+
